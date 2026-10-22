@@ -1,0 +1,14 @@
+.env
+.env.*
+!.env.example
+node_modules/
+vendor/
+*.pem
+*.key
+id_ed25519*
+id_rsa*
+wordyland-access/
+*.sql
+*.sqlite
+*.sqlite3
+.DS_Store

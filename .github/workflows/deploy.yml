@@ -1,0 +1,63 @@
+name: Verify and deploy WordyLand
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: wordyland-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check application JavaScript
+        run: |
+          node --check dist/app.js
+          node --check dist/data.js
+          node --check dist/worlds.js
+          bash -n scripts/deploy-siteground.sh
+          node scripts/test-lessons.mjs
+      - name: Check public bundle
+        run: node scripts/verify-bundle.mjs
+  deploy:
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.SG_PATH != ''
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SG_HOST: ${{ vars.SG_HOST }}
+      SG_USER: ${{ vars.SG_USER }}
+      SG_PORT: ${{ vars.SG_PORT }}
+      SG_PATH: ${{ vars.SG_PATH }}
+      SG_PRIVATE_KEY: ${{ secrets.SG_PRIVATE_KEY }}
+      SG_KNOWN_HOSTS: ${{ secrets.SG_KNOWN_HOSTS }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Deploy checked files via SSH
+        run: bash scripts/deploy-siteground.sh
+
+  connectivity:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Verify SiteGround SSH reachability
+        run: |
+          python3 - <<'PYNET'
+          import socket
+          host = 'gnldm1125.siteground.biz'
+          with socket.create_connection((host, 18765), timeout=20) as client:
+              banner = client.recv(256).decode('ascii', errors='replace').strip()
+              if not banner.startswith('SSH-'):
+                  raise SystemExit('Unexpected SSH banner')
+              print('SiteGround SSH is reachable from GitHub Actions.')
+              print(banner)
+          PYNET
