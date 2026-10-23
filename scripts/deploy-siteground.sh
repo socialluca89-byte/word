@@ -31,16 +31,16 @@ touch "$target/.wordyland-managed"
 REMOTE
 # Transfer only the verified public bundle; never a repository or configuration file.
 # index.html is copied last so a failed asset transfer cannot publish a new page.
-for file in data.js worlds.js app.js index.html; do
+for file in data.js worlds.js app.js accounts.js api.php index.html; do
   scp -i "$key_dir/key" -P "$SG_PORT" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$key_dir/known_hosts" "dist/$file" "$remote:$SG_PATH/$file.wordyland-next"
 done
 ssh "${ssh_args[@]}" "$remote" bash -s -- "$SG_PATH" <<'REMOTE'
 set -euo pipefail
 cd -- "$1"
-for file in data.js worlds.js app.js index.html; do
+for file in data.js worlds.js app.js accounts.js api.php index.html; do
   [[ -f "$file.wordyland-next" ]] || exit 1
 done
-for file in data.js worlds.js app.js index.html; do
+for file in data.js worlds.js app.js accounts.js api.php index.html; do
   if [[ -f "$file" ]]; then cp -p -- "$file" "$file.wordyland-previous"; fi
   mv -- "$file.wordyland-next" "$file"
   chmod 644 "$file"

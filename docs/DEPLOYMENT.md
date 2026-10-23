@@ -1,27 +1,34 @@
-# Automatic SiteGround deployment
+# SiteGround deployment
 
-This workflow deploys the existing static prototype, not a user/database backend.
+## Verified account facts — 23 October 2026
 
-Create a **private** GitHub repository named `wordyland` and push the project to `main`.
+- Domain: `wordyland.eu`, active on Piano hosting 10.
+- Site Tools showed IP `34.1.230.193`.
+- SSH credentials displayed host `ssh.wordyland.eu`, user `u696-hhgazckal0ad`, port `18765`.
+- Existing imported key: `wordyland-deploy` (Ed25519).
+- File Manager initially contained `public_html/Default.html` and `.well-known` only.
 
-Repository variables (Settings → Secrets and variables → Actions → Variables):
+## Server pull deployment
 
-- `SG_HOST`: the hostname shown in SiteGround SSH credentials
-- `SG_USER`: the username shown in SiteGround SSH credentials
-- `SG_PORT`: `18765`
-- `SG_PATH`: the actual absolute document root or empty application directory, verified in SiteGround. Do not guess this path.
+A SiteGround cron job was created for `*/5 * * * *`. It downloads the reviewed pull script pinned to commit `793bac9c2a38a9ff93e0c0433d27f8799ee9aa23`, then runs it. This original script publishes the four static files only. **The first publication has not been verified. The cron must be updated to a reviewed commit containing the new six-file deployment before it can deploy accounts.**
 
-Repository secrets:
+The latest `scripts/pull-siteground.sh` discovers exactly one WordyLand document root, refuses an existing unrelated site, stages assets, checks PHP syntax and PDO SQLite, retains previous public files privately and publishes `index.html` last. Source checkout, backups and log stay outside the public directory. Replacement is per-file, not a globally atomic release. The database stays outside `public_html` and is never overwritten by deployment.
 
-- `SG_PRIVATE_KEY`: private deployment key corresponding to the public key imported into SiteGround. Never commit it.
-- `SG_KNOWN_HOSTS`: verified server host-key entry for `[gnldm1125.siteground.biz]:18765`. Obtain and confirm the server fingerprint from a trusted connection before storing the entry. The workflow enforces host-key verification.
+Browser upload of the API timed out. Its final state is unknown. Check the File Manager and `https://wordyland.eu/api.php?action=health` before retrying; a successful health result is `ready: true`. The cloud browser stopped responding even to recovery. No completed public deployment or live database operation is claimed.
 
-An unencrypted, dedicated deployment key is required for this unattended workflow. It must be restricted to this use and revoked when no longer needed.
+## Optional GitHub Actions SSH deployment
 
-The first deployment requires an empty target directory. Existing sites are not overwritten. Later deployments accept only a directory carrying `.wordyland-managed`. Files are transferred under temporary names and the index page is activated last. Previous public files are retained as `.wordyland-previous`; no database or uploads are removed. File replacement is per-file, not an atomic release of the entire application.
+GitHub checks run on main and pull requests. An SSH deployment is optional and remains disabled unless `SG_PATH` is configured. Do not activate it concurrently with cron deployment.
 
-Pushes to `main` run validation followed by deployment. Pull requests run checks only. Configuration and network access have not yet been verified from a GitHub runner.
+Variables: `SG_HOST`, `SG_USER`, `SG_PORT`, `SG_PATH` (actual verified absolute public directory).
+Secrets: `SG_PRIVATE_KEY`, `SG_KNOWN_HOSTS` (verified host key).
 
-## Remaining work
+Never commit either secret. Do not disable host-key verification. The SSH script accepts only an empty directory or one carrying the WordyLand deployment marker.
 
-Create the repository, configure variables and secrets, run the first workflow, verify the public URL, then implement and test the PHP/MySQL backend for accounts and synchronized progress. Database migrations must be added explicitly to a future backend deployment; this workflow does not run migrations.
+## Remaining release checks
+
+1. Verify server-side PHP/PDO SQLite availability and database creation outside the public directory.
+2. Publish all six files in `dist/` and verify the root page and API over HTTPS.
+3. Verify browser account creation, profile switching and synchronization across two sessions.
+4. Update the cron’s pinned script to the reviewed six-file version, verify a subsequent release and keep only one deployment mechanism active.
+5. Add account recovery, deletion and backup/restore operations before a wider rollout.

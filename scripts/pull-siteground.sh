@@ -23,12 +23,14 @@ if [[ ! -f "$target/.wordyland-managed" ]]; then
 fi
 staging=$(mktemp -d "$source_dir/staging.XXXXXX")
 trap 'rm -rf -- "$staging"' EXIT
-files=(data.js worlds.js app.js index.html)
+files=(data.js worlds.js app.js accounts.js api.php index.html)
 for file in "${files[@]}"; do
   [[ $(git --git-dir="$git_dir" ls-tree "$revision" "dist/$file") == '100644 blob '* ]] || exit 1
   git --git-dir="$git_dir" show "$revision:dist/$file" > "$staging/$file"
   [[ -s "$staging/$file" ]] || exit 1
 done
+php -l "$staging/api.php"
+php -r 'exit(extension_loaded("pdo_sqlite") ? 0 : 1);'
 grep -q WordyLand "$staging/index.html"
 mkdir -p "$source_dir/previous"
 for file in "${files[@]}"; do

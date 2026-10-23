@@ -21,8 +21,14 @@ jobs:
           node --check dist/app.js
           node --check dist/data.js
           node --check dist/worlds.js
+          node --check dist/accounts.js
           bash -n scripts/deploy-siteground.sh
+          bash -n scripts/pull-siteground.sh
           node scripts/test-lessons.mjs
+      - name: Verify account API and database isolation
+        run: |
+          php -l dist/api.php
+          python3 scripts/test-api.py
       - name: Check public bundle
         run: node scripts/verify-bundle.mjs
   deploy:
@@ -53,7 +59,7 @@ jobs:
         run: |
           python3 - <<'PYNET'
           import socket
-          host = 'gnldm1125.siteground.biz'
+          host = 'ssh.wordyland.eu'
           with socket.create_connection((host, 18765), timeout=20) as client:
               banner = client.recv(256).decode('ascii', errors='replace').strip()
               if not banner.startswith('SSH-'):
