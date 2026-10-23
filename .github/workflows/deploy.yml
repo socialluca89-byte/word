@@ -4,43 +4,90 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+    inputs:
+      mode:
+        description: 'deploy = publish main again; probe = read-only SSH check; rollback = restore previous files'
+        type: choice
+        options: [deploy, probe, rollback]
+        default: deploy
+      backup:
+        description: 'Backup name for rollback (or latest)'
+        type: string
+        default: latest
 permissions:
   contents: read
 concurrency:
-  group: wordyland-${{ github.ref }}
+  # One production operation at a time; queued runs are never cancelled mid-deploy.
+  group: ${{ github.event_name == 'pull_request' && format('wordyland-pr-{0}', github.ref) || 'wordyland-production' }}
   cancel-in-progress: false
 jobs:
   verify:
+    if: github.event_name != 'workflow_dispatch' || inputs.mode == 'deploy'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Check application JavaScript
+          fetch-depth: 0
+      - name: Check application JavaScript and shell scripts
         run: |
-          node --check dist/app.js
-          node --check dist/data.js
-          node --check dist/worlds.js
-          node --check dist/accounts.js
-          node --check dist/quests.js
-          node --check dist/arena.js
-          node --check dist/classroom.js
-          bash -n scripts/deploy-siteground.sh
-          bash -n scripts/pull-siteground.sh
+          for f in dist/*.js; do node --check "$f"; done
+          for f in scripts/*.sh; do bash -n "$f"; done
           node scripts/test-lessons.mjs
       - name: Verify account API and database isolation
         run: |
-          php -l dist/api.php
-          php -l dist/platform.php
-          php -l dist/arena.php
-          php -l dist/classroom.php
+          for f in dist/*.php; do php -l "$f"; done
           python3 scripts/test-api.py
           python3 scripts/test-classroom.py
       - name: Check public bundle
         run: node scripts/verify-bundle.mjs
+      - name: Test deployment script in isolation
+        run: bash scripts/test-deploy.sh
+
   deploy:
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request' && vars.SG_PATH != ''
     needs: verify
+    if: >-
+      github.ref == 'refs/heads/main' && vars.SG_PATH != '' &&
+      (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.mode == 'deploy'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SG_HOST: ${{ vars.SG_HOST }}
+      SG_USER: ${{ vars.SG_USER }}
+      SG_PORT: ${{ vars.SG_PORT }}
+      SG_PATH: ${{ vars.SG_PATH }}
+      SG_PRIVATE_KEY: ${{ secrets.SG_PRIVATE_KEY }}
+      SG_KEY_PASSPHRASE: ${{ secrets.SG_KEY_PASSPHRASE }}
+      SG_KNOWN_HOSTS: ${{ secrets.SG_KNOWN_HOSTS }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Deploy tested commit to SiteGround and verify the live site
+        run: bash scripts/deploy-siteground.sh deploy
+
+  probe:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.mode == 'probe'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      SG_HOST: ${{ vars.SG_HOST }}
+      SG_USER: ${{ vars.SG_USER }}
+      SG_PORT: ${{ vars.SG_PORT }}
+      SG_PATH: ${{ vars.SG_PATH }}
+      SG_PRIVATE_KEY: ${{ secrets.SG_PRIVATE_KEY }}
+      SG_KEY_PASSPHRASE: ${{ secrets.SG_KEY_PASSPHRASE }}
+      SG_KNOWN_HOSTS: ${{ secrets.SG_KNOWN_HOSTS }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Read-only SSH check (host keys, path, PHP)
+        run: bash scripts/deploy-siteground.sh probe
+
+  rollback:
+    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.mode == 'rollback' && vars.SG_PATH != ''
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
@@ -49,28 +96,12 @@ jobs:
       SG_PORT: ${{ vars.SG_PORT }}
       SG_PATH: ${{ vars.SG_PATH }}
       SG_PRIVATE_KEY: ${{ secrets.SG_PRIVATE_KEY }}
+      SG_KEY_PASSPHRASE: ${{ secrets.SG_KEY_PASSPHRASE }}
       SG_KNOWN_HOSTS: ${{ secrets.SG_KNOWN_HOSTS }}
+      BACKUP_NAME: ${{ inputs.backup }}
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - name: Deploy checked files via SSH
-        run: bash scripts/deploy-siteground.sh
-
-  connectivity:
-    if: github.event_name != 'pull_request'
-    runs-on: ubuntu-latest
-    timeout-minutes: 2
-    steps:
-      - name: Verify SiteGround SSH reachability
-        run: |
-          python3 - <<'PYNET'
-          import socket
-          host = 'ssh.wordyland.eu'
-          with socket.create_connection((host, 18765), timeout=20) as client:
-              banner = client.recv(256).decode('ascii', errors='replace').strip()
-              if not banner.startswith('SSH-'):
-                  raise SystemExit('Unexpected SSH banner')
-              print('SiteGround SSH is reachable from GitHub Actions.')
-              print(banner)
-          PYNET
+      - name: Restore previous application files (database untouched)
+        run: bash scripts/deploy-siteground.sh rollback "$BACKUP_NAME"
