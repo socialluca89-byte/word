@@ -20,7 +20,8 @@ if [[ -n "${SG_PATH:-}" ]]; then
 fi
 
 work=$(mktemp -d); chmod 700 "$work"
-cleanup() { [[ -n "${SSH_AGENT_PID:-}" ]] && ssh-agent -k >/dev/null 2>&1 || true; rm -rf -- "$work"; }
+deploy_phase=configuration
+cleanup() { local result=$?; if [[ "$result" != 0 && "${GITHUB_ACTIONS:-}" == true ]]; then printf '::error title=Deployment stopped::Stage %s exited with status %s\n' "$deploy_phase" "$result"; fi; [[ -n "${SSH_AGENT_PID:-}" ]] && ssh-agent -k >/dev/null 2>&1 || true; rm -rf -- "$work"; }
 trap cleanup EXIT
 
 # Host identity: keyscan output is only a candidate and is printed for comparison.
@@ -52,7 +53,20 @@ unset SG_PRIVATE_KEY SG_KEY_PASSPHRASE SG_KNOWN_HOSTS
 ssh_opts=(-p "$SG_PORT" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$work/known_hosts"
   -o ConnectTimeout=20 -o ServerAliveInterval=15)
 remote="$SG_USER@$SG_HOST"
-run_remote() { ssh "${ssh_opts[@]}" "$remote" bash -s -- "$@" < scripts/siteground-remote.sh; }
+run_remote() {
+  local output result=0 line
+  output=$(ssh "${ssh_opts[@]}" "$remote" bash -s -- "$@" < scripts/siteground-remote.sh 2>&1) || result=$?
+  printf '%s\n' "$output"
+  if [[ "${GITHUB_ACTIONS:-}" == true ]]; then
+    while IFS= read -r line; do
+      case "$line" in
+        'ERROR:'*) printf '::error title=SiteGround remote::%s\n' "${line//%/%25}" ;;
+        'Cache purge '*) printf '::notice title=SiteGround cache::%s\n' "${line//%/%25}" ;;
+      esac
+    done <<< "$output"
+  fi
+  return "$result"
+}
 
 case "$mode" in
   probe)
@@ -66,6 +80,7 @@ case "$mode" in
     need SG_PATH
     sha=$(git rev-parse HEAD)
     node scripts/verify-bundle.mjs
+    deploy_phase=remote-status
     status=$(run_remote status "$SG_PATH")
     printf '%s\n' "$status"
     prev=$(sed -n 's/^MARKER=//p' <<<"$status" | tail -n1)
@@ -86,6 +101,7 @@ case "$mode" in
       tar -C "$work/bundle" --owner=0 --group=0 -cf "$work/bundle.tar" "${FILES[@]}" SHA256SUMS
       priv="$(dirname "$SG_PATH")/.wordyland-deploy"
       ssh "${ssh_opts[@]}" "$remote" "umask 077 && test -d '$priv/incoming' && ! test -L '$priv/incoming' && cat > '$priv/incoming/$sha.tar'" < "$work/bundle.tar"
+      deploy_phase=remote-install
       install_out=$(run_remote install "$SG_PATH" "$sha" "$prev") || { printf '%s\n' "$install_out"; exit 1; }
       printf '%s\n' "$install_out"
       release_backup=$(sed -n 's|^Private backup: .*/releases/||p' <<<"$install_out" | tail -n1)
@@ -138,6 +154,7 @@ check_files() {
   echo "Live site serves the files of commit $expect_sha (19 static files compared byte-for-byte)."
 }
 if [[ "$mode" == deploy ]]; then
+  deploy_phase=cache-and-live-checks
   if purge_cache && check_health && check_files; then
     echo 'Live checks passed.'
   else
