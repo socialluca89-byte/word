@@ -33,6 +33,9 @@ cp dist/index.html dist/api.php dist/platform.php "$docroot/"
 echo '<?php echo "secret";' > "$docroot/api.php.wordyland-previous"
 git_sha=$(git rev-parse HEAD)
 
+echo '--- remote script avoids process substitution (SiteGround has no /dev/fd)'
+! grep -n '<(' scripts/siteground-remote.sh || fail 'process substitution in remote script'
+
 echo '--- refuses a directory outside wordyland.eu/public_html'
 SG_PATH="$home/www/other/public_html" bash scripts/deploy-siteground.sh deploy >/dev/null 2>&1 && fail 'accepted wrong path'
 echo '--- refuses a symlinked document root'
