@@ -83,8 +83,30 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - name: Runner network
+        run: |
+          echo "Runner public IP: $(curl -fsS https://api.ipify.org || echo unknown)"
       - name: Read-only SSH check (host keys, path, PHP)
         run: bash scripts/deploy-siteground.sh probe
+
+  hostkey-crosscheck:
+    # Independent network vantage points for the SSH host key (no credentials used).
+    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.mode == 'probe'
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 5
+    env:
+      SG_HOST: ${{ vars.SG_HOST }}
+      SG_PORT: ${{ vars.SG_PORT }}
+    steps:
+      - name: Scan host key fingerprints from ${{ matrix.os }}
+        shell: bash
+        run: |
+          echo "Runner public IP: $(curl -fsS https://api.ipify.org || echo unknown)"
+          ssh-keyscan -T 20 -p "$SG_PORT" "$SG_HOST" 2>/dev/null > scan.txt
+          ssh-keygen -lf scan.txt
 
   rollback:
     if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.mode == 'rollback' && vars.SG_PATH != ''
