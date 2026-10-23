@@ -7,6 +7,14 @@
   const panel = area.querySelector('#accountContent'), status = area.querySelector('#accountStatus');
   let session = null, active = null, revision = 0, pending = false, timer, busy = null, applying = false, locked = false;
   const guestKey = 'wordylandGuestBackup', activeKey = 'wordylandActiveProfile';
+  function recoveryNotice(code) {
+    let notice = area.querySelector('#recoveryNotice');
+    if (!notice) { notice = document.createElement('div'); notice.id = 'recoveryNotice'; notice.className = 'recoveryNotice'; area.querySelector('.settings').prepend(notice); }
+    notice.innerHTML = '<b>Conserva il codice di recupero in un luogo sicuro.</b><p>Ti servirà se dimentichi la password. Questo codice viene mostrato solo ora.</p><code></code><br><button class="audio">L’ho conservato: nascondi</button>';
+    notice.querySelector('code').textContent = code.match(/.{1,4}/g).join('-');
+    notice.querySelector('button').onclick = () => notice.remove();
+  }
+  function signalProfile() { window.dispatchEvent(new CustomEvent('wordyland-profile', {detail:{id:active?.id || null, nickname:active?.nickname || '', username:session?.username || null}})); }
   const read = key => { try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch { return null; } };
   const write = (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch {} };
   const snapshot = () => ({stats, custom, stars, world: worldId, avatar});
@@ -71,19 +79,26 @@
   }
   function show() {
     if (!session?.username) {
-      panel.innerHTML = '<h3>Un account per i grandi, un’avventura per ciascuno</h3><p>Accedi da un altro dispositivo per ritrovare i progressi. Crea fino a otto profili con un soprannome. Puoi anche giocare come ospite.</p><form id="accountForm"><label for="accountUser">Nome utente dell’adulto</label><input id="accountUser" autocomplete="username" minlength="3" maxlength="40" pattern="[A-Za-z0-9_.-]{3,40}" required><label for="accountPassword">Password · almeno 12 caratteri</label><input id="accountPassword" type="password" autocomplete="current-password" minlength="12" maxlength="72" required><label class="adultCheck"><input id="adultConfirm" type="checkbox"> Sono un adulto e gestirò i profili dei bambini</label><p class="hint">Conserva le credenziali: il recupero automatico della password non è ancora disponibile.</p><button class="primary" name="action" value="login">Accedi</button><button class="audio" name="action" value="register">Crea account adulto</button></form>';
+      panel.innerHTML = '<h3>Un account per i grandi, un’avventura per ciascuno</h3><p>Accedi da un altro dispositivo per ritrovare i progressi. Crea fino a otto profili con un soprannome. Puoi anche giocare come ospite.</p><form id="accountForm"><label for="accountUser">Nome utente dell’adulto</label><input id="accountUser" autocomplete="username" minlength="3" maxlength="40" pattern="[A-Za-z0-9_.-]{3,40}" required><label for="accountPassword">Password · almeno 12 caratteri</label><input id="accountPassword" type="password" autocomplete="current-password" minlength="12" maxlength="72" required><label class="adultCheck"><input id="adultConfirm" type="checkbox"> Sono un adulto e gestirò i profili dei bambini</label><p class="hint">Alla registrazione riceverai un codice per recuperare l’account. Conservalo con cura.</p><button class="primary" name="action" value="login">Accedi</button><button class="audio" name="action" value="register">Crea account adulto</button></form><details><summary>Hai dimenticato la password?</summary><form id="recoverAccount"><label>Nome utente<input name="username" autocomplete="username" required></label><label>Codice di recupero<input name="code" autocomplete="off" required></label><label>Nuova password<input name="password" type="password" autocomplete="new-password" minlength="12" maxlength="72" required></label><button class="primary">Recupera account</button></form></details>';
       panel.querySelector('form').onsubmit = async e => {
         e.preventDefault(); const action = e.submitter?.value || 'login';
         if (action === 'register' && !panel.querySelector('#adultConfirm').checked) { say('Per creare un account, conferma di essere un adulto.'); return; }
         const buttons = [...panel.querySelectorAll('button')]; buttons.forEach(b => b.disabled = true);
         try {
           session = await request(action, {username:panel.querySelector('#accountUser').value, password:panel.querySelector('#accountPassword').value, adult:panel.querySelector('#adultConfirm').checked});
+          if (session.recovery) { recoveryNotice(session.recovery); delete session.recovery; }
           show(); say('Accesso riuscito. Scegli o crea un profilo.');
         } catch (e) { say(e.message); buttons.forEach(b => b.disabled = false); }
       };
+      panel.querySelector('#recoverAccount').onsubmit = async e => {
+        e.preventDefault(); const form=e.currentTarget, button=e.submitter; button.disabled=true;
+        try { const result=await request('recover',Object.fromEntries(new FormData(form))); session.csrf=result.csrf; recoveryNotice(result.recovery); form.reset(); say('Password aggiornata. Accedi con la nuova password.'); }
+        catch(e){say(e.message);} finally {button.disabled=false;}
+      };
+      signalProfile();
       return;
     }
-    panel.innerHTML = '<h3>Account adulto: ' + esc(session.username) + '</h3><p>' + (active ? 'Stai giocando con il profilo di <b>' + esc(active.nickname) + '</b>.' : 'Scegli un profilo per usare il salvataggio online.') + '</p><div class="profileList">' + session.profiles.map(p => '<button class="audio" data-profile="' + Number(p.id) + '">' + esc(p.nickname) + (active?.id === p.id ? ' ✓' : '') + '</button>').join('') + '</div><form id="newProfile"><label for="profileNickname">Nuovo profilo · usa un soprannome</label><input id="profileNickname" maxlength="20" required autocomplete="off"><button class="primary">Crea profilo</button></form>' + (active ? '<button class="audio" id="syncNow">Salva ora</button><button class="audio" id="copyGuest">Copia qui i progressi ospite</button>' : '') + (locked ? '<p>Il profilo è stato aggiornato altrove. La copia locale resta disponibile su questo dispositivo.</p><button class="audio" id="reloadProfile">Carica la versione online</button>' : '') + '<button class="audio" id="logoutAccount">Esci dall’account</button>';
+    panel.innerHTML = '<h3>Account adulto: ' + esc(session.username) + '</h3><p>' + (active ? 'Stai giocando con il profilo di <b>' + esc(active.nickname) + '</b>.' : 'Scegli un profilo per usare il salvataggio online.') + '</p><div class="profileList">' + session.profiles.map(p => '<button class="audio" data-profile="' + Number(p.id) + '">' + esc(p.nickname) + (active?.id === p.id ? ' ✓' : '') + '</button>').join('') + '</div><form id="newProfile"><label for="profileNickname">Nuovo profilo · usa un soprannome</label><input id="profileNickname" maxlength="20" required autocomplete="off"><button class="primary">Crea profilo</button></form>' + (active ? '<button class="audio" id="syncNow">Salva ora</button><button class="audio" id="copyGuest">Copia qui i progressi ospite</button><div id="studyTools"></div>' : '') + (locked ? '<p>Il profilo è stato aggiornato altrove. La copia locale resta disponibile su questo dispositivo.</p><button class="audio" id="reloadProfile">Carica la versione online</button>' : '') + '<button class="audio" id="logoutAccount">Esci dall’account</button><details class="accountSecurity"><summary>Sicurezza e gestione account</summary><form id="securityAccount"><label>Password attuale<input name="password" type="password" autocomplete="current-password" required></label><button class="audio" value="new-recovery">Genera un nuovo codice di recupero</button><label>Per eliminare account e tutti i profili, scrivi ELIMINA<input name="confirm" autocomplete="off"></label><button class="audio" value="delete-account">Elimina definitivamente account e profili</button></form></details>';
     panel.querySelectorAll('[data-profile]').forEach(b => b.onclick = () => {
       if (locked) { say('Carica prima la versione online del profilo attuale.'); return; }
       choose(Number(b.dataset.profile)).catch(e => say(e.message));
@@ -124,7 +139,29 @@
         session = await request('session'); show(); say('Sei uscito. Ora giochi come ospite.');
       } catch (e) { say(e.message); }
     };
+    panel.querySelector('#securityAccount').onsubmit = async e => {
+      e.preventDefault(); const action=e.submitter.value;
+      if(action==='delete-account' && !window.confirm('Eliminare definitivamente account, profili, monete e schede? Questa operazione non può essere annullata.'))return;
+      e.submitter.disabled=true;
+      try {
+        await flush(); const result=await request(action,Object.fromEntries(new FormData(e.currentTarget)));
+        if(result.recovery){recoveryNotice(result.recovery);e.currentTarget.reset();e.submitter.disabled=false;}
+        else {active=null;pending=false;clearTimeout(timer);localStorage.removeItem(activeKey);const guest=read(guestKey);if(guest)apply(guest,guest.name);session=await request('session');show();say('Account eliminato. Puoi continuare come ospite.');}
+      } catch(error){say(error.message);e.submitter.disabled=false;}
+    };
+    if(active){
+      const manage=document.createElement('details');manage.className='accountSecurity';
+      manage.innerHTML='<summary>Gestisci il profilo scelto</summary><form id="renameProfile"><label>Nuovo soprannome<input name="nickname" maxlength="20" required></label><button class="audio">Aggiorna soprannome</button></form><form id="removeProfile"><p>Elimina solo questo profilo, con monete, progressi e schede.</p><label>Password dell’adulto<input name="password" type="password" autocomplete="current-password" required></label><label>Scrivi ELIMINA per confermare<input name="confirm" required></label><button class="audio">Elimina definitivamente questo profilo</button></form>';
+      panel.append(manage);
+      manage.querySelector('#renameProfile').onsubmit=async e=>{e.preventDefault();try{await flush();const r=await request('rename-profile',{profile:active.id,nickname:new FormData(e.currentTarget).get('nickname')});active.nickname=r.nickname;session.profiles=r.profiles;playerName=r.nickname;oldRemember();refreshPlayer();show();say('Soprannome aggiornato.');}catch(e){say(e.message);}};
+      manage.querySelector('#removeProfile').onsubmit=async e=>{
+        e.preventDefault();if(!confirm('Eliminare definitivamente il profilo '+active.nickname+' e i suoi dati?'))return;
+        try{await flush();const r=await request('delete-profile',{...Object.fromEntries(new FormData(e.currentTarget)),profile:active.id});active=null;pending=false;clearTimeout(timer);localStorage.removeItem(activeKey);const guest=read(guestKey);if(guest)apply(guest,guest.name);session.profiles=r.profiles;show();say('Profilo eliminato. Gli altri profili restano disponibili.');}catch(e){say(e.message);}
+      };
+    }
+    signalProfile();
   }
+  window.wordylandAccount = {request, flush, info:()=>({id:active?.id || null,nickname:active?.nickname || '',username:session?.username || null})};
   window.addEventListener('online', () => flush().catch(() => {}));
   window.addEventListener('beforeunload', e => { if (pending || busy) { e.preventDefault(); e.returnValue = ''; } });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flush().catch(() => {}); });

@@ -10,11 +10,11 @@
 
 ## Server pull deployment
 
-A SiteGround cron job was created for `*/5 * * * *`. It downloads the reviewed pull script pinned to commit `793bac9c2a38a9ff93e0c0433d27f8799ee9aa23`, then runs it. This original script publishes the four static files only. **The first publication has not been verified. The cron must be updated to a reviewed commit containing the new six-file deployment before it can deploy accounts.**
+A SiteGround cron job was created for `*/5 * * * *`. It downloads the reviewed pull script pinned to commit `793bac9c2a38a9ff93e0c0433d27f8799ee9aa23`, then runs it. This original script publishes the four static files only. The first release was subsequently published through SiteGround File Manager. The cron still needs diagnosis and must be updated to a reviewed commit containing the six-file deployment before automated releases can be claimed.
 
 The latest `scripts/pull-siteground.sh` discovers exactly one WordyLand document root, refuses an existing unrelated site, stages assets, checks PHP syntax and PDO SQLite, retains previous public files privately and publishes `index.html` last. Source checkout, backups and log stay outside the public directory. Replacement is per-file, not a globally atomic release. The database stays outside `public_html` and is never overwritten by deployment.
 
-Browser upload of the API timed out. Its final state is unknown. Check the File Manager and `https://wordyland.eu/api.php?action=health` before retrying; a successful health result is `ready: true`. The cloud browser stopped responding even to recovery. No completed public deployment or live database operation is claimed.
+Browser access recovered. File Manager confirmed the API upload, and `https://wordyland.eu/api.php?action=health` returned `{"ready":true,"database":"sqlite"}`. The six-file release was published and the root page at `https://wordyland.eu/` opened successfully. Live browser checks passed both the missing-preposition and full-sentence writing steps. The adult account form loaded with the guest/session status. Live registration and cross-session profile synchronization have not yet been tested. The SQLite data directory was visibly outside `public_html`. The installation archive and duplicate API copy were moved outside the public directory.
 
 ## Optional GitHub Actions SSH deployment
 
@@ -27,8 +27,6 @@ Never commit either secret. Do not disable host-key verification. The SSH script
 
 ## Remaining release checks
 
-1. Verify server-side PHP/PDO SQLite availability and database creation outside the public directory.
-2. Publish all six files in `dist/` and verify the root page and API over HTTPS.
-3. Verify browser account creation, profile switching and synchronization across two sessions.
-4. Update the cron’s pinned script to the reviewed six-file version, verify a subsequent release and keep only one deployment mechanism active.
-5. Add account recovery, deletion and backup/restore operations before a wider rollout.
+1. Verify browser account creation, profile switching and synchronization across two sessions.
+2. Diagnose the existing cron, update its pinned script to the reviewed six-file version, verify a subsequent release and keep only one deployment mechanism active.
+3. Add account recovery, deletion and backup/restore operations before a wider rollout.

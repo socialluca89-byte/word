@@ -1,10 +1,12 @@
 import fs from 'node:fs';
 const html=fs.readFileSync('dist/index.html','utf8');
-for(const name of ['app.js','data.js','worlds.js','accounts.js']) {
+const expected=['index.html','app.js','data.js','worlds.js','accounts.js','api.php','quests.js','quests.css','platform.php','curriculum.json'];
+for(const name of ['app.js','data.js','worlds.js','accounts.js','quests.js']) {
   if(!fs.existsSync('dist/'+name)||!html.includes('src="'+name+'"')) throw Error('Missing public dependency: '+name);
 }
-for(const name of fs.readdirSync('dist')) {
-  if(!['index.html','app.js','data.js','worlds.js','accounts.js','api.php'].includes(name)) throw Error('Unexpected public file: '+name);
-}
-if(!html.includes('WordyLand')) throw Error('Application title missing');
-console.log('Public bundle verified: six application files, no configuration, database or keys.');
+for(const name of fs.readdirSync('dist')) if(!expected.includes(name)) throw Error('Unexpected public file: '+name);
+for(const name of expected) if(!fs.statSync('dist/'+name).isFile()) throw Error('Missing public file: '+name);
+if(!html.includes('WordyLand')||!html.includes('href="quests.css"')) throw Error('Title or styles missing');
+const curriculum=JSON.parse(fs.readFileSync('dist/curriculum.json','utf8'));
+if(!curriculum.body?.length||!curriculum.catpositions?.length) throw Error('School curriculum missing');
+console.log('Public bundle verified: ten application files, no configuration, database or keys.');

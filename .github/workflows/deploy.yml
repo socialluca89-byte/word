@@ -22,12 +22,14 @@ jobs:
           node --check dist/data.js
           node --check dist/worlds.js
           node --check dist/accounts.js
+          node --check dist/quests.js
           bash -n scripts/deploy-siteground.sh
           bash -n scripts/pull-siteground.sh
           node scripts/test-lessons.mjs
       - name: Verify account API and database isolation
         run: |
           php -l dist/api.php
+          php -l dist/platform.php
           python3 scripts/test-api.py
       - name: Check public bundle
         run: node scripts/verify-bundle.mjs

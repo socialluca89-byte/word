@@ -27,19 +27,28 @@ $db->exec('PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000;');
 $db->exec('CREATE TABLE IF NOT EXISTS accounts (id INTEGER PRIMARY KEY, username TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, created_at INTEGER NOT NULL);
 CREATE TABLE IF NOT EXISTS profiles (id INTEGER PRIMARY KEY, account_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE, nickname TEXT NOT NULL, state TEXT NOT NULL, revision INTEGER NOT NULL DEFAULT 0);
 CREATE TABLE IF NOT EXISTS rate_limits (bucket TEXT PRIMARY KEY, attempts INTEGER NOT NULL, expires INTEGER NOT NULL);');
+$columns = array_column($db->query('PRAGMA table_info(accounts)')->fetchAll(), 'name');
+if (!in_array('recovery_hash', $columns, true)) $db->exec('ALTER TABLE accounts ADD COLUMN recovery_hash TEXT');
+if (!in_array('session_version', $columns, true)) $db->exec('ALTER TABLE accounts ADD COLUMN session_version INTEGER NOT NULL DEFAULT 0');
 session_name('wordyland_session');
 session_start(['use_strict_mode' => 1, 'cookie_httponly' => true, 'cookie_secure' => !$testMode, 'cookie_samesite' => 'Strict', 'cookie_lifetime' => 0]);
 if (isset($_SESSION['last_seen']) && time() - $_SESSION['last_seen'] > 86400) $_SESSION = [];
 $_SESSION['last_seen'] = time();
 $_SESSION['csrf'] ??= bin2hex(random_bytes(32));
+if (isset($_SESSION['account_id'])) {
+    $q = $db->prepare('SELECT session_version FROM accounts WHERE id=?'); $q->execute([$_SESSION['account_id']]);
+    $version = $q->fetchColumn();
+    if ($version === false || (int)$version !== (int)($_SESSION['version'] ?? 0)) $_SESSION = ['csrf' => bin2hex(random_bytes(32))];
+}
 $action = $_GET['action'] ?? 'session';
 $method = $_SERVER['REQUEST_METHOD'];
 $body = [];
 if ($method === 'POST') {
-    if ((int)($_SERVER['CONTENT_LENGTH'] ?? 0) > 250000) fail('Dati troppo grandi.', 413);
+    $bodyLimit = $action === 'study-save' ? 6000000 : 250000;
+    if ((int)($_SERVER['CONTENT_LENGTH'] ?? 0) > $bodyLimit) fail('Dati troppo grandi.', 413);
     if (strtolower(explode(';', $_SERVER['CONTENT_TYPE'] ?? '')[0]) !== 'application/json') fail('Formato non supportato.', 415);
-    $raw = file_get_contents('php://input', false, null, 0, 250001);
-    if (strlen($raw) > 250000) fail('Dati troppo grandi.', 413);
+    $raw = file_get_contents('php://input', false, null, 0, $bodyLimit + 1);
+    if (strlen($raw) > $bodyLimit) fail('Dati troppo grandi.', 413);
     try { $body = json_decode($raw, true, 32, JSON_THROW_ON_ERROR); } catch (JsonException) { fail('Dati non validi.'); }
     if (!is_array($body)) fail('Dati non validi.');
     $token = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '';
@@ -87,6 +96,21 @@ if ($method === 'GET' && $action === 'session') {
     $id = $_SESSION['account_id'] ?? null;
     respond(['csrf' => $_SESSION['csrf'], 'username' => $_SESSION['username'] ?? null, 'profiles' => $id ? profiles($db, (int)$id) : []]);
 }
+if ($method === 'POST' && $action === 'recover') {
+    limitAttempts($db, 'recover-ip:' . hash('sha256', $_SERVER['REMOTE_ADDR'] ?? ''), 10);
+    $username = strtolower(trim((string)($body['username'] ?? '')));
+    $code = preg_replace('/[^a-f0-9]/', '', strtolower((string)($body['code'] ?? '')));
+    $password = $body['password'] ?? '';
+    if (!is_string($password) || strlen($password) < 12 || strlen($password) > 72) fail('La nuova password deve avere 12–72 caratteri.');
+    $q = $db->prepare('SELECT id,recovery_hash FROM accounts WHERE username=?'); $q->execute([$username]); $account = $q->fetch();
+    if (!$account || !$account['recovery_hash'] || !hash_equals($account['recovery_hash'], hash('sha256', $code))) fail('Nome utente o codice di recupero non corretto.', 401);
+    $newCode = bin2hex(random_bytes(16));
+    $q = $db->prepare('UPDATE accounts SET password_hash=?,recovery_hash=?,session_version=session_version+1 WHERE id=? AND recovery_hash=?');
+    $q->execute([password_hash($password, PASSWORD_DEFAULT), hash('sha256', $newCode), $account['id'], $account['recovery_hash']]);
+    if (!$q->rowCount()) fail('Il codice è già stato usato.', 409);
+    $_SESSION = ['csrf' => bin2hex(random_bytes(32))];
+    respond(['csrf' => $_SESSION['csrf'], 'recovery' => $newCode]);
+}
 if ($method === 'POST' && in_array($action, ['register','login'], true)) {
     $username = strtolower(trim(is_string($body['username'] ?? null) ? $body['username'] : ''));
     $password = $body['password'] ?? null;
@@ -97,8 +121,9 @@ if ($method === 'POST' && in_array($action, ['register','login'], true)) {
         if (($body['adult'] ?? false) !== true) fail('L’account deve essere creato da un adulto.');
         limitAttempts($db, 'register:' . hash('sha256', $_SERVER['REMOTE_ADDR'] ?? ''), 5);
         try {
-            $q = $db->prepare('INSERT INTO accounts(username,password_hash,created_at) VALUES (?,?,?)');
-            $q->execute([$username, password_hash($password, PASSWORD_DEFAULT), time()]);
+            $recovery = bin2hex(random_bytes(16));
+            $q = $db->prepare('INSERT INTO accounts(username,password_hash,created_at,recovery_hash) VALUES (?,?,?,?)');
+            $q->execute([$username, password_hash($password, PASSWORD_DEFAULT), time(), hash('sha256', $recovery)]);
             $id = (int)$db->lastInsertId();
         } catch (PDOException $e) { if ($e->getCode() === '23000') fail('Nome utente non disponibile.', 409); throw $e; }
     } else {
@@ -108,10 +133,14 @@ if ($method === 'POST' && in_array($action, ['register','login'], true)) {
         $id = (int)$account['id'];
     }
     session_regenerate_id(true);
-    $_SESSION = ['account_id' => $id, 'username' => $username, 'last_seen' => time(), 'csrf' => bin2hex(random_bytes(32))];
-    respond(['csrf' => $_SESSION['csrf'], 'username' => $username, 'profiles' => profiles($db, $id)]);
+    $_SESSION = ['account_id' => $id, 'username' => $username, 'last_seen' => time(), 'version' => $action === 'login' ? (int)$account['session_version'] : 0, 'csrf' => bin2hex(random_bytes(32))];
+    $result = ['csrf' => $_SESSION['csrf'], 'username' => $username, 'profiles' => profiles($db, $id)];
+    if (isset($recovery)) $result['recovery'] = $recovery;
+    respond($result);
 }
 $id = userId();
+define('WORDYLAND_BOOTSTRAPPED', true);
+require __DIR__ . '/platform.php';
 if ($method === 'POST' && $action === 'logout') { $_SESSION = []; session_destroy(); respond(['ok' => true]); }
 if ($method === 'POST' && $action === 'create-profile') {
     $nickname = is_string($body['nickname'] ?? null) ? trim($body['nickname']) : '';
