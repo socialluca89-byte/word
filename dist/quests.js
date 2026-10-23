@@ -54,10 +54,10 @@
     const content=root.querySelector('#questContent');
     content.innerHTML='<div class="adventureHeading"><div><span class="questEyebrow">OGNI CURIOSITÀ HA IL SUO POSTO</span><h3>Oggi, che avventura scegli?</h3></div><p>Tutto è esplorabile fin da subito.<br>Le scoperte crescono con te.</p></div><div class="adventureDestinations">'+Object.entries(places).map(([id,p])=>'<button class="destinationCard" data-destination="'+id+'" aria-pressed="'+(id===activity)+'" style="--place:'+p.color+'"><span class="destinationArt" aria-hidden="true"></span><span class="destinationIcon" aria-hidden="true">'+p.icon+'</span><b>'+p.name+'</b><small>'+(Number(progress[id])||0)+' mission'+(Number(progress[id])===1?'e completata':'i completate')+'</small></button>').join('')+'</div><section class="placePanel" aria-labelledby="placeTitle"><div class="placePreview" id="placePreview"><span class="sceneFallback">'+p.icon+'</span><span class="previewBadge">'+p.icon+' IL TUO PICCOLO MONDO</span></div><div class="placeCopy"><span class="questEyebrow">'+p.tag+'</span><h3 id="placeTitle">'+p.name+'</h3><p>'+p.description+'</p><p class="placeGoal">'+p.goal+'</p><div class="discoveryPath" aria-label="'+count+' missioni completate">'+[1,3,5,10].map((n,i)=>'<span class="'+(count>=n?'discovered':'')+'"><b>'+(count>=n?'★':'☆')+'</b><small>'+['Prima scoperta','Esplorazione','Avventura','Grande viaggio'][i]+'<em>'+n+' mission'+(n===1?'e':'i')+'</em></small></span>').join('')+'</div><p class="hint">'+(next?'Prossima scoperta: '+count+' / '+next+' mission'+(next===1?'e.':'i.'):'Hai raggiunto tutte le tappe! Puoi continuare a esplorare.')+'</p>'+(activity==='pets'?'<div class="petCare"><button class="audio" data-care="water">💧 Acqua</button><button class="audio" data-care="food">🥕 Spuntino</button><button class="audio" data-care="friend">💗 Carezza</button><p id="petCareStatus" role="status"></p></div>':'')+'<div class="placeActions"><button class="primary" id="playPlace">Gioca qui →</button>'+(['treehouse','pets','creative','kart'].includes(activity)?'<button class="audio" id="stylePlace">'+({treehouse:'Arreda la casa',pets:'Scegli il compagno',creative:'Scegli i colori',kart:'Personalizza il kart'}[activity])+'</button>':'')+'</div></div></section>';
     content.querySelectorAll('[data-destination]').forEach(b=>b.onclick=()=>chooseActivity(b.dataset.destination));
-    content.querySelectorAll('[data-care]').forEach(b=>b.onclick=()=>{sceneView?.update({progress:1});content.querySelector('#petCareStatus').textContent={water:'Water = acqua. Una pausa per bere! 💧',food:'Food = cibo. Buono questo spuntino! 🥕',friend:'Friend = amico. Una carezza per te! 💗'}[b.dataset.care];});
+    content.querySelectorAll('[data-care]').forEach(b=>b.onclick=()=>{sceneView?.update({progress:1});sceneView?.react('success');content.querySelector('#petCareStatus').textContent={water:'Water = acqua. Una pausa per bere! 💧',food:'Food = cibo. Buono questo spuntino! 🥕',friend:'Friend = amico. Una carezza per te! 💗'}[b.dataset.care];});
     content.querySelector('#playPlace').onclick=()=>chooseActivity(activity,true);
     content.querySelector('#stylePlace')?.addEventListener('click',()=>{shopGroup={treehouse:'home',pets:'pet',creative:'palette',kart:'kart'}[activity];tab='shop';render();});
-    sceneView=window.wordylandIsland.mount(content.querySelector('#placePreview'),{kind:activity,equipped:wallet()?.equipped,progress:0});
+    sceneView=window.wordylandIsland.mount(content.querySelector('#placePreview'),{kind:activity,equipped:wallet()?.equipped,progress:0,preview:true});
   }
   function renderMissions() {
     const content=root.querySelector('#questContent'),place=places[mission?.activity||activity];
@@ -80,7 +80,7 @@
         const questions=pool.map((w,i)=>{const q={word:w[0],translation:w[1],emoji:w[2],kind:i===pool.length-1?'write':i===0?'choice':'build',number:i+1};if(q.kind==='choice')q.options=shuffle([w,...shuffle(allWords().filter(x=>x[0]!==w[0]&&!x[0].includes(' '))).slice(0,3)]);return q;});
         mission={token:'guest',questions,total:questions.length,xp:0,profile:null,activity};question=questions[0];
       }
-      drawQuestion();say('Nessuna fretta: puoi ascoltare e chiedere aiuto.');
+      drawQuestion();root.querySelector('#missionStage').scrollIntoView({behavior:window.wordylandMotion.allowed()?'smooth':'instant',block:'start'});say('Nessuna fretta: puoi ascoltare e chiedere aiuto.');
     } catch(e){say(e.message);}finally{busy=false;}
   }
   function audio() {
@@ -90,14 +90,16 @@
     speechSynthesis.speak(u);
   }
   function drawQuestion(challenge=false) {
-    clearScene();
     if(!challenge){hinted=false;questionFailed=false;}
-    const stage=root.querySelector('#missionStage');if(!stage)return;stage.hidden=false;
+    const stage=root.querySelector('#missionStage');if(!stage)return;
+    const previousWorld=stage.querySelector('#missionWorld');if(!previousWorld)clearScene();
+    root.querySelector('.missionGrid').hidden=true;stage.hidden=false;
     const q=question;stage.innerHTML='<div class="missionWorld" id="missionWorld"><span class="sceneFallback">'+places[mission.activity].icon+'</span><span class="worldProgressLabel">'+(q.number-1)+' / '+mission.total+' tappe</span></div><div class="questStep">PROVA '+q.number+' DI '+mission.total+'<span>'+currentWorld().icon+' '+currentWorld().name+'</span></div><div class="questTrack"><i style="width:'+((q.number-1)/mission.total*100)+'%"></i></div><div class="questPicture">'+picture(q.word,q.emoji)+'</div><p>'+esc(q.translation)+'</p><button class="audio" id="questListen">🔊 Ascolta</button><div id="questWork"></div><p id="questFeedback" role="status" aria-live="polite"></p><div id="questActions"></div>';
-    sceneView=window.wordylandIsland.mount(stage.querySelector('#missionWorld'),{kind:mission.activity,equipped:wallet()?.equipped,progress:(q.number-1)/mission.total});
+    if(previousWorld)stage.querySelector('#missionWorld').replaceWith(previousWorld);
+    else sceneView=window.wordylandIsland.mount(stage.querySelector('#missionWorld'),{kind:mission.activity,equipped:wallet()?.equipped,progress:(q.number-1)/mission.total});
     stage.querySelector('#questListen').onclick=audio;
     const work=stage.querySelector('#questWork'),actions=stage.querySelector('#questActions');
-    if(!challenge){work.innerHTML='<h3>Guarda bene la parola</h3><div class="questWord">'+esc(q.word)+'</div><p>Ascolta e osserva. Quando vuoi, giochiamo!</p>';actions.innerHTML='<button class="primary" id="readyChallenge">Sono pronto! →</button>';actions.querySelector('button').onclick=()=>drawQuestion(true);return;}
+    if(!challenge){work.innerHTML='<h3>Guarda bene la parola</h3><div class="questWord">'+esc(q.word)+'</div><p>Ascolta e osserva. Quando vuoi, giochiamo!</p>';actions.innerHTML='<button class="primary" id="readyChallenge">Sono pronto! →</button>';actions.querySelector('button').onclick=()=>drawQuestion(true);actions.querySelector('button').focus({preventScroll:true});return;}
     const titles={write:'La porta segreta: ascolta e scrivi',choice:'Ascolta e trova la figura',missing:'Il ponte della lettera mancante',build:'Il laboratorio delle lettere'};
     work.innerHTML='<h3>'+titles[q.kind]+'</h3>';
     if(q.kind==='choice'){
@@ -115,6 +117,7 @@
       work.querySelector('form').onsubmit=e=>{e.preventDefault();submitAnswer(work.querySelector('input').value);};
     }
     actions.innerHTML='<button class="audio" id="questHint">💡 Un aiuto · sempre gratis</button><div id="questHelp" hidden class="questWord">'+esc(q.word)+'</div>';
+    work.querySelector('input,button')?.focus({preventScroll:true});
     actions.querySelector('button').onclick=()=>{const hint=actions.querySelector('#questHelp');hint.hidden=!hint.hidden;hinted=true;};
   }
   function drawTiles(){
@@ -144,19 +147,22 @@
       }
       if(owner!==profile.id||token!==mission?.token)return;
       const word=question.word;stats[word]??={good:0,attempts:0,review:false};stats[word].attempts++;if(result.correct&&!hinted&&!questionFailed){stats[word].good++;stats[word].review=false;}else{stats[word].review=true;if(!result.correct)questionFailed=true;}save();updateStats();
-      if(!result.correct){feedback.textContent=result.message;return;}
+      if(!result.correct){feedback.textContent=result.message;sceneView?.react('retry');return;}
       root.querySelectorAll('#questWork button,#questWork input').forEach(b=>b.disabled=true);
       feedback.textContent=({football:'⚽ Gol! Hai trovato la parola!',space:'🚀 Motori accesi! Un passo verso le stelle.',pets:'💗 Un cuore in più per il tuo compagno!',creative:'🎨 Un nuovo colore per la tua creazione!',kart:'🏁 Il tuo kart avanza!',treehouse:'🏡 Una nuova scoperta per la tua casa!',ocean:'🐚 Il tesoro si avvicina!',dino:'🦕 Un’altra impronta trovata!'}[mission.activity])||'✨ Esatto!';
       sceneView?.update({progress:question.number/mission.total});
+      if(!result.done)sceneView?.react('success');
       const progressLabel=root.querySelector('.worldProgressLabel');if(progressLabel)progressLabel.textContent=question.number+' / '+mission.total+' tappe';
       if(result.done){
         if(hub)hub.wallet=result.wallet;
         const w=result.wallet;root.querySelector('.wallet').innerHTML='<span>🪙 <b>'+w.coins+'</b> monete</span><span>✦ Livello '+w.level+'</span><span>'+w.xp+' XP</span>';root.querySelector('.levelTrack i').style.width=(w.xp%100)+'%';
-        clearScene();
+        const previousWorld=root.querySelector('#missionWorld');
         const completedActivity=mission.activity,place=places[completedActivity];
         const stage=root.querySelector('#missionStage');
         stage.innerHTML='<div class="missionWorld" id="completedWorld"><span class="sceneFallback">'+place.icon+'</span></div><div class="openTreasure">🎉</div><span class="questEyebrow">MISSIONE COMPLETATA</span><h3>'+place.name+': ce l’hai fatta!</h3><p>Ogni tentativo ti ha portato fin qui.</p><div class="missionRewards"><b>✦ '+result.xp+' XP</b><b>🪙 '+result.coins+' monete</b></div><p>'+(result.coins?'La tua isola cresce con te! Scegli un oggetto per il personaggio, la casa o il kart.':'Hai già raccolto i premi per queste parole o le monete di oggi. Puoi continuare a giocare, senza perdere nulla.')+'</p><button class="primary" id="rewardShop">Personalizza il tuo mondo ✨</button><button class="audio" id="anotherQuest">Un’altra avventura</button>';
-        sceneView=window.wordylandIsland.mount(stage.querySelector('#completedWorld'),{kind:completedActivity,equipped:w.equipped,progress:1});
+        if(previousWorld){previousWorld.id='completedWorld';stage.querySelector('#completedWorld').replaceWith(previousWorld);previousWorld.querySelector('.worldProgressLabel').textContent='Tutte le tappe completate!';}
+        else sceneView=window.wordylandIsland.mount(stage.querySelector('#completedWorld'),{kind:completedActivity,equipped:w.equipped,progress:1});
+        sceneView?.react('complete');
         window.dispatchEvent(new CustomEvent('wordyland-celebrate'));
         mission=null;question=null;
         stage.querySelector('#rewardShop').onclick=()=>{shopGroup={treehouse:'home',pets:'pet',creative:'palette',kart:'kart'}[completedActivity]||'avatar';tab='shop';render();};stage.querySelector('#anotherQuest').onclick=()=>render();
@@ -174,7 +180,7 @@
     const shown=catalog.filter(it=>shopGroup==='avatar'?['avatar','hat','effect'].includes(it.slot):shopGroup==='home'?['room','plant','rug','lamp'].includes(it.slot):it.slot===shopGroup);
     root.querySelector('#questContent').innerHTML='<div class="shopHeading"><div><span class="questEyebrow">IL TUO MONDO, COME PIACE A TE</span><h3>Fallo diventare tuo.</h3><p>Scelte gratuite e oggetti da conquistare con le missioni.</p><p class="hint">Nessun acquisto con denaro reale. Tutte le attività sono già aperte.</p></div></div><nav class="styleTabs" aria-label="Cosa vuoi personalizzare?">'+Object.entries(groups).map(([id,name])=>'<button class="audio" data-style="'+id+'" aria-pressed="'+(shopGroup===id)+'">'+name+'</button>').join('')+'</nav><div class="stylePreview" id="stylePreview"><span class="sceneFallback">'+places[previewKind].icon+'</span><span class="previewBadge">'+groups[shopGroup]+' · la tua scelta</span></div><div class="shopGrid">'+shown.map(it=>{const owned=w?.inventory.includes(it.id),equipped=w?.equipped[it.slot]===it.id;return '<article class="shopItem '+(equipped?'equipped':'')+'"><span '+(it.slot==='avatar'?'class="racerModel" data-racer="'+it.id+'"':'')+' aria-hidden="true">'+(it.slot==='avatar'?'':it.icon)+'</span><h4>'+it.name+'</h4><small>'+(it.price===0?'Sempre disponibile':it.slot==='effect'?'Effetto scenico':'Per il tuo mondo')+'</small><button class="'+(owned?'audio':'primary')+'" data-item="'+it.id+'" '+(equipped?'disabled':'')+'>'+(equipped?'Scelto ✓':owned?'Scegli':it.price===0?'Scegli · gratis':'🪙 '+it.price+' · Sblocca')+'</button></article>';}).join('')+'</div><p class="hint">Gli oggetti cambiano l’aspetto del tuo mondo. Gli aiuti negli esercizi restano gratis per tutti.</p>';
     const eq={...w?.equipped};if(shopGroup==='avatar')eq.pet=eq.avatar||'fox';
-    sceneView=window.wordylandIsland.mount(root.querySelector('#stylePreview'),{kind:previewKind,equipped:eq});
+    sceneView=window.wordylandIsland.mount(root.querySelector('#stylePreview'),{kind:previewKind,equipped:eq,preview:true});
     root.querySelectorAll('[data-style]').forEach(b=>b.onclick=()=>{if(busy)return;shopGroup=b.dataset.style;renderShop();});
     root.querySelectorAll('[data-item]').forEach(b=>b.onclick=async()=>{
       if(busy)return;busy=true;const owner=profile.id,it=item(b.dataset.item),owned=w.inventory.includes(it.id);b.disabled=true;

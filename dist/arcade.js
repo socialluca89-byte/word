@@ -1,15 +1,17 @@
-/* Small pointer-driven depth effect; no animation loop or effect on touch devices. */
+/* Small interface responses. Animation preference and pause apply everywhere. */
 (()=>{
-  const hero=document.querySelector('.raceHero');
-  if(!hero||!matchMedia('(hover: hover) and (pointer: fine)').matches)return;
-  const motion=matchMedia('(prefers-reduced-motion: reduce)');
-  const reset=()=>{hero.style.removeProperty('--scene-x');hero.style.removeProperty('--scene-y');};
-  hero.addEventListener('pointermove',event=>{
-    if(motion.matches)return;
-    const box=hero.getBoundingClientRect();
-    hero.style.setProperty('--scene-x',((event.clientX-box.left)/box.width-.5)*-12+'px');
-    hero.style.setProperty('--scene-y',((event.clientY-box.top)/box.height-.5)*-8+'px');
+  const visible=new IntersectionObserver(entries=>entries.forEach(({target,isIntersecting})=>{target.dataset.motionVisible=String(isIntersecting);}),{rootMargin:'40px'});
+  function observe(){document.querySelectorAll('.questMascot,.destinationIcon,.islandHero .raceStart').forEach(el=>{if(!el.dataset.motionObserved){el.dataset.motionObserved='true';visible.observe(el);}});}
+  const changed=new MutationObserver(records=>{
+    for(const record of records)for(const removed of record.removedNodes)if(removed.nodeType===1){if(removed.dataset?.motionObserved)visible.unobserve(removed);removed.querySelectorAll?.('[data-motion-observed]').forEach(el=>visible.unobserve(el));}
+    observe();
   });
-  hero.addEventListener('pointerleave',reset);
-  motion.addEventListener('change',reset);
+  changed.observe(document.querySelector('main'),{childList:true,subtree:true});observe();
+  document.addEventListener('visibilitychange',()=>{document.documentElement.dataset.pageHidden=String(document.hidden);});
+  document.addEventListener('pointerdown',event=>{
+    const button=event.target.closest('.islandHero .raceStart,.destinationCard,.petCare button');
+    if(!button||button.disabled||event.button!==0||!window.wordylandMotion?.allowed())return;
+    const bounds=button.getBoundingClientRect(),ripple=document.createElement('span');ripple.className='tapRipple';ripple.setAttribute('aria-hidden','true');ripple.style.left=event.clientX-bounds.left+'px';ripple.style.top=event.clientY-bounds.top+'px';button.append(ripple);
+    ripple.animate([{transform:'translate(-50%,-50%) scale(0)',opacity:.7},{transform:'translate(-50%,-50%) scale(12)',opacity:0}],{duration:500,easing:'ease-out'}).finished.catch(()=>{}).finally(()=>ripple.remove());
+  });
 })();

@@ -34,3 +34,11 @@ Run `node scripts/version-assets.mjs` after changing browser assets. It versions
 `python3 scripts/test-adventures.py` checks all eight server-verified paths, rejected forged progress, reward caps, cosmetic ownership, three duel modes and migration from the previous schema. It runs in CI alongside the account/classroom/deployment tests.
 
 Browser validation for this release covered all eight complete guest missions, rendered WebGL scenes, free customization and reload persistence, desktop/390/360px layouts, two-pupil football and space duels including signup/login/recovery, and a WebGL-disabled reduced-motion browser. Browser tests use isolated temporary PHP data, never the production database.
+
+## Motion and game continuity
+
+The map includes drifting clouds, birds, ripples, swaying trees and moving miniature activities. Place/style previews are explicitly marked `preview:true`; preview movement never changes learning progress. Correct answers trigger a short themed reaction and a pool of reusable 3D particles. Mistakes show a calm retry message. The mission and duel reuse the same WebGL scene through the ready screen, subsequent questions and the mission's final celebration; leaving disposes it. Starting a mission hides the setup cards and scrolls the playable stage into view.
+
+The pause button applies to all scenes and interface animations. Reduced motion shows static, timed feedback and immediately displays the resulting progress. Animation clocks stop while scenes are outside the viewport or the tab is hidden. CSS ambient accents are also paused off screen. Interface transitions last under 0.7 seconds; exercise answer timing and scoring are unchanged.
+
+Optional browser regression test: start the app with an isolated PHP data/session directory on port 8093, then run `node scripts/test-motion.cjs` with Playwright installed. Set `WORDYLAND_PLAYWRIGHT_MODULE`, `WORDYLAND_CHROMIUM` or `WORDYLAND_TEST_URL` when using an existing runtime. It compares rendered frames for movement/pause/reduced motion and checks goal feedback, retained canvas identity across questions, disposal on leave and mobile overflow.

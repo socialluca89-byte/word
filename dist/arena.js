@@ -68,12 +68,13 @@
     }
     function showQuestion(result,feedback=''){
       if(!valid())return;
-      sceneView?.dispose();sceneView=null;
       const stage=host.querySelector('#duelStage'),d=result.duel,q=result.question;
+      const previousWorld=stage.querySelector('#duelWorld');if(!previousWorld){sceneView?.dispose();sceneView=null;}
       stage.hidden=false;
       host.querySelector('.arenaLayout').hidden=true;
       stage.innerHTML='<div class="duelStageTop"><span class="duelBadge">TU vs '+text(d.nickname)+'</span><button class="audio" id="duelBack">Salva e torna alle sfide</button></div><div class="duelWorld" id="duelWorld"><span class="sceneFallback">'+({football:'⚽',space:'🚀'}[d.activity]||'🏎️')+'</span><span class="worldProgressLabel">'+text(modes[d.activity]||modes.kart)+'</span></div><p class="duelScoreNote">Il tuo mondo avanza con le risposte corrette. Il punteggio del compagno si scopre quando avete finito entrambi.</p><div class="duelProgress"><span>Domanda '+q.number+' di '+d.total+'</span><b>'+d.score+' punti</b></div><div class="questTrack"><i style="width:'+(d.step/d.total*100)+'%"></i></div><span class="duelEmoji" aria-hidden="true">'+text(q.emoji)+'</span><h3>Come si dice «'+text(q.translation)+'»?</h3><p>Scegli la parola in inglese.</p><div class="duelOptions">'+q.options.map((answer,i)=>'<button data-duel-answer="'+i+'"><span>'+String.fromCharCode(65+i)+'</span>'+text(answer)+'</button>').join('')+'</div><p id="duelFeedback" role="status" aria-live="polite">'+text(feedback)+'</p>';
-      sceneView=window.wordylandIsland.mount(stage.querySelector('#duelWorld'),{kind:d.activity||'kart',progress:d.score/(d.total*10)});
+      if(previousWorld)stage.querySelector('#duelWorld').replaceWith(previousWorld);
+      else sceneView=window.wordylandIsland.mount(stage.querySelector('#duelWorld'),{kind:d.activity||'kart',progress:d.score/(d.total*10)});
       stage.querySelector('#duelBack').onclick=()=>{if(busy)return;playing=false;load('La partita è salvata. Puoi riprenderla quando vuoi.');};
       stage.querySelectorAll('[data-duel-answer]').forEach(b=>b.onclick=async()=>{
         if(busy)return;busy=true;stage.querySelectorAll('button').forEach(x=>x.disabled=true);
@@ -83,6 +84,7 @@
           const message=next.correct?'Esatto! +10 punti ✨':'Ora lo sai: si dice '+next.correctAnswer+'. La prossima ti aspetta!';
           stage.querySelector('#duelFeedback').textContent=message;
           sceneView?.update({progress:next.duel.score/(d.total*10)});
+          sceneView?.react(next.correct?(!next.question?'complete':'success'):'retry');
           if(next.correct&&d.activity==='football')stage.querySelector('#duelFeedback').textContent='⚽ Gol! '+message;
           if(!next.question)window.dispatchEvent(new CustomEvent('wordyland-celebrate'));
           const continueButton=document.createElement('button');continueButton.className='primary';continueButton.textContent=next.question?'Prossima domanda →':'Guarda il risultato →';
