@@ -53,7 +53,7 @@ bash scripts/deploy-siteground.sh deploy | tee "$root/out1"
 [[ ! -e "$docroot/api.php.wordyland-previous" ]] || fail 'stray PHP copy still public'
 [[ -z $(find "$docroot" \( -name '*.wordyland-*' -o -name '*.tar' -o -name SHA256SUMS \) ! -name .wordyland-managed) ]] || fail 'temporary files in docroot'
 [[ -f "$docroot/.well-known/acme" && -f "$site/.wordyland-data/keep" ]] || fail 'preserved files lost'
-for f in classroom.php arena.php api.php platform.php classroom.js arena.js curriculum.json quests.css data.js worlds.js app.js accounts.js quests.js index.html; do
+for f in classroom.php arena.php api.php platform.php classroom.js arena.js curriculum.json quests.css data.js worlds.js app.js accounts.js quests.js arcade.css arcade.js race-world.webp race-circuits.webp race-racers.webp index.html; do
   cmp -s "dist/$f" "$docroot/$f" || fail "$f differs"
 done
 priv="$site/.wordyland-deploy"; [[ $(stat -c %a "$priv") == 700 ]] || fail 'private dir not 700'

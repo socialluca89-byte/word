@@ -18,7 +18,7 @@
 #       deploy.lock, current, deploy.log
 set -euo pipefail
 umask 077
-FILES=(classroom.php arena.php api.php platform.php classroom.js arena.js curriculum.json quests.css data.js worlds.js app.js accounts.js quests.js index.html)
+FILES=(classroom.php arena.php api.php platform.php classroom.js arena.js curriculum.json quests.css data.js worlds.js app.js accounts.js quests.js arcade.css arcade.js race-world.webp race-circuits.webp race-racers.webp index.html)
 PHP_FILES=(classroom.php arena.php api.php platform.php)
 KEEP_RELEASES=5
 
@@ -171,7 +171,7 @@ case "$mode" in
     [[ -f "$archive" && ! -L "$archive" ]] || die 'uploaded bundle missing'
     rm -rf -- "$stage"; mkdir -p -- "$stage"
     tar -xf "$archive" -C "$stage" --no-same-owner --no-same-permissions
-    # exactly the 14 application files plus the checksum list, all regular files
+    # exactly the 19 application files plus the checksum list, all regular files
     expected=$(printf '%s\n' "${FILES[@]}" SHA256SUMS | sort)
     actual=$(cd -- "$stage" && find . -mindepth 1 -printf '%P\n' | sort)
     [[ "$expected" == "$actual" ]] || die 'bundle content differs from the expected file list'
