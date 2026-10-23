@@ -30,15 +30,18 @@ CREATE TABLE IF NOT EXISTS rate_limits (bucket TEXT PRIMARY KEY, attempts INTEGE
 $columns = array_column($db->query('PRAGMA table_info(accounts)')->fetchAll(), 'name');
 if (!in_array('recovery_hash', $columns, true)) $db->exec('ALTER TABLE accounts ADD COLUMN recovery_hash TEXT');
 if (!in_array('session_version', $columns, true)) $db->exec('ALTER TABLE accounts ADD COLUMN session_version INTEGER NOT NULL DEFAULT 0');
+if (!in_array('role', $columns, true)) $db->exec('ALTER TABLE accounts ADD COLUMN role TEXT NOT NULL DEFAULT "adult"');
 session_name('wordyland_session');
 session_start(['use_strict_mode' => 1, 'cookie_httponly' => true, 'cookie_secure' => !$testMode, 'cookie_samesite' => 'Strict', 'cookie_lifetime' => 0]);
 if (isset($_SESSION['last_seen']) && time() - $_SESSION['last_seen'] > 86400) $_SESSION = [];
 $_SESSION['last_seen'] = time();
 $_SESSION['csrf'] ??= bin2hex(random_bytes(32));
+$accountRole = null;
 if (isset($_SESSION['account_id'])) {
-    $q = $db->prepare('SELECT session_version FROM accounts WHERE id=?'); $q->execute([$_SESSION['account_id']]);
-    $version = $q->fetchColumn();
-    if ($version === false || (int)$version !== (int)($_SESSION['version'] ?? 0)) $_SESSION = ['csrf' => bin2hex(random_bytes(32))];
+    $q = $db->prepare('SELECT session_version,role FROM accounts WHERE id=?'); $q->execute([$_SESSION['account_id']]);
+    $currentAccount = $q->fetch();
+    if (!$currentAccount || (int)$currentAccount['session_version'] !== (int)($_SESSION['version'] ?? 0)) $_SESSION = ['csrf' => bin2hex(random_bytes(32))];
+    else $accountRole = $currentAccount['role'];
 }
 $action = $_GET['action'] ?? 'session';
 $method = $_SERVER['REQUEST_METHOD'];
@@ -63,7 +66,7 @@ function limitAttempts(PDO $db, string $bucket, int $maximum): void {
     if ((int)$q->fetchColumn() > $maximum) fail('Troppi tentativi. Riprova tra un’ora.', 429);
 }
 function userId(): int {
-    if (!isset($_SESSION['account_id'])) fail('Accedi con il tuo account adulto.', 401);
+    if (!isset($_SESSION['account_id'])) fail('Accedi con il tuo profilo.', 401);
     return (int)$_SESSION['account_id'];
 }
 function profiles(PDO $db, int $id): array {
@@ -91,10 +94,12 @@ function validState(mixed $state): array {
     if (!in_array($avatar, ['🦊','🐼','🤖','🐉','🐱','🐙','🦁','🐧'], true)) fail('Personaggio non valido.');
     return ['stats' => (object)$clean, 'custom' => $words, 'stars' => max(0, min(10000000, (int)($state['stars'] ?? 0))), 'world' => $world, 'avatar' => $avatar];
 }
+define('WORDYLAND_API', true);
+require __DIR__ . '/classroom.php';
 if ($method === 'GET' && $action === 'health') respond(['ready' => true, 'database' => 'sqlite']);
 if ($method === 'GET' && $action === 'session') {
     $id = $_SESSION['account_id'] ?? null;
-    respond(['csrf' => $_SESSION['csrf'], 'username' => $_SESSION['username'] ?? null, 'profiles' => $id ? profiles($db, (int)$id) : []]);
+    respond(['csrf' => $_SESSION['csrf'], 'username' => $_SESSION['username'] ?? null, 'role'=>$accountRole, 'profiles' => $id ? profiles($db, (int)$id) : []]);
 }
 if ($method === 'POST' && $action === 'recover') {
     limitAttempts($db, 'recover-ip:' . hash('sha256', $_SERVER['REMOTE_ADDR'] ?? ''), 10);
@@ -134,11 +139,12 @@ if ($method === 'POST' && in_array($action, ['register','login'], true)) {
     }
     session_regenerate_id(true);
     $_SESSION = ['account_id' => $id, 'username' => $username, 'last_seen' => time(), 'version' => $action === 'login' ? (int)$account['session_version'] : 0, 'csrf' => bin2hex(random_bytes(32))];
-    $result = ['csrf' => $_SESSION['csrf'], 'username' => $username, 'profiles' => profiles($db, $id)];
+    $result = ['csrf' => $_SESSION['csrf'], 'username' => $username, 'role'=>$action==='login'?$account['role']:'adult', 'profiles' => profiles($db, $id)];
     if (isset($recovery)) $result['recovery'] = $recovery;
     respond($result);
 }
 $id = userId();
+if ($accountRole==='learner' && in_array($action,['create-profile','rename-profile','delete-profile','club-create','club-join','club-leave','study-save','study-remove'],true)) fail('Questa operazione è riservata all’adulto che gestisce i profili.',403);
 define('WORDYLAND_BOOTSTRAPPED', true);
 require __DIR__ . '/platform.php';
 if ($method === 'POST' && $action === 'logout') { $_SESSION = []; session_destroy(); respond(['ok' => true]); }

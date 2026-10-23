@@ -14,7 +14,7 @@
     notice.querySelector('code').textContent = code.match(/.{1,4}/g).join('-');
     notice.querySelector('button').onclick = () => notice.remove();
   }
-  function signalProfile() { window.dispatchEvent(new CustomEvent('wordyland-profile', {detail:{id:active?.id || null, nickname:active?.nickname || '', username:session?.username || null}})); }
+  function signalProfile() { window.dispatchEvent(new CustomEvent('wordyland-profile', {detail:{id:active?.id || null, nickname:active?.nickname || '', username:session?.username || null, role:session?.role || null}})); }
   const read = key => { try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch { return null; } };
   const write = (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch {} };
   const snapshot = () => ({stats, custom, stars, world: worldId, avatar});
@@ -78,6 +78,13 @@
     apply(profile.state, profile.nickname); show(); say('✓ Profilo di ' + profile.nickname + ' caricato.');
   }
   function show() {
+    area.querySelector('summary').textContent=session?.role==='learner'?'Il mio profilo di classe':'Area adulti · account e progressi';
+    if (session?.role==='learner') {
+      panel.innerHTML='<h3>Ciao, '+esc(session.profiles[0]?.nickname||'esploratore')+'!</h3><p>Il tuo profilo è iscritto alla classe. I progressi si salvano mentre giochi.</p><button class="audio" id="learnerLogout">Esci dal mio profilo</button>'+(locked?'<p>Il profilo è stato aggiornato su un altro dispositivo. La copia locale resta disponibile.</p><button class="audio" id="learnerReload">Carica la versione online</button>':'');
+      panel.querySelector('#learnerLogout').onclick=()=>logout().catch(e=>say(e.message));
+      panel.querySelector('#learnerReload')?.addEventListener('click',()=>{write('wordylandConflictBackup',{profile:active.id,state:snapshot()});choose(active.id,true).catch(e=>say(e.message));});
+      signalProfile();return;
+    }
     if (!session?.username) {
       panel.innerHTML = '<h3>Un account per i grandi, un’avventura per ciascuno</h3><p>Accedi da un altro dispositivo per ritrovare i progressi. Crea fino a otto profili con un soprannome. Puoi anche giocare come ospite.</p><form id="accountForm"><label for="accountUser">Nome utente dell’adulto</label><input id="accountUser" autocomplete="username" minlength="3" maxlength="40" pattern="[A-Za-z0-9_.-]{3,40}" required><label for="accountPassword">Password · almeno 12 caratteri</label><input id="accountPassword" type="password" autocomplete="current-password" minlength="12" maxlength="72" required><label class="adultCheck"><input id="adultConfirm" type="checkbox"> Sono un adulto e gestirò i profili dei bambini</label><p class="hint">Alla registrazione riceverai un codice per recuperare l’account. Conservalo con cura.</p><button class="primary" name="action" value="login">Accedi</button><button class="audio" name="action" value="register">Crea account adulto</button></form><details><summary>Hai dimenticato la password?</summary><form id="recoverAccount"><label>Nome utente<input name="username" autocomplete="username" required></label><label>Codice di recupero<input name="code" autocomplete="off" required></label><label>Nuova password<input name="password" type="password" autocomplete="new-password" minlength="12" maxlength="72" required></label><button class="primary">Recupera account</button></form></details>';
       panel.querySelector('form').onsubmit = async e => {
@@ -87,7 +94,8 @@
         try {
           session = await request(action, {username:panel.querySelector('#accountUser').value, password:panel.querySelector('#accountPassword').value, adult:panel.querySelector('#adultConfirm').checked});
           if (session.recovery) { recoveryNotice(session.recovery); delete session.recovery; }
-          show(); say('Accesso riuscito. Scegli o crea un profilo.');
+          if(session.role==='learner'&&session.profiles.length===1){await choose(session.profiles[0].id);say('Accesso riuscito. Sei nel tuo profilo di classe.');}
+          else{show();say('Accesso riuscito. Scegli o crea un profilo.');}
         } catch (e) { say(e.message); buttons.forEach(b => b.disabled = false); }
       };
       panel.querySelector('#recoverAccount').onsubmit = async e => {
@@ -129,16 +137,7 @@
       write('wordylandConflictBackup', {profile:active.id, state:snapshot()});
       choose(active.id, true).catch(e => say(e.message));
     };
-    panel.querySelector('#logoutAccount').onclick = async () => {
-      try {
-        if (locked) throw new Error('Carica la versione online prima di uscire. La copia locale verrà conservata.');
-        await flush(); await request('logout', {});
-        const guest = read(guestKey); active = null; pending = false; clearTimeout(timer);
-        try { localStorage.removeItem(activeKey); } catch {}
-        if (guest) apply(guest, guest.name);
-        session = await request('session'); show(); say('Sei uscito. Ora giochi come ospite.');
-      } catch (e) { say(e.message); }
-    };
+    panel.querySelector('#logoutAccount').onclick = () => logout().catch(e=>say(e.message));
     panel.querySelector('#securityAccount').onsubmit = async e => {
       e.preventDefault(); const action=e.submitter.value;
       if(action==='delete-account' && !window.confirm('Eliminare definitivamente account, profili, monete e schede? Questa operazione non può essere annullata.'))return;
@@ -161,12 +160,25 @@
     }
     signalProfile();
   }
-  window.wordylandAccount = {request, flush, info:()=>({id:active?.id || null,nickname:active?.nickname || '',username:session?.username || null})};
+  async function logout() {
+    if(locked)throw new Error('Carica la versione online prima di uscire. La copia locale è conservata.');
+    await flush();await request('logout',{});active=null;pending=false;clearTimeout(timer);
+    try{localStorage.removeItem(activeKey);}catch{}
+    const guest=read(guestKey);if(guest)apply(guest,guest.name);
+    session=await request('session');show();say('Sei uscito. Ora giochi come ospite.');
+  }
+  async function connect(result) {
+    session=result;active=null;pending=false;locked=false;clearTimeout(timer);
+    if(result.role==='learner'&&result.profiles.length===1)await choose(result.profiles[0].id);
+    else show();
+  }
+  window.wordylandAccount = {request, flush, connect, logout, info:()=>({id:active?.id || null,nickname:active?.nickname || '',username:session?.username || null,role:session?.role||null})};
   window.addEventListener('online', () => flush().catch(() => {}));
   window.addEventListener('beforeunload', e => { if (pending || busy) { e.preventDefault(); e.returnValue = ''; } });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flush().catch(() => {}); });
-  request('session').then(async result => {
+  window.wordylandAccount.ready = request('session').then(async result => {
     session = result; show();
+    if(session.role==='learner'&&session.profiles.length===1){await choose(session.profiles[0].id);return;}
     const cached = read(activeKey);
     if (cached && cached.username === session.username && session.profiles.some(p => p.id === cached.id)) {
       // Explicitly reopen the same server profile; no silent guest-to-account merge.

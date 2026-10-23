@@ -90,7 +90,7 @@ if($method==='POST'&&$action==='rename-profile') {
 }
 if ($method === 'GET' && $action === 'hub') {
     $club = (int)($_GET['club'] ?? 0);
-    $clubList = rows($db, 'SELECT c.id,c.name FROM clubs c JOIN club_profiles cp ON cp.club_id=c.id WHERE cp.profile_id=?', [$pid]);
+    $clubList = rows($db, 'SELECT c.id,c.name,(c.owner_id=?) AS managed FROM clubs c JOIN club_profiles cp ON cp.club_id=c.id WHERE cp.profile_id=?', [$id,$pid]);
     $week = strtotime('monday this week 00:00 UTC');
     if ($club && !one($db, 'SELECT 1 FROM club_profiles WHERE club_id=? AND profile_id=?', [$club,$pid])) fail('Questo gruppo è riservato ai partecipanti.',403);
     if ($club) $members = rows($db, 'SELECT p.id,p.nickname,w.equipped FROM profiles p JOIN club_profiles cp ON cp.profile_id=p.id LEFT JOIN wallets w ON w.profile_id=p.id WHERE cp.club_id=? ORDER BY p.id LIMIT 100', [$club]);
@@ -225,9 +225,9 @@ if ($method==='POST' && $action==='quest-answer') {
 if ($method==='POST' && $action==='club-create') {
     if(($body['consent']??false)!==true)fail('Conferma la partecipazione con soprannome e avatar.');
     $name=trim(is_string($body['name']??null)?$body['name']:'');if(!$name || strlen($name)>80)fail('Scegli un nome breve per il gruppo.');
-    limitAttempts($db,'clubs:'.$id,5);$code=bin2hex(random_bytes(6));
+    limitAttempts($db,'clubs:'.$id,5);$code=bin2hex(random_bytes(12));
     $db->beginTransaction();runSql($db,'INSERT INTO clubs(name,invite_hash,owner_id) VALUES (?,?,?)',[$name,hash('sha256',$code),$id]);$club=(int)$db->lastInsertId();
-    runSql($db,'INSERT INTO club_accounts(club_id,account_id) VALUES (?,?)',[$club,$id]);runSql($db,'INSERT INTO club_profiles(club_id,profile_id) VALUES (?,?)',[$club,$pid]);$db->commit();
+    runSql($db,'INSERT INTO club_accounts(club_id,account_id) VALUES (?,?)',[$club,$id]);runSql($db,'INSERT INTO club_profiles(club_id,profile_id) VALUES (?,?)',[$club,$pid]);runSql($db,'INSERT INTO class_links(club_id,code) VALUES (?,?)',[$club,$code]);$db->commit();
     respond(['code'=>$code,'id'=>$club]);
 }
 if ($method==='POST' && $action==='club-join') {

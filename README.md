@@ -2,7 +2,16 @@
 
 English learning adventures for children around seven, based on their own school programme.
 
-The current pilot is a classroom game. An adult creates a private class and shares its invitation code. Each participating profile must join that class to appear in its opponent list or class festival; merely sharing an adult account is insufficient. The current account model supports up to eight profiles per adult and up to 100 participating profiles per class.
+The current pilot is one private classroom. An adult creates the class once, then shares its stable signup link (`#classe=…`). Pupils opening that link see the class already selected and register with a nickname and password; a personal learner profile is created and enrolled automatically. No email or separate adult account is needed for each pupil. Returning pupils use the same link and credentials. Nicknames are unique within the class, case-insensitively. The class supports up to 100 participating profiles; pupils have individual accounts and are not subject to the eight-profiles-per-adult limit.
+
+## One class, one signup link
+
+1. Sign in to the adult area, choose an adult-managed profile, and create the class once.
+2. In the class section, select **Mostra link della classe**. The same link is returned on subsequent visits and only the class owner may retrieve it. Existing classes acquire a stable link without invalidating their earlier invitation code.
+3. Share that link with the class. Pupils choose a nickname (3–20 letters/digits, `_` or `-`) and password (12–72 characters), acknowledge participation, and enter their class automatically. Only nicknames, avatars and scores are shown to classmates.
+4. Save each pupil's one-time recovery code with an adult. The same link provides password recovery and rotates used recovery codes. Signing out clears the on-screen code; no passwords are stored in browser storage.
+
+Learner accounts may play, save progress and challenge classmates; they cannot create classes, retrieve class links, add profiles, rename their login nickname or use adult material-management endpoints. The server enforces this separation. Adult accounts and existing profiles remain compatible with an additive database migration.
 
 ## This release
 
@@ -27,7 +36,7 @@ Paste `English = Italian` per line, or existing vocabulary words. The adult revi
 
 ## Hosting
 
-PHP 8.1+ with PDO SQLite. Deploy the twelve allowlisted files in `dist/` to `public_html`, including `arena.php` and `arena.js`. Install the new modules before replacing `platform.php` and publish `index.html` last. SQLite and reference attachments live in `.wordyland-data` in the directory above `public_html`; preserve that directory across releases. Duel tables are created additively; deleting a participant profile removes its duels. Existing accounts are migrated additively and can generate a recovery code after login. New accounts receive their recovery code once. Password reset rotates the recovery code and invalidates older sessions.
+PHP 8.1+ with PDO SQLite. Deploy the fourteen allowlisted files in `dist/` to `public_html`, including `classroom.php`, `classroom.js`, `arena.php` and `arena.js`. Install the new modules before replacing API/platform files and publish `index.html` last. SQLite and reference attachments live in `.wordyland-data` in the directory above `public_html`; preserve that directory across releases. Schema changes are additive; deleting a learner account removes its enrollments and duels. Existing accounts retain the adult role and their profiles. Password reset rotates the recovery code and invalidates older sessions.
 
 Passwords are hashed, sessions use Secure/HttpOnly/SameSite Strict cookies, writes require CSRF tokens, SQL uses prepared statements, and every profile/material/group operation checks ownership or membership. Recovery is via the adult's recovery code, not email. Handwriting is checked with an adult, not automatically graded.
 
@@ -39,9 +48,11 @@ node scripts/verify-bundle.mjs
 php -l dist/api.php
 php -l dist/platform.php
 php -l dist/arena.php
+php -l dist/classroom.php
 python3 scripts/test-api.py
+python3 scripts/test-classroom.py
 ```
 
-The API suite uses temporary accounts and databases. It covers account isolation, password recovery and deletion, concurrent saves, materials access, mission payouts, replay protection, duplicate purchases, daily coin limits, group privacy and two-player duels (invitations, eligible opponents, acceptance, resume, duplicate answers, verified scores, expiry and loss of group membership).
+The suites use temporary accounts and databases. They cover account isolation, recovery and deletion, concurrent saves, materials, rewards, purchases, private duels, legacy migrations, class-link enrollment and learner permissions. After editing browser assets, run `node scripts/version-assets.mjs` and commit the updated HTML; bundle verification checks the content hashes so returning browsers load the correct JavaScript and styles.
 
 See `docs/DEPLOYMENT.md` for deployment evidence and remaining live checks.

@@ -24,6 +24,7 @@ jobs:
           node --check dist/accounts.js
           node --check dist/quests.js
           node --check dist/arena.js
+          node --check dist/classroom.js
           bash -n scripts/deploy-siteground.sh
           bash -n scripts/pull-siteground.sh
           node scripts/test-lessons.mjs
@@ -32,7 +33,9 @@ jobs:
           php -l dist/api.php
           php -l dist/platform.php
           php -l dist/arena.php
+          php -l dist/classroom.php
           python3 scripts/test-api.py
+          python3 scripts/test-classroom.py
       - name: Check public bundle
         run: node scripts/verify-bundle.mjs
   deploy:
