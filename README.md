@@ -4,6 +4,8 @@ English learning adventures for children around seven, based on their own school
 
 ## This release
 
+- Illustrated adventure clubhouse with responsive layouts, clearer controls and a dedicated friends arena.
+- Turn-based private duels: choose another family profile or a member of an invitation-only group, send an invitation, accept, answer the same 3–5 questions and compare server-verified scores. Games resume across devices and invitations expire after seven days. No public player search or chat; duels do not award spendable coins or mission XP.
 - Six worlds and a personal adventure passport.
 - Three-step missions: picture listening, missing letters / rearranging letters, and writing.
 - Server-verified experience and coins, daily reward limits, owned inventory and cosmetic avatar abilities.
@@ -23,7 +25,7 @@ Paste `English = Italian` per line, or existing vocabulary words. The adult revi
 
 ## Hosting
 
-PHP 8.1+ with PDO SQLite. Deploy the ten allowlisted files in `dist/` to `public_html`. SQLite and reference attachments live in `.wordyland-data` in the directory above `public_html`; preserve that directory across releases. Existing accounts are migrated additively and can generate a recovery code after login. New accounts receive their recovery code once. Password reset rotates the recovery code and invalidates older sessions.
+PHP 8.1+ with PDO SQLite. Deploy the twelve allowlisted files in `dist/` to `public_html`, including `arena.php` and `arena.js`. Install the new modules before replacing `platform.php` and publish `index.html` last. SQLite and reference attachments live in `.wordyland-data` in the directory above `public_html`; preserve that directory across releases. Duel tables are created additively; deleting a participant profile removes its duels. Existing accounts are migrated additively and can generate a recovery code after login. New accounts receive their recovery code once. Password reset rotates the recovery code and invalidates older sessions.
 
 Passwords are hashed, sessions use Secure/HttpOnly/SameSite Strict cookies, writes require CSRF tokens, SQL uses prepared statements, and every profile/material/group operation checks ownership or membership. Recovery is via the adult's recovery code, not email. Handwriting is checked with an adult, not automatically graded.
 
@@ -34,9 +36,10 @@ node scripts/test-lessons.mjs
 node scripts/verify-bundle.mjs
 php -l dist/api.php
 php -l dist/platform.php
+php -l dist/arena.php
 python3 scripts/test-api.py
 ```
 
-The API suite uses temporary accounts and databases. It covers account isolation, password recovery and deletion, concurrent saves, materials access, mission payouts, replay protection, duplicate purchases, daily coin limits and group privacy.
+The API suite uses temporary accounts and databases. It covers account isolation, password recovery and deletion, concurrent saves, materials access, mission payouts, replay protection, duplicate purchases, daily coin limits, group privacy and two-player duels (invitations, eligible opponents, acceptance, resume, duplicate answers, verified scores, expiry and loss of group membership).
 
 See `docs/DEPLOYMENT.md` for deployment evidence and remaining live checks.

@@ -126,6 +126,76 @@ with tempfile.TemporaryDirectory(prefix="wordyland-test-") as temporary:
         board=request(b,f'hub&profile={pb}&club={club_id}')['board']
         assert len(board)==2 and all('username' not in entry and 'id' not in entry for entry in board)
         assert sum(entry['points'] for entry in board)==60
+        # Private duels use identical persisted questions and server-owned scores.
+        opponents = request(a, f'arena&profile={pid}')['opponents']
+        assert pb in [p['id'] for p in opponents]
+        assert all('account_id' not in p and 'username' not in p for p in opponents)
+        family = next(p['id'] for p in opponents if p['family'])
+        assert family != pid
+        outsider = client()
+        tc = request(outsider, 'session')['csrf']
+        tc = request(outsider, 'register', dict(username='test_'+secrets.token_hex(5), password=password, adult=True), tc)['csrf']
+        pc = request(outsider, 'create-profile', {'nickname':'Fuori dal gruppo'}, tc)['id']
+        assert pc not in [p['id'] for p in request(a, f'arena&profile={pid}')['opponents']]
+        request(a, f'arena&profile={pc}', expected=404)
+        request(client(), f'arena&profile={pid}', expected=401)
+        request(a, 'duel-create', {'profile':pid,'opponent':pc,'category':'body'}, token,403)
+        request(a, 'duel-create', {'profile':pid,'opponent':pid,'category':'body'}, token,403)
+        request(a, 'duel-create', {'profile':pid,'opponent':pb,'category':'unknown'}, token,400)
+        request(a, 'duel-create', {'profile':pid,'opponent':pb,'category':'body'}, 'bad',403)
+        invitation = request(a, 'duel-create', {'profile':pid,'opponent':pb,'category':'body'}, token)['duel']
+        duel_id = invitation['id']
+        assert invitation['state']=='pending' and not invitation['incoming']
+        request(a, 'duel-create', {'profile':pid,'opponent':pb,'category':'body'}, token,409)
+        request(b, 'duel-create', {'profile':pb,'opponent':pid,'category':'body'}, tb,409)
+        request(a, 'duel-accept', {'profile':pid,'duel':duel_id}, token,403)
+        request(outsider, f'duel&profile={pc}&duel={duel_id}', expected=404)
+        request(outsider, 'duel-answer', {'profile':pc,'duel':duel_id,'step':0,'answer':0},tc,404)
+        assert request(a, f'duel&profile={pid}&duel={duel_id}')['question'] is None
+        request(a,'duel-answer',{'profile':pid,'duel':duel_id,'step':0,'answer':0},token,409)
+        started = request(b,'duel-accept',{'profile':pb,'duel':duel_id},tb)
+        assert started['duel']['incoming'] and started['duel']['state']=='active'
+        assert 'answer' not in started['question']
+        assert started['question']==request(a,f'duel&profile={pid}&duel={duel_id}')['question']
+        request(b,'duel-accept',{'profile':pb,'duel':duel_id},tb,409)
+        request(a,'duel-answer',{'profile':pid,'duel':duel_id,'step':1,'answer':0},token,409)
+        request(a,'duel-answer',{'profile':pid,'duel':duel_id,'step':0,'answer':-1},token,400)
+        with sqlite3.connect(temporary+'/data/wordyland.sqlite') as database:
+            stored_questions=json.loads(database.execute('SELECT questions FROM duels WHERE id=?',(duel_id,)).fetchone()[0])
+        original_wallet=request(a,f'hub&profile={pid}')['wallet']
+        for player_client, player_id, csrf, miss_one in [(a,pid,token,False),(b,pb,tb,True)]:
+            current=request(player_client,f'duel&profile={player_id}&duel={duel_id}')
+            for step, stored_question in enumerate(stored_questions):
+                assert current['question']['number']==step+1 and 'answer' not in current['question']
+                answer=stored_question['options'].index(stored_question['answer'])
+                if miss_one and step==0:answer=(answer+1)%len(stored_question['options'])
+                current=request(player_client,'duel-answer',{'profile':player_id,'duel':duel_id,'step':step,'answer':answer,'score':999999},csrf)
+                assert current['correct']==(not miss_one or step!=0)
+                request(player_client,'duel-answer',{'profile':player_id,'duel':duel_id,'step':step,'answer':answer},csrf,409)
+                # A GET resumes the exact next step, without replaying the answer.
+                resumed=request(player_client,f'duel&profile={player_id}&duel={duel_id}')
+                assert resumed['duel']['step']==step+1 and resumed['question']==current['question']
+            if player_id==pid:
+                assert current['duel']['state']=='active' and current['duel']['rivalScore'] is None
+                assert current['question'] is None
+        completed=request(a,f'duel&profile={pid}&duel={duel_id}')['duel']
+        assert completed['state']=='completed' and completed['score']==50 and completed['rivalScore']==40
+        assert request(a,f'hub&profile={pid}')['wallet']==original_wallet
+        assert request(b,f'duel&profile={pb}&duel={duel_id}')['duel']['score']==40
+        rematch=request(a,'duel-create',{'profile':pid,'opponent':pb,'category':'body'},token)['duel']
+        request(a,'duel-decline',{'profile':pid,'duel':rematch['id']},token,403)
+        assert request(b,'duel-decline',{'profile':pb,'duel':rematch['id']},tb)['duel']['state']=='declined'
+        cancelled=request(a,'duel-create',{'profile':pid,'opponent':pb,'category':'colors'},token)['duel']
+        assert request(a,'duel-cancel',{'profile':pid,'duel':cancelled['id']},token)['duel']['state']=='cancelled'
+        expired=request(a,'duel-create',{'profile':pid,'opponent':family,'category':'school'},token)['duel']
+        with sqlite3.connect(temporary+'/data/wordyland.sqlite') as database:
+            database.execute('UPDATE duels SET expires_at=0 WHERE id=?',(expired['id'],))
+        assert request(a,f'duel&profile={pid}&duel={expired["id"]}')['duel']['state']=='expired'
+        request(a,'duel-answer',{'profile':pid,'duel':expired['id'],'step':0,'answer':0},token,409)
+        request(b,'club-leave',{'profile':pb,'club':club_id},tb)
+        request(a,f'duel&profile={pid}&duel={duel_id}',expected=403)
+        assert duel_id not in [d['id'] for d in request(a,f'arena&profile={pid}')['duels']]
+        request(b,'club-join',{'profile':pb,'code':club_info['code'],'consent':True},tb)
         for index, words in enumerate([
             [['red','rosso','🔴'],['blue','blu','🔵'],['green','verde','🟢']],
             [['pen','penna','✏️'],['car','auto','🚗'],['ball','palla','⚽']]
@@ -155,7 +225,9 @@ with tempfile.TemporaryDirectory(prefix="wordyland-test-") as temporary:
         with sqlite3.connect(temporary + '/data/wordyland.sqlite') as database:
             assert database.execute('SELECT COUNT(*) FROM profiles WHERE account_id=(SELECT id FROM accounts WHERE username=?)',(username,)).fetchone()[0]==0
             assert database.execute('SELECT COUNT(*) FROM wallets WHERE profile_id=?',(pid,)).fetchone()[0]==0
-        print('API checks passed: authentication/recovery/deletion, CSRF, isolated profiles/materials, verified rewards, replay protection, purchases and private leaderboards.')
+            assert database.execute('SELECT COUNT(*) FROM duels WHERE challenger=? OR opponent=?',(pid,pid)).fetchone()[0]==0
+            assert database.execute('SELECT COUNT(*) FROM duel_players WHERE profile=?',(pid,)).fetchone()[0]==0
+        print('API checks passed: authentication/recovery/deletion, CSRF, isolated profiles/materials, verified rewards, replay protection, purchases, private leaderboards and two-player duels (invitations, permissions, resume, scores, expiry and replay protection).')
     finally:
         process.terminate()
         process.wait(timeout=5)

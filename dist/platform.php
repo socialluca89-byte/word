@@ -77,6 +77,7 @@ if ($method === 'POST' && in_array($action, ['new-recovery','delete-account','de
     foreach ($files as $file) if (preg_match('/^[a-f0-9]{32}\.bin$/', $file['file'])) @unlink($dataDir.'/materials/'.$file['file']);
     $_SESSION = []; session_destroy(); respond(['ok'=>true]);
 }
+require __DIR__ . '/arena.php';
 $platformActions = ['hub','quest-start','quest-answer','buy','equip','study-save','study-file','study-remove','club-create','club-join','club-leave','rename-profile'];
 if (!in_array($action, $platformActions, true)) return;
 $p = ownedProfile($db, $id, $method === 'GET' ? ($_GET['profile'] ?? 0) : ($body['profile'] ?? 0));
