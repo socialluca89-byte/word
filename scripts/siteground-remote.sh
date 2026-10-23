@@ -167,12 +167,22 @@ case "$mode" in
     cache_origin=${3:-http://wordyland.eu}
     [[ "$cache_origin" == http://wordyland.eu || "$cache_origin" =~ ^http://127\.0\.0\.1:[0-9]+$ ]] || die 'invalid cache origin'
     purge_ok=0
+    # SG CachePress uses a legacy local cache address with BAN when available.
+    if [[ "$cache_origin" == http://wordyland.eu && -r /etc/sgcache_ip ]]; then
+      cache_ip=$(tr -d '[:space:]' < /etc/sgcache_ip)
+      if [[ "$cache_ip" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
+        cache_status=$(curl --noproxy '*' -sS --max-time 10 -o /dev/null -w '%{http_code}' -X BAN -H 'Host: wordyland.eu' "http://$cache_ip/(.*)") || cache_status=000
+        echo "Cache purge legacy-cache BAN: HTTP $cache_status"
+        [[ "$cache_status" =~ ^2[0-9]{2}$ ]] && purge_ok=1
+      fi
+    fi
     cache_origins=("$cache_origin")
-    [[ "$cache_origin" == http://wordyland.eu ]] && cache_origins+=(https://wordyland.eu)
+    [[ "$cache_origin" == http://wordyland.eu ]] && cache_origins=(http://127.0.0.1 http://wordyland.eu https://wordyland.eu)
     for cache_endpoint in "${cache_origins[@]}"; do
+      [[ "$purge_ok" == 1 ]] && break
       for cache_path in '/(.*)' '/' '/index.html'; do
-        cache_status=$(curl --noproxy '*' -sS --max-time 15 -o /dev/null -w '%{http_code}' -X PURGE -H 'Host: wordyland.eu' "$cache_endpoint$cache_path") || cache_status=000
-        if [[ "$cache_status" == 200 ]]; then purge_ok=1; fi
+        cache_status=$(curl --noproxy '*' -sS --max-time 10 -o /dev/null -w '%{http_code}' -X PURGE -H 'Host: wordyland.eu' "$cache_endpoint$cache_path") || cache_status=000
+        if [[ "$cache_status" =~ ^2[0-9]{2}$ ]]; then purge_ok=1; fi
         echo "Cache purge $cache_endpoint$cache_path: HTTP $cache_status"
       done
     done
