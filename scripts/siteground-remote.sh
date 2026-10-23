@@ -160,6 +160,25 @@ case "$mode" in
     [[ "$stat_t" == "$stat_p" ]] || die 'private directory is on a different filesystem'
     echo "MARKER=$(marker_value)"
     ;;
+  purge-cache)
+    # SiteGround's NGINX cache accepts PURGE from the hosting server, scoped by Host.
+    # Same request used by SG CachePress: PURGE /(.*), Host: the site's hostname.
+    check_target; prepare_priv; lock; recognise_site
+    cache_origin=${3:-http://wordyland.eu}
+    [[ "$cache_origin" == http://wordyland.eu || "$cache_origin" =~ ^http://127\.0\.0\.1:[0-9]+$ ]] || die 'invalid cache origin'
+    purge_ok=0
+    cache_origins=("$cache_origin")
+    [[ "$cache_origin" == http://wordyland.eu ]] && cache_origins+=(https://wordyland.eu)
+    for cache_endpoint in "${cache_origins[@]}"; do
+      for cache_path in '/(.*)' '/' '/index.html'; do
+        cache_status=$(curl --noproxy '*' -sS --max-time 15 -o /dev/null -w '%{http_code}' -X PURGE -H 'Host: wordyland.eu' "$cache_endpoint$cache_path") || cache_status=000
+        if [[ "$cache_status" == 200 ]]; then purge_ok=1; fi
+        echo "Cache purge $cache_endpoint$cache_path: HTTP $cache_status"
+      done
+    done
+    [[ "$purge_ok" == 1 ]] || die 'SiteGround cache purge failed'
+    echo 'CACHE_PURGED=wordyland.eu'
+    ;;
   install)
     sha=${3:-}; expected_prev=${4:-}
     [[ "$sha" =~ ^[0-9a-f]{40}$ ]] || die 'invalid commit sha'

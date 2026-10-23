@@ -5,6 +5,13 @@ const hash=b=>crypto.createHash('sha256').update(b).digest('hex');
 (async()=>{
  const browser=await chromium.launch({executablePath:process.env.WORDYLAND_CHROMIUM||undefined,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
  const p=await browser.newPage({viewport:{width:1280,height:900}}),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.goto(process.env.WORDYLAND_TEST_URL||'http://127.0.0.1:8093');await p.waitForFunction(()=>document.querySelector('#islandMap').dataset.render==='3d');
+ const guestBefore=await p.evaluate(()=>localStorage.getItem('wordylandGuestWallet'));
+ for(const kind of ['kart','football','space']){
+  await p.locator('[data-live-place='+kind+']').click();assert.equal(await p.locator('#islandMap').getAttribute('data-kind'),kind);
+  await p.locator('#heroSceneAction').click();await p.locator('#islandMap .sceneReaction').waitFor();
+ }
+ assert.equal(await p.evaluate(()=>localStorage.getItem('wordylandGuestWallet')),guestBefore,'Free scene actions must not grant rewards');
+ await p.locator('[data-live-place=island]').click();assert.equal(await p.locator('.islandPin').count(),8);
  const snap=()=>p.locator('#islandMap').screenshot({animations:'allow'});
  const a=await snap();await p.waitForTimeout(400);const b=await snap();assert.notEqual(hash(a),hash(b),'World should move without hovering');
  await p.locator('#islandMotion').click();await p.waitForTimeout(150);const paused=await snap();await p.waitForTimeout(300);assert.equal(hash(paused),hash(await snap()),'Pause should freeze world');

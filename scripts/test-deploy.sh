@@ -19,6 +19,23 @@ shift # user@host
 cd "$FAKE_HOME"; HOME="$FAKE_HOME" exec bash -c "$*"
 FAKE
 chmod +x "$root/bin/ssh"
+# A proxy can serve a stale plain homepage while cache-busting URLs are fresh.
+real_curl=$(command -v curl); export WORDYLAND_REAL_CURL="$real_curl"
+cat > "$root/bin/curl" <<'FAKE'
+#!/usr/bin/env bash
+if [[ " $* " == *' -X PURGE '* ]]; then
+  [[ "${!#}" =~ ^http://127\.0\.0\.1:[0-9]+/ ]] || { echo 'TEST REFUSES NON-LOCAL PURGE' >&2; exit 99; }
+  printf '%s\n' "${!#}" >> "$FAKE_HOME/cache-purges"
+  printf '%s' "${FAKE_PURGE_STATUS:-200}"; exit 0
+fi
+"$WORDYLAND_REAL_CURL" "$@" || exit $?
+if [[ "${FAKE_STALE_HOME:-}" == 1 ]]; then
+  output=''; previous=''
+  for arg in "$@"; do [[ "$previous" == -o ]] && output=$arg; previous=$arg; done
+  if [[ -n "$output" && "$output" != /dev/null && ( "${!#}" == "$SITE_URL/" || "${!#}" == "$SITE_URL/index.html" ) ]]; then printf '%s' 'stale cached homepage' > "$output"; fi
+fi
+FAKE
+chmod +x "$root/bin/curl"
 export PATH="$root/bin:$PATH" FAKE_HOME="$home"
 
 ssh-keygen -q -t ed25519 -N 'test pass' -f "$root/key" -C test >/dev/null
@@ -50,6 +67,7 @@ FAKE_SSH_FAIL_ON='incoming/' bash scripts/deploy-siteground.sh deploy >/dev/null
 echo '--- first deploy'
 bash scripts/deploy-siteground.sh deploy | tee "$root/out1"
 [[ $(cat "$docroot/.wordyland-managed") == "$git_sha" ]] || fail 'marker not set'
+[[ $(wc -l < "$home/cache-purges") == 3 ]] || fail 'cache was not purged before checking the public site'
 [[ ! -e "$docroot/api.php.wordyland-previous" ]] || fail 'stray PHP copy still public'
 [[ -z $(find "$docroot" \( -name '*.wordyland-*' -o -name '*.tar' -o -name SHA256SUMS \) ! -name .wordyland-managed) ]] || fail 'temporary files in docroot'
 [[ -f "$docroot/.well-known/acme" && -f "$site/.wordyland-data/keep" ]] || fail 'preserved files lost'
@@ -99,6 +117,13 @@ grep -q 'previous page' "$docroot/index.html" || fail 'previous index.html not r
 [[ $(cat "$docroot/.wordyland-managed") == "$parent" ]] || fail 'marker not restored after live failure'
 bash scripts/deploy-siteground.sh deploy >/dev/null || fail 'redeploy after live failure'
 cmp -s dist/index.html "$docroot/index.html" || fail 'redeploy content'
+
+echo '--- a stale ordinary homepage fails even when cache-busting checks are fresh'
+printf '%s\n' "$parent" > "$docroot/.wordyland-managed"; echo 'previous cached page WordyLand' > "$docroot/index.html"
+FAKE_STALE_HOME=1 bash scripts/deploy-siteground.sh deploy >"$root/out_stale" 2>&1 && fail 'stale normal homepage was accepted'
+grep -q 'Normal homepage / is stale' "$root/out_stale" || fail 'normal URL was not checked'
+grep -q 'previous cached page' "$docroot/index.html" || fail 'stale-home failure did not restore previous release'
+bash scripts/deploy-siteground.sh deploy >/dev/null || fail 'redeploy after cache failure'
 
 echo '--- refuses unknown site without marker'
 rm "$docroot/.wordyland-managed"; echo '<html>other</html>' > "$docroot/index.html"

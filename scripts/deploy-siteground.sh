@@ -95,7 +95,21 @@ case "$mode" in
   *) echo "Unknown mode $mode" >&2; exit 1 ;;
 esac
 
-# Live checks against the public site with unique cache-busting queries.
+# Purge on the server; external PURGE is rejected by SiteGround.
+purge_cache() {
+  local origin output result=0
+  if [[ "$SITE_URL" == https://wordyland.eu ]]; then origin=http://wordyland.eu
+  elif [[ "$SITE_URL" =~ ^http://127\.0\.0\.1:[0-9]+$ ]]; then origin=$SITE_URL
+  else echo 'Unsupported cache origin' >&2; return 1; fi
+  output=$(run_remote purge-cache "$SG_PATH" "$origin" 2>&1) || result=$?
+  printf '%s\n' "$output"
+  if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
+    printf '\n### SiteGround cache\n\n' >> "$GITHUB_STEP_SUMMARY"
+    printf '%s\n' "$output" | grep -E '^(Cache purge |CACHE_PURGED=|ERROR:)' >> "$GITHUB_STEP_SUMMARY" || true
+  fi
+  return "$result"
+}
+# Verify ordinary visitor URLs as well as cache-busting asset requests.
 expect_sha=${sha:-}
 check_health() {
   local token health
@@ -107,6 +121,12 @@ check_health() {
 }
 check_files() {
   local token f want body got
+  want=$(sha256sum dist/index.html | cut -d' ' -f1)
+  for f in / /index.html; do
+    curl -fsS --retry 2 --retry-delay 2 --max-time 30 -o "$work/live" "$SITE_URL$f" || return 1
+    got=$(sha256sum "$work/live" | cut -d' ' -f1)
+    [[ "$want" == "$got" ]] || { echo "Normal homepage $f is stale; refusing to confirm publication." >&2; return 1; }
+  done
   token="verify-${GITHUB_RUN_ID:-local}-$(date +%s%N)"
   for f in index.html classroom.js arena.js curriculum.json quests.css data.js worlds.js app.js accounts.js quests.js arcade.css arcade.js island.css island.js island-places.webp three.min.js race-world.webp race-circuits.webp race-racers.webp; do
     want=$(sha256sum "dist/$f" | cut -d' ' -f1)
@@ -114,19 +134,25 @@ check_files() {
     got=$(sha256sum "$work/live" | cut -d' ' -f1)
     [[ "$want" == "$got" ]] || { echo "Live $f does not match commit $expect_sha" >&2; return 1; }
   done
+  echo "Ordinary / and /index.html match the release."
   echo "Live site serves the files of commit $expect_sha (19 static files compared byte-for-byte)."
 }
 if [[ "$mode" == deploy ]]; then
-  if check_health && check_files; then
+  if purge_cache && check_health && check_files; then
     echo 'Live checks passed.'
   else
     if [[ -n "${release_backup:-}" ]]; then
       echo "Live checks failed after publishing: restoring backup $release_backup." >&2
-      run_remote rollback "$SG_PATH" "$release_backup" || echo 'AUTOMATIC ROLLBACK FAILED - restore manually (docs/DEPLOYMENT.md)' >&2
+      if run_remote rollback "$SG_PATH" "$release_backup"; then
+        purge_cache || echo 'Previous files restored; cache purge still failed.' >&2
+      else
+        echo 'AUTOMATIC ROLLBACK FAILED - restore manually (docs/DEPLOYMENT.md)' >&2
+      fi
       check_health || echo 'Site still unhealthy after rollback.' >&2
     fi
     exit 1
   fi
 else
+  purge_cache
   check_health
 fi
