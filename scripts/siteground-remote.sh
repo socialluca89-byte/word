@@ -76,11 +76,14 @@ recognise_site() {
 
 quarantine_strays() {
   local found=0 f
+  # No process substitution: SiteGround's shell has no /dev/fd.
+  find "$target" -maxdepth 1 \( -name '*.wordyland-next' -o -name '*.wordyland-previous' -o -name '*.wordyland-tmp' \) -print0 > "$priv/strays.list"
   while IFS= read -r -d '' f; do
     found=1
     mv -n -- "$f" "$priv/quarantine/$(date -u +%Y%m%dT%H%M%SZ)-$(basename -- "$f")"
     echo "Moved stray deployment file out of public_html: $(basename -- "$f")"
-  done < <(find "$target" -maxdepth 1 \( -name '*.wordyland-next' -o -name '*.wordyland-previous' -o -name '*.wordyland-tmp' \) -print0)
+  done < "$priv/strays.list"
+  rm -f -- "$priv/strays.list"
   [[ $found == 1 ]] || echo 'No stray deployment files in public_html.'
 }
 
@@ -108,8 +111,10 @@ backup_current() {
 
 prune_releases() {
   local old
-  mapfile -t old < <(find "$priv/releases" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort -r | tail -n +$((KEEP_RELEASES + 1)))
-  for d in "${old[@]}"; do [[ -n "$d" ]] && rm -rf -- "${priv:?}/releases/$d"; done
+  old=$(find "$priv/releases" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort -r | tail -n +$((KEEP_RELEASES + 1)))
+  for d in $old; do
+    if [[ "$d" =~ ^[0-9]{8}T[0-9]{6}Z-[0-9a-z]+$ ]]; then rm -rf -- "${priv:?}/releases/$d"; fi
+  done
 }
 
 # Replace one public file by an atomic rename from the private directory (same filesystem).
