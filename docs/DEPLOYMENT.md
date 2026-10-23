@@ -61,5 +61,8 @@ Application files only; the database is never restored automatically. Schema mig
 
 - Domain `wordyland.eu`, SiteGround Site Tools, site IP `34.1.230.193`; `ssh.wordyland.eu` resolves to the same IP.
 - SSH (Site Tools → Devs → SSH Keys Manager → SSH credentials): host `ssh.wordyland.eu`, port `18765`.
+- Document root (`SG_PATH`): `/home/customer/www/wordyland.eu/public_html` (confirmed by the read-only probe, 23 Oct 2026). PHP CLI on the server: 8.2 with pdo_sqlite.
+- SSH host key, confirmed identical by separate `ssh-keyscan` connections from three networks (Linux, macOS and Windows runners, distinct public IPs), independent of the authenticated deploy connection: ED25519 `SHA256:aC0WvaEyDmmwRhl9ng1EGeaHqkvuwYt8oyHaClfTbKA`, RSA `SHA256:qYhSKxCHzVeKx3GJbRqYSAP39zdSaMpDJgdxmmwkyS4`. Re-run the `probe` mode to compare if the server changes.
+- Deploy key in SiteGround: `github-actions-deploy` (private part only in the `SG_PRIVATE_KEY` secret).
 - Database and attachments live in `wordyland.eu/.wordyland-data`, outside the document root.
 - The old cron (`*/5 * * * *`, downloads `pull-siteground.sh` at commit `793bac9`) is commented out with `# DISATTIVATO` and must stay that way.
