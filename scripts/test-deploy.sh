@@ -87,7 +87,17 @@ grep -q 'old page' "$docroot/index.html" || fail 'rollback did not restore the p
 bash scripts/deploy-siteground.sh deploy >/dev/null || fail 'redeploy after rollback failed'
 cmp -s dist/index.html "$docroot/index.html" || fail 'redeploy did not restore release'
 
+echo '--- failed HTTPS checks after publishing restore the previous release'
+parent=$(git rev-parse HEAD~1)
+printf '%s\n' "$parent" > "$docroot/.wordyland-managed"; echo 'previous page WordyLand' > "$docroot/index.html"
+SITE_URL=http://127.0.0.1:1 bash scripts/deploy-siteground.sh deploy >"$root/out_live" 2>&1 && fail 'deploy passed with failing live checks'
+grep -q 'restoring backup' "$root/out_live" || fail 'no rollback after live check failure'
+grep -q 'previous page' "$docroot/index.html" || fail 'previous index.html not restored after live failure'
+[[ $(cat "$docroot/.wordyland-managed") == "$parent" ]] || fail 'marker not restored after live failure'
+bash scripts/deploy-siteground.sh deploy >/dev/null || fail 'redeploy after live failure'
+cmp -s dist/index.html "$docroot/index.html" || fail 'redeploy content'
+
 echo '--- refuses unknown site without marker'
 rm "$docroot/.wordyland-managed"; echo '<html>other</html>' > "$docroot/index.html"
 bash scripts/deploy-siteground.sh deploy >/dev/null 2>&1 && fail 'overwrote unknown site'
-echo 'Deployment tests passed: path/symlink refusal, transfer failure, private staging, checksums, idempotence, stale/unknown marker, rollback, preservation.'
+echo 'Deployment tests passed: path/symlink refusal, transfer failure, private staging, checksums, idempotence, stale/unknown marker, rollback, live-check rollback, preservation.'

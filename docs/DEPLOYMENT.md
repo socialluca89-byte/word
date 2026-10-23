@@ -30,7 +30,7 @@ The runner executes `scripts/deploy-siteground.sh` from the tested checkout. Tha
 6. Backs up the current application files to `.wordyland-deploy/releases/<UTC>-<previous sha>/` (with `INFO` and `SHA256SUMS`; last 5 kept).
 7. Publishes each file by atomic rename from the private directory, in this order: `classroom.php arena.php api.php platform.php classroom.js arena.js curriculum.json quests.css data.js worlds.js app.js accounts.js quests.js index.html` (new PHP modules before API/platform, `index.html` last). On any failure the already replaced files are restored from the backup and the marker is left unchanged.
 8. Verifies the published checksums, then writes the commit SHA to `public_html/.wordyland-managed`.
-9. From the runner: `https://wordyland.eu/api.php?action=health` must return `{"ready":true,"database":"sqlite"}`, and 10 static files are fetched with a unique query string and compared byte-for-byte with the commit.
+9. From the runner: `https://wordyland.eu/api.php?action=health` must return `{"ready":true,"database":"sqlite"}`, and 10 static files are fetched with a unique query string and compared byte-for-byte with the commit. If any of these HTTPS checks fails after publication, the runner immediately restores the backup taken by this deploy (files and marker), re-checks health and fails the job.
 
 Never touched: `.well-known`, hosting configuration, `wordyland.eu/.wordyland-data` (SQLite database and attachments), any other file or site. Nothing temporary, archived or backed up is ever written inside `public_html`.
 
@@ -38,7 +38,7 @@ Never touched: `.well-known`, hosting configuration, `wordyland.eu/.wordyland-da
 
 Repository variables: `SG_HOST`, `SG_USER`, `SG_PORT`, `SG_PATH` (absolute path of `wordyland.eu/public_html`; setting it enables deploy).
 
-Repository secrets: `SG_PRIVATE_KEY` (dedicated deploy key, generated in SiteGround SSH Keys Manager), `SG_KEY_PASSPHRASE` (its password, if any), `SG_KNOWN_HOSTS` (OpenSSH line(s) for `[host]:port`). Host-key checking is always strict.
+Repository secrets: `SG_PRIVATE_KEY` (dedicated deploy key, generated in SiteGround SSH Keys Manager), `SG_KEY_PASSPHRASE` (its password, if any), `SG_KNOWN_HOSTS` (OpenSSH line(s) for `[host]:port`). Host-key checking is always strict. `SG_KNOWN_HOSTS` must be confirmed through a channel independent of the GitHub runner's SSH connection (e.g. `ssh-keyscan` from another network, or fingerprints from SiteGround support) before `SG_PATH` is set.
 
 ## Restore procedure
 
