@@ -11,6 +11,20 @@ CREATE TABLE IF NOT EXISTS studies(id INTEGER PRIMARY KEY,profile_id INTEGER REF
 CREATE TABLE IF NOT EXISTS clubs(id INTEGER PRIMARY KEY,name TEXT,invite_hash TEXT UNIQUE,owner_id INTEGER REFERENCES accounts(id) ON DELETE CASCADE);
 CREATE TABLE IF NOT EXISTS club_accounts(club_id INTEGER REFERENCES clubs(id) ON DELETE CASCADE,account_id INTEGER REFERENCES accounts(id) ON DELETE CASCADE,PRIMARY KEY(club_id,account_id));
 CREATE TABLE IF NOT EXISTS club_profiles(club_id INTEGER REFERENCES clubs(id) ON DELETE CASCADE,profile_id INTEGER REFERENCES profiles(id) ON DELETE CASCADE,PRIMARY KEY(club_id,profile_id));');
+// Recheck under a write lock: two first requests must not race the migration.
+function ensureActivityColumn(PDO $db, string $table, string $default): void {
+    $columns=array_column($db->query('PRAGMA table_info('.$table.')')->fetchAll(),'name');
+    if(in_array('activity',$columns,true))return;
+    $db->exec('BEGIN IMMEDIATE');
+    try {
+        $columns=array_column($db->query('PRAGMA table_info('.$table.')')->fetchAll(),'name');
+        if(!in_array('activity',$columns,true))$db->exec('ALTER TABLE '.$table.' ADD COLUMN activity TEXT NOT NULL DEFAULT '.$db->quote($default));
+        $db->exec('COMMIT');
+    } catch(Throwable $error) { $db->exec('ROLLBACK'); throw $error; }
+}
+foreach (['quests','rewards'] as $table) ensureActivityColumn($db,$table,'classic');
+function adventureActivities(): array { return ['classic','treehouse','pets','creative','kart','football','space','ocean','dino']; }
+
 function one(PDO $db, string $sql, array $params = []): array|false { $q = $db->prepare($sql); $q->execute($params); return $q->fetch(); }
 function rows(PDO $db, string $sql, array $params = []): array { $q = $db->prepare($sql); $q->execute($params); return $q->fetchAll(); }
 function runSql(PDO $db, string $sql, array $params = []): void { $db->prepare($sql)->execute($params); }
@@ -30,7 +44,22 @@ function shopCatalog(): array { return [
     ['id'=>'crown','name'=>'Corona delle scoperte','icon'=>'👑','slot'=>'hat','price'=>40],
     ['id'=>'sparkles','name'=>'Scia luminosa','icon'=>'✨','slot'=>'effect','price'=>25],
     ['id'=>'flight','name'=>'Volo delle parole','icon'=>'🪽','slot'=>'effect','price'=>50],
-    ['id'=>'confetti','name'=>'Festa di coriandoli','icon'=>'🎉','slot'=>'effect','price'=>35]
+    ['id'=>'confetti','name'=>'Festa di coriandoli','icon'=>'🎉','slot'=>'effect','price'=>35],
+    ['id'=>'pet-fox','name'=>'Volpina curiosa','icon'=>'🦊','slot'=>'pet','price'=>0],
+    ['id'=>'pet-bunny','name'=>'Coniglietto soffice','icon'=>'🐰','slot'=>'pet','price'=>0],
+    ['id'=>'pet-cat','name'=>'Gattino delle nuvole','icon'=>'🐱','slot'=>'pet','price'=>0],
+    ['id'=>'room-sky','name'=>'Casa cielo','icon'=>'🩵','slot'=>'room','price'=>0],
+    ['id'=>'room-peach','name'=>'Casa pesca','icon'=>'🍑','slot'=>'room','price'=>0],
+    ['id'=>'room-mint','name'=>'Casa menta','icon'=>'🌿','slot'=>'room','price'=>0],
+    ['id'=>'plant','name'=>'Pianta delle scoperte','icon'=>'🪴','slot'=>'plant','price'=>20],
+    ['id'=>'rug','name'=>'Tappeto arcobaleno','icon'=>'🌈','slot'=>'rug','price'=>20],
+    ['id'=>'lamp','name'=>'Lampada stellina','icon'=>'💡','slot'=>'lamp','price'=>25],
+    ['id'=>'kart-blue','name'=>'Kart blu','icon'=>'💙','slot'=>'kart','price'=>0],
+    ['id'=>'kart-pink','name'=>'Kart corallo','icon'=>'🩷','slot'=>'kart','price'=>0],
+    ['id'=>'kart-mint','name'=>'Kart menta','icon'=>'💚','slot'=>'kart','price'=>20],
+    ['id'=>'paint-sun','name'=>'Colori del sole','icon'=>'🌞','slot'=>'palette','price'=>0],
+    ['id'=>'paint-ocean','name'=>'Colori dell’oceano','icon'=>'🌊','slot'=>'palette','price'=>0],
+    ['id'=>'paint-berry','name'=>'Colori dei frutti','icon'=>'🍓','slot'=>'palette','price'=>0]
 ]; }
 function wallet(PDO $db, int $profile): array {
     runSql($db, 'INSERT OR IGNORE INTO wallets(profile_id) VALUES (?)', [$profile]);
@@ -102,7 +131,7 @@ if ($method === 'GET' && $action === 'hub') {
         $board[] = ['nickname'=>$member['nickname'],'mine'=>$member['id']===$pid,'equipped'=>json_decode($member['equipped'] ?? '{}',true),'points'=>(int)$score['points'],'improvement'=>(int)$score['improvement'],'missions'=>(int)$score['missions']];
     }
     usort($board, fn($a,$b)=>$b['points']<=>$a['points'] ?: $b['improvement']<=>$a['improvement']);
-    respond(['wallet'=>wallet($db,$pid),'catalog'=>shopCatalog(),'studies'=>rows($db,'SELECT id,title,words,original_name FROM studies WHERE profile_id=? ORDER BY id DESC',[$pid]),'clubs'=>$clubList,'board'=>array_slice($board,0,20),'team'=>$team,'teamGoal'=>300,'weekStart'=>gmdate('Y-m-d',$week)]);
+    respond(['wallet'=>wallet($db,$pid),'catalog'=>shopCatalog(),'studies'=>rows($db,'SELECT id,title,words,original_name FROM studies WHERE profile_id=? ORDER BY id DESC',[$pid]),'clubs'=>$clubList,'board'=>array_slice($board,0,20),'team'=>$team,'teamGoal'=>300,'adventures'=>(object)array_column(rows($db,'SELECT activity,COUNT(*) AS completed FROM rewards WHERE profile_id=? GROUP BY activity',[$pid]),'completed','activity'),'weekStart'=>gmdate('Y-m-d',$week)]);
 }
 if ($method === 'POST' && $action === 'study-save') {
     if (($body['confirmed'] ?? false) !== true) fail('Controlla e conferma il programma prima di salvarlo.');
@@ -156,6 +185,8 @@ if ($method === 'POST' && in_array($action,['buy','equip'],true)) {
 }
 if ($method === 'POST' && $action==='quest-start') {
     limitAttempts($db,'quests:'.$pid,60);
+    $activity=$body['activity']??'classic';
+    if(!is_string($activity)||!in_array($activity,adventureActivities(),true))fail('Scegli un’avventura disponibile.');
     $study=(int)($body['study']??0);
     if ($study) {
         $s=one($db,'SELECT words FROM studies WHERE id=? AND profile_id=?',[$study,$pid]); if(!$s)fail('Scheda non trovata.',404);
@@ -188,7 +219,7 @@ if ($method === 'POST' && $action==='quest-start') {
     }
     $token=bin2hex(random_bytes(16));
     runSql($db,'DELETE FROM quests WHERE profile_id=? AND completed=0 AND created_at<?',[$pid,time()-3600]);
-    runSql($db,'INSERT INTO quests(token,profile_id,questions,created_at) VALUES (?,?,?,?)',[$token,$pid,json_encode($questions,JSON_UNESCAPED_UNICODE),time()]);
+    runSql($db,'INSERT INTO quests(token,profile_id,questions,created_at,activity) VALUES (?,?,?,?,?)',[$token,$pid,json_encode($questions,JSON_UNESCAPED_UNICODE),time(),$activity]);
     respond(['token'=>$token,'total'=>count($questions),'question'=>publicQuestion($questions[0],0)]);
 }
 if ($method==='POST' && $action==='quest-answer') {
@@ -217,7 +248,7 @@ if ($method==='POST' && $action==='quest-answer') {
         $paid=(int)one($db,'SELECT COUNT(*) AS n FROM rewards WHERE profile_id=? AND coins>0 AND created_at>=?',[$pid,strtotime(gmdate('Y-m-d').' 00:00 UTC')])['n'];
         $coins=($paid<3 && $totalXp>0)?15+($totalRecovered?5:0):0;
         runSql($db,'UPDATE wallets SET coins=coins+? WHERE profile_id=?',[$coins,$pid]);
-        runSql($db,'INSERT INTO rewards(token,profile_id,xp,coins,recovered,created_at) VALUES (?,?,?,?,?,?)',[$quest['token'],$pid,$totalXp,$coins,$totalRecovered,time()]);
+        runSql($db,'INSERT INTO rewards(token,profile_id,xp,coins,recovered,created_at,activity) VALUES (?,?,?,?,?,?,?)',[$quest['token'],$pid,$totalXp,$coins,$totalRecovered,time(),$quest['activity']]);
     }
     runSql($db,'UPDATE quests SET step=?,xp=?,recovered=?,completed=? WHERE token=?',[$next,$totalXp,$totalRecovered,(int)$finished,$quest['token']]);$db->exec('COMMIT');
     respond(['correct'=>true,'done'=>$finished,'xp'=>$totalXp,'coins'=>$coins,'recovered'=>$totalRecovered,'wallet'=>wallet($db,$pid),'question'=>$finished?null:publicQuestion($questions[$next],$next)]);

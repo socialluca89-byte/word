@@ -8,3 +8,12 @@ Object.assign(hints,{three:'Ricorda th all’inizio e due e alla fine: th · r �
 lists.place.push(["in front of", "davanti a", "📦"],["behind", "dietro", "📦"],["between", "tra due elementi", "📦"]);
 lists.catpositions=[["the cat is on the box", "il gatto è sopra la scatola", "🐈"], ["the cat is in the box", "il gatto è dentro la scatola", "🐈"], ["the cat is under the box", "il gatto è sotto la scatola", "🐈"], ["the cat is on the table", "il gatto è sul tavolo", "🐈"]];
 Object.assign(hints,{"in front of": "Sono tre parole: in + front + of. Ricorda gli spazi.", "behind": "Osserva la h dopo be: be · hind.", "between": "Al centro ci sono due e: betw · ee · n.", "how are you?": "Sono tre parole: how + are + you.", "how old are you?": "Per chiedere l’età: how + old + are + you.", "what is your name?": "Quattro parole: what + is + your + name."});
+
+// Vocabulary shared by island adventures and server-verified missions.
+lists.home=[["house","casa","🏡"],["door","porta","🚪"],["window","finestra","🪟"],["chair","sedia","🪑"],["table","tavolo","🪑"],["bed","letto","🛏️"],["lamp","lampada","💡"],["plant","pianta","🪴"]];
+lists.animals=[["cat","gatto","🐱"],["dog","cane","🐶"],["rabbit","coniglio","🐰"],["fox","volpe","🦊"],["panda","panda","🐼"],["bird","uccello","🐦"],["horse","cavallo","🐴"],["turtle","tartaruga","🐢"]];
+lists.transport=[["car","automobile","🚗"],["wheel","ruota","🛞"],["road","strada","🛣️"],["bus","autobus","🚌"],["bike","bicicletta","🚲"],["train","treno","🚂"],["boat","barca","⛵"],["plane","aeroplano","✈️"]];
+lists.sport=[["ball","palla","⚽"],["goal","porta da calcio","🥅"],["team","squadra","👥"],["foot","piede","🦶"],["run","correre","🏃"],["jump","saltare","🤸"],["kick","calciare","⚽"],["win","vincere","🏆"]];
+lists.space=[["star","stella","⭐"],["moon","luna","🌙"],["sun","sole","☀️"],["planet","pianeta","🪐"],["rocket","razzo","🚀"],["astronaut","astronauta","🧑‍🚀"],["Earth","Terra","🌍"],["sky","cielo","🌌"]];
+lists.ocean=[["fish","pesce","🐟"],["dolphin","delfino","🐬"],["whale","balena","🐳"],["octopus","polpo","🐙"],["crab","granchio","🦀"],["shell","conchiglia","🐚"],["sea","mare","🌊"],["shark","squalo","🦈"]];
+lists.dino=[["dinosaur","dinosauro","🦕"],["egg","uovo","🥚"],["tail","coda","🦕"],["tree","albero","🌳"],["rock","roccia","🪨"],["big","grande","🐘"],["small","piccolo","🐜"],["green","verde","🟢"]];

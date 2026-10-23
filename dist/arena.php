@@ -10,6 +10,7 @@ $db->exec('CREATE TABLE IF NOT EXISTS duels (
  step INTEGER NOT NULL DEFAULT 0, score INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(duel,profile));
  CREATE INDEX IF NOT EXISTS duels_challenger ON duels(challenger,created_at);
  CREATE INDEX IF NOT EXISTS duels_opponent ON duels(opponent,created_at);');
+ensureActivityColumn($db,'duels','kart');
 function duelClassmates(PDO $db, int $a, int $b): bool {
     return (bool)one($db, 'SELECT 1 FROM club_profiles a JOIN club_profiles b ON a.club_id=b.club_id WHERE a.profile_id=? AND b.profile_id=? LIMIT 1', [$a,$b]);
 }
@@ -26,7 +27,7 @@ function duelView(PDO $db, array $d, int $pid): array {
     $rival=one($db,'SELECT step,score FROM duel_players WHERE duel=? AND profile=?',[$d['id'],$other]);
     $total=count(json_decode($d['questions'],true));
     return ['id'=>$d['id'],'opponent'=>$other,'nickname'=>$p['nickname'],'category'=>$d['category'],'state'=>$d['state'],
-        'incoming'=>(int)$d['opponent']===$pid,'step'=>(int)$mine['step'],'score'=>(int)$mine['score'],
+        'activity'=>$d['activity'],'incoming'=>(int)$d['opponent']===$pid,'step'=>(int)$mine['step'],'score'=>(int)$mine['score'],
         'rivalScore'=>$d['state']==='completed'?(int)$rival['score']:null,'rivalDone'=>(int)$rival['step']===$total,
         'total'=>$total,'expiresAt'=>(int)$d['expires_at']];
 }
@@ -51,8 +52,10 @@ if ($action==='duel-create') {
     $other=(int)($body['opponent']??0);
     if ($other===$pid || !duelClassmates($db,$pid,$other)) fail('Scegli un compagno iscritto alla tua classe.',403);
     $curriculum=json_decode(file_get_contents(__DIR__.'/curriculum.json'),true,32,JSON_THROW_ON_ERROR);
+    $activity=$body['activity']??'kart';
+    if(!is_string($activity)||!in_array($activity,['kart','football','space'],true))fail('Scegli kart, calcio o spazio.');
     $category=$body['category']??'body';
-    if (!is_string($category)||!in_array($category,['body','catpositions','toys','colors','hello','school'],true)||empty($curriculum[$category])) fail('Scegli un argomento disponibile.');
+    if (!is_string($category)||!in_array($category,['body','catpositions','toys','colors','hello','school','home','animals','transport','sport','space','ocean','dino'],true)||empty($curriculum[$category])) fail('Scegli un argomento disponibile.');
     limitAttempts($db,'duels:'.$pid,20);
     $unique=[];foreach ($curriculum[$category] as $w) $unique[normalWord($w[0])]=$w;
     $pool=array_values($unique); shuffle($pool); $questions=[];
@@ -69,7 +72,7 @@ if ($action==='duel-create') {
         }
     }
     $token=bin2hex(random_bytes(16));$now=time();
-    runSql($db,'INSERT INTO duels(id,challenger,opponent,category,questions,created_at,expires_at) VALUES (?,?,?,?,?,?,?)',[$token,$pid,$other,$category,json_encode($questions,JSON_UNESCAPED_UNICODE),$now,$now+604800]);
+    runSql($db,'INSERT INTO duels(id,challenger,opponent,category,questions,created_at,expires_at,activity) VALUES (?,?,?,?,?,?,?,?)',[$token,$pid,$other,$category,json_encode($questions,JSON_UNESCAPED_UNICODE),$now,$now+604800,$activity]);
     foreach ([$pid,$other] as $player) runSql($db,'INSERT INTO duel_players(duel,profile) VALUES (?,?)',[$token,$player]);
     $d=one($db,'SELECT * FROM duels WHERE id=?',[$token]);$db->exec('COMMIT');respond(['duel'=>duelView($db,$d,$pid)]);
 }

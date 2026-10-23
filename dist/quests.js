@@ -2,12 +2,23 @@
 (() => {
   const root=document.createElement('section');root.id='questHub';root.className='questHub';
   root.setAttribute('aria-label','Il tuo passaporto delle avventure');
-  document.querySelector('.worldSection').after(root);
-  let profile={id:null},hub=null,tab='missions',mission=null,question=null,busy=false,tiles=[],picked=[],club=0, hinted=false, questionFailed=false;
+  document.querySelector('.raceHero').after(root);
+  let profile={id:null},hub=null,tab='adventures',mission=null,question=null,busy=false,tiles=[],picked=[],club=0, hinted=false, questionFailed=false;
+  const places=window.wordylandIsland.places;
+  let activity='treehouse',shopGroup='avatar',sceneView=null;
+  const clearScene=()=>{sceneView?.dispose();sceneView=null;};
   let guest;try{guest=JSON.parse(localStorage.getItem('wordylandGuestWallet')||'null');}catch{}
   guest=guest&&Number.isFinite(guest.coins)?guest:{coins:0,xp:0,level:1,equipped:{avatar:'fox'},inventory:['fox'],credits:{},paid:{}};
   const catalog=[['fox','Volpe esploratrice','🦊','avatar',0],['panda','Panda delle stelle','🐼','avatar',30],['robot','Robot inventore','🤖','avatar',45],['dragon','Drago delle parole','🐉','avatar',60],['octopus','Polpo creativo','🐙','avatar',45],['lion','Leone coraggioso','🦁','avatar',60],['cap','Cappello da avventura','🧢','hat',20],['crown','Corona delle scoperte','👑','hat',40],['sparkles','Scia luminosa','✨','effect',25],['flight','Volo delle parole','🪽','effect',50],['confetti','Festa di coriandoli','🎉','effect',35]].map(([id,name,icon,slot,price])=>({id,name,icon,slot,price}));
+  guest.adventures=guest.adventures&&typeof guest.adventures==='object'&&!Array.isArray(guest.adventures)?guest.adventures:{};
+  catalog.push(...[{"id": "pet-fox", "name": "Volpina curiosa", "icon": "🦊", "slot": "pet", "price": 0}, {"id": "pet-bunny", "name": "Coniglietto soffice", "icon": "🐰", "slot": "pet", "price": 0}, {"id": "pet-cat", "name": "Gattino delle nuvole", "icon": "🐱", "slot": "pet", "price": 0}, {"id": "room-sky", "name": "Casa cielo", "icon": "🩵", "slot": "room", "price": 0}, {"id": "room-peach", "name": "Casa pesca", "icon": "🍑", "slot": "room", "price": 0}, {"id": "room-mint", "name": "Casa menta", "icon": "🌿", "slot": "room", "price": 0}, {"id": "plant", "name": "Pianta delle scoperte", "icon": "🪴", "slot": "plant", "price": 20}, {"id": "rug", "name": "Tappeto arcobaleno", "icon": "🌈", "slot": "rug", "price": 20}, {"id": "lamp", "name": "Lampada stellina", "icon": "💡", "slot": "lamp", "price": 25}, {"id": "kart-blue", "name": "Kart blu", "icon": "💙", "slot": "kart", "price": 0}, {"id": "kart-pink", "name": "Kart corallo", "icon": "🩷", "slot": "kart", "price": 0}, {"id": "kart-mint", "name": "Kart menta", "icon": "💚", "slot": "kart", "price": 20}, {"id": "paint-sun", "name": "Colori del sole", "icon": "🌞", "slot": "palette", "price": 0}, {"id": "paint-ocean", "name": "Colori dell’oceano", "icon": "🌊", "slot": "palette", "price": 0}, {"id": "paint-berry", "name": "Colori dei frutti", "icon": "🍓", "slot": "palette", "price": 0}]);
   const item=id=>catalog.find(x=>x.id===id);
+  guest.inventory=Array.isArray(guest.inventory)?guest.inventory.filter(id=>item(id)):['fox'];
+  if(!guest.inventory.includes('fox'))guest.inventory.unshift('fox');
+  guest.equipped=Object.fromEntries(Object.entries(guest.equipped&&typeof guest.equipped==='object'?guest.equipped:{}).filter(([slot,id])=>item(id)?.slot===slot&&guest.inventory.includes(id)));
+  guest.equipped.avatar??='fox';
+  guest.xp=Number.isFinite(guest.xp)?Math.max(0,guest.xp):0;
+  for(const key of ['credits','paid'])if(!guest[key]||typeof guest[key]!=='object'||Array.isArray(guest[key]))guest[key]={};
   const wallet=()=>profile.id?(hub?.wallet||{coins:0,xp:0,level:1,equipped:{avatar:'fox'},inventory:['fox']}):guest;
   const say=text=>{const e=root.querySelector('#questStatus');if(e)e.textContent=text;};
   const api=(action,data)=>window.wordylandAccount.request(action,data===undefined?undefined:{...data,profile:profile.id});
@@ -20,14 +31,39 @@
     render();adultTools();
   }
   function render() {
+    clearScene();
     const w=wallet();if(w?.equipped?.avatar){avatar=item(w.equipped.avatar)?.icon||'🦊';refreshPlayer();}
-    root.innerHTML='<div class="passport"><div class="avatarStage">'+mascot()+'</div><div><span class="questEyebrow">IL TUO PROFILO PILOTA</span><h2>'+esc(profile.nickname||'Esploratore delle parole')+'</h2><p>'+(profile.id?'La tua avventura ti segue su ogni dispositivo.':'Gioca come ospite. Un adulto può creare un profilo per ritrovarti ovunque.')+'</p><div class="wallet"><span>🪙 <b>'+(w?.coins||0)+'</b> monete</span><span>✦ Livello '+(w?.level||1)+'</span><span>'+(w?.xp||0)+' XP</span></div><div class="levelTrack" aria-label="Esperienza verso il prossimo livello"><i style="width:'+((w?.xp||0)%100)+'%"></i></div></div><div class="passportSticker">PLAYER<br>ONE<br>✦</div></div><nav class="questTabs" aria-label="Passaporto"><button data-tab="arena" aria-pressed="'+(tab==='arena')+'">⚔️ Sfida un compagno</button><button data-tab="missions" aria-pressed="'+(tab==='missions')+'">⚑ Gioca una missione</button><button data-tab="shop" aria-pressed="'+(tab==='shop')+'">🏁 Il tuo garage</button><button data-tab="festival" aria-pressed="'+(tab==='festival')+'">🏆 La tua classe</button></nav><div id="questContent"></div><p id="questStatus" role="status" aria-live="polite"></p>';
+    root.innerHTML='<div class="passport"><div class="avatarStage">'+mascot()+'</div><div><span class="questEyebrow">IL TUO PASSAPORTO DELLE AVVENTURE</span><h2>'+esc(profile.nickname||'Il tuo personaggio')+'</h2><p>'+(profile.id?'La tua avventura ti segue su ogni dispositivo.':'Gioca come ospite. Un adulto può creare un profilo per ritrovarti ovunque.')+'</p><div class="wallet"><span>🪙 <b>'+(w?.coins||0)+'</b> monete</span><span>✦ Livello '+(w?.level||1)+'</span><span>'+(w?.xp||0)+' XP</span></div><div class="levelTrack" aria-label="Esperienza verso il prossimo livello"><i style="width:'+((w?.xp||0)%100)+'%"></i></div></div><div class="passportSticker">PLAY<br>YOUR<br>WAY ✦</div></div><nav class="questTabs" aria-label="Passaporto"><button data-tab="adventures" aria-pressed="'+(tab==='adventures')+'">🏝️ La mia isola</button><button data-tab="arena" aria-pressed="'+(tab==='arena')+'">⚔️ Sfida un compagno</button><button data-tab="missions" aria-pressed="'+(tab==='missions')+'">🧩 Missioni</button><button data-tab="shop" aria-pressed="'+(tab==='shop')+'">✨ Il mio stile</button><button data-tab="festival" aria-pressed="'+(tab==='festival')+'">🏆 La tua classe</button></nav><div id="questContent"></div><p id="questStatus" role="status" aria-live="polite"></p>';
     root.querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>{if(busy)return;tab=b.dataset.tab;render();});
+    window.dispatchEvent(new CustomEvent('wordyland-world-state',{detail:{activity,equipped:w?.equipped||{},adventures:profile.id?hub?.adventures||{}:guest.adventures}}));
+    if(tab==='adventures')renderAdventures();
     if(tab==='arena')window.wordylandArena.mount(root.querySelector('#questContent'),profile,openAdults);if(tab==='missions')renderMissions();if(tab==='shop')renderShop();if(tab==='festival')renderFestival();
   }
-  function renderMissions() {
+  function chooseActivity(id,play=false){
+    if(busy||!places[id])return;
+    activity=id;setWorld(places[id].world);
+    if(play&&mission?.activity!==id){mission=null;question=null;}
+    tab=play?'missions':'adventures';render();
+    root.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth',block:'start'});
+    if(play&&!mission)startQuest();
+  }
+  window.addEventListener('wordyland-place',e=>chooseActivity(e.detail));
+  function renderAdventures(){
+    const p=places[activity],progress=profile.id?hub?.adventures||{}:guest.adventures;
+    const count=Math.max(0,Number(progress[activity])||0),next=[1,3,5,10].find(n=>n>count);
     const content=root.querySelector('#questContent');
-    content.innerHTML='<div class="missionGrid"><div class="dailyMission"><span class="questEyebrow">LA TUA PROSSIMA PARTENZA</span><h3>Pronti a fare strada?</h3><p>Ogni parola è un passo avanti. Ascolta, gioca e scrivi: il tuo prossimo traguardo ti aspetta.</p><div class="missionPath"><span>👀<small>Scopri</small></span><i>···</i><span>🧩<small>Gioca</small></span><i>···</i><span>✏️<small>Scrivi</small></span><i>···</i><span>🎁<small>Apri!</small></span></div><label for="questSource">La tua prossima missione</label><select id="questSource"><option value="personal">✨ Il mio percorso personale</option><option value="body">👀 Il corpo</option><option value="catpositions">🐈 Il gatto e la scatola</option><option value="toys">🧸 Giocattoli</option><option value="colors">🎨 Colori</option><option value="hello">👋 Presentiamoci</option><option value="school">✏️ A scuola</option>'+(hub?.studies||[]).map(s=>'<option value="study:'+s.id+'">📚 '+esc(s.title)+'</option>').join('')+'</select><button class="primary" id="beginQuest">Apri la missione →</button></div><div class="treasureCard"><span class="treasureIcon">🎁</span><h3>Il tuo prossimo tesoro</h3><p>Completa la missione: fino a <b>15 monete</b> e un bonus quando superi una difficoltà.</p><div class="rewardPill">🪙 Monete · ✦ Esperienza</div><p class="hint">Premi per tre missioni al giorno con parole nuove. Il ripasso e gli aiuti restano sempre disponibili.</p></div></div><div id="missionStage" class="missionStage" hidden></div>';
+    content.innerHTML='<div class="adventureHeading"><div><span class="questEyebrow">OGNI CURIOSITÀ HA IL SUO POSTO</span><h3>Oggi, che avventura scegli?</h3></div><p>Tutto è esplorabile fin da subito.<br>Le scoperte crescono con te.</p></div><div class="adventureDestinations">'+Object.entries(places).map(([id,p])=>'<button class="destinationCard" data-destination="'+id+'" aria-pressed="'+(id===activity)+'" style="--place:'+p.color+'"><span class="destinationArt" aria-hidden="true"></span><span class="destinationIcon" aria-hidden="true">'+p.icon+'</span><b>'+p.name+'</b><small>'+(Number(progress[id])||0)+' mission'+(Number(progress[id])===1?'e completata':'i completate')+'</small></button>').join('')+'</div><section class="placePanel" aria-labelledby="placeTitle"><div class="placePreview" id="placePreview"><span class="sceneFallback">'+p.icon+'</span><span class="previewBadge">'+p.icon+' IL TUO PICCOLO MONDO</span></div><div class="placeCopy"><span class="questEyebrow">'+p.tag+'</span><h3 id="placeTitle">'+p.name+'</h3><p>'+p.description+'</p><p class="placeGoal">'+p.goal+'</p><div class="discoveryPath" aria-label="'+count+' missioni completate">'+[1,3,5,10].map((n,i)=>'<span class="'+(count>=n?'discovered':'')+'"><b>'+(count>=n?'★':'☆')+'</b><small>'+['Prima scoperta','Esplorazione','Avventura','Grande viaggio'][i]+'<em>'+n+' mission'+(n===1?'e':'i')+'</em></small></span>').join('')+'</div><p class="hint">'+(next?'Prossima scoperta: '+count+' / '+next+' mission'+(next===1?'e.':'i.'):'Hai raggiunto tutte le tappe! Puoi continuare a esplorare.')+'</p>'+(activity==='pets'?'<div class="petCare"><button class="audio" data-care="water">💧 Acqua</button><button class="audio" data-care="food">🥕 Spuntino</button><button class="audio" data-care="friend">💗 Carezza</button><p id="petCareStatus" role="status"></p></div>':'')+'<div class="placeActions"><button class="primary" id="playPlace">Gioca qui →</button>'+(['treehouse','pets','creative','kart'].includes(activity)?'<button class="audio" id="stylePlace">'+({treehouse:'Arreda la casa',pets:'Scegli il compagno',creative:'Scegli i colori',kart:'Personalizza il kart'}[activity])+'</button>':'')+'</div></div></section>';
+    content.querySelectorAll('[data-destination]').forEach(b=>b.onclick=()=>chooseActivity(b.dataset.destination));
+    content.querySelectorAll('[data-care]').forEach(b=>b.onclick=()=>{sceneView?.update({progress:1});content.querySelector('#petCareStatus').textContent={water:'Water = acqua. Una pausa per bere! 💧',food:'Food = cibo. Buono questo spuntino! 🥕',friend:'Friend = amico. Una carezza per te! 💗'}[b.dataset.care];});
+    content.querySelector('#playPlace').onclick=()=>chooseActivity(activity,true);
+    content.querySelector('#stylePlace')?.addEventListener('click',()=>{shopGroup={treehouse:'home',pets:'pet',creative:'palette',kart:'kart'}[activity];tab='shop';render();});
+    sceneView=window.wordylandIsland.mount(content.querySelector('#placePreview'),{kind:activity,equipped:wallet()?.equipped,progress:0});
+  }
+  function renderMissions() {
+    const content=root.querySelector('#questContent'),place=places[mission?.activity||activity];
+    content.innerHTML='<div class="activeAdventure"><span>'+place.icon+'</span><div><small>STAI GIOCANDO IN</small><b>'+place.name+'</b></div><button class="audio" id="backIsland">Torna all’isola</button></div><div class="missionGrid"><div class="dailyMission"><span class="questEyebrow">UNA PICCOLA SFIDA, UNA NUOVA SCOPERTA</span><h3>La tua prossima avventura</h3><p>'+place.goal+'</p><div class="missionPath"><span>👀<small>Scopri</small></span><i>···</i><span>🧩<small>Gioca</small></span><i>···</i><span>✏️<small>Scrivi</small></span><i>···</i><span>🎁<small>Apri!</small></span></div><label for="questSource">La tua prossima missione</label><select id="questSource">'+Object.entries(places).filter(([id])=>id!=='creative').map(([,p])=>'<option value="'+p.category+'">'+p.icon+' '+p.name+'</option>').join('')+'<option value="personal">✨ Il mio percorso personale</option><option value="body">👀 Il corpo</option><option value="catpositions">🐈 Il gatto e la scatola</option><option value="toys">🧸 Giocattoli</option><option value="colors">🎨 Colori</option><option value="hello">👋 Presentiamoci</option><option value="school">✏️ A scuola</option>'+(hub?.studies||[]).map(s=>'<option value="study:'+s.id+'">📚 '+esc(s.title)+'</option>').join('')+'</select><button class="primary" id="beginQuest">Apri la missione →</button></div><div class="treasureCard"><span class="treasureIcon">🎁</span><h3>Il tuo prossimo tesoro</h3><p>Completa la missione: fino a <b>15 monete</b> e un bonus quando superi una difficoltà.</p><div class="rewardPill">🪙 Monete · ✦ Esperienza</div><p class="hint">Premi per tre missioni al giorno con parole nuove. Il ripasso e gli aiuti restano sempre disponibili.</p></div></div><div id="missionStage" class="missionStage" hidden></div>';
+    root.querySelector('#questSource').value=place.category;
+    root.querySelector('#backIsland').onclick=()=>{tab='adventures';render();};
     root.querySelector('#beginQuest').onclick=startQuest;
     if(mission)drawQuestion();
   }
@@ -36,13 +72,13 @@
     try {
       const source=root.querySelector('#questSource').value, owner=profile.id;
       if(profile.id) {
-        const result=await api('quest-start',source.startsWith('study:')?{study:Number(source.split(':')[1])}:{category:source});
-        if(owner!==profile.id)return;mission={token:result.token,total:result.total,profile:owner};question=result.question;
+        const result=await api('quest-start',source.startsWith('study:')?{study:Number(source.split(':')[1]),activity}:{category:source,activity});
+        if(owner!==profile.id)return;mission={token:result.token,total:result.total,profile:owner,activity};question=result.question;
       } else {
         let pool=source==='personal'?allWords().filter(w=>!w[0].includes(' ')):lists[source]||lists.body;
         pool=shuffle(pool).slice(0,3);
         const questions=pool.map((w,i)=>{const q={word:w[0],translation:w[1],emoji:w[2],kind:i===pool.length-1?'write':i===0?'choice':'build',number:i+1};if(q.kind==='choice')q.options=shuffle([w,...shuffle(allWords().filter(x=>x[0]!==w[0]&&!x[0].includes(' '))).slice(0,3)]);return q;});
-        mission={token:'guest',questions,total:questions.length,xp:0,profile:null};question=questions[0];
+        mission={token:'guest',questions,total:questions.length,xp:0,profile:null,activity};question=questions[0];
       }
       drawQuestion();say('Nessuna fretta: puoi ascoltare e chiedere aiuto.');
     } catch(e){say(e.message);}finally{busy=false;}
@@ -54,9 +90,11 @@
     speechSynthesis.speak(u);
   }
   function drawQuestion(challenge=false) {
+    clearScene();
     if(!challenge){hinted=false;questionFailed=false;}
     const stage=root.querySelector('#missionStage');if(!stage)return;stage.hidden=false;
-    const q=question;stage.innerHTML='<div class="questStep">PROVA '+q.number+' DI '+mission.total+'<span>'+currentWorld().icon+' '+currentWorld().name+'</span></div><div class="questTrack"><i style="width:'+((q.number-1)/mission.total*100)+'%"></i></div><div class="questPicture">'+picture(q.word,q.emoji)+'</div><p>'+esc(q.translation)+'</p><button class="audio" id="questListen">🔊 Ascolta</button><div id="questWork"></div><p id="questFeedback" role="status" aria-live="polite"></p><div id="questActions"></div>';
+    const q=question;stage.innerHTML='<div class="missionWorld" id="missionWorld"><span class="sceneFallback">'+places[mission.activity].icon+'</span><span class="worldProgressLabel">'+(q.number-1)+' / '+mission.total+' tappe</span></div><div class="questStep">PROVA '+q.number+' DI '+mission.total+'<span>'+currentWorld().icon+' '+currentWorld().name+'</span></div><div class="questTrack"><i style="width:'+((q.number-1)/mission.total*100)+'%"></i></div><div class="questPicture">'+picture(q.word,q.emoji)+'</div><p>'+esc(q.translation)+'</p><button class="audio" id="questListen">🔊 Ascolta</button><div id="questWork"></div><p id="questFeedback" role="status" aria-live="polite"></p><div id="questActions"></div>';
+    sceneView=window.wordylandIsland.mount(stage.querySelector('#missionWorld'),{kind:mission.activity,equipped:wallet()?.equipped,progress:(q.number-1)/mission.total});
     stage.querySelector('#questListen').onclick=audio;
     const work=stage.querySelector('#questWork'),actions=stage.querySelector('#questActions');
     if(!challenge){work.innerHTML='<h3>Guarda bene la parola</h3><div class="questWord">'+esc(q.word)+'</div><p>Ascolta e osserva. Quando vuoi, giochiamo!</p>';actions.innerHTML='<button class="primary" id="readyChallenge">Sono pronto! →</button>';actions.querySelector('button').onclick=()=>drawQuestion(true);return;}
@@ -100,6 +138,7 @@
           if(!guest.credits[key]&&Object.keys(guest.credits).filter(x=>x.startsWith(day)).length<15){guest.credits[key]=true;guest.xp+=10;mission.xp+=10;}
           const done=question.number===mission.total;
           let coins=0;if(done&&mission.xp>0&&(guest.paid[day]||0)<3){coins=15;guest.coins+=coins;guest.paid[day]=(guest.paid[day]||0)+1;}
+          if(done)guest.adventures[mission.activity]=(Number(guest.adventures[mission.activity])||0)+1;
           storeGuest();result={correct:true,done,xp:mission.xp,coins,wallet:guest,question:mission.questions[question.number]};
         }
       }
@@ -107,15 +146,21 @@
       const word=question.word;stats[word]??={good:0,attempts:0,review:false};stats[word].attempts++;if(result.correct&&!hinted&&!questionFailed){stats[word].good++;stats[word].review=false;}else{stats[word].review=true;if(!result.correct)questionFailed=true;}save();updateStats();
       if(!result.correct){feedback.textContent=result.message;return;}
       root.querySelectorAll('#questWork button,#questWork input').forEach(b=>b.disabled=true);
-      feedback.textContent='✨ Esatto! Hai superato la prova.';
+      feedback.textContent=({football:'⚽ Gol! Hai trovato la parola!',space:'🚀 Motori accesi! Un passo verso le stelle.',pets:'💗 Un cuore in più per il tuo compagno!',creative:'🎨 Un nuovo colore per la tua creazione!',kart:'🏁 Il tuo kart avanza!',treehouse:'🏡 Una nuova scoperta per la tua casa!',ocean:'🐚 Il tesoro si avvicina!',dino:'🦕 Un’altra impronta trovata!'}[mission.activity])||'✨ Esatto!';
+      sceneView?.update({progress:question.number/mission.total});
+      const progressLabel=root.querySelector('.worldProgressLabel');if(progressLabel)progressLabel.textContent=question.number+' / '+mission.total+' tappe';
       if(result.done){
         if(hub)hub.wallet=result.wallet;
         const w=result.wallet;root.querySelector('.wallet').innerHTML='<span>🪙 <b>'+w.coins+'</b> monete</span><span>✦ Livello '+w.level+'</span><span>'+w.xp+' XP</span>';root.querySelector('.levelTrack i').style.width=(w.xp%100)+'%';
+        clearScene();
+        const completedActivity=mission.activity,place=places[completedActivity];
         const stage=root.querySelector('#missionStage');
-        stage.innerHTML='<div class="openTreasure">🎉</div><span class="questEyebrow">MISSIONE COMPLETATA</span><h3>Il baule si è aperto!</h3><p>Ogni tentativo ti ha portato fin qui.</p><div class="missionRewards"><b>✦ '+result.xp+' XP</b><b>🪙 '+result.coins+' monete</b></div><p>'+(result.coins?'Il negozio ti aspetta: scegli qualcosa per il tuo personaggio!':'Hai già raccolto i premi per queste parole o le monete di oggi. Puoi continuare a giocare, senza perdere nulla.')+'</p><button class="primary" id="rewardShop">Vai al negozio 🎒</button><button class="audio" id="anotherQuest">Un’altra avventura</button>';
+        stage.innerHTML='<div class="missionWorld" id="completedWorld"><span class="sceneFallback">'+place.icon+'</span></div><div class="openTreasure">🎉</div><span class="questEyebrow">MISSIONE COMPLETATA</span><h3>'+place.name+': ce l’hai fatta!</h3><p>Ogni tentativo ti ha portato fin qui.</p><div class="missionRewards"><b>✦ '+result.xp+' XP</b><b>🪙 '+result.coins+' monete</b></div><p>'+(result.coins?'La tua isola cresce con te! Scegli un oggetto per il personaggio, la casa o il kart.':'Hai già raccolto i premi per queste parole o le monete di oggi. Puoi continuare a giocare, senza perdere nulla.')+'</p><button class="primary" id="rewardShop">Personalizza il tuo mondo ✨</button><button class="audio" id="anotherQuest">Un’altra avventura</button>';
+        sceneView=window.wordylandIsland.mount(stage.querySelector('#completedWorld'),{kind:completedActivity,equipped:w.equipped,progress:1});
+        window.dispatchEvent(new CustomEvent('wordyland-celebrate'));
         mission=null;question=null;
-        stage.querySelector('#rewardShop').onclick=()=>{tab='shop';render();};stage.querySelector('#anotherQuest').onclick=()=>render();
-        if(profile.id)hub=await api('hub&profile='+profile.id+(club?'&club='+club:''));
+        stage.querySelector('#rewardShop').onclick=()=>{shopGroup={treehouse:'home',pets:'pet',creative:'palette',kart:'kart'}[completedActivity]||'avatar';tab='shop';render();};stage.querySelector('#anotherQuest').onclick=()=>render();
+        if(profile.id){const result=await api('hub&profile='+profile.id+(club?'&club='+club:''));if(owner===profile.id)hub=result;}
       }else{
         root.querySelector('#questActions').innerHTML='<button class="primary" id="questNext">Continua →</button>';
         root.querySelector('#questNext').onclick=()=>{question=result.question;drawQuestion();};
@@ -123,21 +168,29 @@
     }catch(e){feedback.textContent=e.message;}finally{busy=false;}
   }
   function renderShop(){
-    const w=wallet();root.querySelector('#questContent').innerHTML='<div class="shopHeading"><div><span class="questEyebrow">IL GARAGE DEI CAMPIONI</span><h3>Scegli il tuo pilota.</h3><p>Usa le monete delle missioni. Nessun acquisto con denaro reale.</p></div><div class="wardrobePreview">'+mascot()+'</div></div><div class="shopGrid">'+catalog.map(it=>{const owned=w?.inventory.includes(it.id),equipped=w?.equipped[it.slot]===it.id;return '<article class="shopItem '+(equipped?'equipped':'')+'"><span '+(it.slot==='avatar'?'class="racerModel" data-racer="'+it.id+'"':'')+' aria-hidden="true">'+(it.slot==='avatar'?'':it.icon)+'</span><h4>'+it.name+'</h4><small>'+(it.slot==='effect'?'Skill scenica':it.slot==='hat'?'Accessorio':'Personaggio')+'</small><button class="'+(owned?'audio':'primary')+'" data-item="'+it.id+'" '+(equipped?'disabled':'')+'>'+(equipped?'Indossato ✓':owned?'Indossa':'🪙 '+it.price+' · Sblocca')+'</button></article>';}).join('')+'</div><p class="hint">Le skill cambiano l’aspetto e le animazioni. Gli aiuti negli esercizi sono gratis per tutti.</p>';
+    clearScene();
+    const groups={avatar:'Personaggio',home:'Casa',pet:'Compagno',kart:'Kart',palette:'Atelier'},w=wallet();
+    const previewKind={avatar:'pets',home:'treehouse',pet:'pets',kart:'kart',palette:'creative'}[shopGroup];
+    const shown=catalog.filter(it=>shopGroup==='avatar'?['avatar','hat','effect'].includes(it.slot):shopGroup==='home'?['room','plant','rug','lamp'].includes(it.slot):it.slot===shopGroup);
+    root.querySelector('#questContent').innerHTML='<div class="shopHeading"><div><span class="questEyebrow">IL TUO MONDO, COME PIACE A TE</span><h3>Fallo diventare tuo.</h3><p>Scelte gratuite e oggetti da conquistare con le missioni.</p><p class="hint">Nessun acquisto con denaro reale. Tutte le attività sono già aperte.</p></div></div><nav class="styleTabs" aria-label="Cosa vuoi personalizzare?">'+Object.entries(groups).map(([id,name])=>'<button class="audio" data-style="'+id+'" aria-pressed="'+(shopGroup===id)+'">'+name+'</button>').join('')+'</nav><div class="stylePreview" id="stylePreview"><span class="sceneFallback">'+places[previewKind].icon+'</span><span class="previewBadge">'+groups[shopGroup]+' · la tua scelta</span></div><div class="shopGrid">'+shown.map(it=>{const owned=w?.inventory.includes(it.id),equipped=w?.equipped[it.slot]===it.id;return '<article class="shopItem '+(equipped?'equipped':'')+'"><span '+(it.slot==='avatar'?'class="racerModel" data-racer="'+it.id+'"':'')+' aria-hidden="true">'+(it.slot==='avatar'?'':it.icon)+'</span><h4>'+it.name+'</h4><small>'+(it.price===0?'Sempre disponibile':it.slot==='effect'?'Effetto scenico':'Per il tuo mondo')+'</small><button class="'+(owned?'audio':'primary')+'" data-item="'+it.id+'" '+(equipped?'disabled':'')+'>'+(equipped?'Scelto ✓':owned?'Scegli':it.price===0?'Scegli · gratis':'🪙 '+it.price+' · Sblocca')+'</button></article>';}).join('')+'</div><p class="hint">Gli oggetti cambiano l’aspetto del tuo mondo. Gli aiuti negli esercizi restano gratis per tutti.</p>';
+    const eq={...w?.equipped};if(shopGroup==='avatar')eq.pet=eq.avatar||'fox';
+    sceneView=window.wordylandIsland.mount(root.querySelector('#stylePreview'),{kind:previewKind,equipped:eq});
+    root.querySelectorAll('[data-style]').forEach(b=>b.onclick=()=>{if(busy)return;shopGroup=b.dataset.style;renderShop();});
     root.querySelectorAll('[data-item]').forEach(b=>b.onclick=async()=>{
-      if(busy)return;busy=true;const it=item(b.dataset.item),owned=w.inventory.includes(it.id);b.disabled=true;
+      if(busy)return;busy=true;const owner=profile.id,it=item(b.dataset.item),owned=w.inventory.includes(it.id);b.disabled=true;
       try{
-        if(profile.id){const result=await api(owned?'equip':'buy',{item:it.id});hub.wallet=result.wallet;}
+        if(profile.id){const result=await api(owned?'equip':'buy',{item:it.id});if(owner!==profile.id)return;hub.wallet=result.wallet;}
         else{if(!owned){if(guest.coins<it.price)throw new Error('Ti mancano '+(it.price-guest.coins)+' monete. Completa una missione!');guest.coins-=it.price;guest.inventory.push(it.id);}guest.equipped[it.slot]=it.id;storeGuest();}
         render();say(it.name+' è pronto per l’avventura!');
-      }catch(e){say(e.message);b.disabled=false;}finally{busy=false;}
+      }catch(e){say(e.message);if(b.isConnected)b.disabled=false;}finally{busy=false;}
     });
   }
   function renderFestival(){
     const content=root.querySelector('#questContent');
     if(!profile.id||!hub?.clubs?.length){content.innerHTML='<div class="festivalWelcome"><span>🏆</span><h3>Un festival per la tua classe</h3><p>L’insegnante o un adulto può creare il gruppo classe e invitare i partecipanti con un codice. Qui compaiono solo soprannomi e avatar.</p><button class="primary" id="festivalLogin">Apri l’area adulti</button></div>';content.querySelector('button').onclick=openAdults;return;}
     const board=hub?.board||[],team=hub?.team||0;
-    content.innerHTML='<div class="festivalHeader"><div><span class="questEyebrow">IL FESTIVAL DELLE SCOPERTE</span><h3>Una settimana, tante conquiste</h3><p>Esperienza, miglioramenti e coraggio. Ogni lunedì una nuova avventura.</p></div><label>La tua classe<select id="festivalClub">'+(hub?.clubs||[]).map(c=>'<option value="'+c.id+'" '+(club===c.id?'selected':'')+'>'+esc(c.name)+'</option>').join('')+'</select></label></div><div class="teamQuest"><span>🚀</span><div><b>Costruiamo insieme la stazione spaziale</b><p>'+team+' / '+(hub?.teamGoal||300)+' XP di squadra</p><div class="levelTrack"><i style="width:'+Math.min(100,team/3)+'%"></i></div></div><span>'+(team>=300?'🌟':'🪐')+'</span></div><ol class="festivalBoard">'+board.map((p,i)=>'<li class="'+(p.mine?'myRank':'')+'"><span class="rankMedal">'+(['🥇','🥈','🥉'][i]||'✦')+'</span><span class="rankAvatar racerModel" data-racer="'+(['fox','panda','robot','dragon','octopus','lion'].includes(p.equipped?.avatar)?p.equipped.avatar:'fox')+'" aria-hidden="true"></span><div><b>'+esc(p.nickname)+(p.mine?' · tu':'')+'</b><small>'+(p.improvement?'🌱 '+p.improvement+' difficoltà superate':p.missions?'💪 '+p.missions+' missioni completate':'🌟 La tua prima scoperta ti aspetta')+'</small></div><strong>'+p.points+' XP</strong></li>').join('')+'</ol><p class="hint">Contano fino a 15 parole nuove al giorno. Nessun punto viene tolto per gli errori. La partecipazione ai gruppi è gestita dagli adulti.</p>';
+    content.innerHTML='<div class="festivalHeader"><div><span class="questEyebrow">IL FESTIVAL DELLE SCOPERTE</span><h3>Una settimana, tante conquiste</h3><p>Esperienza, miglioramenti e coraggio. Ogni lunedì una nuova avventura.</p></div><label>La tua classe<select id="festivalClub">'+(hub?.clubs||[]).map(c=>'<option value="'+c.id+'" '+(club===c.id?'selected':'')+'>'+esc(c.name)+'</option>').join('')+'</select></label></div><div class="teamQuest"><span>🚀</span><div><b>Costruiamo insieme la stazione spaziale</b><p>'+team+' / '+(hub?.teamGoal||300)+' XP di squadra</p><div class="levelTrack"><i style="width:'+Math.min(100,team/3)+'%"></i></div></div><span>'+(team>=300?'🌟':'🪐')+'</span></div><div class="missionWorld" id="teamWorld"><span class="sceneFallback">🚀</span><span class="worldProgressLabel">LA STAZIONE DELLA CLASSE</span></div><ol class="festivalBoard">'+board.map((p,i)=>'<li class="'+(p.mine?'myRank':'')+'"><span class="rankMedal">'+(['🥇','🥈','🥉'][i]||'✦')+'</span><span class="rankAvatar racerModel" data-racer="'+(['fox','panda','robot','dragon','octopus','lion'].includes(p.equipped?.avatar)?p.equipped.avatar:'fox')+'" aria-hidden="true"></span><div><b>'+esc(p.nickname)+(p.mine?' · tu':'')+'</b><small>'+(p.improvement?'🌱 '+p.improvement+' difficoltà superate':p.missions?'💪 '+p.missions+' missioni completate':'🌟 La tua prima scoperta ti aspetta')+'</small></div><strong>'+p.points+' XP</strong></li>').join('')+'</ol><p class="hint">Contano fino a 15 parole nuove al giorno. Nessun punto viene tolto per gli errori. La partecipazione ai gruppi è gestita dagli adulti.</p>';
+    sceneView=window.wordylandIsland.mount(content.querySelector('#teamWorld'),{kind:'space',progress:Math.min(1,team/(hub?.teamGoal||300))});
     content.querySelector('#festivalClub').onchange=async e=>{club=Number(e.target.value);try{await refresh();}catch(e){say(e.message);}};
   }
   function openAdults(){const area=document.querySelector('.accountArea');area.open=true;area.scrollIntoView({behavior:'smooth',block:'start'});}
@@ -163,7 +216,7 @@
   }
   window.addEventListener('wordyland-profile',async e=>{
     const changed=profile.id!==e.detail.id;profile=e.detail;
-    if(changed){mission=null;question=null;club=0;hub=null;}
+    if(changed){mission=null;question=null;club=0;hub=null;activity='treehouse';clearScene();}
     try{await refresh();}catch(e){render();say(e.message);}
   });
   profile=window.wordylandAccount?.info()||profile;render();if(profile.id)refresh().catch(e=>say(e.message));

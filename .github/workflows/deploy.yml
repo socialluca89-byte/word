@@ -39,6 +39,7 @@ jobs:
           for f in dist/*.php; do php -l "$f"; done
           python3 scripts/test-api.py
           python3 scripts/test-classroom.py
+          python3 scripts/test-adventures.py
       - name: Check public bundle
         run: node scripts/verify-bundle.mjs
       - name: Test deployment script in isolation

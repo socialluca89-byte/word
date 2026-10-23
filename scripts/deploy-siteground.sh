@@ -6,7 +6,7 @@
 set -euo pipefail
 mode=${1:-deploy}; backup=${2:-latest}
 cd "$(dirname "$0")/.."
-FILES=(classroom.php arena.php api.php platform.php classroom.js arena.js curriculum.json quests.css data.js worlds.js app.js accounts.js quests.js arcade.css arcade.js race-world.webp race-circuits.webp race-racers.webp index.html)
+FILES=(classroom.php arena.php api.php platform.php classroom.js arena.js curriculum.json quests.css data.js worlds.js app.js accounts.js quests.js arcade.css arcade.js island.css island.js island-places.webp three.min.js race-world.webp race-circuits.webp race-racers.webp index.html)
 SITE_URL=${SITE_URL:-https://wordyland.eu}
 
 need() { for n in "$@"; do [[ -n "${!n:-}" ]] || { echo "Missing GitHub configuration: $n" >&2; exit 1; }; done; }
@@ -79,7 +79,7 @@ case "$mode" in
           exit 0
         fi
       fi
-      # Bundle exactly the 19 verified files plus checksums; upload to the private directory.
+      # Bundle exactly the 23 verified files plus checksums; upload to the private directory.
       mkdir "$work/bundle"
       for f in "${FILES[@]}"; do install -m 644 "dist/$f" "$work/bundle/$f"; done
       (cd "$work/bundle" && sha256sum "${FILES[@]}" > SHA256SUMS)
@@ -108,13 +108,13 @@ check_health() {
 check_files() {
   local token f want body got
   token="verify-${GITHUB_RUN_ID:-local}-$(date +%s%N)"
-  for f in index.html classroom.js arena.js curriculum.json quests.css data.js worlds.js app.js accounts.js quests.js arcade.css arcade.js race-world.webp race-circuits.webp race-racers.webp; do
+  for f in index.html classroom.js arena.js curriculum.json quests.css data.js worlds.js app.js accounts.js quests.js arcade.css arcade.js island.css island.js island-places.webp three.min.js race-world.webp race-circuits.webp race-racers.webp; do
     want=$(sha256sum "dist/$f" | cut -d' ' -f1)
     curl -fsS --retry 3 --retry-delay 5 --max-time 30 -o "$work/live" "$SITE_URL/$f?$token" || { echo "Live $f unreachable" >&2; return 1; }
     got=$(sha256sum "$work/live" | cut -d' ' -f1)
     [[ "$want" == "$got" ]] || { echo "Live $f does not match commit $expect_sha" >&2; return 1; }
   done
-  echo "Live site serves the files of commit $expect_sha (15 static files compared byte-for-byte)."
+  echo "Live site serves the files of commit $expect_sha (19 static files compared byte-for-byte)."
 }
 if [[ "$mode" == deploy ]]; then
   if check_health && check_files; then
