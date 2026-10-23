@@ -1,49 +1,109 @@
 #!/usr/bin/env bash
+# GitHub Actions side of the SiteGround deployment.
+# Usage: deploy-siteground.sh deploy|probe|rollback [backup-name]
+# Runs the versioned scripts/siteground-remote.sh from this checkout over SSH;
+# nothing is downloaded or executed from elsewhere.
 set -euo pipefail
-for name in SG_HOST SG_USER SG_PORT SG_PATH SG_PRIVATE_KEY SG_KNOWN_HOSTS; do
-  if [[ -z "${!name:-}" ]]; then echo "Missing GitHub configuration: $name" >&2; exit 1; fi
-done
-[[ "$SG_HOST" =~ ^[a-zA-Z0-9.-]+$ ]] || exit 1
-[[ "$SG_USER" =~ ^[a-zA-Z0-9_-]+$ ]] || exit 1
-[[ "$SG_PORT" =~ ^[0-9]+$ ]] || exit 1
-[[ "$SG_PATH" =~ ^/[a-zA-Z0-9_./-]+$ && "$SG_PATH" != *'..'* && "$SG_PATH" != / && "$SG_PATH" != /home && "$SG_PATH" != /www ]] || { echo 'Invalid deployment directory' >&2; exit 1; }
-node scripts/verify-bundle.mjs
-key_dir=$(mktemp -d)
-trap 'rm -rf -- "$key_dir"' EXIT
-chmod 700 "$key_dir"
-printf '%s\n' "$SG_PRIVATE_KEY" > "$key_dir/key"
-printf '%s\n' "$SG_KNOWN_HOSTS" > "$key_dir/known_hosts"
-chmod 600 "$key_dir/key" "$key_dir/known_hosts"
-unset SG_PRIVATE_KEY SG_KNOWN_HOSTS
-ssh_args=(-i "$key_dir/key" -p "$SG_PORT" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$key_dir/known_hosts" -o ConnectTimeout=20)
-remote="$SG_USER@$SG_HOST"
-# Refuse to write into an existing site unless already marked as WordyLand.
-ssh "${ssh_args[@]}" "$remote" bash -s -- "$SG_PATH" <<'REMOTE'
-set -euo pipefail
-target=$1
-[[ ! -L "$target" ]] || { echo 'Deployment target must not be a symlink'; exit 1; }
-mkdir -p -- "$target"
-if [[ ! -f "$target/.wordyland-managed" && -n "$(find "$target" -mindepth 1 -maxdepth 1 -print -quit)" ]]; then
-  echo 'Target contains an existing site. Choose an empty directory; nothing was overwritten.' >&2
-  exit 1
+mode=${1:-deploy}; backup=${2:-latest}
+cd "$(dirname "$0")/.."
+FILES=(classroom.php arena.php api.php platform.php classroom.js arena.js curriculum.json quests.css data.js worlds.js app.js accounts.js quests.js index.html)
+SITE_URL=${SITE_URL:-https://wordyland.eu}
+
+need() { for n in "$@"; do [[ -n "${!n:-}" ]] || { echo "Missing GitHub configuration: $n" >&2; exit 1; }; done; }
+need SG_HOST SG_USER SG_PORT
+[[ "$SG_HOST" =~ ^[a-zA-Z0-9.-]+$ ]] || { echo 'Invalid SG_HOST' >&2; exit 1; }
+[[ "$SG_USER" =~ ^[a-zA-Z0-9_-]+$ ]] || { echo 'Invalid SG_USER' >&2; exit 1; }
+[[ "$SG_PORT" =~ ^[0-9]+$ ]] || { echo 'Invalid SG_PORT' >&2; exit 1; }
+if [[ -n "${SG_PATH:-}" ]]; then
+  [[ "$SG_PATH" =~ ^/[a-zA-Z0-9_./-]+/wordyland\.eu/public_html$ && "$SG_PATH" != *'..'* && "$SG_PATH" != *'//'* ]] \
+    || { echo 'SG_PATH must be the absolute .../wordyland.eu/public_html path' >&2; exit 1; }
 fi
-touch "$target/.wordyland-managed"
-REMOTE
-# Transfer only the verified public bundle; never a repository or configuration file.
-# index.html is copied last so a failed asset transfer cannot publish a new page.
-for file in classroom.php arena.php api.php platform.php classroom.js arena.js curriculum.json quests.css data.js worlds.js app.js accounts.js quests.js index.html; do
-  scp -i "$key_dir/key" -P "$SG_PORT" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$key_dir/known_hosts" "dist/$file" "$remote:$SG_PATH/$file.wordyland-next"
-done
-ssh "${ssh_args[@]}" "$remote" bash -s -- "$SG_PATH" <<'REMOTE'
-set -euo pipefail
-cd -- "$1"
-for file in classroom.php arena.php api.php platform.php classroom.js arena.js curriculum.json quests.css data.js worlds.js app.js accounts.js quests.js index.html; do
-  [[ -f "$file.wordyland-next" ]] || exit 1
-done
-for file in classroom.php arena.php api.php platform.php classroom.js arena.js curriculum.json quests.css data.js worlds.js app.js accounts.js quests.js index.html; do
-  if [[ -f "$file" ]]; then cp -p -- "$file" "$file.wordyland-previous"; fi
-  mv -- "$file.wordyland-next" "$file"
-  chmod 644 "$file"
-done
-printf '%s\n' 'WordyLand static bundle deployed.'
-REMOTE
+
+work=$(mktemp -d); chmod 700 "$work"
+cleanup() { [[ -n "${SSH_AGENT_PID:-}" ]] && ssh-agent -k >/dev/null 2>&1 || true; rm -rf -- "$work"; }
+trap cleanup EXIT
+
+# Host identity: keyscan output is only a candidate and is printed for comparison.
+if [[ -z "${SG_KNOWN_HOSTS:-}" ]]; then
+  [[ "$mode" == probe ]] || { echo 'Missing GitHub configuration: SG_KNOWN_HOSTS' >&2; exit 1; }
+  echo "SG_KNOWN_HOSTS not set. Candidate host keys for [$SG_HOST]:$SG_PORT (verify before trusting):"
+  ssh-keyscan -T 20 -p "$SG_PORT" "$SG_HOST" 2>/dev/null | sort | tee "$work/scan"
+  ssh-keygen -lf "$work/scan" || true
+  exit 0
+fi
+printf '%s\n' "$SG_KNOWN_HOSTS" > "$work/known_hosts"
+ssh-keygen -F "[$SG_HOST]:$SG_PORT" -f "$work/known_hosts" >/dev/null \
+  || { echo "SG_KNOWN_HOSTS has no entry for [$SG_HOST]:$SG_PORT" >&2; exit 1; }
+
+need SG_PRIVATE_KEY
+# Private key, optionally protected by SG_KEY_PASSPHRASE, loaded into a private agent.
+printf '%s\n' "$SG_PRIVATE_KEY" | tr -d '\r' > "$work/key"; chmod 600 "$work/key"
+eval "$(ssh-agent -s -a "$work/agent.sock")" >/dev/null
+if [[ -n "${SG_KEY_PASSPHRASE:-}" ]]; then
+  printf '#!/bin/sh\nprintf "%%s\\n" "$SG_KEY_PASSPHRASE"\n' > "$work/askpass"; chmod 700 "$work/askpass"
+  SSH_ASKPASS="$work/askpass" SSH_ASKPASS_REQUIRE=force DISPLAY=none ssh-add "$work/key" </dev/null >/dev/null 2>&1 \
+    || { echo 'Could not load SG_PRIVATE_KEY with SG_KEY_PASSPHRASE' >&2; exit 1; }
+else
+  ssh-add "$work/key" </dev/null >/dev/null 2>&1 || { echo 'Could not load SG_PRIVATE_KEY (passphrase needed?)' >&2; exit 1; }
+fi
+rm -f -- "$work/key" "$work/askpass"
+unset SG_PRIVATE_KEY SG_KEY_PASSPHRASE SG_KNOWN_HOSTS
+
+ssh_opts=(-p "$SG_PORT" -o BatchMode=yes -o StrictHostKeyChecking=yes -o UserKnownHostsFile="$work/known_hosts"
+  -o ConnectTimeout=20 -o ServerAliveInterval=15)
+remote="$SG_USER@$SG_HOST"
+run_remote() { ssh "${ssh_opts[@]}" "$remote" bash -s -- "$@" < scripts/siteground-remote.sh; }
+
+case "$mode" in
+  probe)
+    run_remote probe "${SG_PATH:-}"
+    exit 0 ;;
+  rollback)
+    need SG_PATH
+    run_remote rollback "$SG_PATH" "$backup"
+    ;;
+  deploy)
+    need SG_PATH
+    sha=$(git rev-parse HEAD)
+    node scripts/verify-bundle.mjs
+    status=$(run_remote status "$SG_PATH")
+    printf '%s\n' "$status"
+    prev=$(sed -n 's/^MARKER=//p' <<<"$status" | tail -n1)
+    if [[ "$prev" == "$sha" ]]; then
+      echo "Commit $sha is already deployed; verifying the live site only."
+    else
+      if [[ -n "$prev" ]]; then
+        git cat-file -e "$prev^{commit}" 2>/dev/null || { echo "Deployed commit $prev is unknown to this repository; refusing." >&2; exit 1; }
+        if git merge-base --is-ancestor "$sha" "$prev"; then
+          echo "A newer commit ($prev) is already deployed; this run is obsolete and will not overwrite it."
+          exit 0
+        fi
+      fi
+      # Bundle exactly the 14 verified files plus checksums; upload to the private directory.
+      mkdir "$work/bundle"
+      for f in "${FILES[@]}"; do install -m 644 "dist/$f" "$work/bundle/$f"; done
+      (cd "$work/bundle" && sha256sum "${FILES[@]}" > SHA256SUMS)
+      tar -C "$work/bundle" --owner=0 --group=0 -cf "$work/bundle.tar" "${FILES[@]}" SHA256SUMS
+      priv="$(dirname "$SG_PATH")/.wordyland-deploy"
+      ssh "${ssh_opts[@]}" "$remote" "umask 077 && test -d '$priv/incoming' && ! test -L '$priv/incoming' && cat > '$priv/incoming/$sha.tar'" < "$work/bundle.tar"
+      run_remote install "$SG_PATH" "$sha" "$prev"
+    fi
+    ;;
+  *) echo "Unknown mode $mode" >&2; exit 1 ;;
+esac
+
+# Live checks against the public site with unique cache-busting queries.
+expect_sha=${sha:-}
+token="verify-${GITHUB_RUN_ID:-local}-$(date +%s)"
+health=$(curl -fsS --retry 3 --retry-delay 5 "$SITE_URL/api.php?action=health&$token")
+echo "Health: $health"
+python3 -c 'import json,sys; d=json.loads(sys.argv[1]); sys.exit(0 if d.get("ready") is True and d.get("database")=="sqlite" else 1)' "$health" \
+  || { echo 'Health check failed' >&2; exit 1; }
+if [[ "$mode" == deploy ]]; then
+  for f in index.html classroom.js arena.js curriculum.json quests.css data.js worlds.js app.js accounts.js quests.js; do
+    want=$(sha256sum "dist/$f" | cut -d' ' -f1)
+    got=$(curl -fsS --retry 3 --retry-delay 5 "$SITE_URL/$f?$token" | sha256sum | cut -d' ' -f1)
+    [[ "$want" == "$got" ]] || { echo "Live $f does not match commit $expect_sha" >&2; exit 1; }
+  done
+  echo "Live site serves the files of commit $expect_sha (10 static files compared byte-for-byte, API healthy)."
+fi
