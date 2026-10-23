@@ -1,8 +1,8 @@
 # SiteGround deployment
 
-## Pending release: clubhouse design and private duels
+## Pending release: classroom design and classmate duels
 
-The new design and friends arena are implemented and validated locally; this is not a claim of publication. This release requires twelve public files, including the new `arena.php` and `arena.js`. Older ten-file archives or pinned deployment scripts omit these modules and must not be used for this release. Upload new backend modules before replacing `platform.php`, and publish `index.html` last. Preserve the private database and attachments; duel tables migrate additively.
+The new design and classroom arena are implemented and validated locally; this is not a claim of publication. Opponents must share an invitation-only class; family profiles without a shared class are excluded. This release requires twelve public files, including the new `arena.php` and `arena.js`. Older ten-file archives or pinned deployment scripts omit these modules and must not be used for this release. Upload new backend modules before replacing `platform.php`, and publish `index.html` last. Preserve the private database and attachments; duel tables migrate additively.
 
 The latest workflow uses manual publication after disabling the old cron. Do not re-enable or install recurring remote-code execution as part of this release. Verify the new assets, API health and a two-profile invitation/acceptance/game/result cycle after publication. Local browser checks cover invitation, acceptance, saved-game resume, a 50–40 result, rematch and desktop/mobile layouts; production checks remain outstanding.
 

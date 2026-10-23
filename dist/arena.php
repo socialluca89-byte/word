@@ -10,8 +10,8 @@ $db->exec('CREATE TABLE IF NOT EXISTS duels (
  step INTEGER NOT NULL DEFAULT 0, score INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(duel,profile));
  CREATE INDEX IF NOT EXISTS duels_challenger ON duels(challenger,created_at);
  CREATE INDEX IF NOT EXISTS duels_opponent ON duels(opponent,created_at);');
-function duelFriends(PDO $db, int $a, int $b): bool {
-    return (bool)one($db, 'SELECT 1 FROM profiles a JOIN profiles b ON a.account_id=b.account_id WHERE a.id=? AND b.id=? UNION ALL SELECT 1 FROM club_profiles a JOIN club_profiles b ON a.club_id=b.club_id WHERE a.profile_id=? AND b.profile_id=? LIMIT 1', [$a,$b,$a,$b]);
+function duelClassmates(PDO $db, int $a, int $b): bool {
+    return (bool)one($db, 'SELECT 1 FROM club_profiles a JOIN club_profiles b ON a.club_id=b.club_id WHERE a.profile_id=? AND b.profile_id=? LIMIT 1', [$a,$b]);
 }
 function duelQuestion(array $duel, int $step): ?array {
     $questions=json_decode($duel['questions'],true);
@@ -37,15 +37,19 @@ $me=ownedProfile($db,$id,$method==='GET'?($_GET['profile']??0):($body['profile']
 $pid=(int)$me['id'];
 runSql($db,'UPDATE duels SET state="expired" WHERE (challenger=? OR opponent=?) AND expires_at<? AND state IN ("pending","active")',[$pid,$pid,time()]);
 if ($action==='arena') {
-    $opponents=rows($db,'SELECT DISTINCT p.id,p.nickname,w.equipped,CASE WHEN p.account_id=? THEN 1 ELSE 0 END AS family FROM profiles p LEFT JOIN wallets w ON w.profile_id=p.id WHERE p.id!=? AND (p.account_id=? OR p.id IN (SELECT b.profile_id FROM club_profiles a JOIN club_profiles b ON a.club_id=b.club_id WHERE a.profile_id=?)) ORDER BY family DESC,p.nickname,p.id LIMIT 100',[$id,$pid,$id,$pid]);
-    foreach ($opponents as &$o) { $o['id']=(int)$o['id']; $o['family']=(bool)$o['family']; $o['equipped']=json_decode($o['equipped']??'{}',true); } unset($o);
+    $classes=rows($db,'SELECT c.id,c.name FROM clubs c JOIN club_profiles cp ON cp.club_id=c.id WHERE cp.profile_id=? ORDER BY c.name,c.id',[$pid]);
+    $opponents=rows($db,'SELECT DISTINCT p.id,p.nickname,w.equipped FROM profiles p JOIN club_profiles b ON b.profile_id=p.id JOIN club_profiles a ON a.club_id=b.club_id LEFT JOIN wallets w ON w.profile_id=p.id WHERE a.profile_id=? AND p.id!=? ORDER BY p.nickname,p.id LIMIT 100',[$pid,$pid]);
+    foreach ($opponents as &$o) {
+        $o['id']=(int)$o['id']; $o['equipped']=json_decode($o['equipped']??'{}',true);
+        $o['classes']=array_column(rows($db,'SELECT c.name FROM clubs c JOIN club_profiles a ON a.club_id=c.id JOIN club_profiles b ON b.club_id=c.id WHERE a.profile_id=? AND b.profile_id=? ORDER BY c.name',[$pid,$o['id']]),'name');
+    } unset($o);
     $duels=rows($db,'SELECT * FROM duels WHERE challenger=? OR opponent=? ORDER BY CASE WHEN state IN ("pending","active") THEN 0 ELSE 1 END,created_at DESC,id DESC LIMIT 40',[$pid,$pid]);
-    $duels=array_values(array_filter($duels,fn($d)=>duelFriends($db,$pid,(int)$d['challenger']===$pid?(int)$d['opponent']:(int)$d['challenger'])));
-    respond(['opponents'=>$opponents,'duels'=>array_map(fn($d)=>duelView($db,$d,$pid),$duels)]);
+    $duels=array_values(array_filter($duels,fn($d)=>duelClassmates($db,$pid,(int)$d['challenger']===$pid?(int)$d['opponent']:(int)$d['challenger'])));
+    respond(['classes'=>$classes,'opponents'=>$opponents,'duels'=>array_map(fn($d)=>duelView($db,$d,$pid),$duels)]);
 }
 if ($action==='duel-create') {
     $other=(int)($body['opponent']??0);
-    if ($other===$pid || !duelFriends($db,$pid,$other)) fail('Scegli un amico del tuo gruppo o un profilo della famiglia.',403);
+    if ($other===$pid || !duelClassmates($db,$pid,$other)) fail('Scegli un compagno iscritto alla tua classe.',403);
     $curriculum=json_decode(file_get_contents(__DIR__.'/curriculum.json'),true,32,JSON_THROW_ON_ERROR);
     $category=$body['category']??'body';
     if (!is_string($category)||!in_array($category,['body','catpositions','toys','colors','hello','school'],true)||empty($curriculum[$category])) fail('Scegli un argomento disponibile.');
@@ -61,7 +65,7 @@ if ($action==='duel-create') {
     if (one($db,'SELECT 1 FROM duels WHERE ((challenger=? AND opponent=?) OR (challenger=? AND opponent=?)) AND category=? AND state IN ("pending","active")',[$pid,$other,$other,$pid,$category])) { $db->exec('ROLLBACK'); fail('Avete già una sfida aperta su questo argomento.',409); }
     foreach ([$pid,$other] as $player) {
         if ((int)one($db,'SELECT COUNT(*) AS n FROM duels WHERE (challenger=? OR opponent=?) AND expires_at>=? AND state IN ("pending","active")',[$player,$player,time()])['n']>=10) {
-            $db->exec('ROLLBACK'); fail($player===$pid?'Completa le sfide aperte prima di inviarne altre.':'Questo amico ha già tante sfide aperte. Riprova più tardi.',409);
+            $db->exec('ROLLBACK'); fail($player===$pid?'Completa le sfide aperte prima di inviarne altre.':'Questo compagno ha già tante sfide aperte. Riprova più tardi.',409);
         }
     }
     $token=bin2hex(random_bytes(16));$now=time();
@@ -75,7 +79,7 @@ $db->exec('BEGIN IMMEDIATE');
 $d=one($db,'SELECT * FROM duels WHERE id=? AND (challenger=? OR opponent=?)',[$token,$pid,$pid]);
 if (!$d) { $db->exec('ROLLBACK');fail('Sfida non trovata.',404); }
 $other=(int)$d['challenger']===$pid?(int)$d['opponent']:(int)$d['challenger'];
-if (!duelFriends($db,$pid,$other)) { $db->exec('ROLLBACK');fail('Non fate più parte dello stesso gruppo.',403); }
+if (!duelClassmates($db,$pid,$other)) { $db->exec('ROLLBACK');fail('Non fate più parte della stessa classe.',403); }
 $player=one($db,'SELECT * FROM duel_players WHERE duel=? AND profile=?',[$token,$pid]);
 if ($action==='duel') { $db->exec('COMMIT');respond(['duel'=>duelView($db,$d,$pid),'question'=>duelQuestion($d,(int)$player['step'])]); }
 if (in_array($action,['duel-accept','duel-decline','duel-cancel'],true)) {

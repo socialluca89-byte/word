@@ -2,17 +2,19 @@
 
 English learning adventures for children around seven, based on their own school programme.
 
+The current pilot is a classroom game. An adult creates a private class and shares its invitation code. Each participating profile must join that class to appear in its opponent list or class festival; merely sharing an adult account is insufficient. The current account model supports up to eight profiles per adult and up to 100 participating profiles per class.
+
 ## This release
 
 - Illustrated adventure clubhouse with responsive layouts, clearer controls and a dedicated friends arena.
-- Turn-based private duels: choose another family profile or a member of an invitation-only group, send an invitation, accept, answer the same 3–5 questions and compare server-verified scores. Games resume across devices and invitations expire after seven days. No public player search or chat; duels do not award spendable coins or mission XP.
+- Turn-based private duels: choose a classmate in a shared invitation-only class, send an invitation, accept, answer the same 3–5 questions and compare server-verified scores. Games resume across devices and invitations expire after seven days. Sharing an adult account alone does not make another profile eligible: both must join the same class. No public player search or chat; duels do not award spendable coins or mission XP.
 - Six worlds and a personal adventure passport.
 - Three-step missions: picture listening, missing letters / rearranging letters, and writing.
 - Server-verified experience and coins, daily reward limits, owned inventory and cosmetic avatar abilities.
 - Adult signup, recovery code, password recovery, profile rename/deletion and account deletion.
 - Up to eight isolated child profiles, with nicknames rather than child email addresses.
 - School programmes: review proposed words from pasted text, confirm the programme, optionally attach a photo/PDF privately, then play missions using those words.
-- Private weekly family leaderboard and invitation-only groups; optional participation per profile, improvement badges and a cooperative target.
+- Private weekly class leaderboard and invitation-only class groups; optional participation per profile, improvement badges and a cooperative target.
 - Guest play with local progress, local coins and a local wardrobe. Guest coins are not imported into online accounts.
 
 ## Rewards

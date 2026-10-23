@@ -130,8 +130,15 @@ with tempfile.TemporaryDirectory(prefix="wordyland-test-") as temporary:
         opponents = request(a, f'arena&profile={pid}')['opponents']
         assert pb in [p['id'] for p in opponents]
         assert all('account_id' not in p and 'username' not in p for p in opponents)
-        family = next(p['id'] for p in opponents if p['family'])
-        assert family != pid
+        family = next(p['id'] for p in request(a, 'session')['profiles'] if p['id'] != pid)
+        assert family not in [p['id'] for p in opponents]
+        # Sharing an adult account alone does not make someone a classmate.
+        request(a,'duel-create',{'profile':pid,'opponent':family,'category':'body'},token,403)
+        request(a,'club-join',{'profile':family,'code':club_info['code'],'consent':True},token)
+        roster=request(a,f'arena&profile={pid}')
+        assert roster['classes']==[{'id':club_id,'name':'Gruppo di prova'}]
+        assert family in [p['id'] for p in roster['opponents']]
+        assert all(p['classes']==['Gruppo di prova'] for p in roster['opponents'])
         outsider = client()
         tc = request(outsider, 'session')['csrf']
         tc = request(outsider, 'register', dict(username='test_'+secrets.token_hex(5), password=password, adult=True), tc)['csrf']
