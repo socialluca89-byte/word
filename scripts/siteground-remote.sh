@@ -218,7 +218,11 @@ case "$mode" in
     current=$(marker_value)
     BACKUP_DIR=''; backup_current "$current"
     restore_from "$dir"
-    [[ "$restore_sha" =~ ^[0-9a-f]{40}$ ]] && write_marker "$restore_sha"
+    if [[ "$restore_sha" =~ ^[0-9a-f]{40}$ ]]; then
+      write_marker "$restore_sha"
+    elif [[ -f "$target/.wordyland-managed" ]]; then
+      mv -f -- "$target/.wordyland-managed" "$priv/quarantine/marker-before-rollback"
+    fi
     echo "$(date -u +%FT%TZ) rollback to $which (${restore_sha:-unknown}) from ${current:-none}" >> "$priv/deploy.log"
     echo "ROLLED_BACK_TO=${restore_sha:-$which}"
     ;;

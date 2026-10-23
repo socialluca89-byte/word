@@ -86,7 +86,10 @@ case "$mode" in
       tar -C "$work/bundle" --owner=0 --group=0 -cf "$work/bundle.tar" "${FILES[@]}" SHA256SUMS
       priv="$(dirname "$SG_PATH")/.wordyland-deploy"
       ssh "${ssh_opts[@]}" "$remote" "umask 077 && test -d '$priv/incoming' && ! test -L '$priv/incoming' && cat > '$priv/incoming/$sha.tar'" < "$work/bundle.tar"
-      run_remote install "$SG_PATH" "$sha" "$prev"
+      install_out=$(run_remote install "$SG_PATH" "$sha" "$prev") || { printf '%s\n' "$install_out"; exit 1; }
+      printf '%s\n' "$install_out"
+      release_backup=$(sed -n 's|^Private backup: .*/releases/||p' <<<"$install_out" | tail -n1)
+      [[ -n "$release_backup" ]] || { echo 'Install did not report its backup' >&2; exit 1; }
     fi
     ;;
   *) echo "Unknown mode $mode" >&2; exit 1 ;;
@@ -94,16 +97,36 @@ esac
 
 # Live checks against the public site with unique cache-busting queries.
 expect_sha=${sha:-}
-token="verify-${GITHUB_RUN_ID:-local}-$(date +%s)"
-health=$(curl -fsS --retry 3 --retry-delay 5 "$SITE_URL/api.php?action=health&$token")
-echo "Health: $health"
-python3 -c 'import json,sys; d=json.loads(sys.argv[1]); sys.exit(0 if d.get("ready") is True and d.get("database")=="sqlite" else 1)' "$health" \
-  || { echo 'Health check failed' >&2; exit 1; }
-if [[ "$mode" == deploy ]]; then
+check_health() {
+  local token health
+  token="verify-${GITHUB_RUN_ID:-local}-$(date +%s%N)"
+  health=$(curl -fsS --retry 3 --retry-delay 5 --max-time 30 "$SITE_URL/api.php?action=health&$token") || { echo 'Health endpoint unreachable' >&2; return 1; }
+  echo "Health: $health"
+  python3 -c 'import json,sys; d=json.loads(sys.argv[1]); sys.exit(0 if d.get("ready") is True and d.get("database")=="sqlite" else 1)' "$health" \
+    || { echo 'Health check failed' >&2; return 1; }
+}
+check_files() {
+  local token f want body got
+  token="verify-${GITHUB_RUN_ID:-local}-$(date +%s%N)"
   for f in index.html classroom.js arena.js curriculum.json quests.css data.js worlds.js app.js accounts.js quests.js; do
     want=$(sha256sum "dist/$f" | cut -d' ' -f1)
-    got=$(curl -fsS --retry 3 --retry-delay 5 "$SITE_URL/$f?$token" | sha256sum | cut -d' ' -f1)
-    [[ "$want" == "$got" ]] || { echo "Live $f does not match commit $expect_sha" >&2; exit 1; }
+    curl -fsS --retry 3 --retry-delay 5 --max-time 30 -o "$work/live" "$SITE_URL/$f?$token" || { echo "Live $f unreachable" >&2; return 1; }
+    got=$(sha256sum "$work/live" | cut -d' ' -f1)
+    [[ "$want" == "$got" ]] || { echo "Live $f does not match commit $expect_sha" >&2; return 1; }
   done
-  echo "Live site serves the files of commit $expect_sha (10 static files compared byte-for-byte, API healthy)."
+  echo "Live site serves the files of commit $expect_sha (10 static files compared byte-for-byte)."
+}
+if [[ "$mode" == deploy ]]; then
+  if check_health && check_files; then
+    echo 'Live checks passed.'
+  else
+    if [[ -n "${release_backup:-}" ]]; then
+      echo "Live checks failed after publishing: restoring backup $release_backup." >&2
+      run_remote rollback "$SG_PATH" "$release_backup" || echo 'AUTOMATIC ROLLBACK FAILED - restore manually (docs/DEPLOYMENT.md)' >&2
+      check_health || echo 'Site still unhealthy after rollback.' >&2
+    fi
+    exit 1
+  fi
+else
+  check_health
 fi
