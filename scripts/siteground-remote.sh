@@ -177,13 +177,24 @@ case "$mode" in
       fi
     fi
     cache_origins=("$cache_origin")
-    [[ "$cache_origin" == http://wordyland.eu ]] && cache_origins=(http://127.0.0.1 http://wordyland.eu https://wordyland.eu)
+    if [[ "$cache_origin" == http://wordyland.eu ]]; then
+      cache_origins=(http://127.0.0.1)
+      # The web/cache listener can bind to the host interface rather than loopback.
+      read -r sg_cache_client_addr sg_cache_client_port sg_cache_server_addr sg_cache_server_port <<< "${SSH_CONNECTION:-}" || true
+      sg_cache_host_addr=$(php -r 'echo gethostbyname(gethostname());' 2>/dev/null) || sg_cache_host_addr=''
+      for sg_cache_addr in "${sg_cache_server_addr:-}" "$sg_cache_host_addr"; do
+        if [[ "$sg_cache_addr" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then cache_origins+=("http://$sg_cache_addr"); fi
+      done
+      cache_origins+=(http://wordyland.eu https://wordyland.eu)
+    fi
     for cache_endpoint in "${cache_origins[@]}"; do
       [[ "$purge_ok" == 1 ]] && break
       for cache_path in '/(.*)' '/' '/index.html'; do
-        cache_status=$(curl --noproxy '*' -sS --max-time 10 -o /dev/null -w '%{http_code}' -X PURGE -H 'Host: wordyland.eu' "$cache_endpoint$cache_path") || cache_status=000
+        cache_status=$(curl --noproxy '*' -sS --max-time 10 -o /dev/null -w '%{http_code}' -X PURGE -H 'Host: wordyland.eu' "$cache_endpoint$cache_path" 2>/dev/null) || cache_status=000
         if [[ "$cache_status" =~ ^2[0-9]{2}$ ]]; then purge_ok=1; fi
-        echo "Cache purge $cache_endpoint$cache_path: HTTP $cache_status"
+        cache_label=$cache_endpoint
+        if [[ "$cache_endpoint" != http://127.0.0.1 && "$cache_endpoint" != http://wordyland.eu && "$cache_endpoint" != https://wordyland.eu && "$cache_origin" == http://wordyland.eu ]]; then cache_label=server-interface; fi
+        echo "Cache purge $cache_label$cache_path: HTTP $cache_status"
       done
     done
     [[ "$purge_ok" == 1 ]] || die 'SiteGround cache purge failed'

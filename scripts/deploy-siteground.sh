@@ -60,7 +60,7 @@ run_remote() {
   if [[ "${GITHUB_ACTIONS:-}" == true ]]; then
     while IFS= read -r line; do
       case "$line" in
-        'ERROR:'*) printf '::error title=SiteGround remote::%s\n' "${line//%/%25}" ;;
+        'ERROR:'*) if [[ "$1" == purge-cache ]]; then printf '::warning title=SiteGround cache::%s\n' "${line//%/%25}"; else printf '::error title=SiteGround remote::%s\n' "${line//%/%25}"; fi ;;
         'Cache purge '*) printf '::notice title=SiteGround cache::%s\n' "${line//%/%25}" ;;
       esac
     done <<< "$output"
@@ -155,7 +155,8 @@ check_files() {
 }
 if [[ "$mode" == deploy ]]; then
   deploy_phase=cache-and-live-checks
-  if purge_cache && check_health && check_files; then
+  purge_cache || echo 'Cache purge unavailable; ordinary visitor URLs must still match the release.' >&2
+  if check_health && check_files; then
     echo 'Live checks passed.'
   else
     if [[ -n "${release_backup:-}" ]]; then
@@ -170,6 +171,6 @@ if [[ "$mode" == deploy ]]; then
     exit 1
   fi
 else
-  purge_cache
+  purge_cache || echo 'Files restored; cache purge unavailable.' >&2
   check_health
 fi

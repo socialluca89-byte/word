@@ -80,6 +80,9 @@ ls "$priv/releases" | grep -q initial || fail 'no initial backup'
 echo '--- repeat deploy is idempotent'
 out=$(bash scripts/deploy-siteground.sh deploy); grep -q 'already deployed' <<<"$out" || fail 'not idempotent'
 
+echo '--- unavailable cache management is acceptable only with fresh ordinary visitor URLs'
+FAKE_PURGE_STATUS=403 bash scripts/deploy-siteground.sh deploy >/dev/null 2>&1 || fail 'fresh ordinary homepage rejected with cache management disabled'
+
 echo '--- failed install (symlinked file) restores previous files and keeps the marker'
 parent=$(git rev-parse HEAD~1)
 printf '%s\n' "$parent" > "$docroot/.wordyland-managed"
@@ -120,7 +123,7 @@ cmp -s dist/index.html "$docroot/index.html" || fail 'redeploy content'
 
 echo '--- a stale ordinary homepage fails even when cache-busting checks are fresh'
 printf '%s\n' "$parent" > "$docroot/.wordyland-managed"; echo 'previous cached page WordyLand' > "$docroot/index.html"
-FAKE_STALE_HOME=1 bash scripts/deploy-siteground.sh deploy >"$root/out_stale" 2>&1 && fail 'stale normal homepage was accepted'
+FAKE_STALE_HOME=1 FAKE_PURGE_STATUS=403 bash scripts/deploy-siteground.sh deploy >"$root/out_stale" 2>&1 && fail 'stale normal homepage was accepted'
 grep -q 'Normal homepage / is stale' "$root/out_stale" || fail 'normal URL was not checked'
 grep -q 'previous cached page' "$docroot/index.html" || fail 'stale-home failure did not restore previous release'
 bash scripts/deploy-siteground.sh deploy >/dev/null || fail 'redeploy after cache failure'
