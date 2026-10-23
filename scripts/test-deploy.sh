@@ -1,0 +1,93 @@
+#!/usr/bin/env bash
+# Isolated test of the SiteGround deployment: a fake "ssh" runs the remote side
+# locally against a temporary hosting account; a local PHP server stands in for
+# the public site. Never touches the real server.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+root=$(mktemp -d); trap 'kill ${php_pid:-0} 2>/dev/null || true; rm -rf -- "$root"' EXIT
+home="$root/home"; site="$home/www/wordyland.eu"; docroot="$site/public_html"
+mkdir -p "$docroot/.well-known" "$site/.wordyland-data" "$root/bin"
+echo keep > "$docroot/.well-known/acme"; echo db > "$site/.wordyland-data/keep"
+fail() { echo "TEST FAILED: $*" >&2; exit 1; }
+
+# Fake ssh: drop options, run the remote command locally with the fake HOME.
+cat > "$root/bin/ssh" <<'FAKE'
+#!/usr/bin/env bash
+while [[ $# -gt 0 ]]; do case "$1" in -p|-o|-i) shift 2;; -*) shift;; *) break;; esac; done
+shift # user@host
+[[ -n "${FAKE_SSH_FAIL_ON:-}" && "$*" == *"$FAKE_SSH_FAIL_ON"* ]] && { echo 'simulated transfer failure' >&2; exit 255; }
+cd "$FAKE_HOME"; HOME="$FAKE_HOME" exec bash -c "$*"
+FAKE
+chmod +x "$root/bin/ssh"
+export PATH="$root/bin:$PATH" FAKE_HOME="$home"
+
+ssh-keygen -q -t ed25519 -N 'test pass' -f "$root/key" -C test >/dev/null
+export SG_HOST=ssh.example.test SG_USER=tester SG_PORT=18765 SG_PATH="$docroot"
+export SG_PRIVATE_KEY="$(cat "$root/key")" SG_KEY_PASSPHRASE='test pass'
+export SG_KNOWN_HOSTS="[ssh.example.test]:18765 $(cat "$root/key.pub")"
+export SITE_URL=http://127.0.0.1:8765 GITHUB_RUN_ID=test
+php -S 127.0.0.1:8765 -t "$docroot" >/dev/null 2>&1 & php_pid=$!
+
+# Existing site: older WordyLand version with an unmarked root and a stray PHP copy.
+cp dist/index.html dist/api.php dist/platform.php "$docroot/"
+echo '<?php echo "secret";' > "$docroot/api.php.wordyland-previous"
+git_sha=$(git rev-parse HEAD)
+
+echo '--- refuses a directory outside wordyland.eu/public_html'
+SG_PATH="$home/www/other/public_html" bash scripts/deploy-siteground.sh deploy >/dev/null 2>&1 && fail 'accepted wrong path'
+echo '--- refuses a symlinked document root'
+ln -s "$docroot" "$home/www/link"; mkdir -p "$home/www/l2/wordyland.eu"; ln -s "$docroot" "$home/www/l2/wordyland.eu/public_html"
+SG_PATH="$home/www/l2/wordyland.eu/public_html" bash scripts/deploy-siteground.sh deploy >/dev/null 2>&1 && fail 'accepted symlink'
+
+echo '--- simulated transfer failure leaves the site untouched'
+before=$(sha256sum "$docroot/index.html")
+FAKE_SSH_FAIL_ON='incoming/' bash scripts/deploy-siteground.sh deploy >/dev/null 2>&1 && fail 'transfer failure not detected'
+[[ $(sha256sum "$docroot/index.html") == "$before" ]] || fail 'site changed after failed transfer'
+
+echo '--- first deploy'
+bash scripts/deploy-siteground.sh deploy | tee "$root/out1"
+[[ $(cat "$docroot/.wordyland-managed") == "$git_sha" ]] || fail 'marker not set'
+[[ ! -e "$docroot/api.php.wordyland-previous" ]] || fail 'stray PHP copy still public'
+[[ -z $(find "$docroot" \( -name '*.wordyland-*' -o -name '*.tar' -o -name SHA256SUMS \) ! -name .wordyland-managed) ]] || fail 'temporary files in docroot'
+[[ -f "$docroot/.well-known/acme" && -f "$site/.wordyland-data/keep" ]] || fail 'preserved files lost'
+for f in classroom.php arena.php api.php platform.php classroom.js arena.js curriculum.json quests.css data.js worlds.js app.js accounts.js quests.js index.html; do
+  cmp -s "dist/$f" "$docroot/$f" || fail "$f differs"
+done
+priv="$site/.wordyland-deploy"; [[ $(stat -c %a "$priv") == 700 ]] || fail 'private dir not 700'
+ls "$priv/releases" | grep -q initial || fail 'no initial backup'
+
+echo '--- repeat deploy is idempotent'
+out=$(bash scripts/deploy-siteground.sh deploy); grep -q 'already deployed' <<<"$out" || fail 'not idempotent'
+
+echo '--- failed install (symlinked file) restores previous files and keeps the marker'
+parent=$(git rev-parse HEAD~1)
+printf '%s\n' "$parent" > "$docroot/.wordyland-managed"
+echo '<?php // old' > "$docroot/classroom.php"; echo 'old page WordyLand' > "$docroot/index.html"
+rm "$docroot/quests.js"; ln -s /etc/hostname "$docroot/quests.js"
+bash scripts/deploy-siteground.sh deploy >/dev/null 2>&1 && fail 'install over symlink succeeded'
+grep -q '// old' "$docroot/classroom.php" || fail 'classroom.php not restored after failure'
+grep -q 'old page' "$docroot/index.html" || fail 'index.html changed despite failure'
+[[ $(cat "$docroot/.wordyland-managed") == "$parent" ]] || fail 'marker changed after failure'
+rm "$docroot/quests.js"
+bash scripts/deploy-siteground.sh deploy >/dev/null || fail 'deploy after fix failed'
+[[ $(cat "$docroot/.wordyland-managed") == "$git_sha" ]] || fail 'marker not updated'
+
+echo '--- an obsolete run does not overwrite a newer deployed commit'
+printf '%s\n' "$git_sha" > "$docroot/.wordyland-managed"
+git worktree add -q "$root/old" HEAD~1
+cp scripts/deploy-siteground.sh scripts/siteground-remote.sh "$root/old/scripts/"
+out=$(cd "$root/old" && bash scripts/deploy-siteground.sh deploy); grep -q 'obsolete' <<<"$out" || fail 'obsolete run not skipped'
+git worktree remove --force "$root/old"
+cmp -s dist/index.html "$docroot/index.html" || fail 'obsolete run changed the site'
+
+echo '--- rollback restores the previous files'
+bash scripts/deploy-siteground.sh rollback latest | tail -n 3
+grep -q 'old page' "$docroot/index.html" || fail 'rollback did not restore the previous release files'
+[[ $(cat "$docroot/.wordyland-managed") == "$parent" ]] || fail 'rollback marker wrong'
+bash scripts/deploy-siteground.sh deploy >/dev/null || fail 'redeploy after rollback failed'
+cmp -s dist/index.html "$docroot/index.html" || fail 'redeploy did not restore release'
+
+echo '--- refuses unknown site without marker'
+rm "$docroot/.wordyland-managed"; echo '<html>other</html>' > "$docroot/index.html"
+bash scripts/deploy-siteground.sh deploy >/dev/null 2>&1 && fail 'overwrote unknown site'
+echo 'Deployment tests passed: path/symlink refusal, transfer failure, private staging, checksums, idempotence, stale/unknown marker, rollback, preservation.'
