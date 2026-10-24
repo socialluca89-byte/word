@@ -115,8 +115,21 @@ function onlinePresence(PDO $db,array $ids): array {
     $result=[];foreach($items as $row)$result[(int)$row['profile_id']]=[1=>'online',2=>'ready',3=>'busy'][(int)$row['rank']];return $result;
 }
 
+// Resume metadata is additive; old in-progress missions remain readable.
+if(!in_array('source',array_column($db->query('PRAGMA table_info(quests)')->fetchAll(),'name'),true)){
+    $db->exec('BEGIN IMMEDIATE');
+    try{if(!in_array('source',array_column($db->query('PRAGMA table_info(quests)')->fetchAll(),'name'),true))$db->exec('ALTER TABLE quests ADD COLUMN source TEXT NOT NULL DEFAULT ""');$db->exec('COMMIT');}catch(Throwable $error){$db->exec('ROLLBACK');throw $error;}
+}
+$db->exec('CREATE INDEX IF NOT EXISTS quests_resume ON quests(profile_id,completed,created_at)');
+function questLifetime(): int{return 604800;}
+function questSnapshot(array $quest): array {
+    $questions=json_decode($quest['questions'],true);$step=(int)$quest['step'];
+    if($quest['source']===''){static $curriculum=null;$curriculum??=json_decode(file_get_contents(__DIR__.'/curriculum.json'),true);foreach(['catpositions','penpositions','mousepositions'] as $category){if(!array_diff(array_column($questions,'word'),array_column($curriculum[$category],0))){$quest['source']=$category;break;}}}
+    return ['token'=>$quest['token'],'total'=>count($questions),'step'=>$step,'activity'=>$quest['activity'],'source'=>$quest['source'],'xp'=>(int)$quest['xp'],'expiresAt'=>(int)$quest['created_at']+questLifetime()];
+}
+
 require __DIR__ . '/arena.php';
-$platformActions = ['hub','quest-start','quest-answer','buy','equip','study-save','study-file','study-remove','club-create','club-join','club-leave','rename-profile'];
+$platformActions = ['hub','pending-games','quest-resume','quest-start','quest-answer','buy','equip','study-save','study-file','study-remove','club-create','club-join','club-leave','rename-profile'];
 if (!in_array($action, $platformActions, true)) return;
 $p = ownedProfile($db, $id, $method === 'GET' ? ($_GET['profile'] ?? 0) : ($body['profile'] ?? 0));
 $pid = (int)$p['id'];
@@ -125,6 +138,21 @@ if($method==='POST'&&$action==='rename-profile') {
     if(!$nickname||strlen($nickname)>80)fail('Scegli un soprannome breve.');
     runSql($db,'UPDATE profiles SET nickname=? WHERE id=? AND account_id=?',[$nickname,$pid,$id]);
     respond(['nickname'=>$nickname,'profiles'=>profiles($db,$id)]);
+}
+if(in_array($action,['pending-games','quest-resume'],true)){
+    if($method!=='GET')fail('Metodo non consentito.',405);
+    if($action==='quest-resume'){
+        $quest=one($db,'SELECT * FROM quests WHERE token=? AND profile_id=?',[(string)($_GET['token']??''),$pid]);
+        if(!$quest)fail('Missione non disponibile.',404);
+        if((int)$quest['created_at']<time()-questLifetime())fail('Questa missione è scaduta. Puoi iniziarne una nuova.',410);
+        if($quest['completed'])fail('Questa missione è già completata.',409);
+        $snapshot=questSnapshot($quest);$questions=json_decode($quest['questions'],true);
+        respond($snapshot+['question'=>publicQuestion($questions[$snapshot['step']],$snapshot['step'])]);
+    }
+    $quests=rows($db,'SELECT * FROM quests WHERE profile_id=? AND completed=0 AND created_at>=? ORDER BY created_at DESC,token LIMIT 20',[$pid,time()-questLifetime()]);
+    $duels=rows($db,'SELECT d.* FROM duels d JOIN duel_players dp ON dp.duel=d.id AND dp.profile=? WHERE d.state="active" AND d.expires_at>=? ORDER BY d.created_at DESC,d.id LIMIT 40',[$pid,time()]);
+    $pending=[];foreach($duels as $duel){$other=(int)$duel['challenger']===$pid?(int)$duel['opponent']:(int)$duel['challenger'];if(!duelClassmates($db,$pid,$other))continue;$view=duelView($db,$duel,$pid);if($view['step']<$view['total'])$pending[]=$view;}
+    respond(['quests'=>array_map('questSnapshot',$quests),'duels'=>$pending]);
 }
 if ($method === 'GET' && $action === 'hub') {
     $club = (int)($_GET['club'] ?? 0);
@@ -248,14 +276,14 @@ if ($method === 'POST' && $action==='quest-start') {
         $questions[]=$q;
     }
     $token=bin2hex(random_bytes(16));
-    runSql($db,'DELETE FROM quests WHERE profile_id=? AND completed=0 AND created_at<?',[$pid,time()-3600]);
-    runSql($db,'INSERT INTO quests(token,profile_id,questions,created_at,activity) VALUES (?,?,?,?,?)',[$token,$pid,json_encode($questions,JSON_UNESCAPED_UNICODE),time(),$activity]);
+    runSql($db,'DELETE FROM quests WHERE profile_id=? AND completed=0 AND created_at<?',[$pid,time()-questLifetime()]);
+    runSql($db,'INSERT INTO quests(token,profile_id,questions,created_at,activity,source) VALUES (?,?,?,?,?,?)',[$token,$pid,json_encode($questions,JSON_UNESCAPED_UNICODE),time(),$activity,$study?'study:'.$study:$category]);
     respond(['token'=>$token,'total'=>count($questions),'question'=>publicQuestion($questions[0],0)]);
 }
 if ($method==='POST' && $action==='quest-answer') {
     $db->exec('BEGIN IMMEDIATE');
     $quest=one($db,'SELECT * FROM quests WHERE token=? AND profile_id=?',[(string)($body['token']??''),$pid]);
-    if(!$quest || $quest['created_at']<time()-3600){$db->exec('ROLLBACK');fail('Questa missione è terminata. Iniziane una nuova.',410);}
+    if(!$quest || $quest['created_at']<time()-questLifetime()){$db->exec('ROLLBACK');fail('Questa missione è terminata. Iniziane una nuova.',410);}
     if($quest['completed']){$db->exec('ROLLBACK');fail('Premio già assegnato a questa missione.',409);}
     if(($body['step']??null)!==(int)$quest['step']){$db->exec('ROLLBACK');fail('La missione è avanzata: riparti dalla schermata attuale.',409);}
     $questions=json_decode($quest['questions'],true);$q=$questions[$quest['step']];$word=normalWord($q['word']);

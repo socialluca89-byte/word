@@ -24,12 +24,55 @@
   const say=text=>{const e=root.querySelector('#questStatus');if(e)e.textContent=text;};
   const api=(action,data)=>window.wordylandAccount.request(action,data===undefined?undefined:{...data,profile:profile.id});
   const storeGuest=()=>{guest.level=1+Math.floor(guest.xp/100);try{localStorage.setItem('wordylandGuestWallet',JSON.stringify(guest));}catch{}};
+  const resumeHost=document.createElement('section');resumeHost.id='resumeHub';resumeHost.className='resumeHub';resumeHost.hidden=true;resumeHost.setAttribute('aria-label','Missioni e sfide da continuare');document.querySelector('.startChoices').before(resumeHost);
+  let pending={quests:[],duels:[]},pendingEpoch=0,resumeDuel=null;
+  const guestMissionKey='wordylandGuestMission';
+  guest.finished=guest.finished&&typeof guest.finished==='object'&&!Array.isArray(guest.finished)?guest.finished:{};
+  for(const [id,time] of Object.entries(guest.finished))if(!/^[a-f0-9]{32}$/.test(id)||!Number.isFinite(time)||time<Date.now()-604800000)delete guest.finished[id];
+  function guestPool(source){return source==='personal'?allWords().filter(w=>!w[0].includes(' ')):lists[source]||lists.body;}
+  function guestDraft(){
+    try{const draft=JSON.parse(localStorage.getItem(guestMissionKey)||'null');if(!draft||typeof draft.source!=='string'||draft.source!=='personal'&&!Object.hasOwn(lists,draft.source)||!Array.isArray(draft.words)||!draft.words.length||draft.words.length>8||!Number.isInteger(draft.step)||draft.step<0||draft.step>=draft.words.length||!places[draft.activity]||!/^[a-f0-9]{32}$/.test(draft.id)||!Number.isFinite(draft.expiresAt)||draft.expiresAt<Date.now()||guest.finished[draft.id])return null;const pool=guestPool(draft.source);if(!draft.words.every(word=>pool.some(row=>row[0]===word)))return null;return draft;}catch{return null;}
+  }
+  function persistGuestMission(){
+    if(profile.id||!mission||mission.token!=='guest')return true;
+    try{localStorage.setItem(guestMissionKey,JSON.stringify({id:mission.id,words:mission.questions.map(q=>q.word),step:mission.step||0,xp:mission.xp,source:mission.source,activity:mission.activity,expiresAt:mission.expiresAt}));return true;}catch{return false;}
+  }
+  function missionTitle(source,kind){return lessonTopics[source]?.name||(source==='catpositions'?'Preposizioni · Il gatto e la scatola':source==='focus'?'Il corpo · ripasso mirato':source?.startsWith('study:')?'La tua scheda di scuola':places[kind]?.name||'La tua missione');}
+  function drawContinuations(){
+    const draft=!profile.id?guestDraft():null;
+    const quests=profile.id?pending.quests:(draft?[{token:'guest',source:draft.source,activity:draft.activity,step:draft.step,total:draft.words.length}]:[]);
+    const duels=profile.id?pending.duels:[];
+    resumeHost.hidden=Boolean(profile.id&&!hub)||!quests.length&&!duels.length;
+    if(resumeHost.hidden){if(location.hash==='#continua'){resumeHost.hidden=false;resumeHost.innerHTML='<h3>Da continuare</h3><p>'+(profile.id&&!hub?'Carico le partite del tuo profilo…':profile.id?'Non hai partite da continuare. Puoi iniziare una nuova avventura.':window.wordylandAccount.info().username?'Scegli il tuo profilo nell’area account per ritrovare le partite salvate.':'Non hai missioni ospite da continuare in questo browser. Accedi al tuo profilo per ritrovare le partite online.')+'</p><a class="lessonShortcut" href="#allenati">Vai agli esercizi →</a>';}else resumeHost.innerHTML='';return;}
+    resumeHost.innerHTML='<h3>Da continuare</h3><p>Riparti dalla prima domanda ancora da rispondere.'+(profile.id?' Le risposte confermate sono salvate nel tuo profilo.':' Come ospite, la missione resta in questo browser.')+'</p><div class="resumeList">'+quests.map(q=>'<article><span aria-hidden="true">📚</span><div><b>'+esc(missionTitle(q.source,q.activity))+'</b><small>'+q.step+' / '+q.total+' risposte confermate</small></div><button class="primary" data-resume-quest="'+esc(q.token)+'">Riprendi →</button></article>').join('')+duels.map(d=>'<article><span aria-hidden="true">'+(places[d.activity]?.icon||'⚔️')+'</span><div><b>Sfida con '+esc(d.nickname)+'</b><small>'+d.step+' / '+d.total+' risposte confermate · '+esc(places[d.activity]?.name||'Sfida')+'</small></div><button class="primary" data-resume-duel="'+esc(d.id)+'">Riprendi →</button></article>').join('')+'</div><p id="resumeStatus" role="status"></p>';
+    resumeHost.querySelectorAll('[data-resume-quest]').forEach(button=>button.onclick=()=>resumeQuest(button.dataset.resumeQuest));
+    resumeHost.querySelectorAll('[data-resume-duel]').forEach(button=>button.onclick=()=>{if(busy)return;resumeDuel=button.dataset.resumeDuel;tab='arena';history.replaceState(null,'','#sfide');window.dispatchEvent(new Event('wordyland-play-view'));render();root.scrollIntoView({block:'start'});});
+  }
+  async function refreshPending(){
+    const owner=profile.id,current=++pendingEpoch;
+    if(!owner){pending={quests:[],duels:[]};drawContinuations();return;}
+    try{const result=await api('pending-games&profile='+owner);if(profile.id!==owner||current!==pendingEpoch)return;pending=result;drawContinuations();}
+    catch{if(profile.id!==owner||current!==pendingEpoch)return;const status=resumeHost.querySelector('#resumeStatus');if(status)status.textContent='Torna online per verificare e riprendere le partite salvate.';}
+  }
+  async function resumeQuest(token){
+    if(busy)return;busy=true;const owner=profile.id;
+    try{
+      if(owner){const result=await api('quest-resume&profile='+owner+'&token='+encodeURIComponent(token));if(profile.id!==owner)return;activity=places[result.activity]?result.activity:'pets';lessonSource=result.source;mission={token:result.token,total:result.total,step:result.step,xp:result.xp,profile:owner,activity,source:result.source};question=result.question;}
+      else{const draft=guestDraft();if(!draft)throw Error('La missione non è più disponibile in questo browser.');const pool=guestPool(draft.source),rows=draft.words.map(word=>pool.find(row=>row[0]===word)),questions=rows.map((row,index)=>makeLessonQuestion(row,index,rows.length,pool));activity=draft.activity;lessonSource=draft.source;mission={token:'guest',id:draft.id,questions,total:questions.length,step:draft.step,xp:Math.max(0,Math.min(150,Number(draft.xp)||0)),profile:null,activity,source:draft.source,expiresAt:draft.expiresAt};question=questions[draft.step];}
+      tab='missions';history.replaceState(null,'','#missioni');window.dispatchEvent(new Event('wordyland-play-view'));setWorld(places[activity].world);render();root.querySelector('#missionStage').scrollIntoView({block:'start'});say('Missione ripresa: le risposte già confermate sono conservate.');
+    }catch(error){const status=resumeHost.querySelector('#resumeStatus');if(status)status.textContent=error.message;}
+    finally{busy=false;}
+  }
+  window.addEventListener('wordyland-progress-saved',()=>refreshPending());
+  window.addEventListener('wordyland-presence',()=>{if(document.visibilityState==='visible'&&navigator.onLine&&!busy)refreshPending();});
+  window.addEventListener('wordyland-continue',()=>refreshPending().then(()=>{if(!resumeHost.hidden)resumeHost.scrollIntoView({block:'start'});}));
+
   function mascot(w=wallet()) {const e=w?.equipped||{},pilot=['fox','panda','robot','dragon','octopus','lion'].includes(e.avatar)?e.avatar:'fox';return '<span class="avatarHat">'+(item(e.hat)?.icon||'')+'</span><span class="questMascot racerModel '+(e.effect==='flight'?'canFly':'')+'" data-racer="'+pilot+'" role="img" aria-label="'+item(pilot).name+'"></span><span class="avatarEffect">'+(item(e.effect)?.icon||'')+'</span>';}
   async function refresh() {
     const expected=profile.id;
     if(expected){let result=await api('hub&profile='+expected+(club?'&club='+club:''));if(profile.id!==expected)return;if(!club&&result.clubs?.length){club=Number(result.clubs[0].id);result=await api('hub&profile='+expected+'&club='+club);if(profile.id!==expected)return;}hub=result;}
     else hub=null;
-    render();adultTools();
+    if(!busy&&!mission&&!resumeDuel&&!root.querySelector('#duelStage:not([hidden])'))render();drawContinuations();adultTools();
   }
   function render() {
     clearScene();
@@ -39,7 +82,7 @@
     window.dispatchEvent(new CustomEvent('wordyland-world-state',{detail:{activity,equipped:w?.equipped||{},adventures:profile.id?hub?.adventures||{}:guest.adventures}}));
     if(tab==='lessons')renderLessons();
     if(tab==='adventures')renderAdventures();
-    if(tab==='arena')window.wordylandArena.mount(root.querySelector('#questContent'),profile,openAdults);if(tab==='missions')renderMissions();if(tab==='shop')renderShop();if(tab==='festival')renderFestival();
+    if(tab==='arena')window.wordylandArena.mount(root.querySelector('#questContent'),profile,openAdults,resumeDuel);resumeDuel=null;if(tab==='missions')renderMissions();if(tab==='shop')renderShop();if(tab==='festival')renderFestival();
   }
   function chooseActivity(id,play=false){
     if(busy||!places[id])return;
@@ -81,12 +124,14 @@
     root.querySelector('#questSource').value=mission?.source||lessonSource||place.category;
     root.querySelector('#backIsland').onclick=()=>{tab='adventures';render();};
     root.querySelector('#beginQuest').onclick=startQuest;
-    if(mission)drawQuestion();
+    if(mission){if(mission.nextQuestion){question=mission.nextQuestion;delete mission.nextQuestion;}drawQuestion();}
   }
   async function startQuest() {
     if(busy)return;busy=true;
     try {
       const source=root.querySelector('#questSource').value, owner=profile.id;
+      const existing=profile.id?pending.quests.find(q=>q.source===source&&q.activity===activity):guestDraft();
+      if(existing&&(profile.id||existing.source===source&&existing.activity===activity)){busy=false;await resumeQuest(profile.id?existing.token:'guest');return;}
       if(profile.id) {
         const result=await api('quest-start',source.startsWith('study:')?{study:Number(source.split(':')[1]),activity}:{category:source,activity});
         if(owner!==profile.id)return;mission={token:result.token,total:result.total,profile:owner,activity,source};question=result.question;
@@ -94,9 +139,10 @@
         let pool=source==='personal'?allWords().filter(w=>!w[0].includes(' ')):lists[source]||lists.body;
         const candidates=pool;pool=shuffle(pool).slice(0,3);
         const questions=pool.map((w,i)=>makeLessonQuestion(w,i,pool.length,candidates));
-        mission={token:'guest',questions,total:questions.length,xp:0,profile:null,activity,source};question=questions[0];
+        mission={token:'guest',id:Array.from(crypto.getRandomValues(new Uint8Array(16)),b=>b.toString(16).padStart(2,'0')).join(''),questions,total:questions.length,step:0,xp:0,profile:null,activity,source,expiresAt:Date.now()+604800000};question=questions[0];
       }
-      drawQuestion();root.querySelector('#missionStage').scrollIntoView({behavior:window.wordylandMotion.allowed()?'smooth':'instant',block:'start'});say('Nessuna fretta: puoi ascoltare e chiedere aiuto.');
+      const stored=profile.id||persistGuestMission();refreshPending();
+      drawQuestion();root.querySelector('#missionStage').scrollIntoView({behavior:window.wordylandMotion.allowed()?'smooth':'instant',block:'start'});say(stored?'Nessuna fretta: puoi ascoltare e chiedere aiuto.':'Il browser non può salvare la missione: tieni aperta questa pagina.');
     } catch(e){say(e.message);}finally{busy=false;}
   }
   function audio(useAnswer=false) {
@@ -110,9 +156,10 @@
     const stage=root.querySelector('#missionStage');if(!stage)return;
     const previousWorld=stage.querySelector('#missionWorld');if(!previousWorld)clearScene();
     root.querySelector('.missionGrid').hidden=true;stage.hidden=false;
-    const q=question;stage.innerHTML='<div class="missionWorld" id="missionWorld"><span class="sceneFallback">'+places[mission.activity].icon+'</span><span class="worldProgressLabel">'+(q.number-1)+' / '+mission.total+' tappe</span></div><div class="questStep">PROVA '+q.number+' DI '+mission.total+'<span>'+currentWorld().icon+' '+currentWorld().name+'</span></div><div class="questTrack"><i style="width:'+((q.number-1)/mission.total*100)+'%"></i></div><div class="questPicture">'+picture(q.word,q.emoji)+'</div><p>'+esc(q.translation)+'</p><button class="audio" id="questListen">🔊 Ascolta</button><div id="questWork"></div><p id="questFeedback" role="status" aria-live="polite"></p><div id="questActions"></div>';
+    const q=question;stage.innerHTML='<div class="missionWorld" id="missionWorld"><span class="sceneFallback">'+places[mission.activity].icon+'</span><span class="worldProgressLabel">'+(q.number-1)+' / '+mission.total+' tappe</span></div><div class="missionPause"><button class="audio" id="pauseQuest">Pausa · riprendi più tardi</button><small>Le risposte confermate si salvano automaticamente.</small></div><div class="questStep">PROVA '+q.number+' DI '+mission.total+'<span>'+currentWorld().icon+' '+currentWorld().name+'</span></div><div class="questTrack"><i style="width:'+((q.number-1)/mission.total*100)+'%"></i></div><div class="questPicture">'+picture(q.word,q.emoji)+'</div><p>'+esc(q.translation)+'</p><button class="audio" id="questListen">🔊 Ascolta</button><div id="questWork"></div><p id="questFeedback" role="status" aria-live="polite"></p><div id="questActions"></div>';
     if(previousWorld)stage.querySelector('#missionWorld').replaceWith(previousWorld);
     else sceneView=window.wordylandIsland.mount(stage.querySelector('#missionWorld'),{kind:mission.activity,equipped:wallet()?.equipped,progress:(q.number-1)/mission.total});
+    stage.querySelector('#pauseQuest').onclick=async()=>{if(busy)return;if(!profile.id&&!persistGuestMission()){say('Il browser non può salvare la missione: tieni aperta questa pagina.');return;}mission=null;question=null;tab='adventures';location.hash='#continua';render();await refreshPending();if(!resumeHost.hidden)resumeHost.scrollIntoView({block:'start'});};
     stage.querySelector('#questListen').onclick=()=>audio();
     const work=stage.querySelector('#questWork'),actions=stage.querySelector('#questActions');
     if(!challenge){work.innerHTML='<h3>Guarda bene la parola</h3><div class="questWord">'+esc(q.word)+'</div><p>Ascolta e osserva. Quando vuoi, giochiamo!</p>';actions.innerHTML='<button class="primary" id="readyChallenge">Sono pronto! →</button>';actions.querySelector('button').onclick=()=>drawQuestion(true);if(['count','dialogue'].includes(q.kind)){const listen=document.createElement('button');listen.className='audio';listen.textContent='🔊 Ascolta la risposta';listen.onclick=()=>audio(true);work.append(listen);}actions.querySelector('button').focus({preventScroll:true});return;}
@@ -149,7 +196,7 @@
   }
   async function submitAnswer(answer){
     if(busy)return;if(!answer.trim()){say('Inserisci la risposta oppure usa Un aiuto.');return;}busy=true;
-    const feedback=root.querySelector('#questFeedback'),owner=profile.id,token=mission.token;
+    const feedback=root.querySelector('#questFeedback'),owner=profile.id,token=mission.token;root.querySelector('#pauseQuest').disabled=true;
     try{
       let result;
       if(profile.id){result=await api('quest-answer',{token:mission.token,step:question.number-1,answer});}
@@ -160,14 +207,18 @@
           const day=new Date().toISOString().slice(0,10),key=day+':'+normalize(question.word);
           if(!guest.credits[key]&&Object.keys(guest.credits).filter(x=>x.startsWith(day)).length<15){guest.credits[key]=true;guest.xp+=10;mission.xp+=10;}
           const done=question.number===mission.total;
+          if(guest.finished[mission.id])throw Error('Questa missione è già completata. Aprine una nuova.');
           let coins=0;if(done&&mission.xp>0&&(guest.paid[day]||0)<3){coins=15;guest.coins+=coins;guest.paid[day]=(guest.paid[day]||0)+1;}
-          if(done)guest.adventures[mission.activity]=(Number(guest.adventures[mission.activity])||0)+1;
+          if(done){guest.adventures[mission.activity]=(Number(guest.adventures[mission.activity])||0)+1;guest.finished[mission.id]=Date.now();}
           storeGuest();result={correct:true,done,xp:mission.xp,coins,wallet:guest,question:mission.questions[question.number]};
         }
       }
       if(owner!==profile.id||token!==mission?.token)return;
       const word=question.word;stats[word]??={good:0,attempts:0,review:false};stats[word].attempts++;if(result.correct&&!hinted&&!questionFailed){stats[word].good++;stats[word].review=false;}else{stats[word].review=true;if(!result.correct)questionFailed=true;}save();updateStats();
       if(!result.correct){feedback.textContent=result.message;sceneView?.react('retry');return;}
+      if(hub&&result.wallet)hub.wallet=result.wallet;
+      if(!result.done){mission.step=question.number;persistGuestMission();}else if(!profile.id){try{localStorage.removeItem(guestMissionKey);}catch{}}
+      refreshPending();
       root.querySelectorAll('#questWork button,#questWork input').forEach(b=>b.disabled=true);
       feedback.textContent=({football:'⚽ Gol! Hai trovato la parola!',space:'🚀 Motori accesi! Un passo verso le stelle.',pets:'💗 Un cuore in più per il tuo compagno!',creative:'🎨 Un nuovo colore per la tua creazione!',kart:'🏁 Il tuo kart avanza!',treehouse:'🏡 Una nuova scoperta per la tua casa!',ocean:'🐚 Il tesoro si avvicina!',dino:'🦕 Un’altra impronta trovata!'}[mission.activity])||'✨ Esatto!';
       sceneView?.update({progress:question.number/mission.total});
@@ -189,9 +240,9 @@
         if(profile.id){const result=await api('hub&profile='+profile.id+(club?'&club='+club:''));if(owner===profile.id)hub=result;}
       }else{
         root.querySelector('#questActions').innerHTML='<button class="primary" id="questNext">Continua →</button>';
-        root.querySelector('#questNext').onclick=()=>{question=result.question;drawQuestion();};
+        root.querySelector('#questNext').onclick=()=>{question=result.question;drawQuestion();};mission.nextQuestion=result.question;
       }
-    }catch(e){feedback.textContent=e.message;}finally{busy=false;}
+    }catch(e){feedback.textContent=e.message;if(owner===profile.id&&mission?.token===token&&profile.id){const retry=document.createElement('button');retry.className='audio';retry.textContent='Riprendi dal salvataggio';retry.onclick=()=>resumeQuest(token);root.querySelector('#questActions')?.append(retry);}}finally{busy=false;const pause=root.querySelector('#pauseQuest');if(pause)pause.disabled=false;}
   }
   function renderShop(){
     clearScene();
@@ -243,8 +294,8 @@
   }
   window.addEventListener('wordyland-profile',async e=>{
     const changed=profile.id!==e.detail.id;profile=e.detail;
-    if(changed){mission=null;question=null;club=0;hub=null;activity='treehouse';lessonSource=null;clearScene();}
-    try{await refresh();}catch(e){render();say(e.message);}
+    if(changed){pendingEpoch++;pending={quests:[],duels:[]};drawContinuations();mission=null;question=null;club=0;hub=null;activity='treehouse';lessonSource=null;clearScene();}
+    refreshPending();try{await refresh();}catch(e){render();say(e.message);}
   });
-  profile=window.wordylandAccount?.info()||profile;render();if(profile.id)refresh().catch(e=>say(e.message));
+  profile=window.wordylandAccount?.info()||profile;drawContinuations();refreshPending();render();if(profile.id)refresh().catch(e=>say(e.message));
 })();

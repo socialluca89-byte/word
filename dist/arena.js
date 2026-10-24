@@ -5,7 +5,7 @@
   const modes={kart:'🏎️ Kart',football:'⚽ Calcio',space:'🚀 Spazio'};
   const avatars={fox:'🦊',panda:'🐼',robot:'🤖',dragon:'🐉',octopus:'🐙',lion:'🦁'};
   const text=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  window.wordylandArena={mount(host,profile,openAdults){
+  window.wordylandArena={mount(host,profile,openAdults,resumeId=null){
     let data={opponents:[],duels:[],classes:[]},busy=false,playing=false,sceneView=null,renderedDuels='',renderedOpponents='';
     const valid=()=>host.isConnected&&window.wordylandAccount.info().id===profile.id;
     const request=(action,body)=>window.wordylandAccount.request(action,body===undefined?undefined:{...body,profile:profile.id});
@@ -43,7 +43,7 @@
       const button=(label,action,primary=false)=>'<button class="'+(primary?'primary':'audio')+'" data-duel="'+d.id+'" data-duel-action="'+action+'">'+label+'</button>';
       let actions='',score='';
       if(d.state==='pending')actions=incoming?button('Accetta ⚡','duel-accept',true)+button('Non ora','duel-decline'):button('Annulla invito','duel-cancel');
-      if(d.state==='active'&&!done)actions=button(d.step?'Continua →':'Gioca →','play',true);
+      if(d.state==='active'&&!done)actions=button(d.step?'Riprendi →':'Gioca →','play',true);
       if(d.state==='active'&&done)score='<p class="duelScore">Tu: <b>'+d.score+'</b><small>Il risultato arriva quando avete finito entrambi.</small></p>';
       if(d.state==='completed'){
         const win=d.score>d.rivalScore,tie=d.score===d.rivalScore;
@@ -65,7 +65,7 @@
     }
     async function act(action,payload,message){
       if(busy)return;busy=true;host.querySelectorAll('button').forEach(b=>b.disabled=true);
-      try{await request(action,payload);if(!valid())return;busy=false;await load(message);}
+      try{await request(action,payload);if(!valid())return;window.dispatchEvent(new Event('wordyland-progress-saved'));busy=false;await load(message);}
       catch(e){status(e.message);if(valid())host.querySelectorAll('button').forEach(b=>b.disabled=false);}
       finally{busy=false;}
     }
@@ -82,7 +82,7 @@
       const previousWorld=stage.querySelector('#duelWorld');if(!previousWorld){sceneView?.dispose();sceneView=null;}
       stage.hidden=false;
       host.querySelector('.arenaLayout').hidden=true;
-      stage.innerHTML='<div class="duelStageTop"><span class="duelBadge">TU vs '+text(d.nickname)+'</span><button class="audio" id="duelBack">Salva e torna alle sfide</button></div><div class="duelWorld" id="duelWorld"><span class="sceneFallback">'+({football:'⚽',space:'🚀'}[d.activity]||'🏎️')+'</span><span class="worldProgressLabel">'+text(modes[d.activity]||modes.kart)+'</span></div><p class="duelScoreNote">Il tuo mondo avanza con le risposte corrette. Il punteggio del compagno si scopre quando avete finito entrambi.</p><div class="duelProgress"><span>Domanda '+q.number+' di '+d.total+'</span><b>'+d.score+' punti</b></div><div class="questTrack"><i style="width:'+(d.step/d.total*100)+'%"></i></div><span class="duelEmoji" aria-hidden="true">'+text(q.emoji)+'</span><h3>Come si dice «'+text(q.translation)+'»?</h3><p>Scegli la parola in inglese.</p><div class="duelOptions">'+q.options.map((answer,i)=>'<button data-duel-answer="'+i+'"><span>'+String.fromCharCode(65+i)+'</span>'+text(answer)+'</button>').join('')+'</div><p id="duelFeedback" role="status" aria-live="polite">'+text(feedback)+'</p>';
+      stage.innerHTML='<div class="duelStageTop"><span class="duelBadge">TU vs '+text(d.nickname)+'</span><button class="audio" id="duelBack">Pausa · riprendi più tardi</button></div><div class="duelWorld" id="duelWorld"><span class="sceneFallback">'+({football:'⚽',space:'🚀'}[d.activity]||'🏎️')+'</span><span class="worldProgressLabel">'+text(modes[d.activity]||modes.kart)+'</span></div><p class="duelSaveNote">Ogni risposta confermata è salvata automaticamente. Puoi chiudere e riprendere con lo stesso profilo.</p><p class="duelScoreNote">Il tuo mondo avanza con le risposte corrette. Il punteggio del compagno si scopre quando avete finito entrambi.</p><div class="duelProgress"><span>Domanda '+q.number+' di '+d.total+'</span><b>'+d.score+' punti</b></div><div class="questTrack"><i style="width:'+(d.step/d.total*100)+'%"></i></div><span class="duelEmoji" aria-hidden="true">'+text(q.emoji)+'</span><h3>Come si dice «'+text(q.translation)+'»?</h3><p>Scegli la parola in inglese.</p><div class="duelOptions">'+q.options.map((answer,i)=>'<button data-duel-answer="'+i+'"><span>'+String.fromCharCode(65+i)+'</span>'+text(answer)+'</button>').join('')+'</div><p id="duelFeedback" role="status" aria-live="polite">'+text(feedback)+'</p>';
       if(previousWorld)stage.querySelector('#duelWorld').replaceWith(previousWorld);
       else sceneView=window.wordylandIsland.mount(stage.querySelector('#duelWorld'),{kind:d.activity||'kart',progress:d.score/(d.total*10)});
       stage.querySelector('#duelBack').onclick=()=>{if(busy)return;playing=false;load('La partita è salvata. Puoi riprenderla quando vuoi.');};
@@ -90,7 +90,7 @@
         if(busy)return;busy=true;stage.querySelectorAll('button').forEach(x=>x.disabled=true);
         try{
           const next=await request('duel-answer',{duel:d.id,step:d.step,answer:Number(b.dataset.duelAnswer)});
-          if(!valid())return;
+          if(!valid())return;window.dispatchEvent(new Event('wordyland-progress-saved'));
           const message=next.correct?'Esatto! +10 punti ✨':'Ora lo sai: si dice '+next.correctAnswer+'. La prossima ti aspetta!';
           stage.querySelector('#duelFeedback').textContent=message;
           sceneView?.update({progress:next.duel.score/(d.total*10)});
@@ -100,12 +100,12 @@
           const continueButton=document.createElement('button');continueButton.className='primary';continueButton.textContent=next.question?'Prossima domanda →':'Guarda il risultato →';
           continueButton.onclick=async()=>{if(busy)return;if(next.question)showQuestion(next);else{playing=false;await load(next.duel.state==='completed'?'Sfida conclusa! Guarda il risultato qui sotto.':'Hai finito! Il tuo punteggio è salvato: aspettiamo il tuo compagno.');}};
           stage.append(continueButton);
-        }catch(e){stage.querySelector('#duelFeedback').textContent=e.message;stage.querySelectorAll('button').forEach(x=>x.disabled=false);}
+        }catch(e){stage.querySelector('#duelFeedback').textContent=e.message;stage.querySelectorAll('button').forEach(x=>x.disabled=false);const retry=document.createElement('button');retry.className='audio';retry.textContent='Riprendi dal salvataggio';retry.onclick=()=>open(d.id);stage.append(retry);}
         finally{busy=false;}
       });
     }
     const refreshPresence=()=>{if(valid()&&!host.closest('[hidden]')&&document.visibilityState==='visible'&&navigator.onLine)load('',true);};window.addEventListener('wordyland-presence',refreshPresence);const removed=new MutationObserver(()=>{if(!valid()){removed.disconnect();window.removeEventListener('wordyland-presence',refreshPresence);}});removed.observe(document.querySelector('main'),{childList:true,subtree:true});
-    host.innerHTML='<div class="arenaEmpty"><h3>Prepariamo l’arena…</h3><p id="arenaStatus" role="status"></p></div>';load();
+    host.innerHTML='<div class="arenaEmpty"><h3>Prepariamo l’arena…</h3><p id="arenaStatus" role="status"></p></div>';load().then(()=>{if(resumeId&&valid()&&host.querySelector('#duelStage'))open(resumeId);});
   }};
   document.addEventListener('click',e=>{
     const action=e.target.closest('[data-jump]')?.dataset.jump;if(!action)return;
