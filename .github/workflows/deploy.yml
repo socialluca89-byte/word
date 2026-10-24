@@ -41,6 +41,8 @@ jobs:
           python3 scripts/test-classroom.py
           python3 scripts/test-adventures.py
           php -l scripts/bootstrap-admin.php
+          php -l scripts/siteground-cache.php
+          python3 scripts/test-cache-purge.py
           python3 scripts/test-community.py
       - name: Check public bundle
         run: node scripts/verify-bundle.mjs

@@ -111,12 +111,20 @@ case "$mode" in
   *) echo "Unknown mode $mode" >&2; exit 1 ;;
 esac
 
-# Purge on the server; external PURGE is rejected by SiteGround.
+# Prefer Site Tools' local socket; older servers fall back to HTTP PURGE/BAN.
 purge_cache() {
   local origin output result=0
   if [[ "$SITE_URL" == https://wordyland.eu ]]; then origin=http://wordyland.eu
   elif [[ "$SITE_URL" =~ ^http://127\.0\.0\.1:[0-9]+$ ]]; then origin=$SITE_URL
   else echo 'Unsupported cache origin' >&2; return 1; fi
+  if [[ "$SITE_URL" == https://wordyland.eu ]]; then
+    if output=$(ssh "${ssh_opts[@]}" "$remote" php < scripts/siteground-cache.php 2>&1); then
+      printf '%s\n' "$output"
+      if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then printf '\n### SiteGround cache\n\nSite Tools cache invalidation succeeded; dynamic cache remains enabled.\n' >> "$GITHUB_STEP_SUMMARY"; fi
+      return 0
+    fi
+    printf '%s\n' "$output"
+  fi
   output=$(run_remote purge-cache "$SG_PATH" "$origin" 2>&1) || result=$?
   printf '%s\n' "$output"
   if [[ -n "${GITHUB_STEP_SUMMARY:-}" ]]; then
