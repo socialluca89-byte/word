@@ -17,6 +17,8 @@ The mouse/box worksheet adds seven positions: in, next to, on, between, under, i
 
 Free-practice pen/book scenes distinguish the pen from the generic position marker, and count illustrations render the actual number of items. Exercises preserve the existing reward caps, profile ownership and classroom permissions.
 
-Browser validation covers ten full guest missions, all thirteen entry cards, multiword gaps, dialogue/count choices, scene continuity and desktop/390/360px layouts. Publishing remains subject to the existing ordinary-homepage/cache checks described in DEPLOYMENT.md.
+Browser validation covers eleven full guest missions (including the original cat-position revision), all thirteen entry cards, multiword gaps, dialogue/count choices, scene continuity and desktop/390/360px layouts. Publishing remains subject to the existing ordinary-homepage/cache checks described in DEPLOYMENT.md.
 
 To repeat the browser check, start the app on an isolated local PHP server at port 8093 and run `node scripts/test-school-browser.cjs` with Playwright installed. Existing runtimes can be selected through `WORDYLAND_PLAYWRIGHT_MODULE` and `WORDYLAND_CHROMIUM`; `WORDYLAND_TEST_URL` changes the local test URL.
+
+Open `https://wordyland.eu/#preposizioni` for the three spatial paths (cat/box, pen/book, mouse/box). A prominent link appears on the start screen and in the full lesson catalog; the three cards are first in the full catalog and explicitly named “Preposizioni”. The dedicated view lists the seven place expressions and links back to all thirteen topics. Browser checks cover direct navigation, reload, the home shortcut, all three spatial missions/illustrations and 390/360px layouts.

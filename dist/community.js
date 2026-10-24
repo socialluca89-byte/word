@@ -13,8 +13,8 @@
   const current=++epoch;navigation();const hash=location.hash;
   if(!info().username)newRecovery=null;
   const match=hash.match(/^#admin-attiva=([a-f0-9]{64})$/);if(match){activationCode=match[1];history.replaceState(null,'','#admin');}
-  if(hash==='#sfide'||hash==='#personaggi'||hash==='#allenati'){
-   root.hidden=true;document.querySelector('.questHub').hidden=false;if(hash==='#personaggi')window.dispatchEvent(new CustomEvent('wordyland-style'));else document.querySelector(hash==='#allenati'?'[data-tab=lessons]':'[data-tab=arena]')?.click();if(scroll)document.querySelector('.questHub').scrollIntoView({behavior:window.wordylandMotion.allowed()?'smooth':'instant',block:'start'});return;
+  if(hash==='#sfide'||hash==='#personaggi'||hash==='#allenati'||hash==='#preposizioni'){
+   root.hidden=true;document.querySelector('.questHub').hidden=false;if(hash==='#preposizioni')window.dispatchEvent(new CustomEvent('wordyland-prepositions'));else if(hash==='#personaggi')window.dispatchEvent(new CustomEvent('wordyland-style'));else document.querySelector(hash==='#allenati'?'[data-tab=lessons]':'[data-tab=arena]')?.click();if(scroll)document.querySelector(hash==='#preposizioni'?'#questContent':'.questHub').scrollIntoView({behavior:window.wordylandMotion.allowed()?'smooth':'instant',block:'start'});return;
   }
   if(!['#classe-crea','#segnalazioni','#admin','#iscritti'].includes(location.hash)){root.hidden=true;document.querySelector('.questHub').hidden=false;return;}
   root.hidden=false;document.querySelector('.questHub').hidden=true;
@@ -68,7 +68,7 @@
   root.innerHTML=heading('PRIMO ACCESSO PRIVATO','Attiva il tuo accesso amministratore.','Scegli la password del tuo account. Il link di attivazione è utilizzabile una sola volta.')+'<form id="activateAdmin"><label>Email<input name="username" type="email" value="luca@perrone.it" readonly></label><label>Nuova password<input name="password" type="password" minlength="12" maxlength="72" autocomplete="new-password" required></label><button class="primary">Attiva e accedi</button></form><p id="communityStatus" role="status"></p>';
   root.querySelector('form').onsubmit=async e=>{e.preventDefault();const fields=Object.fromEntries(new FormData(e.currentTarget));e.submitter.disabled=true;try{const recovered=await request('recover',{...fields,code:activationCode});activationCode=null;newRecovery=recovered.recovery;await window.wordylandAccount.connect(await request('login',fields));await route();}catch(error){status(error.message);if(e.submitter.isConnected)e.submitter.disabled=false;}};
  }
- document.addEventListener('click',e=>{const link=e.target.closest('.serviceNav a,.startChoices a');if(link&&link.hash===location.hash&&!e.defaultPrevented){e.preventDefault();offset=0;route(true);}});
+ document.addEventListener('click',e=>{const link=e.target.closest('.serviceNav a,.startChoices a,.prepositionsFeature,.lessonShortcut');if(link&&link.hash===location.hash&&!e.defaultPrevented){e.preventDefault();offset=0;route(true);}});
  window.addEventListener('hashchange',()=>{offset=0;route(true);});
  window.addEventListener('wordyland-profile',()=>route());
  window.wordylandAccount.ready.then(()=>route(true));
