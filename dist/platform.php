@@ -5,7 +5,7 @@ $db->exec('CREATE TABLE IF NOT EXISTS wallets(profile_id INTEGER PRIMARY KEY REF
 CREATE TABLE IF NOT EXISTS inventory(profile_id INTEGER REFERENCES profiles(id) ON DELETE CASCADE,item TEXT,PRIMARY KEY(profile_id,item));
 CREATE TABLE IF NOT EXISTS quests(token TEXT PRIMARY KEY,profile_id INTEGER REFERENCES profiles(id) ON DELETE CASCADE,questions TEXT,step INTEGER DEFAULT 0,xp INTEGER DEFAULT 0,recovered INTEGER DEFAULT 0,completed INTEGER DEFAULT 0,created_at INTEGER);
 CREATE TABLE IF NOT EXISTS practice(profile_id INTEGER REFERENCES profiles(id) ON DELETE CASCADE,word TEXT,good INTEGER DEFAULT 0,wrong INTEGER DEFAULT 0,PRIMARY KEY(profile_id,word));
-CREATE TABLE IF NOT EXISTS practice_outcomes(profile_id INTEGER REFERENCES profiles(id) ON DELETE CASCADE,word TEXT,independent INTEGER NOT NULL DEFAULT 0,assisted INTEGER NOT NULL DEFAULT 0,corrected INTEGER NOT NULL DEFAULT 0,observed INTEGER NOT NULL DEFAULT 0,PRIMARY KEY(profile_id,word));
+CREATE TABLE IF NOT EXISTS practice_outcomes(profile_id INTEGER REFERENCES profiles(id) ON DELETE CASCADE,word TEXT,independent INTEGER NOT NULL DEFAULT 0,assisted INTEGER NOT NULL DEFAULT 0,corrected INTEGER NOT NULL DEFAULT 0,observed INTEGER NOT NULL DEFAULT 0,needs_review INTEGER NOT NULL DEFAULT 0,review_at INTEGER NOT NULL DEFAULT 0,PRIMARY KEY(profile_id,word));
 CREATE TABLE IF NOT EXISTS credits(profile_id INTEGER REFERENCES profiles(id) ON DELETE CASCADE,word TEXT,day TEXT,PRIMARY KEY(profile_id,word,day));
 CREATE TABLE IF NOT EXISTS rewards(token TEXT PRIMARY KEY REFERENCES quests(token) ON DELETE CASCADE,profile_id INTEGER REFERENCES profiles(id) ON DELETE CASCADE,xp INTEGER,coins INTEGER,recovered INTEGER,created_at INTEGER);
 CREATE TABLE IF NOT EXISTS studies(id INTEGER PRIMARY KEY,profile_id INTEGER REFERENCES profiles(id) ON DELETE CASCADE,title TEXT,words TEXT,file TEXT,original_name TEXT,created_at INTEGER);
@@ -24,11 +24,26 @@ function ensureActivityColumn(PDO $db, string $table, string $default): void {
     } catch(Throwable $error) { $db->exec('ROLLBACK'); throw $error; }
 }
 foreach (['quests','rewards'] as $table) ensureActivityColumn($db,$table,'classic');
+// Add review metadata without guessing or rewriting any historical learning counters.
+$outcomeColumns=array_column($db->query('PRAGMA table_info(practice_outcomes)')->fetchAll(),'name');
+if(array_diff(['needs_review','review_at'],$outcomeColumns)) {
+    $db->exec('BEGIN IMMEDIATE');
+    try {
+        $outcomeColumns=array_column($db->query('PRAGMA table_info(practice_outcomes)')->fetchAll(),'name');
+        foreach(['needs_review','review_at'] as $column)if(!in_array($column,$outcomeColumns,true))$db->exec('ALTER TABLE practice_outcomes ADD COLUMN '.$column.' INTEGER NOT NULL DEFAULT 0');
+        $db->exec('COMMIT');
+    }catch(Throwable $error){$db->exec('ROLLBACK');throw $error;}
+}
+
 function adventureActivities(): array { return ['classic','treehouse','pets','creative','kart','football','space','ocean','dino']; }
 
 function one(PDO $db, string $sql, array $params = []): array|false { $q = $db->prepare($sql); $q->execute($params); return $q->fetch(); }
 function rows(PDO $db, string $sql, array $params = []): array { $q = $db->prepare($sql); $q->execute($params); return $q->fetchAll(); }
 function runSql(PDO $db, string $sql, array $params = []): void { $db->prepare($sql)->execute($params); }
+function markPracticeReview(PDO $db,int $pid,string $word): void {
+    runSql($db,'INSERT INTO practice_outcomes(profile_id,word,needs_review,review_at) VALUES (?,?,1,?) ON CONFLICT(profile_id,word) DO UPDATE SET needs_review=1,review_at=excluded.review_at',[$pid,$word,time()]);
+}
+
 function ownedProfile(PDO $db, int $account, mixed $profile): array {
     $p = one($db, 'SELECT * FROM profiles WHERE id=? AND account_id=?', [(int)$profile, $account]);
     if (!$p) fail('Scegli un profilo del tuo account.', 404);
@@ -270,8 +285,8 @@ if ($method === 'POST' && $action==='quest-start') {
     }
     $unique=[];foreach($pool as $word)$unique[normalWord($word[0])]=$word; $pool=array_values($unique);
     shuffle($pool);
-    $difficult=array_column(rows($db,'SELECT p.word FROM practice p LEFT JOIN practice_outcomes o ON o.profile_id=p.profile_id AND o.word=p.word WHERE p.profile_id=? AND p.wrong>0 AND (p.good-COALESCE(o.observed,0)+COALESCE(o.independent,0))<3',[$pid]),'word');
-    usort($pool,fn($a,$b)=>(int)in_array(normalWord($b[0]),$difficult,true)<=>(int)in_array(normalWord($a[0]),$difficult,true));
+    $review=array_column(rows($db,'SELECT p.word,COALESCE(o.review_at,0) AS review_at FROM practice p LEFT JOIN practice_outcomes o ON o.profile_id=p.profile_id AND o.word=p.word WHERE p.profile_id=? AND (COALESCE(o.needs_review,0)=1 OR (p.wrong>0 AND (p.good-COALESCE(o.observed,0)+COALESCE(o.independent,0))<3))',[$pid]),'review_at','word');
+    usort($pool,fn($a,$b)=>((int)array_key_exists(normalWord($b[0]),$review)<=>(int)array_key_exists(normalWord($a[0]),$review))?:((int)($review[normalWord($b[0])]??0)<=>(int)($review[normalWord($a[0])]??0)));
     $selected=array_slice($pool,0,3);$questions=[];
     foreach($selected as $i=>$word) {
         $kind=$i===count($selected)-1?'write':($i===0?'choice':(random_int(0,1)?'missing':'build'));
@@ -319,6 +334,7 @@ if ($method==='POST' && $action==='quest-hint') {
     if($quest['completed'] || ($body['step']??null)!==(int)$quest['step']){$db->exec('ROLLBACK');fail('La missione è avanzata: riparti dalla schermata attuale.',409);}
     $questions=json_decode($quest['questions'],true);
     $questions[$quest['step']]['assisted']=true;
+    markPracticeReview($db,$pid,normalWord($questions[$quest['step']]['word']));
     runSql($db,'UPDATE quests SET questions=? WHERE token=?',[json_encode($questions,JSON_UNESCAPED_UNICODE),$quest['token']]);
     $db->exec('COMMIT');respond(['ok'=>true]);
 }
@@ -336,6 +352,7 @@ if ($method==='POST' && $action==='quest-answer') {
     runSql($db,'INSERT OR IGNORE INTO practice(profile_id,word) VALUES (?,?)',[$pid,$word]);
     if(normalWord($answer)!==normalWord($q['answer'])) {
         $questions[$quest['step']]['hadErrors']=true;
+        markPracticeReview($db,$pid,$word);
         runSql($db,'UPDATE quests SET questions=? WHERE token=?',[json_encode($questions,JSON_UNESCAPED_UNICODE),$quest['token']]);
         runSql($db,'UPDATE practice SET wrong=wrong+1 WHERE profile_id=? AND word=?',[$pid,$word]);$db->exec('COMMIT');
         respond(['correct'=>false,'message'=>'Riascolta e riprova con calma. Gli aiuti sono sempre disponibili.']);
@@ -344,7 +361,7 @@ if ($method==='POST' && $action==='quest-answer') {
     $recovered=$practice['wrong']>0 && $practice['good']===0 ? 1:0;
     runSql($db,'UPDATE practice SET good=good+1 WHERE profile_id=? AND word=?',[$pid,$word]);
     $assisted=!empty($q['assisted']);$corrected=!empty($q['hadErrors']);$independent=!$assisted&&!$corrected;
-    runSql($db,'INSERT INTO practice_outcomes(profile_id,word,independent,assisted,corrected,observed) VALUES (?,?,?,?,?,1) ON CONFLICT(profile_id,word) DO UPDATE SET independent=independent+excluded.independent,assisted=assisted+excluded.assisted,corrected=corrected+excluded.corrected,observed=observed+1',[$pid,$word,(int)$independent,(int)$assisted,(int)$corrected]);
+    runSql($db,'INSERT INTO practice_outcomes(profile_id,word,independent,assisted,corrected,observed,needs_review,review_at) VALUES (?,?,?,?,?,1,?,?) ON CONFLICT(profile_id,word) DO UPDATE SET independent=independent+excluded.independent,assisted=assisted+excluded.assisted,corrected=corrected+excluded.corrected,observed=observed+1,needs_review=excluded.needs_review,review_at=excluded.review_at',[$pid,$word,(int)$independent,(int)$assisted,(int)$corrected,(int)!$independent,$independent?0:time()]);
     $day=gmdate('Y-m-d');$already=one($db,'SELECT 1 FROM credits WHERE profile_id=? AND word=? AND day=?',[$pid,$word,$day]);
     $today=(int)one($db,'SELECT COUNT(*) AS n FROM credits WHERE profile_id=? AND day=?',[$pid,$day])['n'];
     $xp=(!$already && $today<15)?10:0;

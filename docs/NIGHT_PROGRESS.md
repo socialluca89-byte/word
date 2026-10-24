@@ -145,3 +145,19 @@ PASS: intero job verify e browser ux, learning, resume, presence, pwa, rewards, 
 Runner diagnostico: annotazione pubblica con nome suite e prima diagnosi limitata/redatta, mai file delle fixture, nessun retry. Test manuale con mock che esce 7: il runner conserva exit 7 e redige URL/email nell’annotazione. Non si tratta di un test browser reale fallito.
 
 Vincolo utente «non togliere nessuna delle funzioni fatte» registrato in AGENTS.md, inventario in NAVIGATION_INVENTORY.md, checklist sviluppato/testato/pubblicato/bloccato in PLAN_STATUS.md. Questi documenti non dichiarano completati recupero reale o invio email. La pubblicazione del nuovo incremento resta subordinata al vero esito CI/live; non considerare il run 40126383092 come riuscito.
+
+## Pubblicazione verificata del blocco 6–7
+
+Commit completo `22f2d6028b87c0ae22029eaa211c148a7964ef69`, run https://github.com/socialluca89-byte/word/actions/runs/40127589132, conclusione SUCCESS. Browser PASS; job deploy 120972911021 con «Deploy tested commit to SiteGround and verify the live site» success e «Complete job» success. Sono quindi live aiuti, conteggi e ottimizzazione delle notifiche ospite; il run fallito 40126383092 resta registrato come fallimento, non viene sostituito da un retry.
+
+Anteprime condivisibili reali e verificate byte-per-byte dall’URL pubblico: https://github.com/socialluca89-byte/word/blob/22f2d6028b87c0ae22029eaa211c148a7964ef69/docs/review/mobile-before-390.png e https://github.com/socialluca89-byte/word/blob/22f2d6028b87c0ae22029eaa211c148a7964ef69/docs/review/mobile-after-390.png. Nessun percorso locale presentato come accessibile all’utente.
+
+## Blocco 8 — Ripasso dopo un errore recente
+
+Difetto riprodotto deterministicamente su dati fittizi: una parola con tre successi pregressi veniva esclusa dal ripasso anche dopo un nuovo errore, mentre parole con vecchi errori avevano priorità. Il test prima della correzione falliva su «A new mistake must outrank older review words, even after three successes».
+
+Correzione: metadati additivi needs_review/review_at in practice_outcomes, con migrazione sotto lock dalla tabella già esistente, nessuna riscrittura dei conteggi. Errore o aiuto riaprono il ripasso; una correzione lo mantiene, una successiva risposta autonoma lo chiude. Nelle missioni nuove la parola più recentemente segnalata precede le altre da ripassare; missioni in pausa e tutte le destinazioni restano invariate.
+
+PASS mirati API: migrazione calda dalla versione precedente, vecchi successi/wallet conservati, priorità dopo errore e aiuto, correzione contro risposta autonoma, isolamento profili, aiuti ripetuti gratuiti. PASS browser: selettore scheda personale raggiungibile, errore→correzione non toglie successi (3→3), nuova missione parte dalla parola recente, nuovo successo autonomo 3→4, layout mobile e missioni già create conservate. Autonomy API rimane PASS.
+
+PASS: intero job verify e tutte le suite browser finali ux, learning, resume, presence, pwa, rewards, motion, access, email, performance, navigation, autonomy e review. Nessun dato reale degli alunni letto, nessun reset o bootstrap. La capacità pubblica del sito è stata verificata in sola lettura: HTTP 200, emailRecoveryEnabled=false; nessun invio effettuato. La pubblicazione del nuovo ripasso deve ancora essere confermata con il suo run live.

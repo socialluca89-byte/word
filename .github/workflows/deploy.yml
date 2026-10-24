@@ -53,6 +53,7 @@ jobs:
           python3 scripts/test-presence.py
           python3 scripts/test-resume.py
           python3 scripts/test-autonomy.py
+          python3 scripts/test-review.py
       - name: Check public bundle
         run: node scripts/verify-bundle.mjs
       - name: Test deployment script in isolation
@@ -78,7 +79,7 @@ jobs:
           WORDYLAND_PLAYWRIGHT_MODULE: /tmp/wordyland-browser-deps/node_modules/playwright
         run: |
           export WORDYLAND_CHROMIUM=$(node -p "require(process.env.WORDYLAND_PLAYWRIGHT_MODULE).chromium.executablePath()")
-          for check in ux learning resume presence pwa rewards motion access email performance navigation autonomy; do bash scripts/test-browser.sh "$check"; done
+          for check in ux learning resume presence pwa rewards motion access email performance navigation autonomy review; do bash scripts/test-browser.sh "$check"; done
 
   deploy:
     needs: [verify, browser]

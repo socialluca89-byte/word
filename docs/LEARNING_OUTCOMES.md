@@ -18,3 +18,9 @@ Il server registra l’uso di un aiuto con `quest-hint`, vincolato a proprietari
 Per gli ospiti, l’aiuto è salvato nel browser insieme alla domanda corrente, anche se la connessione cade. Gli account lo salvano online: se la conferma manca, l’interfaccia lo segnala. La risposta successiva include comunque l’aiuto e lo registra atomicamente con il risultato, così una richiesta separata interrotta non diventa un successo autonomo. Un aiuto confermato dal server resta disponibile alla ripresa su un altro dispositivo; offline non si può garantire sincronizzazione tra dispositivi. Se il server non ha ricevuto alcuna scrittura e la pagina viene chiusa prima della riconnessione, l’avviso non promette un salvataggio che non è avvenuto.
 
 I test usano solo database e account sintetici e verificano migrazione additiva, vecchi progressi, aiuti gratuiti, proprietà/CSRF, retry, errori, cambio dispositivo, perdita della conferma, contatori singoli e premi invariati. La scelta del ripasso resta una guida didattica: il gioco mostra prima la parola e non costituisce un esame antifrode.
+
+## Ripasso degli errori recenti
+
+Una parola con tre successi precedenti non deve scomparire dal ripasso se viene appena sbagliata o richiede un aiuto. I metadati additivi `needs_review` e `review_at` tengono separata questa necessità dai successi acquisiti: non azzerano i contatori o i premi. Le parole da rivedere più recenti vengono prima nel prossimo gruppo di domande della stessa scheda/tema. Una correzione dopo errore o aiuto mantiene la richiesta di ripasso; una successiva risposta autonoma la chiude. Il normale credito storico continua a valere.
+
+La migrazione aggiunge le due colonne soltanto se assenti, con controllo sotto lock, e conserva le righe della versione precedente. Non ricostruisce eventi storici sconosciuti. Si riordinano soltanto missioni nuove: le domande già salvate di una missione in pausa restano nell’ordine originale.
