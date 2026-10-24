@@ -29,6 +29,8 @@ if [[ " $* " == *' -X PURGE '* ]]; then
   printf '%s' "${FAKE_PURGE_STATUS:-200}"; exit 0
 fi
 "$WORDYLAND_REAL_CURL" "$@" || exit $?
+
+if [[ "${FAKE_HTML_CHALLENGE:-}" == 1 && "${!#}" == *'api.php?action=health'* ]]; then printf '%s' '<html>sgcaptcha hosting verification</html>'; fi
 if [[ "${FAKE_STALE_HOME:-}" == 1 ]]; then
   output=''; previous=''
   for arg in "$@"; do [[ "$previous" == -o ]] && output=$arg; previous=$arg; done
@@ -127,6 +129,14 @@ FAKE_STALE_HOME=1 FAKE_PURGE_STATUS=403 bash scripts/deploy-siteground.sh deploy
 grep -q 'Normal homepage / is stale' "$root/out_stale" || fail 'normal URL was not checked'
 grep -q 'previous cached page' "$docroot/index.html" || fail 'stale-home failure did not restore previous release'
 bash scripts/deploy-siteground.sh deploy >/dev/null || fail 'redeploy after cache failure'
+
+echo '--- hosting verification is diagnosed and rollback marker is confirmed'
+printf '%s\n' "$parent" > "$docroot/.wordyland-managed"; echo 'previous verified release WordyLand' > "$docroot/index.html"
+FAKE_HTML_CHALLENGE=1 GITHUB_ACTIONS=true bash scripts/deploy-siteground.sh deploy >"$root/out_challenge" 2>&1 && fail 'hosting HTML was accepted as API health'
+grep -q 'anti-bot verification intercepted the health endpoint' "$root/out_challenge" || fail 'hosting challenge not diagnosed'
+grep -q "Automatic rollback completed; verified server marker: $parent" "$root/out_challenge" || fail 'rollback marker not confirmed'
+grep -q 'previous verified release' "$docroot/index.html" || fail 'challenge rollback lost previous files'
+[[ $(cat "$docroot/.wordyland-managed") == "$parent" ]] || fail 'challenge rollback marker mismatch'
 
 echo '--- refuses unknown site without marker'
 rm "$docroot/.wordyland-managed"; echo '<html>other</html>' > "$docroot/index.html"

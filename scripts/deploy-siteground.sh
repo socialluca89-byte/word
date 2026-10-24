@@ -24,6 +24,10 @@ deploy_phase=configuration
 cleanup() { local result=$?; if [[ "$result" != 0 && "${GITHUB_ACTIONS:-}" == true ]]; then printf '::error title=Deployment stopped::Stage %s exited with status %s\n' "$deploy_phase" "$result"; fi; [[ -n "${SSH_AGENT_PID:-}" ]] && ssh-agent -k >/dev/null 2>&1 || true; rm -rf -- "$work"; }
 trap cleanup EXIT
 
+# Fixed, non-sensitive diagnostics stay visible even when full logs need login.
+live_error() { echo "$1" >&2; if [[ "${GITHUB_ACTIONS:-}" == true ]]; then printf '::error title=Live verification::%s\n' "$1"; fi; }
+live_notice() { echo "$1"; if [[ "${GITHUB_ACTIONS:-}" == true ]]; then printf '::notice title=Site version::%s\n' "$1"; fi; }
+
 # Host identity: keyscan output is only a candidate and is printed for comparison.
 if [[ -z "${SG_KNOWN_HOSTS:-}" ]]; then
   [[ "$mode" == probe ]] || { echo 'Missing GitHub configuration: SG_KNOWN_HOSTS' >&2; exit 1; }
@@ -84,6 +88,7 @@ case "$mode" in
     status=$(run_remote status "$SG_PATH")
     printf '%s\n' "$status"
     prev=$(sed -n 's/^MARKER=//p' <<<"$status" | tail -n1)
+    if [[ "$prev" =~ ^[a-f0-9]{40}$ ]]; then live_notice "Server marker before verification: $prev"; fi
     if [[ "$prev" == "$sha" ]]; then
       echo "Commit $sha is already deployed; verifying the live site only."
     else
@@ -94,7 +99,7 @@ case "$mode" in
           exit 0
         fi
       fi
-      # Bundle exactly the 25 verified files plus checksums; upload to the private directory.
+      # Bundle exactly the 36 verified files plus checksums; upload to the private directory.
       mkdir "$work/bundle"
       for f in "${FILES[@]}"; do install -m 644 "dist/$f" "$work/bundle/$f"; done
       (cd "$work/bundle" && sha256sum "${FILES[@]}" > SHA256SUMS)
@@ -143,10 +148,11 @@ expect_sha=${sha:-}
 check_health() {
   local token health
   token="verify-${GITHUB_RUN_ID:-local}-$(date +%s%N)"
-  health=$(curl -fsS --retry 3 --retry-delay 5 --max-time 30 "$SITE_URL/api.php?action=health&$token") || { echo 'Health endpoint unreachable' >&2; return 1; }
-  echo "Health: $health"
-  python3 -c 'import json,sys; d=json.loads(sys.argv[1]); sys.exit(0 if d.get("ready") is True and d.get("database")=="sqlite" else 1)' "$health" \
-    || { echo 'Health check failed' >&2; return 1; }
+  health=$(curl -fsS --retry 3 --retry-delay 5 --max-time 30 "$SITE_URL/api.php?action=health&$token") || { live_error 'Health endpoint unreachable'; return 1; }
+  if [[ "$health" == *sgcaptcha* ]]; then live_error 'SiteGround anti-bot verification intercepted the health endpoint (HTML instead of JSON).'; return 1; fi
+  python3 -c 'import json,sys; d=json.loads(sys.argv[1]); sys.exit(0 if d.get("ready") is True and d.get("database")=="sqlite" else 1)' "$health" 2>/dev/null \
+    || { live_error 'Health check failed: the API did not confirm ready=true and database=sqlite.'; return 1; }
+  echo 'Health: ready=true, database=sqlite'
 }
 check_files() {
   local token f want body got
@@ -154,14 +160,18 @@ check_files() {
   for f in / /index.html; do
     curl -fsS --retry 2 --retry-delay 2 --max-time 30 -o "$work/live" "$SITE_URL$f" || return 1
     got=$(sha256sum "$work/live" | cut -d' ' -f1)
-    [[ "$want" == "$got" ]] || { echo "Normal homepage $f is stale; refusing to confirm publication." >&2; return 1; }
+    if [[ "$want" != "$got" ]]; then
+      if grep -q 'sgcaptcha' "$work/live"; then live_error "SiteGround anti-bot verification intercepted normal homepage $f."
+      else live_error "Normal homepage $f is stale; refusing to confirm publication."; fi
+      return 1
+    fi
   done
   token="verify-${GITHUB_RUN_ID:-local}-$(date +%s%N)"
   for f in index.html classroom.js presence.js arena.js curriculum.json quests.css data.js worlds.js learning.js app.js accounts.js quests.js community.js arcade.css arcade.js island.css island.js island-places.webp three.min.js race-world.webp race-circuits.webp race-racers.webp manifest.webmanifest icon-192.png icon-512.png icon-maskable-512.png offline.html offline.js pwa.css pwa.js sw.js; do
     want=$(sha256sum "dist/$f" | cut -d' ' -f1)
-    curl -fsS --retry 3 --retry-delay 5 --max-time 30 -o "$work/live" "$SITE_URL/$f?$token" || { echo "Live $f unreachable" >&2; return 1; }
+    curl -fsS --retry 3 --retry-delay 5 --max-time 30 -o "$work/live" "$SITE_URL/$f?$token" || { live_error "Live $f unreachable"; return 1; }
     got=$(sha256sum "$work/live" | cut -d' ' -f1)
-    [[ "$want" == "$got" ]] || { echo "Live $f does not match commit $expect_sha" >&2; return 1; }
+    [[ "$want" == "$got" ]] || { live_error "Live $f does not match commit $expect_sha"; return 1; }
   done
   echo "Ordinary / and /index.html match the release."
   echo "Live site serves the files of commit $expect_sha (31 static files compared byte-for-byte)."
@@ -175,9 +185,14 @@ if [[ "$mode" == deploy ]]; then
     if [[ -n "${release_backup:-}" ]]; then
       echo "Live checks failed after publishing: restoring backup $release_backup." >&2
       if run_remote rollback "$SG_PATH" "$release_backup"; then
+        restored_status=$(run_remote status "$SG_PATH") || restored_status=''
+        restored_sha=$(sed -n 's/^MARKER=//p' <<<"$restored_status" | tail -n1)
+        if [[ "$restored_sha" =~ ^[a-f0-9]{40}$ && "$restored_sha" == "$prev" ]]; then live_notice "Automatic rollback completed; verified server marker: $restored_sha"
+        elif [[ -z "$prev" && -z "$restored_sha" && "$restored_status" == *MARKER=* ]]; then live_notice "Automatic rollback completed; initial unmarked site restored."
+        else live_error 'Rollback returned successfully but its server marker could not be verified.'; fi
         purge_cache || echo 'Previous files restored; cache purge still failed.' >&2
       else
-        echo 'AUTOMATIC ROLLBACK FAILED - restore manually (docs/DEPLOYMENT.md)' >&2
+        live_error 'AUTOMATIC ROLLBACK FAILED - restore manually (docs/DEPLOYMENT.md)'
       fi
       check_health || echo 'Site still unhealthy after rollback.' >&2
     fi
