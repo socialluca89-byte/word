@@ -32,3 +32,7 @@ Le anteprime consultabili via GitHub sono in docs/review, con dati ospite fittiz
 Anteprime e riepilogo sono sviluppati e testati localmente; tutte le API e 17 suite browser distinte sono PASS nel blocco 11 di NIGHT_PROGRESS.md. Corrette anche dipendenza bloccante dai font e notifica obsoleta dopo un salvataggio confermato. La nuova CI remota non è ancora stata eseguita. Nessun nuovo accesso ai dati dei compagni: il riepilogo richiede adulto/admin e proprietà del profilo anche per l’amministratore globale. Gli strumenti docente esistenti non sono stati sostituiti.
 
 Restano parziali la verifica su telefoni fisici e il recupero reale del proprietario. Restano bloccati consegna email e pubblicazione per le dipendenze indicate. Non è corretto dichiarare tutti i punti completati o questi incrementi live.
+
+## Diagnosi conclusiva delle dipendenze
+
+Vedi [DELIVERY_READINESS.md](DELIVERY_READINESS.md): richieste health e limiti dei log storici, HTTP 200 attuale da curl/Chromium attraverso la rete configurata, prova locale dei controlli complementari di integrità, requisiti esatti PHP mail senza richiesta di password SMTP, probe proprietario già in main e conseguenze da autorizzare solo dopo l’esito reale. Include matrice sintetica dei cinque punti e testo unico da sottoporre a SiteGround; nessun contatto o invio è stato eseguito automaticamente.
