@@ -106,6 +106,15 @@ if ($method === 'POST' && in_array($action, ['new-recovery','delete-account','de
     foreach ($files as $file) if (preg_match('/^[a-f0-9]{32}\.bin$/', $file['file'])) @unlink($dataDir.'/materials/'.$file['file']);
     $_SESSION = []; session_destroy(); respond(['ok'=>true]);
 }
+// Short-lived foreground presence. One lease per browser tab, no activity history.
+$db->exec('CREATE TABLE IF NOT EXISTS online_presence(session_key TEXT NOT NULL,tab_key TEXT NOT NULL,profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,session_version INTEGER NOT NULL,state TEXT NOT NULL,last_seen INTEGER NOT NULL,PRIMARY KEY(session_key,tab_key)); CREATE INDEX IF NOT EXISTS presence_profile ON online_presence(profile_id,last_seen);');
+function onlinePresence(PDO $db,array $ids): array {
+    if(!$ids)return [];
+    $marks=implode(',',array_fill(0,count($ids),'?'));
+    $items=rows($db,'SELECT o.profile_id,MAX(CASE o.state WHEN "busy" THEN 3 WHEN "ready" THEN 2 ELSE 1 END) AS rank FROM online_presence o JOIN profiles p ON p.id=o.profile_id JOIN accounts a ON a.id=p.account_id AND a.session_version=o.session_version WHERE o.last_seen>=? AND o.profile_id IN ('.$marks.') GROUP BY o.profile_id',array_merge([time()-90],$ids));
+    $result=[];foreach($items as $row)$result[(int)$row['profile_id']]=[1=>'online',2=>'ready',3=>'busy'][(int)$row['rank']];return $result;
+}
+
 require __DIR__ . '/arena.php';
 $platformActions = ['hub','quest-start','quest-answer','buy','equip','study-save','study-file','study-remove','club-create','club-join','club-leave','rename-profile'];
 if (!in_array($action, $platformActions, true)) return;

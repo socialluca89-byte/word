@@ -46,6 +46,8 @@ if ($action==='arena') {
     } unset($o);
     $duels=rows($db,'SELECT * FROM duels WHERE challenger=? OR opponent=? ORDER BY CASE WHEN state IN ("pending","active") THEN 0 ELSE 1 END,created_at DESC,id DESC LIMIT 40',[$pid,$pid]);
     $duels=array_values(array_filter($duels,fn($d)=>duelClassmates($db,$pid,(int)$d['challenger']===$pid?(int)$d['opponent']:(int)$d['challenger'])));
+    $presence=onlinePresence($db,array_column($opponents,'id'));foreach($opponents as &$opponent)$opponent['presence']=$presence[(int)$opponent['id']]??'offline';unset($opponent);
+    $order=['ready'=>0,'online'=>1,'busy'=>2,'offline'=>3];usort($opponents,fn($a,$b)=>($order[$a['presence']]<=>$order[$b['presence']])?:strcasecmp($a['nickname'],$b['nickname']));
     respond(['classes'=>$classes,'opponents'=>$opponents,'duels'=>array_map(fn($d)=>duelView($db,$d,$pid),$duels)]);
 }
 if ($action==='duel-create') {

@@ -22,9 +22,9 @@
   save = function () { oldSave(); schedule(); };
   rememberPlayer = function () { oldRemember(); schedule(); };
   function say(text) { status.textContent = text; }
-  async function request(action, body) {
+  async function request(action, body, options = {}) {
     const response = await fetch('api.php?action=' + action, {
-      method: body === undefined ? 'GET' : 'POST', credentials: 'same-origin', cache: 'no-store',
+      method: body === undefined ? 'GET' : 'POST', credentials: 'same-origin', cache: 'no-store', keepalive: options.keepalive === true,
       headers: body === undefined ? {} : {'Content-Type':'application/json', 'X-CSRF-Token': session?.csrf || ''},
       body: body === undefined ? undefined : JSON.stringify(body)
     });

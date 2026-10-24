@@ -11,6 +11,9 @@ function respond(array $data, int $status = 200): never {
     exit;
 }
 function fail(string $message, int $status = 400): never { respond(['error' => $message], $status); }
+function clearPresenceSession(PDO $db): void {
+    if($db->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='online_presence'")->fetchColumn())$db->prepare('DELETE FROM online_presence WHERE session_key=?')->execute([hash('sha256',session_id())]);
+}
 set_exception_handler(function (Throwable $e): never {
     error_log('WordyLand API: ' . get_class($e));
     fail('Servizio momentaneamente non disponibile. I progressi locali restano sul dispositivo.', 503);
@@ -139,6 +142,7 @@ if ($method === 'POST' && in_array($action, ['register','login'], true)) {
         if (!password_verify($password, $account['password_hash'] ?? $dummy) || !$account) fail('Credenziali non corrette.', 401);
         $id = (int)$account['id'];
     }
+    clearPresenceSession($db);
     session_regenerate_id(true);
     $_SESSION = ['account_id' => $id, 'username' => $username, 'last_seen' => time(), 'version' => $action === 'login' ? (int)$account['session_version'] : 0, 'csrf' => bin2hex(random_bytes(32))];
     $result = ['csrf' => $_SESSION['csrf'], 'username' => $username, 'role'=>$action==='login'?$account['role']:'adult', 'profiles' => profiles($db, $id)];
@@ -150,7 +154,7 @@ if ($accountRole==='learner' && in_array($action,['create-profile','rename-profi
 define('WORDYLAND_BOOTSTRAPPED', true);
 require __DIR__ . '/platform.php';
 require __DIR__ . '/community.php';
-if ($method === 'POST' && $action === 'logout') { $_SESSION = []; session_destroy(); respond(['ok' => true]); }
+if ($method === 'POST' && $action === 'logout') { clearPresenceSession($db); $_SESSION = []; session_destroy(); respond(['ok' => true]); }
 if ($method === 'POST' && $action === 'create-profile') {
     $nickname = is_string($body['nickname'] ?? null) ? trim($body['nickname']) : '';
     if ($nickname === '' || strlen($nickname) > 80) fail('Scegli un soprannome breve.');

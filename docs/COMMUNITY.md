@@ -2,6 +2,8 @@
 
 Entry links for the updated application:
 
+- `https://wordyland.eu/#iscritti`: authenticated class roster and live presence; administrators can view all profiles and learner accounts registered today (Europe/Rome). See PRESENCE.md.
+
 - `https://wordyland.eu/#classe-crea`: sign in as an adult, choose/create an owned profile, create a class or retrieve one of your class links.
 - `https://wordyland.eu/#sfide`: opens the existing Arena tab. Select a classmate to invite. Both players must have profiles enrolled in the same class; server-side permissions and scoring remain authoritative.
 - `https://wordyland.eu/#segnalazioni`: authenticated adults and pupils can send bugs or suggestions and follow the status of their own reports.

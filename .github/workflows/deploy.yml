@@ -45,6 +45,7 @@ jobs:
           php -l scripts/siteground-cache.php
           python3 scripts/test-cache-purge.py
           python3 scripts/test-community.py
+          python3 scripts/test-presence.py
       - name: Check public bundle
         run: node scripts/verify-bundle.mjs
       - name: Test deployment script in isolation
