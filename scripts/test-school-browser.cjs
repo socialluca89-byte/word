@@ -1,7 +1,7 @@
 // Optional end-to-end school lesson check; use an isolated local PHP server.
 const {chromium}=require(process.env.WORDYLAND_PLAYWRIGHT_MODULE||'playwright');const assert=require('assert/strict');
-(async()=>{const browser=await chromium.launch({executablePath:process.env.WORDYLAND_CHROMIUM||undefined,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});const p=await browser.newPage({viewport:{width:1360,height:1000},reducedMotion:'reduce'}),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.goto(process.env.WORDYLAND_TEST_URL||'http://127.0.0.1:8093');await p.locator('[data-tab=lessons]').click();assert.equal(await p.locator('[data-lesson]').count(),12);
-for(const topic of ['counting','penpositions','conversation','aboutme','family','food','clothes','weather','routines']){
+(async()=>{const browser=await chromium.launch({executablePath:process.env.WORDYLAND_CHROMIUM||undefined,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});const p=await browser.newPage({viewport:{width:1360,height:1000},reducedMotion:'reduce'}),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.goto(process.env.WORDYLAND_TEST_URL||'http://127.0.0.1:8093');await p.locator('[data-tab=lessons]').click();assert.equal(await p.locator('[data-lesson]').count(),13);
+for(const topic of ['counting','penpositions','conversation','aboutme','family','food','clothes','weather','routines','mousepositions']){
  await p.locator('[data-tab=lessons]').click();await p.locator('[data-lesson='+topic+']').click();await p.locator('#readyChallenge').waitFor();
  for(let n=0;n<3;n++){
   const word=(await p.locator('#questWork .questWord').textContent()).trim();const translation=(await p.locator('#missionStage .questPicture+p').textContent()).trim();
@@ -22,4 +22,4 @@ for(const topic of ['counting','penpositions','conversation','aboutme','family',
  }
  console.log('Lesson completed:',topic);
 }
-await p.locator('[data-tab=lessons]').click();for(const width of[390,360]){await p.setViewportSize({width,height:844});assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Overflow '+width);}assert.deepEqual(errors,[]);await browser.close();console.log('New lesson browser passed: twelve accessible topic cards, nine full missions, counting/dialogue/gaps, shared scenes, no errors and mobile layout.');})().catch(e=>{console.error(e);process.exit(1)});
+await p.locator('[data-tab=lessons]').click();for(const width of[390,360]){await p.setViewportSize({width,height:844});assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Overflow '+width);}assert.deepEqual(errors,[]);await browser.close();console.log('New lesson browser passed: thirteen accessible topic cards, ten full missions, counting/dialogue/gaps, shared scenes, no errors and mobile layout.');})().catch(e=>{console.error(e);process.exit(1)});

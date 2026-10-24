@@ -18,8 +18,8 @@
 #       deploy.lock, current, deploy.log
 set -euo pipefail
 umask 077
-FILES=(classroom.php arena.php api.php platform.php classroom.js arena.js curriculum.json quests.css data.js worlds.js app.js accounts.js quests.js arcade.css arcade.js island.css island.js island-places.webp three.min.js race-world.webp race-circuits.webp race-racers.webp index.html)
-PHP_FILES=(classroom.php arena.php api.php platform.php)
+FILES=(community.php classroom.php arena.php api.php platform.php classroom.js arena.js curriculum.json quests.css data.js worlds.js app.js accounts.js quests.js community.js arcade.css arcade.js island.css island.js island-places.webp three.min.js race-world.webp race-circuits.webp race-racers.webp index.html)
+PHP_FILES=(community.php classroom.php arena.php api.php platform.php)
 KEEP_RELEASES=5
 
 die() { echo "ERROR: $*" >&2; exit 1; }
@@ -211,7 +211,7 @@ case "$mode" in
     [[ -f "$archive" && ! -L "$archive" ]] || die 'uploaded bundle missing'
     rm -rf -- "$stage"; mkdir -p -- "$stage"
     tar -xf "$archive" -C "$stage" --no-same-owner --no-same-permissions
-    # exactly the 23 application files plus the checksum list, all regular files
+    # exactly the 25 application files plus the checksum list, all regular files
     expected=$(printf '%s\n' "${FILES[@]}" SHA256SUMS | sort)
     actual=$(cd -- "$stage" && find . -mindepth 1 -printf '%P\n' | sort)
     [[ "$expected" == "$actual" ]] || die 'bundle content differs from the expected file list'

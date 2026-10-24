@@ -49,3 +49,6 @@ function makeLessonQuestion(row,index,total,pool){
  }
  return q;
 }
+
+lists.mousepositions=[["the mouse is in the box","il topolino è dentro la scatola","🐭"],["the mouse is next to the box","il topolino è accanto alla scatola","🐭"],["the mouse is on the box","il topolino è sopra la scatola","🐭"],["the mouse is between the boxes","il topolino è tra le scatole","🐭"],["the mouse is under the box","il topolino è sotto la scatola","🐭"],["the mouse is in front of the box","il topolino è davanti alla scatola","🐭"],["the mouse is behind the box","il topolino è dietro la scatola","🐭"]];
+lessonTopics.mousepositions={name:"Il topolino e la scatola",icon:"🐭",activity:"pets",description:"Abbina sette scene alle preposizioni e completa le frasi."};

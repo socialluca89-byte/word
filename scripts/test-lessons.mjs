@@ -19,7 +19,7 @@ assert.equal(evaluate('lists.hello.some(x=>x[0].includes("Chloe"))'),false);
 console.log('Lesson checks passed: phrase gaps, punctuation, spatial scenes and generic content.');
 
 const curriculum=JSON.parse(fs.readFileSync('dist/curriculum.json','utf8'));
-for(const topic of ['counting','penpositions','conversation','aboutme','family','food','clothes','weather','routines']) {
+for(const topic of ['counting','penpositions','conversation','aboutme','family','food','clothes','weather','routines','mousepositions']) {
   assert.deepEqual(JSON.parse(evaluate('JSON.stringify(lists.'+topic+')')),curriculum[topic],topic+' must match the server curriculum');
 }
 assert.equal(evaluate('lists.numbers.length'),10);
@@ -42,3 +42,5 @@ const dialogue=JSON.parse(evaluate('JSON.stringify(makeLessonQuestion(lists.conv
 assert.equal(dialogue.kind,'dialogue');assert.equal(dialogue.prompt,'How are you?');assert.equal(dialogue.options.filter(r=>r[3]?.prompt===dialogue.prompt).length,1);
 assert.ok(!JSON.stringify(curriculum).match(/Chloe|Claudia|Luca/i),'Personal worksheet names must not enter the shared curriculum');
 console.log('New lesson checks passed: shared vocabulary, 1–10, count quantities/plurals/options, multiword gaps, pen/book scenes, dialogue prompts and generic example names.');
+
+assert.ok(evaluate('picture("the mouse is between the boxes","🐭")').includes("Topolino e scatola"));

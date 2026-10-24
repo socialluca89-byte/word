@@ -22,8 +22,8 @@ if (!in_array($action,$classActions,true)) return;
 if (($method==='GET')!==($action==='class-invite')) fail('Metodo non consentito.',405);
 if ($action==='class-link') {
     $owner=userId();
-    if ($accountRole!=='adult') fail('Il link della classe è gestito dall’adulto.',403);
-    $class=classroomOne($db,'SELECT id FROM clubs WHERE id=? AND owner_id=?',[(int)($body['club']??0),$owner]);
+    if (!in_array($accountRole,['adult','admin'],true)) fail('Il link della classe è gestito dall’adulto.',403);
+    $class=$accountRole==='admin'?classroomOne($db,'SELECT id FROM clubs WHERE id=?',[(int)($body['club']??0)]):classroomOne($db,'SELECT id FROM clubs WHERE id=? AND owner_id=?',[(int)($body['club']??0),$owner]);
     if (!$class) fail('Puoi condividere soltanto una classe che gestisci.',403);
     $db->exec('BEGIN IMMEDIATE');
     $link=classroomOne($db,'SELECT code FROM class_links WHERE club_id=?',[$class['id']]);

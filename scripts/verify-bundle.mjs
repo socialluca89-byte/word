@@ -1,8 +1,8 @@
 import fs from 'node:fs';
 import {createHash} from 'node:crypto';
 const html=fs.readFileSync('dist/index.html','utf8');
-const expected=['index.html','app.js','data.js','worlds.js','accounts.js','api.php','quests.js','quests.css','platform.php','curriculum.json','arena.php','arena.js','classroom.php','classroom.js','arcade.js','arcade.css','race-world.webp','race-circuits.webp','race-racers.webp','island.js','island.css','island-places.webp','three.min.js'];
-for(const name of ['app.js','data.js','worlds.js','accounts.js','quests.js','arena.js','classroom.js','arcade.js','island.js','three.min.js']) {
+const expected=['index.html','app.js','data.js','worlds.js','accounts.js','api.php','quests.js','quests.css','platform.php','curriculum.json','arena.php','arena.js','classroom.php','classroom.js','arcade.js','arcade.css','race-world.webp','race-circuits.webp','race-racers.webp','island.js','island.css','island-places.webp','three.min.js','community.php','community.js'];
+for(const name of ['app.js','data.js','worlds.js','accounts.js','quests.js','arena.js','classroom.js','arcade.js','island.js','community.js','three.min.js']) {
   const hash=createHash('sha256').update(fs.readFileSync('dist/'+name)).digest('hex').slice(0,12);
   if(!html.includes('src="'+name+'?v='+hash+'"')) throw Error('Missing or outdated public dependency: '+name+'; run node scripts/version-assets.mjs');
 }
@@ -22,4 +22,4 @@ for(const name of ['race-circuits.webp','race-racers.webp']){
 }
 const islandHash=createHash('sha256').update(fs.readFileSync('dist/island-places.webp')).digest('hex').slice(0,12);
 if(!fs.readFileSync('dist/island.css','utf8').includes('island-places.webp?v='+islandHash))throw Error('Outdated island illustration');
-console.log('Public bundle verified: twenty-three application files, no configuration, database or keys.');
+console.log('Public bundle verified: twenty-five application files, no configuration, database or keys.');

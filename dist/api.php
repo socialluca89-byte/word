@@ -107,22 +107,24 @@ if ($method === 'POST' && $action === 'recover') {
     $code = preg_replace('/[^a-f0-9]/', '', strtolower((string)($body['code'] ?? '')));
     $password = $body['password'] ?? '';
     if (!is_string($password) || strlen($password) < 12 || strlen($password) > 72) fail('La nuova password deve avere 12–72 caratteri.');
-    $q = $db->prepare('SELECT id,recovery_hash FROM accounts WHERE username=?'); $q->execute([$username]); $account = $q->fetch();
+    $q = $db->prepare('SELECT id,recovery_hash,role FROM accounts WHERE username=?'); $q->execute([$username]); $account = $q->fetch();
     if (!$account || !$account['recovery_hash'] || !hash_equals($account['recovery_hash'], hash('sha256', $code))) fail('Nome utente o codice di recupero non corretto.', 401);
     $newCode = bin2hex(random_bytes(16));
     $q = $db->prepare('UPDATE accounts SET password_hash=?,recovery_hash=?,session_version=session_version+1 WHERE id=? AND recovery_hash=?');
     $q->execute([password_hash($password, PASSWORD_DEFAULT), hash('sha256', $newCode), $account['id'], $account['recovery_hash']]);
     if (!$q->rowCount()) fail('Il codice è già stato usato.', 409);
+    if($username==='luca@perrone.it' && ($account['role']??'')==='admin' && is_file($dataDir.'/admin-activation.txt') && !is_link($dataDir.'/admin-activation.txt'))unlink($dataDir.'/admin-activation.txt');
     $_SESSION = ['csrf' => bin2hex(random_bytes(32))];
     respond(['csrf' => $_SESSION['csrf'], 'recovery' => $newCode]);
 }
 if ($method === 'POST' && in_array($action, ['register','login'], true)) {
     $username = strtolower(trim(is_string($body['username'] ?? null) ? $body['username'] : ''));
     $password = $body['password'] ?? null;
-    if (!preg_match('/^[a-z0-9_.-]{3,40}$/', $username) || !is_string($password) || strlen($password) < 12 || strlen($password) > 72) fail('Usa un nome utente di 3–40 caratteri e una password di 12–72 caratteri.');
+    if ((!preg_match('/^[a-z0-9_.-]{3,40}$/', $username) && !(strlen($username)<=254 && filter_var($username,FILTER_VALIDATE_EMAIL))) || !is_string($password) || strlen($password) < 12 || strlen($password) > 72) fail('Usa un’email valida o un nome utente di 3–40 caratteri e una password di 12–72 caratteri.');
     limitAttempts($db, 'ip:' . hash('sha256', $_SERVER['REMOTE_ADDR'] ?? ''), 40);
     limitAttempts($db, 'login:' . hash('sha256', $username), 15);
     if ($action === 'register') {
+        if($username==='luca@perrone.it')fail('Questo account amministratore viene configurato dal proprietario. Usa Accedi o il link privato di attivazione.',403);
         if (($body['adult'] ?? false) !== true) fail('L’account deve essere creato da un adulto.');
         limitAttempts($db, 'register:' . hash('sha256', $_SERVER['REMOTE_ADDR'] ?? ''), 5);
         try {
@@ -147,6 +149,7 @@ $id = userId();
 if ($accountRole==='learner' && in_array($action,['create-profile','rename-profile','delete-profile','club-create','club-join','club-leave','study-save','study-remove'],true)) fail('Questa operazione è riservata all’adulto che gestisce i profili.',403);
 define('WORDYLAND_BOOTSTRAPPED', true);
 require __DIR__ . '/platform.php';
+require __DIR__ . '/community.php';
 if ($method === 'POST' && $action === 'logout') { $_SESSION = []; session_destroy(); respond(['ok' => true]); }
 if ($method === 'POST' && $action === 'create-profile') {
     $nickname = is_string($body['nickname'] ?? null) ? trim($body['nickname']) : '';

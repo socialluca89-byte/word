@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import {createHash} from 'node:crypto';
 
 // Run after changing browser assets, before committing a release.
-const assets=['data.js','worlds.js','app.js','accounts.js','classroom.js','arena.js','quests.js','quests.css','arcade.js','arcade.css','island.css','island.js','three.min.js'];
+const assets=['data.js','worlds.js','app.js','accounts.js','classroom.js','arena.js','quests.js','quests.css','arcade.js','arcade.css','island.css','island.js','community.js','three.min.js'];
 for(const name of ['race-circuits.webp','race-racers.webp']){
   const hash=createHash('sha256').update(fs.readFileSync('dist/'+name)).digest('hex').slice(0,12);
   const css=fs.readFileSync('dist/arcade.css','utf8').replace(new RegExp(name.replaceAll('.','\\.')+'(?:\\?v=[a-f0-9]+)?','g'),name+'?v='+hash);

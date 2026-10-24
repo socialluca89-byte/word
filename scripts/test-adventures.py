@@ -103,7 +103,7 @@ with tempfile.TemporaryDirectory(prefix='wordyland-island-test-') as temporary:
                     result=request(session,'duel-answer',{'profile':player,'duel':duel['id'],'step':step,'answer':q['options'].index(q['answer']),'score':99999},csrf)
                 assert result['duel']['score']==50
             assert result['duel']['state']=='completed' and result['duel']['rivalScore']==50
-        new_topics=['counting','penpositions','conversation','aboutme','family','food','clothes','weather','routines']
+        new_topics=['counting','penpositions','conversation','aboutme','family','food','clothes','weather','routines','mousepositions']
         request(a,'quest-start',{'profile':pid,'category':'unknown'},token,400)
         request(a,'quest-start',{'profile':pid,'category':[]},token,400)
         for topic in new_topics:
@@ -118,7 +118,7 @@ with tempfile.TemporaryDirectory(prefix='wordyland-island-test-') as temporary:
                 assert q['prompt'] and sum(row[3]['prompt']==q['prompt'] for row in q['options'])==1
             while True:
                 assert 'answer' not in q
-                if q['number']==2 and topic in ['counting','penpositions']:assert q['kind']=='gap'
+                if q['number']==2 and topic in ['counting','penpositions','mousepositions']:assert q['kind']=='gap'
                 if q['kind']=='gap':
                     start=q['mask'].index('_');end=start
                     while end<len(q['mask']) and q['mask'][end]=='_':end+=1
@@ -146,7 +146,7 @@ with tempfile.TemporaryDirectory(prefix='wordyland-island-test-') as temporary:
         assert legacy['adventures']=={'classic':8+len(new_topics)}
         assert legacy['wallet']['equipped']['pet']=='pet-bunny'
         assert request(a, f'arena&profile={pid}')['duels'][0]['activity']=='kart'
-        print('Adventure checks passed: eight verified paths, incorrect answers/replays cannot forge progress, daily caps, isolated ownership, free and earned cosmetics, all three persisted duel modes, nine new lesson/duel topics, count/dialogue/multiword gap validation, and legacy migration.')
+        print('Adventure checks passed: eight verified paths, incorrect answers/replays cannot forge progress, daily caps, isolated ownership, free and earned cosmetics, all three persisted duel modes, ten new lesson/duel topics, count/dialogue/multiword gap validation, and legacy migration.')
     finally:
         process.terminate()
         process.wait(timeout=5)

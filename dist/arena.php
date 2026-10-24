@@ -55,7 +55,7 @@ if ($action==='duel-create') {
     $activity=$body['activity']??'kart';
     if(!is_string($activity)||!in_array($activity,['kart','football','space'],true))fail('Scegli kart, calcio o spazio.');
     $category=$body['category']??'body';
-    if (!is_string($category)||!in_array($category,['body','catpositions','toys','colors','hello','school','home','animals','transport','sport','space','ocean','dino','counting','penpositions','conversation','aboutme','family','food','clothes','weather','routines'],true)||empty($curriculum[$category])) fail('Scegli un argomento disponibile.');
+    if (!is_string($category)||!in_array($category,['body','catpositions','toys','colors','hello','school','home','animals','transport','sport','space','ocean','dino','counting','penpositions','conversation','aboutme','family','food','clothes','weather','routines','mousepositions'],true)||empty($curriculum[$category])) fail('Scegli un argomento disponibile.');
     limitAttempts($db,'duels:'.$pid,20);
     $unique=[];foreach ($curriculum[$category] as $w) $unique[normalWord($w[0])]=$w;
     $pool=array_values($unique); shuffle($pool); $questions=[];

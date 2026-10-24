@@ -40,6 +40,8 @@ jobs:
           python3 scripts/test-api.py
           python3 scripts/test-classroom.py
           python3 scripts/test-adventures.py
+          php -l scripts/bootstrap-admin.php
+          python3 scripts/test-community.py
       - name: Check public bundle
         run: node scripts/verify-bundle.mjs
       - name: Test deployment script in isolation
