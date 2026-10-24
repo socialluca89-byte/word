@@ -320,6 +320,8 @@ if ($method==='POST' && $action==='quest-answer') {
     $answer=is_string($body['answer']??null)?$body['answer']:'';
     runSql($db,'INSERT OR IGNORE INTO practice(profile_id,word) VALUES (?,?)',[$pid,$word]);
     if(normalWord($answer)!==normalWord($q['answer'])) {
+        $questions[$quest['step']]['hadErrors']=true;
+        runSql($db,'UPDATE quests SET questions=? WHERE token=?',[json_encode($questions,JSON_UNESCAPED_UNICODE),$quest['token']]);
         runSql($db,'UPDATE practice SET wrong=wrong+1 WHERE profile_id=? AND word=?',[$pid,$word]);$db->exec('COMMIT');
         respond(['correct'=>false,'message'=>'Riascolta e riprova con calma. Gli aiuti sono sempre disponibili.']);
     }

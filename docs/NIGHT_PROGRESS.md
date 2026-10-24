@@ -4,6 +4,8 @@ Task esistente, coordinato dall’assistente dot; nessun task sostitutivo o cron
 
 ## Blocco 1 — Recupero account adulto
 
+Commit: `7143c7f`, salvato sul ramo remoto work.
+
 Problema: il proprietario non dispone dei dati iniziali di accesso; il recupero attuale richiede un codice. Verificato il provisioning nel repository: la password iniziale casuale non è mostrata; viene salvato un link privato di attivazione nella cartella dati su SiteGround. Non è stata verificata la presenza attuale del file reale: questa sessione non dispone di una connessione SSH diretta configurata; quella del deploy risiede nel runner GitHub.
 
 Realizzato:
@@ -30,6 +32,8 @@ Intervento minimo: il proprietario verifica dal proprio SiteGround se esiste `.w
 
 ## Blocco 2 — Inizializzazione delle scene fuori schermo
 
+Commit: `0eeb497`, salvato sul ramo remoto work.
+
 Problema misurato: la mappa dell’isola si trovava sotto la prima schermata (top 1866px a 390px di larghezza, 1199px a 1360px; viewport alta 844px), ma allocava comunque WebGL e veniva ricostruita dagli aggiornamenti iniziali del profilo.
 
 Correzione in `dist/island.js`: inizializzazione quando la mappa arriva entro 120px dalla finestra, o subito se viene usato un comando della scena. Prima dell’avvio gli aggiornamenti conservano l’ultimo personaggio/progresso senza costruire scene inutili. Navigazione, rotazione, zoom, animazioni e feedback restano disponibili. Il fallback senza IntersectionObserver resta immediato.
@@ -52,8 +56,23 @@ Verifiche:
 - Le altre suite browser erano passate nel blocco 1; non ripetute tutte dopo questa modifica circoscritta al caricamento della mappa.
 - NON ESEGUITI: misura su telefono fisico, verifica account reale, invio email reale e pubblicazione. Resta applicabile il limite sul provisioning proprietario descritto sopra.
 
+## Blocco 3 — Conservare gli errori dopo la ripresa
+
+Difetto riprodotto: il browser azzerava `questionFailed` quando ridisegnava una domanda; i salvataggi non ricordavano gli errori. Chiudere e riaprire dopo un errore permetteva di contare la correzione come successo autonomo nelle statistiche locali.
+
+Correzione: il server conserva `hadErrors` nel JSON della domanda quando rifiuta una risposta; la ripresa da un altro dispositivo restituisce quel flag. L’ospite salva lo stesso flag con la domanda corrente e lo ripristina alla riapertura. La domanda successiva non eredita gli errori della precedente. Nessuna migrazione distruttiva, nessuna modifica ai saldi o ai premi.
+
+Verifiche:
+
+- PASS: API ripresa con errore → riapertura e secondo dispositivo → correzione; nessun errore trasportato sulla domanda successiva.
+- PASS: browser ospite errore → reload → ripresa → risposta corretta; il contatore di successi autonomi resta zero, il salvataggio della domanda successiva è pulito. Passano anche le regressioni già presenti: premi singoli, risposta confermata persa in rete, isolamento profili e sfide riprese con punteggio.
+- PASS: sintassi, contenuti, bundle e test API completi rieseguiti. Anche il deploy simulato è passato, inclusi ripristino, cache obsoleta e protezione anti-bot.
+- NON ESEGUITI: esercizi di utenti reali e pubblicazione.
+
+Limiti espliciti: `practice.good` sul server continua a rappresentare anche risposte corrette dopo errore; questo blocco non ridefinisce tutta la misura di padronanza. La persistenza degli aiuti resta da implementare e testare. Le missioni già salvate prima della correzione non possono ricostruire errori che non erano stati registrati.
+
 ## Coda successiva
 
-1. Conservare la memoria degli errori/aiuti alla ripresa di una domanda e distinguere risposte autonome da correzioni, senza cambiare i premi già ottenuti.
+1. Completare la persistenza degli aiuti e la distinzione server tra risposte autonome e correzioni; la memoria degli errori alla ripresa è già corretta nel blocco 3.
 2. Estendere le misure a telefono fisico e alle altre anteprime; il caricamento differito della mappa è già implementato e misurato nel blocco 2.
 3. Riprodurre l’instabilità del test inviti con diagnostica mirata, poi migliorare navigazione/onboarding e verificare nuovamente mobile/desktop.

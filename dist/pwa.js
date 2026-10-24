@@ -1,7 +1,7 @@
 /* Install and update controls. No private data is stored by the service worker. */
 (()=>{
  const install=document.querySelector('#installApp'),help=document.querySelector('#installHelp'),status=document.querySelector('#appStatus'),update=document.querySelector('#appUpdate'),reload=document.querySelector('#updateApp');
- const workerURL='sw.js?v=3d3f7931ffee';
+ const workerURL='sw.js?v=59a0ba9287f7';
  let prompt=null,registration=null,reloading=false;
  const standalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
  function installation(){install.hidden=standalone();if(standalone())help.hidden=true;install.textContent=prompt?'Installa WordyLand':'Come installare';}

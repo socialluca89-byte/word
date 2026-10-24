@@ -20,7 +20,12 @@ with tempfile.TemporaryDirectory(prefix='wordyland-resume-') as temporary:
         q=request(a,'quest-start',{'profile':pa,'category':'mousepositions','activity':'pets'},ta);token=q['token']
         snapshot=request(a,f'quest-resume&profile={pa}&token={token}');assert snapshot['step']==0 and snapshot['source']=='mousepositions' and snapshot['question']==q['question']
         request(guest,f'quest-resume&profile={pa}&token={token}',expected=401);request(b,f'quest-resume&profile={pa}&token={token}',expected=404);request(b,f'quest-resume&profile={pb}&token={token}',expected=404)
-        first=q['question'];result=request(a,'quest-answer',{'profile':pa,'token':token,'step':0,'answer':first['word']},ta);assert result['correct']
+        first=q['question']
+        wrong=request(a,'quest-answer',{'profile':pa,'token':token,'step':0,'answer':'synthetic wrong answer'},ta);assert not wrong['correct']
+        check=request(a,f'quest-resume&profile={pa}&token={token}');assert check['question']['hadErrors'] is True
+        other_device=client();tc=request(other_device,'session')['csrf'];request(other_device,'login',{'username':'luna','password':password},tc)
+        assert request(other_device,f'quest-resume&profile={pa}&token={token}')['question']['hadErrors'] is True
+        result=request(a,'quest-answer',{'profile':pa,'token':token,'step':0,'answer':first['word']},ta);assert result['correct'] and not result['question'].get('hadErrors',False)
         request(a,'quest-answer',{'profile':pa,'token':token,'step':0,'answer':first['word']},ta,409)
         pending=request(a,f'pending-games&profile={pa}');assert pending['quests'][0]['step']==1 and 'questions' not in json.dumps(pending)
         assert request(b,f'pending-games&profile={pb}')['quests']==[]
