@@ -75,6 +75,11 @@ run_remote() {
 case "$mode" in
   probe)
     run_remote probe "${SG_PATH:-}"
+    if [[ -n "${SG_PATH:-}" ]]; then
+      # Only presence/role/activation availability; never print private file contents.
+      private_data="${SG_PATH%/public_html}/.wordyland-data"
+      ssh "${ssh_opts[@]}" "$remote" "WORDYLAND_BOOTSTRAP_DATA='$private_data' php" < scripts/owner-recovery-status.php
+    fi
     exit 0 ;;
   rollback)
     need SG_PATH
@@ -138,11 +143,6 @@ purge_cache() {
   fi
   return "$result"
 }
-bootstrap_admin() {
-  deploy_phase=owner-admin
-  local private_data="${SG_PATH%/public_html}/.wordyland-data"
-  ssh "${ssh_opts[@]}" "$remote" "WORDYLAND_BOOTSTRAP_DATA='$private_data' php" < scripts/bootstrap-admin.php
-}
 # Verify ordinary visitor URLs as well as cache-busting asset requests.
 expect_sha=${sha:-}
 check_health() {
@@ -179,7 +179,7 @@ check_files() {
 if [[ "$mode" == deploy ]]; then
   deploy_phase=cache-and-live-checks
   purge_cache || echo 'Cache purge unavailable; ordinary visitor URLs must still match the release.' >&2
-  if check_health && check_files && bootstrap_admin; then
+  if check_health && check_files; then
     echo 'Live checks passed.'
   else
     if [[ -n "${release_backup:-}" ]]; then

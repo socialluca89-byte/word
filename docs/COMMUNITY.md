@@ -15,7 +15,7 @@ These are screen links, not enrollment codes. The real enrollment link is return
 
 The authorized owner email is `luca@perrone.it`. Knowing this email does not grant privileges: public registration reserves this identity, request bodies cannot set a role, and dashboard endpoints verify the role in the database. Login supports legacy usernames and email addresses.
 
-After a successful deployment and all live checks, GitHub Actions streams `scripts/bootstrap-admin.php` through the authenticated SSH connection. This script stays outside the public bundle. It uses the existing private SQLite database and is idempotent. For an existing adult owner account it preserves password and recovery hash, upgrades the role and invalidates old sessions. It refuses to promote a learner.
+Ordinary GitHub Actions deployments never run owner provisioning. A separately authorised operator can stream `scripts/bootstrap-admin.php` through the existing authenticated SSH connection when provisioning is explicitly required. This script stays outside the public bundle. It uses the existing private SQLite database and is idempotent. For an existing adult owner account it preserves password and recovery hash, upgrades the role and invalidates old sessions. It refuses to promote a learner.
 
 If the owner account does not exist, the helper creates an admin with an unknown random password and saves a one-time activation link in:
 

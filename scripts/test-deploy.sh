@@ -79,8 +79,27 @@ done
 priv="$site/.wordyland-deploy"; [[ $(stat -c %a "$priv") == 700 ]] || fail 'private dir not 700'
 ls "$priv/releases" | grep -q initial || fail 'no initial backup'
 
+echo '--- publication never provisions the owner or writes activation credentials'
+WORDYLAND_FIXTURE_DB="$site/.wordyland-data/wordyland.sqlite" php -r '
+$db=new PDO("sqlite:".getenv("WORDYLAND_FIXTURE_DB"));
+if($db->query("SELECT COUNT(*) FROM accounts WHERE username=\"luca@perrone.it\"")->fetchColumn()!=0)exit(1);
+$db->exec("INSERT INTO accounts(username,password_hash,created_at,recovery_hash,session_version,role) VALUES (\"luca@perrone.it\",\"synthetic-password-hash\",1,\"synthetic-recovery-hash\",23,\"adult\")");
+' || fail 'ordinary deploy created an owner account'
+[[ ! -e "$site/.wordyland-data/admin-activation.txt" ]] || fail 'ordinary deploy generated activation credentials'
+printf '%s' 'synthetic private activation fixture' > "$site/.wordyland-data/admin-activation.txt"
+
 echo '--- repeat deploy is idempotent'
 out=$(bash scripts/deploy-siteground.sh deploy); grep -q 'already deployed' <<<"$out" || fail 'not idempotent'
+WORDYLAND_FIXTURE_DB="$site/.wordyland-data/wordyland.sqlite" php -r '
+$db=new PDO("sqlite:".getenv("WORDYLAND_FIXTURE_DB"));$row=$db->query("SELECT password_hash,recovery_hash,session_version,role FROM accounts WHERE username=\"luca@perrone.it\"")->fetch(PDO::FETCH_ASSOC);
+if($row!==["password_hash"=>"synthetic-password-hash","recovery_hash"=>"synthetic-recovery-hash","session_version"=>23,"role"=>"adult"])exit(1);
+' || fail 'ordinary redeploy changed owner credentials or privileges'
+[[ $(cat "$site/.wordyland-data/admin-activation.txt") == 'synthetic private activation fixture' ]] || fail 'activation instructions changed'
+
+echo '--- the read-only probe reports owner metadata without activation contents'
+probe_output=$(bash scripts/deploy-siteground.sh probe)
+grep -q '"ownerExists":true,"ownerIsAdmin":false,"privateActivationAvailable":true' <<<"$probe_output" || fail 'owner probe metadata missing'
+[[ "$probe_output" != *'synthetic private activation fixture'* && "$probe_output" != *'synthetic-password-hash'* ]] || fail 'private owner data leaked by probe'
 
 echo '--- unavailable cache management is acceptable only with fresh ordinary visitor URLs'
 FAKE_PURGE_STATUS=403 bash scripts/deploy-siteground.sh deploy >/dev/null 2>&1 || fail 'fresh ordinary homepage rejected with cache management disabled'
