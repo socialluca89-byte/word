@@ -14,6 +14,24 @@ const base=process.env.WORDYLAND_TEST_URL;assert(['localhost','127.0.0.1'].inclu
     await p.locator('.startChoices a[href="#allenati"]').click();await p.locator('[data-lesson=catpositions]').waitFor();
     await p.locator('.startChoices a[href="#personaggi"]').click();await p.locator('.shopGrid').waitFor();
     await p.locator('.startChoices a[href="#sfide"]').click();await p.locator('#arenaLogin').waitFor();await p.locator('#arenaLogin').click();await p.locator('#accountUser').waitFor();
+    const destinations=['#personaggi','#iscritti','#classe-crea','#sfide','#segnalazioni','#admin'];
+    assert.deepEqual(await p.locator('.serviceNav a').evaluateAll(nodes=>nodes.map(node=>node.hash).sort()),[...destinations].sort(),'Preserve every service destination');
+    for(const destination of destinations){
+     if(await p.locator('.adultNavigation').getAttribute('open')===null)await p.locator('.adultNavigation>summary').click();
+     await p.locator('.serviceNav a[href="'+destination+'"]').click();
+     if(destination==='#personaggi')await p.locator('.shopGrid').waitFor();
+     else if(destination==='#sfide')await p.locator('#arenaLogin').waitFor();
+     else await p.locator('#communityHub #communityLogin').waitFor();
+     assert.equal(new URL(p.url()).hash,destination);
+    }
+    assert(await p.locator('#installApp').isVisible(),'Installation entry remains reachable');
+    await p.locator('.appTools a[href="offline.html"]').click();await p.locator('.offlineOptions button').first().waitFor();
+    await p.goto(base);await p.evaluate(()=>wordylandAccount.ready);await p.locator('.practiceZone>summary').click();
+    const classic=['journey','write','build','match','paper','look'];
+    assert.deepEqual(await p.locator('.practiceZone [data-mode]').evaluateAll(nodes=>nodes.map(node=>node.dataset.mode).sort()),[...classic].sort(),'Preserve all six classic modes');
+    for(const mode of classic){await p.locator('.practiceZone [data-mode="'+mode+'"]').click();assert.equal(await p.locator('.practiceZone [data-mode="'+mode+'"]').getAttribute('aria-pressed'),'true');await p.locator('#begin').waitFor({state:'visible'});}
+
+
    }
    assert.deepEqual(errors,[]);await p.close();
   }

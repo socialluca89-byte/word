@@ -9,13 +9,16 @@ const base=process.env.WORDYLAND_TEST_URL;assert(['localhost','127.0.0.1'].inclu
    await p.addInitScript(()=>{window.webglStarts=[];const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){const context=original.call(this,type,...args);if(context&&['webgl','webgl2','experimental-webgl'].includes(type))window.webglStarts.push({canvas:this,at:performance.now()});return context;};});
    await p.goto(base);await p.evaluate(()=>wordylandAccount.ready);await p.waitForTimeout(150);
    const before=await p.evaluate(()=>({contexts:webglStarts.length,mapStarts:webglStarts.filter(x=>document.querySelector('#islandMap').contains(x.canvas)).length,mapTop:Math.round(document.querySelector('#islandMap').getBoundingClientRect().top),viewport:innerHeight}));
+   await p.evaluate(()=>{const detail=wordylandAccount.info();window.dispatchEvent(new CustomEvent('wordyland-profile',{detail}));window.dispatchEvent(new CustomEvent('wordyland-profile',{detail}));});
+   const repeated=await p.evaluate(()=>webglStarts.length);
+   if(!process.env.WORDYLAND_PERFORMANCE_BASELINE)assert.equal(repeated,before.contexts,'Repeated unchanged guest notifications must not recreate WebGL previews');
    if(!process.env.WORDYLAND_PERFORMANCE_BASELINE&&before.mapTop>before.viewport+120)assert.equal(before.mapStarts,0,'Offscreen map must not allocate a WebGL context');
    await p.locator('#islandMap').scrollIntoViewIfNeeded();await p.waitForFunction(()=>document.querySelector('#islandMap').dataset.render==='3d');
    const after=await p.evaluate(()=>({contexts:webglStarts.length,mapStarts:webglStarts.filter(x=>document.querySelector('#islandMap').contains(x.canvas)).length}));
    if(!process.env.WORDYLAND_PERFORMANCE_BASELINE)assert.equal(after.mapStarts,1,'Scrolling initializes the map once');
    await p.locator('[data-live-place=football]').click();await p.locator('#heroSceneAction').click();await p.locator('#islandMap .sceneReaction').waitFor();
    await p.locator('[data-live-place=island]').click();assert.equal(await p.locator('.islandPin').count(),8);assert.equal(await p.locator('#islandMap canvas').count(),1);
-   assert.deepEqual(errors,[]);results.push({width,before,after});await p.close();
+   assert.deepEqual(errors,[]);results.push({width,before,afterRepeatedGuestNotifications:repeated,after});await p.close();
   }
   console.log('WebGL initialization measurements:',JSON.stringify(results));
  }finally{await browser.close();}

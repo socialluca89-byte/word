@@ -127,3 +127,21 @@ Nessuna verifica reale dell’account Luca o attivazione email in questo blocco.
 1. Verificare il nuovo conteggio su dispositivi fisici e valutarne una spiegazione chiara per gli adulti; la persistenza aiuti e la distinzione server sono implementate nel blocco 6.
 2. Estendere le misure a telefono fisico e alle altre anteprime; il caricamento differito della mappa è già implementato e misurato nel blocco 2.
 3. Estendere onboarding e verifica a dispositivi fisici; il clic perso sugli inviti è riprodotto e corretto, la nuova navigazione ha misure e screenshot nel blocco 5.
+
+## Esito CI blocco 6 e correzione successiva in verifica
+
+Commit `6161ca726eedb90732949f0854d75531e9beb590`, run https://github.com/socialluca89-byte/word/actions/runs/40126383092: verify PASS, browser FAIL, deploy non eseguito. La release verificata online resta `52122a9`. Non dichiarare pubblicato il blocco 6.
+
+Il job pubblico indica soltanto exit 1 nel passo collettivo browser; il log parziale GitHub restituisce 404 senza accesso autenticato e l’endpoint API dei log non è raggiungibile dal proxy di questa sessione. Nessun tentativo di aggirare restrizioni o recuperare credenziali. Aggiunta un’annotazione fissa per singola suite al runner, senza mostrare file privati delle fixture né aggiungere retry, così un eventuale nuovo fallimento sarà identificabile pubblicamente.
+
+Misura indipendente riprodotta: due notifiche identiche della sessione ospite aumentavano le inizializzazioni WebGL da 2 a 4. Ora vengono aggiornati i controlli senza ricostruire la scena se identità e profilo ospite non cambiano. Il test aggiornato misura 1 → 1 a 390 e 1360px e una sola mappa allo scroll. PASS mirati performance/access/resume. Questa è una correzione verificata; non è ancora una diagnosi provata del fallimento CI precedente.
+
+## Blocco 7 — Notifiche ospite, diagnostica e conservazione delle funzioni
+
+Sviluppata e verificata la conservazione delle scene quando arriva una notifica ospite identica. Misura prima 2 → 4 inizializzazioni per due notifiche, dopo 1 → 1, sia a 390 sia a 1360px; mappa sempre singola allo scroll. Non si modifica la navigazione o lo stato didattico.
+
+PASS: intero job verify e browser ux, learning, resume, presence, pwa, rewards, motion, access, email, performance, navigation, autonomy sul nuovo bundle. Rafforzato navigation con tutte le voci di servizio, rispettivi ingressi protetti, installazione/offline e sei modalità classiche a 320/390/768/1360px. Un errore del nuovo test inizialmente contava anche data-mode=guest della barra account: corretto il selettore per interrogare soltanto la sezione classica; nessuna funzione del prodotto eliminata.
+
+Runner diagnostico: annotazione pubblica con nome suite e prima diagnosi limitata/redatta, mai file delle fixture, nessun retry. Test manuale con mock che esce 7: il runner conserva exit 7 e redige URL/email nell’annotazione. Non si tratta di un test browser reale fallito.
+
+Vincolo utente «non togliere nessuna delle funzioni fatte» registrato in AGENTS.md, inventario in NAVIGATION_INVENTORY.md, checklist sviluppato/testato/pubblicato/bloccato in PLAN_STATUS.md. Questi documenti non dichiarano completati recupero reale o invio email. La pubblicazione del nuovo incremento resta subordinata al vero esito CI/live; non considerare il run 40126383092 come riuscito.

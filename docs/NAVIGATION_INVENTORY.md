@@ -1,0 +1,30 @@
+# Inventario funzionalità e navigazione
+
+Vincolo esplicito dell’utente: «home più chiara solo riorganizzata senza togliere nessuna delle funzioni fatte». Non eliminare funzioni né renderle irraggiungibili su telefono o desktop. Prima di cambiare destinazioni o raggruppamenti, aggiornare questo inventario e le regressioni di raggiungibilità. Nascondere temporaneamente i menu durante un esercizio è ammesso soltanto se Pausa ripristina le destinazioni.
+
+## Destinazioni esistenti da preservare
+
+| Destinazione | Accesso attuale | Regressioni pertinenti |
+| --- | --- | --- |
+| Esercizi e temi, incluse preposizioni | Allenati, scheda Esercizi e temi, collegamento Preposizioni | navigation, ux, learning, school |
+| Otto luoghi e missioni dell’isola | La mia isola; Casa, Animali, Colori, Kart, Calcio, Spazio, Oceano, Dinosauri | motion, adventures API, school |
+| Missioni e ripresa | Scheda Missioni, Da continuare, collegamento continua | resume API/browser, autonomy |
+| Sfide kart/calcio/spazio | Gioca con la classe, menu Sfida un compagno | presence, resume, adventures API |
+| Personaggi, accessori, compagni e premi | Il tuo personaggio, scheda Personaggi e premi | characters, rewards |
+| Iscritti e presenza | Menu Iscritti e online | presence API/browser |
+| Creazione e link classe | Menu Crea classe; area adulto | classroom API, community |
+| Programma/schede dell’adulto | Account e progressi, strumenti della scheda personale | api, school |
+| Classifica privata e obiettivo classe | Scheda La tua classe | api, community |
+| Idee, bug e relativo stato | Menu Idee e bug | community API/browser |
+| Amministrazione | Menu Amministrazione, solo con ruolo abilitato | community API/browser |
+| Account, profili, registrazione/accesso | Accedi, Area adulti/account e progressi | access API/browser |
+| Logout, cambio e recupero password | Barra accesso e moduli account/classe | access, email recovery |
+| Attivazione amministratore | Link privato già previsto; mai pubblicarlo | community API/browser |
+| Installazione web app | Come installare e prompt disponibile | pwa |
+| Ripasso offline | Collegamento Ripasso offline, offline.html | pwa, learning |
+| Sei modalità classiche (journey/write/build/match/paper/look) e scelta del mondo | Sezione di ripasso e comandi dei mondi | learning, school |
+| Audio, aiuti, pausa e movimento ridotto | Comandi dell’esercizio e della scena | learning, motion, autonomy |
+
+I menu dell’area assistenza possono essere raccolti in un pannello, ma devono restare apribili. Una destinazione protetta può richiedere l’accesso o il ruolo appropriato: la riorganizzazione non concede nuovi privilegi e non deve cancellare l’ingresso alla funzione. Il recupero email resta configurabile ma non attivato; non presentarlo come servizio funzionante senza verifica reale del trasporto.
+
+Le anteprime della home sono in [review](review/README.md), con dati ospite fittizi. L’inventario descrive il prodotto esistente e non è una richiesta di ricreare tutte le funzioni o introdurre nuove migrazioni/servizi.

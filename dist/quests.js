@@ -338,7 +338,11 @@
     host.querySelectorAll('[data-leave-club]').forEach(b=>b.onclick=async()=>{try{await api('club-leave',{club:Number(b.dataset.leaveClub)});club=0;await refresh();}catch(e){say(e.message);}});
   }
   window.addEventListener('wordyland-profile',async e=>{
-    const changed=profile.id!==e.detail.id;profile=e.detail;
+    const changed=profile.id!==e.detail.id;
+    const unchangedGuest=!changed&&!profile.id&&!profile.username&&!e.detail.username;
+    profile=e.detail;
+    // Session readiness does not change an existing guest world; keep its scene alive.
+    if(unchangedGuest){drawContinuations();adultTools();return;}
     if(changed){pendingEpoch++;pending={quests:[],duels:[]};drawContinuations();mission=null;question=null;club=0;hub=null;activity='treehouse';lessonSource=null;clearScene();}
     refreshPending();try{await refresh();}catch(e){render();say(e.message);}
   });

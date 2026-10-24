@@ -26,4 +26,24 @@ for _ in range(80):
  except Exception:time.sleep(.05)
 else:raise RuntimeError('Local PHP test server unavailable')
 PY
-node "$script"
+if node "$script" 2>&1 | tee "$fixture/browser.log"; then
+  :
+else
+  result=$?
+  # Fixed public annotation: all browser fixtures are synthetic; never expose their private files.
+  if [[ "${GITHUB_ACTIONS:-}" == true ]]; then
+    diagnostic=$(python3 - "$fixture/browser.log" <<'PY'
+import re,sys
+lines=open(sys.argv[1]).read().splitlines()
+message=next((line for line in lines if re.search(r'AssertionError|(?:Error|TimeoutError):|(?:locator|page)\.[A-Za-z]+:',line)), 'No structured browser diagnostic available.')
+message=re.sub(r'\x1b\[[0-9;]*m','',message)
+message=re.sub(r'https?://\S+','[URL]',message)
+message=re.sub(r'\b[a-fA-F0-9]{32,}\b','[redacted]',message)
+message=re.sub(r'[\w.+-]+@[\w.-]+','[email]',message)[:300]
+print(message.replace('%','%25').replace('\r','%0D').replace('\n','%0A'))
+PY
+)
+    printf '::error title=Browser suite %s::Exit %s; %s No retry was performed.\n' "$check" "$result" "$diagnostic"
+  fi
+  exit "$result"
+fi
