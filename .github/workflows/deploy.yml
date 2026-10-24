@@ -36,6 +36,7 @@ jobs:
           node scripts/test-lessons.mjs
           node scripts/test-pwa.mjs
           node scripts/test-learning.mjs
+          node scripts/test-rewards.mjs
       - name: Verify account API and database isolation
         run: |
           for f in dist/*.php; do php -l "$f"; done
@@ -73,7 +74,7 @@ jobs:
           WORDYLAND_PLAYWRIGHT_MODULE: /tmp/wordyland-browser-deps/node_modules/playwright
         run: |
           export WORDYLAND_CHROMIUM=$(node -p "require(process.env.WORDYLAND_PLAYWRIGHT_MODULE).chromium.executablePath()")
-          for check in ux learning resume presence pwa; do bash scripts/test-browser.sh "$check"; done
+          for check in ux learning resume presence pwa rewards; do bash scripts/test-browser.sh "$check"; done
 
   deploy:
     needs: [verify, browser]

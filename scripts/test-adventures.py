@@ -49,6 +49,10 @@ with tempfile.TemporaryDirectory(prefix='wordyland-island-test-') as temporary:
             return request(session, 'create-profile', {'nickname':nickname}, token)['id'], token
         pid, token = register(a, 'Luna')
         other, other_token = register(b, 'Nico')
+        # Milestone badges cannot be bought or equipped before verified completion.
+        request(a,'buy',{'profile':pid,'item':'badge-first'},token,403)
+        request(a,'equip',{'profile':pid,'item':'badge-explorer'},token,403)
+        assert 'badge-first' not in request(a,f'hub&profile={pid}')['wallet']['inventory']
         # A non-avatar purchase must retain the default character in server state.
         companion = request(b, 'buy', {'profile':other,'item':'pet-bunny'}, other_token)['wallet']
         assert companion['equipped']['avatar']=='fox' and companion['equipped']['pet']=='pet-bunny'
@@ -78,6 +82,10 @@ with tempfile.TemporaryDirectory(prefix='wordyland-island-test-') as temporary:
             hub = request(a, f'hub&profile={pid}')
             assert hub['adventures'] == completed
             assert hub['wallet']['coins'] <= 60 and hub['wallet']['xp'] <= 150
+        badges=request(a,f'hub&profile={pid}')['wallet']['inventory']
+        assert 'badge-first' in badges and 'badge-explorer' in badges and 'badge-persistence' not in badges
+        request(a,'buy',{'profile':pid,'item':'badge-persistence'},token,403)
+        assert 'badge-first' not in request(b,f'hub&profile={other}')['wallet']['inventory']
         request(b, f'hub&profile={pid}', expected=404)
         assert request(b, f'hub&profile={other}')['adventures'] == {}
         for item, slot in [('pet-bunny','pet'),('room-peach','room'),('kart-pink','kart'),('paint-berry','palette')]:
@@ -141,15 +149,34 @@ with tempfile.TemporaryDirectory(prefix='wordyland-island-test-') as temporary:
             duel=request(a,'duel-create',{'profile':pid,'opponent':other,'category':topic},token)['duel']
             assert duel['category']==topic
             request(a,'duel-cancel',{'profile':pid,'duel':duel['id']},token)
+        milestone_wallet=request(a,f'hub&profile={pid}')['wallet']
+        assert 'badge-persistence' in milestone_wallet['inventory']
+        # Fund only this disposable fixture to test every additional priced cosmetic.
+        with sqlite3.connect(temporary+'/data/wordyland.sqlite') as db:
+            db.execute('UPDATE wallets SET coins=2000 WHERE profile_id=?',(pid,))
+        extras=[x for x in request(a,f'hub&profile={pid}')['catalog'] if x['id'].startswith(('hat-','effect-','pet-t','pet-p','room-l','room-su','kart-g','kart-pu','paint-f','paint-c','trophy-','ball-','rocket-'))]
+        assert len(extras)==19
+        for extra in extras:
+            before=request(a,f'hub&profile={pid}')['wallet']['coins']
+            bought=request(a,'buy',{'profile':pid,'item':extra['id']},token)['wallet']
+            assert bought['coins']==before-extra['price'] and bought['equipped'][extra['slot']]==extra['id']
+            repeat=request(a,'buy',{'profile':pid,'item':extra['id']},token)['wallet']
+            assert repeat['coins']==bought['coins'] and repeat['inventory'].count(extra['id'])==1
+            request(b,'equip',{'profile':other,'item':extra['id']},other_token,403)
+        before=request(a,f'hub&profile={pid}')['wallet']['coins']
+        for badge in ['badge-first','badge-explorer','badge-persistence']:
+            equipped=request(a,'equip',{'profile':pid,'item':badge},token)['wallet']
+            assert equipped['coins']==before and equipped['equipped']['badge']==badge
+        equipment_before_migration=request(a,f'hub&profile={pid}')['wallet']['equipped']
         # Simulate the previous schema and verify additive migration preserves rows.
         with sqlite3.connect(temporary+'/data/wordyland.sqlite') as db:
             for table in ['quests','rewards','duels']:
                 db.execute(f'ALTER TABLE {table} DROP COLUMN activity')
         legacy = request(a, f'hub&profile={pid}')
         assert legacy['adventures']=={'classic':8+len(new_topics)}
-        assert legacy['wallet']['equipped']['pet']=='pet-bunny'
+        assert legacy['wallet']['equipped']==equipment_before_migration
         assert request(a, f'arena&profile={pid}')['duels'][0]['activity']=='kart'
-        print('Adventure checks passed: eight verified paths, incorrect answers/replays cannot forge progress, daily caps, isolated ownership, free and earned cosmetics, all three persisted duel modes, ten new lesson/duel topics, count/dialogue/multiword gap validation, and legacy migration.')
+        print('Adventure checks passed: eight verified paths, incorrect answers/replays cannot forge progress, daily caps, isolated ownership, free and earned cosmetics, all three persisted duel modes, ten new lesson/duel topics, count/dialogue/multiword gap validation, legacy migration, all 19 new paid cosmetics, no double charges and three verified milestone badges.')
     finally:
         process.terminate()
         process.wait(timeout=5)

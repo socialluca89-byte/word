@@ -59,12 +59,39 @@ function shopCatalog(): array { return [
     ['id'=>'kart-mint','name'=>'Kart menta','icon'=>'💚','slot'=>'kart','price'=>20],
     ['id'=>'paint-sun','name'=>'Colori del sole','icon'=>'🌞','slot'=>'palette','price'=>0],
     ['id'=>'paint-ocean','name'=>'Colori dell’oceano','icon'=>'🌊','slot'=>'palette','price'=>0],
-    ['id'=>'paint-berry','name'=>'Colori dei frutti','icon'=>'🍓','slot'=>'palette','price'=>0]
+    ['id'=>'paint-berry','name'=>'Colori dei frutti','icon'=>'🍓','slot'=>'palette','price'=>0],
+    ['id'=>'hat-wizard','name'=>'Cappello delle magie','icon'=>'🧙','slot'=>'hat','price'=>30],
+    ['id'=>'hat-flowers','name'=>'Corona di fiori','icon'=>'🌸','slot'=>'hat','price'=>20],
+    ['id'=>'effect-bubbles','name'=>'Bolle di sapone','icon'=>'🫧','slot'=>'effect','price'=>25],
+    ['id'=>'effect-rainbow','name'=>'Cerchio arcobaleno','icon'=>'🌈','slot'=>'effect','price'=>35],
+    ['id'=>'pet-turtle','name'=>'Tartaruga curiosa','icon'=>'🐢','slot'=>'pet','price'=>20],
+    ['id'=>'pet-penguin','name'=>'Pinguino delle nevi','icon'=>'🐧','slot'=>'pet','price'=>25],
+    ['id'=>'room-lavender','name'=>'Casa lavanda','icon'=>'💜','slot'=>'room','price'=>20],
+    ['id'=>'room-sunset','name'=>'Casa tramonto','icon'=>'🌅','slot'=>'room','price'=>20],
+    ['id'=>'kart-gold','name'=>'Kart del sole','icon'=>'☀️','slot'=>'kart','price'=>25],
+    ['id'=>'kart-purple','name'=>'Kart galassia','icon'=>'💜','slot'=>'kart','price'=>25],
+    ['id'=>'paint-forest','name'=>'Colori della foresta','icon'=>'🌳','slot'=>'palette','price'=>15],
+    ['id'=>'paint-candy','name'=>'Colori delle caramelle','icon'=>'🍬','slot'=>'palette','price'=>15],
+    ['id'=>'trophy-star','name'=>'Stella da esporre','icon'=>'🌟','slot'=>'trophy','price'=>25],
+    ['id'=>'trophy-flower','name'=>'Fiore gigante','icon'=>'🌻','slot'=>'trophy','price'=>20],
+    ['id'=>'trophy-crystal','name'=>'Cristallo del mare','icon'=>'💎','slot'=>'trophy','price'=>30],
+    ['id'=>'ball-sun','name'=>'Pallone del sole','icon'=>'🟠','slot'=>'ball','price'=>15],
+    ['id'=>'ball-ocean','name'=>'Pallone dell’oceano','icon'=>'🔵','slot'=>'ball','price'=>15],
+    ['id'=>'rocket-mint','name'=>'Razzo menta','icon'=>'💚','slot'=>'rocket','price'=>25],
+    ['id'=>'rocket-galaxy','name'=>'Razzo galassia','icon'=>'🟣','slot'=>'rocket','price'=>30],
+    ['id'=>'badge-first','name'=>'Prima avventura','icon'=>'🏅','slot'=>'badge','price'=>0,'unlock'=>['missions'=>1]],
+    ['id'=>'badge-explorer','name'=>'Tre mondi esplorati','icon'=>'🧭','slot'=>'badge','price'=>0,'unlock'=>['activities'=>3]],
+    ['id'=>'badge-persistence','name'=>'Dieci avventure','icon'=>'🎖️','slot'=>'badge','price'=>0,'unlock'=>['missions'=>10]]
 ]; }
 function wallet(PDO $db, int $profile): array {
     runSql($db, 'INSERT OR IGNORE INTO wallets(profile_id) VALUES (?)', [$profile]);
     $w = one($db, 'SELECT coins,xp,equipped FROM wallets WHERE profile_id=?', [$profile]);
     $w['equipped'] = array_merge(['avatar'=>'fox'], json_decode($w['equipped'], true) ?: []);
+    $milestone=one($db,'SELECT COUNT(*) AS missions,COUNT(DISTINCT activity) AS activities FROM rewards WHERE profile_id=?',[$profile]);
+    foreach(shopCatalog() as $reward)if(isset($reward['unlock'])){
+        $earned=true;foreach($reward['unlock'] as $metric=>$needed)if((int)$milestone[$metric]<$needed)$earned=false;
+        if($earned)runSql($db,'INSERT OR IGNORE INTO inventory(profile_id,item) VALUES (?,?)',[$profile,$reward['id']]);
+    }
     $w['inventory'] = array_merge(['fox'], array_column(rows($db, 'SELECT item FROM inventory WHERE profile_id=?', [$profile]), 'item'));
     $w['level'] = 1 + (int)floor($w['xp']/100);
     return $w;
@@ -213,6 +240,7 @@ if ($method === 'POST' && in_array($action,['buy','equip'],true)) {
     $item=null; foreach(shopCatalog() as $entry) if($entry['id']===($body['item']??''))$item=$entry;
     if (!$item) fail('Oggetto non trovato.',404);
     $db->exec('BEGIN IMMEDIATE'); $w=wallet($db,$pid);
+    if(isset($item['unlock'])&&!in_array($item['id'],$w['inventory'],true)){$db->exec('ROLLBACK');fail('Questo distintivo si ottiene completando le avventure indicate.',403);}
     if ($action==='buy' && !in_array($item['id'],$w['inventory'],true)) {
         if ($w['coins']<$item['price']) {$db->exec('ROLLBACK');fail('Ti mancano ancora '.($item['price']-$w['coins']).' monete. Continua la tua avventura!',409);}
         runSql($db,'UPDATE wallets SET coins=coins-? WHERE profile_id=?',[$item['price'],$pid]);

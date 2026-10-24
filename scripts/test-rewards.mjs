@@ -1,0 +1,13 @@
+import fs from 'node:fs';
+import vm from 'node:vm';
+import {spawnSync} from 'node:child_process';
+import assert from 'node:assert/strict';
+const context={};vm.runInNewContext(fs.readFileSync('dist/data.js','utf8'),context);
+const php=fs.readFileSync('dist/platform.php','utf8'),start=php.indexOf('function shopCatalog()'),end=php.indexOf('function wallet(',start);
+const result=spawnSync('php',['-r',php.slice(start,end)+'echo json_encode(shopCatalog());'],{encoding:'utf8'});assert.equal(result.status,0,result.stderr);
+const catalog=JSON.parse(result.stdout);assert.equal(catalog.length,48);assert.equal(new Set(catalog.map(x=>x.id)).size,48);
+for(const item of context.wordylandRewardExtras)assert.deepEqual(catalog.find(x=>x.id===item.id),JSON.parse(JSON.stringify(item)));
+assert.equal(catalog.filter(x=>x.unlock).length,3);assert(catalog.filter(x=>x.unlock).every(x=>x.slot==='badge'&&x.price===0));
+for(const slot of ['trophy','ball','rocket','badge'])assert(catalog.some(x=>x.slot===slot));
+assert(catalog.every(x=>Number.isInteger(x.price)&&x.price>=0&&x.price<=60));
+console.log('Rewards catalog passed: 48 unique items, 22 matching additions across guest/server, four new types and three deterministic earned badges.');
