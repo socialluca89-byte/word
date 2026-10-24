@@ -11,7 +11,7 @@ assert(process.env.WORDYLAND_BROWSER_DATA,'Use an isolated local database');
  // Observe actual Three.js scene graphs without adding a production test endpoint.
  await p.addInitScript(()=>{window.testScenes=[];document.addEventListener('DOMContentLoaded',()=>{const T=window.THREE;if(!T)return;const add=T.Scene.prototype.add;T.Scene.prototype.add=function(...nodes){window.testScenes.push(this);return add.apply(this,nodes);};});});
  const models=selector=>p.locator(selector).evaluate(host=>{const canvas=host.querySelector('canvas');if(!canvas)return null;const scenes=window.testScenes;const result=[];for(const scene of scenes.slice(-1)){scene.traverse(o=>{if(o.userData.character)result.push({type:o.userData.character,crown:o.children.some(c=>c.material?.color?.getHex()===0xffd16b)});});}return result;});
- const wardrobe=async()=>{if(!p.url().startsWith(base))await p.goto(base+'/#personaggi');else await p.locator('.serviceNav a[href="#personaggi"]').click();await p.locator('.shopGrid').waitFor();};
+ const wardrobe=async()=>{if(!p.url().startsWith(base))await p.goto(base+'/#personaggi');else await p.locator('.startChoices a[href="#personaggi"]').click();await p.locator('.shopGrid').waitFor();};
  await wardrobe();assert.equal(await p.locator('.shopItem [data-item=fox]').textContent(),'In uso ✓');
  await p.locator('[data-item=panda]').click();await p.locator('#questStatus').getByText(/Ti mancano 30 monete/).waitFor();assert.equal(await p.locator('.passport [data-racer]').getAttribute('data-racer'),'fox');
  await p.reload();assert.equal(await p.locator('.passport [data-racer]').getAttribute('data-racer'),'fox');
@@ -33,8 +33,8 @@ assert(process.env.WORDYLAND_BROWSER_DATA,'Use an isolated local database');
   assert((await models('#missionWorld')).some(m=>m.type==='robot'&&m.crown),'Selected character in '+kind);
   assert.equal(await p.locator('.passport [data-racer]').getAttribute('data-racer'),'robot');console.log('Rendered selected character in:',kind);
  }
- await p.goto(base+'/#segnalazioni');await p.locator('.serviceNav a[href="#personaggi"]').click();await p.locator('.shopGrid').waitFor();
- await p.locator('[data-style=home]').click();await p.locator('.serviceNav a[href="#sfide"]').click();await p.locator('.serviceNav a[href="#personaggi"]').click();await p.locator('[data-item=fox]').waitFor();
+ await p.goto(base+'/#segnalazioni');await p.locator('.startChoices a[href="#personaggi"]').click();await p.locator('.shopGrid').waitFor();
+ await p.locator('[data-style=home]').click();await p.locator('.startChoices a[href="#sfide"]').click();await p.locator('.startChoices a[href="#personaggi"]').click();await p.locator('[data-item=fox]').waitFor();
  // Exercise a real server account and two isolated owned profiles.
  const credentials={username:'characters_'+Date.now(),password:'Character-test-password-123',adult:true};
  await p.evaluate(async c=>{const a=window.wordylandAccount;await a.connect(await a.request('register',c));},credentials);

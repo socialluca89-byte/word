@@ -1,8 +1,8 @@
 import fs from 'node:fs';
 import {createHash} from 'node:crypto';
 const html=fs.readFileSync('dist/index.html','utf8');
-const expected=['index.html','app.js','data.js','worlds.js','accounts.js','api.php','quests.js','quests.css','platform.php','curriculum.json','arena.php','arena.js','classroom.php','classroom.js','arcade.js','arcade.css','race-world.webp','race-circuits.webp','race-racers.webp','island.js','island.css','island-places.webp','three.min.js','community.php','community.js'];
-for(const name of ['app.js','data.js','worlds.js','accounts.js','quests.js','arena.js','classroom.js','arcade.js','island.js','community.js','three.min.js']) {
+const expected=['index.html','app.js','data.js','worlds.js','accounts.js','api.php','quests.js','quests.css','platform.php','curriculum.json','arena.php','arena.js','classroom.php','classroom.js','arcade.js','arcade.css','race-world.webp','race-circuits.webp','race-racers.webp','island.js','island.css','island-places.webp','three.min.js','community.php','community.js','manifest.webmanifest','icon-192.png','icon-512.png','icon-maskable-512.png','offline.html','offline.js','pwa.css','pwa.js','sw.js'];
+for(const name of ['app.js','data.js','worlds.js','accounts.js','quests.js','arena.js','classroom.js','arcade.js','island.js','community.js','three.min.js','pwa.js']) {
   const hash=createHash('sha256').update(fs.readFileSync('dist/'+name)).digest('hex').slice(0,12);
   if(!html.includes('src="'+name+'?v='+hash+'"')) throw Error('Missing or outdated public dependency: '+name+'; run node scripts/version-assets.mjs');
 }
@@ -12,7 +12,7 @@ const styleHash=createHash('sha256').update(fs.readFileSync('dist/quests.css')).
 if(!html.includes('WordyLand')||!html.includes('href="quests.css?v='+styleHash+'"')) throw Error('Title or styles missing/outdated; run node scripts/version-assets.mjs');
 const curriculum=JSON.parse(fs.readFileSync('dist/curriculum.json','utf8'));
 if(!curriculum.body?.length||!curriculum.catpositions?.length) throw Error('School curriculum missing');
-for(const name of ['arcade.css','island.css']){
+for(const name of ['arcade.css','island.css','pwa.css']){
   const hash=createHash('sha256').update(fs.readFileSync('dist/'+name)).digest('hex').slice(0,12);
   if(!html.includes('href="'+name+'?v='+hash+'"')) throw Error('Outdated stylesheet: '+name);
 }
@@ -22,4 +22,14 @@ for(const name of ['race-circuits.webp','race-racers.webp']){
 }
 const islandHash=createHash('sha256').update(fs.readFileSync('dist/island-places.webp')).digest('hex').slice(0,12);
 if(!fs.readFileSync('dist/island.css','utf8').includes('island-places.webp?v='+islandHash))throw Error('Outdated island illustration');
-console.log('Public bundle verified: twenty-five application files, no configuration, database or keys.');
+console.log('Public bundle verified: thirty-four application files, no configuration, database or keys.');
+
+const manifest=JSON.parse(fs.readFileSync('dist/manifest.webmanifest','utf8'));
+if(manifest.start_url!=='/'||manifest.scope!=='/'||manifest.display!=='standalone')throw Error('Invalid PWA entry point');
+for(const icon of manifest.icons){
+ const name=icon.src.split('?')[0],hash=createHash('sha256').update(fs.readFileSync('dist/'+name)).digest('hex').slice(0,12);
+ if(icon.src!==name+'?v='+hash)throw Error('Outdated app icon');
+}
+const workerHash=createHash('sha256').update(fs.readFileSync('dist/sw.js')).digest('hex').slice(0,12);
+if(!fs.readFileSync('dist/pwa.js','utf8').includes("sw.js?v="+workerHash))throw Error('Outdated service worker registration');
+if(!html.includes('rel="manifest"'))throw Error('PWA manifest missing');

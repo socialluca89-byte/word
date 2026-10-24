@@ -34,6 +34,7 @@ jobs:
           for f in dist/*.js; do node --check "$f"; done
           for f in scripts/*.sh; do bash -n "$f"; done
           node scripts/test-lessons.mjs
+          node scripts/test-pwa.mjs
       - name: Verify account API and database isolation
         run: |
           for f in dist/*.php; do php -l "$f"; done
