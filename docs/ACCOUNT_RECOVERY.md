@@ -23,3 +23,15 @@ Per abilitare l’invio occorre prima concordare e verificare la posta uscente d
 L’indirizzo qui è fittizio: non usarlo sul sito. Nessun file di configurazione è stato creato sul server e nessuna email reale è stata inviata. Non sono stati attivati servizi o credenziali. Togliere il file o impostare `enabled:false` disattiva il flusso. Prima di attivarlo per l’account reale serve la conferma specifica del proprietario.
 
 Nei test soltanto, `WORDYLAND_TEST=1` e `WORDYLAND_TEST_MAIL=1` scrivono una casella fittizia nella cartella temporanea privata. Questa modalità non è disponibile in produzione. I test API e browser non usano iscritti reali.
+
+## Procedura assistita pronta, mai automatica
+
+Se il probe conferma che il proprietario esiste, è amministratore e non ha più il file privato di attivazione, è disponibile `scripts/prepare-owner-recovery.php`. È uno script CLI privato, escluso dal bundle pubblico e mai chiamato da deploy o probe. È stato provato soltanto su database fittizi.
+
+L’esecuzione sul vero account richiede prima la conferma specifica dell’utente. Il vincolo viene dalla direttiva ricevuta nel task: «Per il vero account luca@perrone.it NON resettare password, generare nuove credenziali/recovery o modificare permessi automaticamente». I flag richiesti dallo script non sostituiscono quella conferma nella conversazione.
+
+La procedura accetta solo la cartella privata di wordyland.eu e l’account fisso luca@perrone.it, già esistente con ruolo admin. Non crea utenti, non promuove ruoli, non cambia la password e non tocca profili, monete o XP. Prepara un nuovo link nel file privato admin-activation.txt (0600), ruota il codice di recupero e revoca le sessioni esistenti. Il proprietario deve aprire personalmente il link sul proprio hosting e scegliere la password; nessun segreto viene stampato. Se un file di attivazione esiste già, si ferma senza sovrascriverlo: usare prima il percorso già disponibile.
+
+Per evitare attivazioni accidentali servono entrambi l’argomento `--prepare-owner-recovery` e la conferma esplicita del destinatario in `WORDYLAND_OWNER_RECOVERY_CONFIRM`; la directory è `WORDYLAND_BOOTSTRAP_DATA`. L’operatore autorizzato usa soltanto la connessione SSH già configurata e il file versionato del repository; nessun download/esecuzione periodica, nuova chiave o endpoint web. Non eseguire lo script solo per “verificare”: usare il probe di sola lettura.
+
+Un errore di scrittura/aggiornamento o commit viene verificato nei test con rollback e pulizia del solo file appena creato. Un eventuale esito non determinabile conserva le istruzioni private e richiede un controllo prima di ripetere. Il nuovo script non autorizza alcuna azione sul progetto separato Caffè Oro.

@@ -161,3 +161,19 @@ Correzione: metadati additivi needs_review/review_at in practice_outcomes, con m
 PASS mirati API: migrazione calda dalla versione precedente, vecchi successi/wallet conservati, priorità dopo errore e aiuto, correzione contro risposta autonoma, isolamento profili, aiuti ripetuti gratuiti. PASS browser: selettore scheda personale raggiungibile, errore→correzione non toglie successi (3→3), nuova missione parte dalla parola recente, nuovo successo autonomo 3→4, layout mobile e missioni già create conservate. Autonomy API rimane PASS.
 
 PASS: intero job verify e tutte le suite browser finali ux, learning, resume, presence, pwa, rewards, motion, access, email, performance, navigation, autonomy e review. Nessun dato reale degli alunni letto, nessun reset o bootstrap. La capacità pubblica del sito è stata verificata in sola lettura: HTTP 200, emailRecoveryEnabled=false; nessun invio effettuato. La pubblicazione del nuovo ripasso deve ancora essere confermata con il suo run live.
+
+## Blocco 9 — Recupero proprietario assistito preparato, non eseguito
+
+Sviluppato scripts/prepare-owner-recovery.php, CLI soltanto. Non viene chiamato da deploy o probe, non è installato in public_html e richiede due conferme tecniche oltre alla futura conferma specifica dell’utente per l’account reale. Target fisso Luca e cartella privata wordyland.eu; nessuna creazione account/promozione ruolo, nessuna password mostrata o cambiata. Se manca il file di attivazione e il proprietario è già admin, può preparare istruzioni private monouso conservando profili e premi; ruota recovery/sessioni soltanto quando viene esplicitamente eseguito.
+
+PASS con soli database fittizi: assenza conferma/argomento, account assente o non admin, file esistente o symlink, cartella pubblica/alias rifiutati; password/ruolo/profili/wallet/altri account invariati; file 0600, codice non presente nell’output, ripetizione rifiutata senza nuova rotazione; errori UPDATE e COMMIT con rollback e pulizia. Nessuna operazione reale, nessun codice o password reale letto/generato.
+
+Dipendenza invariata per Luca: occorre prima il probe autenticato o il controllo personale del file privato. Se il file esiste, usare il link esistente; se manca, chiedere conferma specifica prima di questa procedura. Non presentare lo sviluppo della procedura come recupero effettivamente riuscito. La checklist mantiene il punto bloccato e l’invio email non attivato.
+
+## Esito live blocco 8 — fallimento hosting, ripristino verificato
+
+Commit completo `77e071ca24438881121786d0d1cd80d90a71ea99`, run https://github.com/socialluca89-byte/word/actions/runs/40128858645: verify e browser PASS; deploy FAIL. Annotazione pubblica: «SiteGround anti-bot verification intercepted the health endpoint (HTML instead of JSON).» Annotazione di ripristino: «Automatic rollback completed; verified server marker: 22f2d6028b87c0ae22029eaa211c148a7964ef69».
+
+La release live resta quindi 22f2d60. Non dichiarare pubblicato il ripasso recente e non ripetere un deploy dall’esito incerto: l’esito qui è noto, con ripristino verificato. Nessun controllo allentato, nessun tentativo di superare la verifica anti-bot o cambiare IP/credenziali. Il blocco non è un rifiuto dell’auto-review degli strumenti: è una risposta dell’hosting durante il controllo HTTPS della pipeline.
+
+Il blocco 9 è preparato/testato soltanto su fixture e sarà conservato su work, senza inviarlo a main per generare artificiosamente un nuovo deploy. Nessun reset reale né servizio email attivato. Prima di un’altra pubblicazione servono prove pertinenti o chiarimento della protezione SiteGround, oltre ai controlli normali.

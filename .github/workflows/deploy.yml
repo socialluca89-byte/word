@@ -47,6 +47,8 @@ jobs:
           python3 scripts/test-adventures.py
           php -l scripts/bootstrap-admin.php
           php -l scripts/owner-recovery-status.php
+          php -l scripts/prepare-owner-recovery.php
+          python3 scripts/test-owner-recovery.py
           php -l scripts/siteground-cache.php
           python3 scripts/test-cache-purge.py
           python3 scripts/test-community.py
