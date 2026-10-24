@@ -49,6 +49,9 @@ with tempfile.TemporaryDirectory(prefix='wordyland-island-test-') as temporary:
             return request(session, 'create-profile', {'nickname':nickname}, token)['id'], token
         pid, token = register(a, 'Luna')
         other, other_token = register(b, 'Nico')
+        # A non-avatar purchase must retain the default character in server state.
+        companion = request(b, 'buy', {'profile':other,'item':'pet-bunny'}, other_token)['wallet']
+        assert companion['equipped']['avatar']=='fox' and companion['equipped']['pet']=='pet-bunny'
         request(a, 'quest-start', {'profile':pid,'activity':'unknown'}, token, 400)
         request(a, 'quest-start', {'profile':pid,'activity':[]}, token, 400)
         request(b, 'quest-start', {'profile':pid,'activity':'kart'}, other_token, 404)

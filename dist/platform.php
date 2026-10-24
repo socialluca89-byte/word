@@ -64,7 +64,7 @@ function shopCatalog(): array { return [
 function wallet(PDO $db, int $profile): array {
     runSql($db, 'INSERT OR IGNORE INTO wallets(profile_id) VALUES (?)', [$profile]);
     $w = one($db, 'SELECT coins,xp,equipped FROM wallets WHERE profile_id=?', [$profile]);
-    $w['equipped'] = json_decode($w['equipped'], true) ?: ['avatar'=>'fox'];
+    $w['equipped'] = array_merge(['avatar'=>'fox'], json_decode($w['equipped'], true) ?: []);
     $w['inventory'] = array_merge(['fox'], array_column(rows($db, 'SELECT item FROM inventory WHERE profile_id=?', [$profile]), 'item'));
     $w['level'] = 1 + (int)floor($w['xp']/100);
     return $w;
