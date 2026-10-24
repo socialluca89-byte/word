@@ -5,6 +5,7 @@ $db->exec('CREATE TABLE IF NOT EXISTS wallets(profile_id INTEGER PRIMARY KEY REF
 CREATE TABLE IF NOT EXISTS inventory(profile_id INTEGER REFERENCES profiles(id) ON DELETE CASCADE,item TEXT,PRIMARY KEY(profile_id,item));
 CREATE TABLE IF NOT EXISTS quests(token TEXT PRIMARY KEY,profile_id INTEGER REFERENCES profiles(id) ON DELETE CASCADE,questions TEXT,step INTEGER DEFAULT 0,xp INTEGER DEFAULT 0,recovered INTEGER DEFAULT 0,completed INTEGER DEFAULT 0,created_at INTEGER);
 CREATE TABLE IF NOT EXISTS practice(profile_id INTEGER REFERENCES profiles(id) ON DELETE CASCADE,word TEXT,good INTEGER DEFAULT 0,wrong INTEGER DEFAULT 0,PRIMARY KEY(profile_id,word));
+CREATE TABLE IF NOT EXISTS practice_outcomes(profile_id INTEGER REFERENCES profiles(id) ON DELETE CASCADE,word TEXT,independent INTEGER NOT NULL DEFAULT 0,assisted INTEGER NOT NULL DEFAULT 0,corrected INTEGER NOT NULL DEFAULT 0,observed INTEGER NOT NULL DEFAULT 0,PRIMARY KEY(profile_id,word));
 CREATE TABLE IF NOT EXISTS credits(profile_id INTEGER REFERENCES profiles(id) ON DELETE CASCADE,word TEXT,day TEXT,PRIMARY KEY(profile_id,word,day));
 CREATE TABLE IF NOT EXISTS rewards(token TEXT PRIMARY KEY REFERENCES quests(token) ON DELETE CASCADE,profile_id INTEGER REFERENCES profiles(id) ON DELETE CASCADE,xp INTEGER,coins INTEGER,recovered INTEGER,created_at INTEGER);
 CREATE TABLE IF NOT EXISTS studies(id INTEGER PRIMARY KEY,profile_id INTEGER REFERENCES profiles(id) ON DELETE CASCADE,title TEXT,words TEXT,file TEXT,original_name TEXT,created_at INTEGER);
@@ -156,7 +157,7 @@ function questSnapshot(array $quest): array {
 }
 
 require __DIR__ . '/arena.php';
-$platformActions = ['hub','pending-games','quest-resume','quest-start','quest-answer','buy','equip','study-save','study-file','study-remove','club-create','club-join','club-leave','rename-profile'];
+$platformActions = ['hub','pending-games','quest-resume','quest-start','quest-hint','quest-answer','buy','equip','study-save','study-file','study-remove','club-create','club-join','club-leave','rename-profile'];
 if (!in_array($action, $platformActions, true)) return;
 $p = ownedProfile($db, $id, $method === 'GET' ? ($_GET['profile'] ?? 0) : ($body['profile'] ?? 0));
 $pid = (int)$p['id'];
@@ -269,7 +270,7 @@ if ($method === 'POST' && $action==='quest-start') {
     }
     $unique=[];foreach($pool as $word)$unique[normalWord($word[0])]=$word; $pool=array_values($unique);
     shuffle($pool);
-    $difficult=array_column(rows($db,'SELECT word FROM practice WHERE profile_id=? AND wrong>0 AND good<3',[$pid]),'word');
+    $difficult=array_column(rows($db,'SELECT p.word FROM practice p LEFT JOIN practice_outcomes o ON o.profile_id=p.profile_id AND o.word=p.word WHERE p.profile_id=? AND p.wrong>0 AND (p.good-COALESCE(o.observed,0)+COALESCE(o.independent,0))<3',[$pid]),'word');
     usort($pool,fn($a,$b)=>(int)in_array(normalWord($b[0]),$difficult,true)<=>(int)in_array(normalWord($a[0]),$difficult,true));
     $selected=array_slice($pool,0,3);$questions=[];
     foreach($selected as $i=>$word) {
@@ -310,13 +311,27 @@ if ($method === 'POST' && $action==='quest-start') {
     runSql($db,'INSERT INTO quests(token,profile_id,questions,created_at,activity,source) VALUES (?,?,?,?,?,?)',[$token,$pid,json_encode($questions,JSON_UNESCAPED_UNICODE),time(),$activity,$study?'study:'.$study:$category]);
     respond(['token'=>$token,'total'=>count($questions),'question'=>publicQuestion($questions[0],0)]);
 }
+if ($method==='POST' && $action==='quest-hint') {
+    limitAttempts($db,'quest-hint:'.$pid,300);
+    $db->exec('BEGIN IMMEDIATE');
+    $quest=one($db,'SELECT * FROM quests WHERE token=? AND profile_id=?',[(string)($body['token']??''),$pid]);
+    if(!$quest || $quest['created_at']<time()-questLifetime()){$db->exec('ROLLBACK');fail('Questa missione è terminata. Iniziane una nuova.',410);}
+    if($quest['completed'] || ($body['step']??null)!==(int)$quest['step']){$db->exec('ROLLBACK');fail('La missione è avanzata: riparti dalla schermata attuale.',409);}
+    $questions=json_decode($quest['questions'],true);
+    $questions[$quest['step']]['assisted']=true;
+    runSql($db,'UPDATE quests SET questions=? WHERE token=?',[json_encode($questions,JSON_UNESCAPED_UNICODE),$quest['token']]);
+    $db->exec('COMMIT');respond(['ok'=>true]);
+}
 if ($method==='POST' && $action==='quest-answer') {
     $db->exec('BEGIN IMMEDIATE');
     $quest=one($db,'SELECT * FROM quests WHERE token=? AND profile_id=?',[(string)($body['token']??''),$pid]);
     if(!$quest || $quest['created_at']<time()-questLifetime()){$db->exec('ROLLBACK');fail('Questa missione è terminata. Iniziane una nuova.',410);}
     if($quest['completed']){$db->exec('ROLLBACK');fail('Premio già assegnato a questa missione.',409);}
     if(($body['step']??null)!==(int)$quest['step']){$db->exec('ROLLBACK');fail('La missione è avanzata: riparti dalla schermata attuale.',409);}
-    $questions=json_decode($quest['questions'],true);$q=$questions[$quest['step']];$word=normalWord($q['word']);
+    $questions=json_decode($quest['questions'],true);
+    // A reported help can only lower autonomy; it cannot clear server-recorded errors/help.
+    if(($body['assisted']??false)===true)$questions[$quest['step']]['assisted']=true;
+    $q=$questions[$quest['step']];$word=normalWord($q['word']);
     $answer=is_string($body['answer']??null)?$body['answer']:'';
     runSql($db,'INSERT OR IGNORE INTO practice(profile_id,word) VALUES (?,?)',[$pid,$word]);
     if(normalWord($answer)!==normalWord($q['answer'])) {
@@ -328,6 +343,8 @@ if ($method==='POST' && $action==='quest-answer') {
     $practice=one($db,'SELECT good,wrong FROM practice WHERE profile_id=? AND word=?',[$pid,$word]);
     $recovered=$practice['wrong']>0 && $practice['good']===0 ? 1:0;
     runSql($db,'UPDATE practice SET good=good+1 WHERE profile_id=? AND word=?',[$pid,$word]);
+    $assisted=!empty($q['assisted']);$corrected=!empty($q['hadErrors']);$independent=!$assisted&&!$corrected;
+    runSql($db,'INSERT INTO practice_outcomes(profile_id,word,independent,assisted,corrected,observed) VALUES (?,?,?,?,?,1) ON CONFLICT(profile_id,word) DO UPDATE SET independent=independent+excluded.independent,assisted=assisted+excluded.assisted,corrected=corrected+excluded.corrected,observed=observed+1',[$pid,$word,(int)$independent,(int)$assisted,(int)$corrected]);
     $day=gmdate('Y-m-d');$already=one($db,'SELECT 1 FROM credits WHERE profile_id=? AND word=? AND day=?',[$pid,$word,$day]);
     $today=(int)one($db,'SELECT COUNT(*) AS n FROM credits WHERE profile_id=? AND day=?',[$pid,$day])['n'];
     $xp=(!$already && $today<15)?10:0;
@@ -340,8 +357,8 @@ if ($method==='POST' && $action==='quest-answer') {
         runSql($db,'UPDATE wallets SET coins=coins+? WHERE profile_id=?',[$coins,$pid]);
         runSql($db,'INSERT INTO rewards(token,profile_id,xp,coins,recovered,created_at,activity) VALUES (?,?,?,?,?,?,?)',[$quest['token'],$pid,$totalXp,$coins,$totalRecovered,time(),$quest['activity']]);
     }
-    runSql($db,'UPDATE quests SET step=?,xp=?,recovered=?,completed=? WHERE token=?',[$next,$totalXp,$totalRecovered,(int)$finished,$quest['token']]);$db->exec('COMMIT');
-    respond(['correct'=>true,'done'=>$finished,'xp'=>$totalXp,'coins'=>$coins,'recovered'=>$totalRecovered,'wallet'=>wallet($db,$pid),'question'=>$finished?null:publicQuestion($questions[$next],$next)]);
+    runSql($db,'UPDATE quests SET step=?,xp=?,recovered=?,completed=?,questions=? WHERE token=?',[$next,$totalXp,$totalRecovered,(int)$finished,json_encode($questions,JSON_UNESCAPED_UNICODE),$quest['token']]);$db->exec('COMMIT');
+    respond(['correct'=>true,'independent'=>$independent,'assisted'=>$assisted,'corrected'=>$corrected,'done'=>$finished,'xp'=>$totalXp,'coins'=>$coins,'recovered'=>$totalRecovered,'wallet'=>wallet($db,$pid),'question'=>$finished?null:publicQuestion($questions[$next],$next)]);
 }
 if ($method==='POST' && $action==='club-create') {
     if(($body['consent']??false)!==true)fail('Conferma la partecipazione con soprannome e avatar.');

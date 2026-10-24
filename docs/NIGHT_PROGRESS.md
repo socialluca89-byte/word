@@ -100,8 +100,30 @@ PASS sul lotto finale: intero job verify, deploy simulato aggiornato e browser u
 
 Stato prima della pubblicazione: verificati gli effetti del deploy e preservati gli account; la pubblicazione dei miglioramenti mirati rientra nell’autorizzazione utente precedente. Nessuna attivazione email e nessun reset dell’account reale inclusi. Confermare separatamente l’esito del run GitHub dopo il push a main; non dichiarare online le modifiche finché non passano i controlli live.
 
+## Pubblicazione verificata dei blocchi 1–5
+
+Commit completo: `52122a94914eefaa97723ee562239827576a6c67`.
+Run: https://github.com/socialluca89-byte/word/actions/runs/40124834427 — conclusione SUCCESS.
+Job deploy `120964497801`: «Deploy tested commit to SiteGround and verify the live site» success; «Complete job» success. Anche verify/browser completati con successo. Queste sono prove del vero deploy con controlli live, non soltanto esiti locali.
+
+Il perimetro autorizzato deriva dalle richieste utente «pubblica non posso togliere la cache dinamica», «procedi» e dalle richieste successive di migliorare UX/UI, esercizi, salvataggi e affidabilità. Si tratta di miglioramenti mirati della stessa applicazione e della pipeline già usata. Non autorizza reset del proprietario, nuove credenziali, attivazione email, servizi a pagamento, cron o accessi aggiuntivi. Il vincolo successivo del coordinatore («Non pubblicare finché perimetro autorizzato ed effetti sugli account non verificati») è rispettato separando il provisioning dal deploy e verificando che account/credenziali/ruolo restino invariati nei test. Nessun reset reale è incluso nella pubblicazione.
+
+## Blocco 6 — Aiuti e conteggio delle risposte autonome nelle missioni
+
+Aggiunta la tabella `practice_outcomes` senza alterare o riclassificare i valori precedenti di practice/profili/wallet. Registra risposte autonome, risposte con aiuto e correzioni dopo errore; aiuto e correzione possono coesistere. Il ripasso conserva il credito storico, mentre le nuove risposte con aiuto o dopo errore non aumentano la misura autonoma. XP, monete e feedback positivo mantengono le regole precedenti.
+
+`quest-hint` salva la richiesta sul server per profilo/token/domanda corrente, con CSRF, controllo proprietario e limite richieste; i retry non assegnano punti. Il browser conserva l’aiuto ospite con la domanda, e porta il flag anche nella risposta finale se la scrittura separata è fallita. Non può cancellare aiuti/errori già registrati. Un salvataggio non confermato viene segnalato; non si promette sincronizzazione tra dispositivi quando il server non ha ricevuto dati.
+
+Test mirati PASS: conservazione dei valori storici e del credito di ripasso, aiuti gratuiti/idempotenti, proprietà e CSRF, errore/correzione, aiuto+errore, domanda successiva pulita, risposta ripetuta, perdita della conferma, secondo dispositivo, salvataggio incluso con la risposta e cancellazione dei soli dati di un account fittizio. Browser mirato PASS con aiuto ospite offline e reload, richiesta aiuto fallita, risposta confermata con aiuto, conferma aiuto persa e ripresa da altro dispositivo.
+
+L’intero job verify locale è PASS sul nuovo bundle. La regressione browser completa ha rilevato ancora una differenza nel confronto screenshot del test motion dopo hover. Correzione del test: cattura del framebuffer WebGL tramite toDataURL, con preserveDrawingBuffer abilitato soltanto nel test; nessuna modifica alle opzioni grafiche di produzione. Mantiene le asserzioni esatte di movimento/pausa/hover e movimento ridotto, senza overlay DOM o rasterizzazione dello scroll. Il test corretto è PASS e tutte le suite browser finali sono completate con successo: ux, learning, resume, presence, pwa, rewards, motion, access, email, performance, navigation e autonomy. Nessun retry automatico aggiunto. Il test API autonomia aggiornato conferma anche la rimozione dei dati didattici alla cancellazione dell’account fittizio.
+
+Anteprime ora nel repository: [prima](review/mobile-before-390.png) e [dopo](review/mobile-after-390.png), con dati ospite fittizi. Non dipendono dalla leggibilità dei percorsi locali della sessione. Non è disponibile uno strumento Library/upload in questo ambiente; le immagini saranno consultabili dai normali link GitHub del commit pubblicato.
+
+Nessuna verifica reale dell’account Luca o attivazione email in questo blocco. La modalità probe di sola lettura è pronta, ma l’esecuzione richiede un dispatch autenticato del workflow, non disponibile da questi strumenti. Nessun nuovo accesso richiesto o aggiramento tentato.
+
 ## Coda successiva
 
-1. Completare la persistenza degli aiuti e la distinzione server tra risposte autonome e correzioni; la memoria degli errori alla ripresa è già corretta nel blocco 3.
+1. Verificare il nuovo conteggio su dispositivi fisici e valutarne una spiegazione chiara per gli adulti; la persistenza aiuti e la distinzione server sono implementate nel blocco 6.
 2. Estendere le misure a telefono fisico e alle altre anteprime; il caricamento differito della mappa è già implementato e misurato nel blocco 2.
 3. Estendere onboarding e verifica a dispositivi fisici; il clic perso sugli inviti è riprodotto e corretto, la nuova navigazione ha misure e screenshot nel blocco 5.

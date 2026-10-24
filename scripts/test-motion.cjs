@@ -5,7 +5,10 @@ const hash=b=>crypto.createHash('sha256').update(b).digest('hex');
 (async()=>{
  const browser=await chromium.launch({executablePath:process.env.WORDYLAND_CHROMIUM||undefined,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
  const base=process.env.WORDYLAND_TEST_URL||'http://127.0.0.1:8093';assert(['localhost','127.0.0.1'].includes(new URL(base).hostname),'Isolated local tests only');
- const p=await browser.newPage({viewport:{width:1280,height:900}}),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.goto(base);await p.locator('#islandMap').scrollIntoViewIfNeeded();await p.waitForFunction(()=>document.querySelector('#islandMap').dataset.render==='3d');
+ const p=await browser.newPage({viewport:{width:1280,height:900}}),errors=[];p.on('pageerror',e=>errors.push(e.message));
+ // Retain the GPU framebuffer only in this test, so pixel checks cannot include DOM overlays or scroll rasterisation.
+ await p.addInitScript(()=>{const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,options,...args){return original.call(this,type,['webgl','webgl2','experimental-webgl'].includes(type)?{...options,preserveDrawingBuffer:true}:options,...args);};});
+ await p.goto(base);await p.locator('#islandMap').scrollIntoViewIfNeeded();await p.waitForFunction(()=>document.querySelector('#islandMap').dataset.render==='3d');
  const guestBefore=await p.evaluate(()=>localStorage.getItem('wordylandGuestWallet'));
  for(const kind of ['kart','football','space']){
   await p.locator('[data-live-place='+kind+']').click();assert.equal(await p.locator('#islandMap').getAttribute('data-kind'),kind);
@@ -13,9 +16,9 @@ const hash=b=>crypto.createHash('sha256').update(b).digest('hex');
  }
  assert.equal(await p.evaluate(()=>localStorage.getItem('wordylandGuestWallet')),guestBefore,'Free scene actions must not grant rewards');
  await p.locator('[data-live-place=island]').click();assert.equal(await p.locator('.islandPin').count(),8);
- // Measure the rendered world independently of hover labels and late font swaps.
+ // Compare actual WebGL pixels independently of hover labels, fractional scrolling and late font swaps.
  await p.evaluate(()=>document.fonts.ready);await p.mouse.move(0,0);
- const snap=()=>p.locator('#islandMap canvas').screenshot({animations:'allow',style:'.islandPin,.sceneReaction{visibility:hidden!important}'});
+ const snap=async()=>Buffer.from(await p.locator('#islandMap canvas').evaluate(canvas=>canvas.toDataURL().split(',')[1]),'base64');
  const renderedFrame=()=>p.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
  const a=await snap();await p.waitForTimeout(400);const b=await snap();assert.notEqual(hash(a),hash(b),'World should move without hovering');
  await p.locator('#islandMotion').click();await renderedFrame();const paused=await snap();await p.waitForTimeout(300);assert.equal(hash(paused),hash(await snap()),'Pause should freeze world');

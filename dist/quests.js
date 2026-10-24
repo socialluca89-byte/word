@@ -3,7 +3,7 @@
   const root=document.createElement('section');root.id='questHub';root.className='questHub';
   root.setAttribute('aria-label','Il tuo passaporto delle avventure');
   document.querySelector('.raceHero').after(root);
-  let profile={id:null},hub=null,tab='adventures',mission=null,question=null,busy=false,tiles=[],picked=[],club=0, hinted=false, questionFailed=false;
+  let profile={id:null},hub=null,tab='adventures',mission=null,question=null,busy=false,tiles=[],picked=[],club=0, questionFailed=false;
   // One focused play surface; returning to a section always restores navigation.
   window.wordylandUI={play(kind=''){
     document.body.dataset.play=kind;
@@ -43,7 +43,7 @@
   }
   function persistGuestMission(){
     if(profile.id||!mission||mission.token!=='guest')return true;
-    try{localStorage.setItem(guestMissionKey,JSON.stringify({id:mission.id,words:mission.questions.map(q=>q.word),step:mission.step||0,xp:mission.xp,source:mission.source,activity:mission.activity,expiresAt:mission.expiresAt,hadErrors:Boolean(mission.questions[mission.step||0]?.hadErrors)}));return true;}catch{return false;}
+    try{localStorage.setItem(guestMissionKey,JSON.stringify({id:mission.id,words:mission.questions.map(q=>q.word),step:mission.step||0,xp:mission.xp,source:mission.source,activity:mission.activity,expiresAt:mission.expiresAt,hadErrors:Boolean(mission.questions[mission.step||0]?.hadErrors),assisted:Boolean(mission.questions[mission.step||0]?.assisted)}));return true;}catch{return false;}
   }
   function missionTitle(source,kind){return lessonTopics[source]?.name||(source==='catpositions'?'Preposizioni · Il gatto e la scatola':source==='focus'?'Il corpo · ripasso mirato':source?.startsWith('study:')?'La tua scheda di scuola':places[kind]?.name||'La tua missione');}
   const recommended=[['catpositions','Preposizioni con il gatto','🐈','pets'],['focus','Le parole del corpo','👀','pets'],['counting','Contiamo insieme','🔢','creative'],['mousepositions','Dov’è il topolino?','🐭','pets'],['conversation','Facciamo amicizia','👋','creative']];
@@ -82,7 +82,7 @@
     if(busy)return;busy=true;const owner=profile.id;
     try{
       if(owner){const result=await api('quest-resume&profile='+owner+'&token='+encodeURIComponent(token));if(profile.id!==owner)return;activity=places[result.activity]?result.activity:'pets';lessonSource=result.source;mission={token:result.token,total:result.total,step:result.step,xp:result.xp,profile:owner,activity,source:result.source};question=result.question;}
-      else{const draft=guestDraft();if(!draft)throw Error('La missione non è più disponibile in questo browser.');const pool=guestPool(draft.source),rows=draft.words.map(word=>pool.find(row=>row[0]===word)),questions=rows.map((row,index)=>makeLessonQuestion(row,index,rows.length,pool));activity=draft.activity;lessonSource=draft.source;mission={token:'guest',id:draft.id,questions,total:questions.length,step:draft.step,xp:Math.max(0,Math.min(150,Number(draft.xp)||0)),profile:null,activity,source:draft.source,expiresAt:draft.expiresAt};question=questions[draft.step];question.hadErrors=draft.hadErrors===true;}
+      else{const draft=guestDraft();if(!draft)throw Error('La missione non è più disponibile in questo browser.');const pool=guestPool(draft.source),rows=draft.words.map(word=>pool.find(row=>row[0]===word)),questions=rows.map((row,index)=>makeLessonQuestion(row,index,rows.length,pool));activity=draft.activity;lessonSource=draft.source;mission={token:'guest',id:draft.id,questions,total:questions.length,step:draft.step,xp:Math.max(0,Math.min(150,Number(draft.xp)||0)),profile:null,activity,source:draft.source,expiresAt:draft.expiresAt};question=questions[draft.step];question.hadErrors=draft.hadErrors===true;question.assisted=draft.assisted===true;}
       tab='missions';history.replaceState(null,'','#missioni');window.dispatchEvent(new Event('wordyland-play-view'));setWorld(places[activity].world);render();root.querySelector('#missionStage').scrollIntoView({block:'start'});say('Missione ripresa: le risposte già confermate sono conservate.');
     }catch(error){const status=resumeHost.querySelector('#resumeStatus');if(status)status.textContent=error.message;}
     finally{busy=false;}
@@ -177,7 +177,7 @@
     u.onerror=()=>say('La voce non è disponibile. Puoi guardare la parola con Un aiuto.');speechSynthesis.speak(u);
   }
   function drawQuestion(challenge=false) {
-    if(!challenge){hinted=false;questionFailed=Boolean(question?.hadErrors);}
+    if(!challenge){questionFailed=Boolean(question?.hadErrors);}
     const stage=root.querySelector('#missionStage');if(!stage)return;
     const previousWorld=stage.querySelector('#missionWorld');if(!previousWorld)clearScene();
     root.querySelector('.missionGrid').hidden=true;stage.hidden=false;
@@ -215,7 +215,16 @@
     }
     actions.innerHTML='<button class="audio" id="questHint">💡 Un aiuto · sempre gratis</button><div id="questHelp" hidden class="questWord">'+esc(q.word)+'</div>';
     work.querySelector('input,button')?.focus({preventScroll:true});
-    actions.querySelector('button').onclick=()=>{const hint=actions.querySelector('#questHelp');hint.hidden=!hint.hidden;hinted=true;};
+    actions.querySelector('button').onclick=()=>{
+      const hint=actions.querySelector('#questHelp');hint.hidden=!hint.hidden;question.assisted=true;
+      if(!profile.id){persistGuestMission();return;}
+      const current=question,owner=profile.id,token=mission.token,step=current.number-1;
+      if(current.helpSaved||current.helpSaving)return;
+      current.helpSaving=true;
+      api('quest-hint',{token,step}).then(()=>{current.helpSaved=true;}).catch(()=>{
+        if(profile.id===owner&&question===current&&mission?.token===token&&(mission.step||0)===step)say('Puoi usare l’aiuto. Il salvataggio non è confermato: torna online prima di chiudere.');
+      }).finally(()=>{current.helpSaving=false;});
+    };
   }
   function drawTiles(){
     const work=root.querySelector('#questWork');
@@ -229,7 +238,7 @@
     const previousInventory=[...wallet().inventory],feedback=root.querySelector('#questFeedback'),owner=profile.id,token=mission.token;root.querySelector('#pauseQuest').disabled=true;const saveNote=root.querySelector('#questSaveStatus');saveNote.textContent=profile.id?'Salvo la risposta…':'Controllo la risposta…';
     try{
       let result;
-      if(profile.id){result=await api('quest-answer',{token:mission.token,step:question.number-1,answer});}
+      if(profile.id){result=await api('quest-answer',{token:mission.token,step:question.number-1,answer,assisted:question.assisted===true});}
       else{
         const correct=normalize(answer)===normalize(question.answer||question.word);
         if(!correct)result={correct:false,message:'Riascolta e riprova con calma. Gli aiuti sono sempre disponibili.'};
@@ -240,11 +249,11 @@
           if(guest.finished[mission.id])throw Error('Questa missione è già completata. Aprine una nuova.');
           let coins=0;if(done&&mission.xp>0&&(guest.paid[day]||0)<3){coins=15;guest.coins+=coins;guest.paid[day]=(guest.paid[day]||0)+1;}
           if(done){guest.adventures[mission.activity]=(Number(guest.adventures[mission.activity])||0)+1;guest.finished[mission.id]=Date.now();}
-          storeGuest();result={correct:true,done,xp:mission.xp,coins,wallet:guest,question:mission.questions[question.number]};
+          storeGuest();result={correct:true,independent:!question.assisted&&!question.hadErrors&&!questionFailed,done,xp:mission.xp,coins,wallet:guest,question:mission.questions[question.number]};
         }
       }
       if(owner!==profile.id||token!==mission?.token)return;
-      const word=question.word;stats[word]??={good:0,attempts:0,review:false};stats[word].attempts++;if(result.correct&&!hinted&&!questionFailed){stats[word].good++;stats[word].review=false;}else{stats[word].review=true;if(!result.correct)questionFailed=true;}save();updateStats();
+      const word=question.word;stats[word]??={good:0,attempts:0,review:false};stats[word].attempts++;if(result.correct&&result.independent===true){stats[word].good++;stats[word].review=false;}else{stats[word].review=true;if(!result.correct)questionFailed=true;}save();updateStats();
       const learning={expected:window.wordylandLearning.expected(question),answer,word:question.word,translation:question.translation,kind:question.kind,prompt:question.prompt,chosenTranslation:question.options?.find(option=>option[0]===answer)?.[1],button:chosenButton,input:root.querySelector('#questAnswer')};
       saveNote.textContent=result.correct?(profile.id?'✓ Risposta salvata nel profilo':'✓ Risposta salvata qui'):'Puoi riprovare con calma.';
       if(!result.correct){question.hadErrors=true;if(!profile.id)persistGuestMission();window.wordylandLearning.show(feedback,false,learning);sceneView?.react('retry');return;}
