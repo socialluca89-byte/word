@@ -11,7 +11,8 @@ push to main ──► verify (tests) ──► deploy (SSH to SiteGround) ─�
 Workflow: `.github/workflows/deploy.yml` ("Verify and deploy WordyLand").
 
 - **verify** runs on every push to `main`, on pull requests and on manual *deploy* runs: `node --check` on all JavaScript in `dist`, `bash -n` on all scripts, `scripts/test-lessons.mjs`, `scripts/test-pwa.mjs`, `scripts/test-learning.mjs`, `php -l` on all PHP in `dist`, `scripts/test-api.py`, `scripts/test-classroom.py`, `scripts/test-adventures.py`, `php -l scripts/bootstrap-admin.php`, `scripts/test-community.py`, `scripts/test-presence.py`, `scripts/test-resume.py`, `php -l scripts/siteground-cache.php`, `scripts/test-cache-purge.py`, `scripts/verify-bundle.mjs` and the isolated deployment test `scripts/test-deploy.sh`.
-- **deploy** runs only on `refs/heads/main` (push or manual *deploy*), only after **verify** passed and only when the repository variable `SG_PATH` is set. Pull requests never deploy.
+- **browser** runs UX, feedback, resume, presence and PWA Playwright journeys in disposable local PHP environments, using pinned Playwright 1.62.1. It never uses production data.
+- **deploy** runs only on `refs/heads/main` (push or manual *deploy*), only after **verify** and **browser** passed and only when the repository variable `SG_PATH` is set. Pull requests never deploy.
 - All production operations share the concurrency group `wordyland-production` and never cancel each other mid-run.
 - Manual button (Actions → Verify and deploy WordyLand → Run workflow, branch `main`):
   - `deploy` re-publishes the current `main` (idempotent: if already deployed, it only re-checks the live site);

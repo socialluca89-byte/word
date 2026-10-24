@@ -55,3 +55,14 @@ The original normal homepage was found stale in SiteGround's cache while unique 
 Exercises use 20–26px instructions/options, 36–48px model words, 32px writing fields and large touch controls. This applies to missions, class duels, classic practice and anonymous offline revision. Shared `learning.js` shows a static large red X with a specific explanation (position meanings, letter/spelling differences, dialogue or quantities) and the correct example. Children can retry in practice; duels show the correction before continuing, without altering server scoring. Correct answers show a large green check and three stars, including the final mission answer. Stars animate once and respect reduced motion and the global animation pause.
 
 Italian explanations and English examples have explicit audio buttons, with no autoplay. Voice availability depends on the device. Feedback remains until the child continues. Strings are escaped, and feedback is announced with a polite live region. Browser coverage: `bash scripts/test-browser.sh learning`, plus school, resume and PWA regressions, against disposable local data.
+
+
+## Focused child UX
+
+The start screen includes an explicitly suggested rotating three-question mission, with the existing resume section ahead of it and the three exploration/class/character shortcuts. This is a suggestion, not a teacher assignment or an adaptive assessment. Six secondary tabs wrap into a readable grid. Lesson cards, class forms and Arena controls have larger labels and touch targets.
+
+An active mission or duel uses `body[data-play]` to hide surrounding landing/account/passport UI. The pause control remains visible; leaving, completing a mission or opening another route restores navigation. A sticky mission toolbar keeps pause and listening reachable. Illustrated options use a compact two-column grid from 350px upward, retaining 21–22px text. Phrase choices remain full-width on small screens. Save confirmations distinguish online profiles from this-browser guest storage; timeouts, HTML hosting challenges and lost connections no longer imply that an unconfirmed answer was saved. No writes are automatically replayed.
+
+The authenticated pending-games response includes only the selected owned profile’s valid class-scoped incoming invitation count. The class shortcut updates from that count; logout/profile changes clear it. Incoming invitations have a stronger visual treatment. Duel listening reads the Italian question without revealing the English answer. Existing server grading, rewards and privacy boundaries remain in effect.
+
+Validation: `bash scripts/test-browser.sh ux`, plus learning, resume, presence, community, characters, school and PWA. Core browser journeys now block deployment alongside existing API/content/deployment verification. Screenshots contain only temporary fixture data.

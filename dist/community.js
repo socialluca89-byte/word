@@ -11,6 +11,7 @@
  function navigation(){document.querySelectorAll('.serviceNav a').forEach(a=>{if(a.hash===location.hash)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});}
  async function route(scroll=false){
   const current=++epoch;navigation();const hash=location.hash;
+  if(['#continua','#sfide','#personaggi','#allenati','#preposizioni','#classe-crea','#segnalazioni','#admin','#iscritti'].includes(hash)||hash.startsWith('#admin-attiva='))window.wordylandUI?.play();
   if(!info().username)newRecovery=null;
   const match=hash.match(/^#admin-attiva=([a-f0-9]{64})$/);if(match){activationCode=match[1];history.replaceState(null,'','#admin');}
   if(hash==='#continua'){root.hidden=true;document.querySelector('.questHub').hidden=false;window.dispatchEvent(new CustomEvent('wordyland-continue'));return;}

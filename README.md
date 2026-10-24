@@ -36,7 +36,7 @@ Paste `English = Italian` per line, or existing vocabulary words. The adult revi
 
 ## Hosting
 
-PHP 8.1+ with PDO SQLite. Deploy the fourteen allowlisted files in `dist/` to `public_html`, including `classroom.php`, `classroom.js`, `arena.php` and `arena.js`. Install the new modules before replacing API/platform files and publish `index.html` last. SQLite and reference attachments live in `.wordyland-data` in the directory above `public_html`; preserve that directory across releases. Schema changes are additive; deleting a learner account removes its enrollments and duels. Existing accounts retain the adult role and their profiles. Password reset rotates the recovery code and invalidates older sessions.
+PHP 8.1+ with PDO SQLite. Deploy the thirty-six allowlisted files in `dist/` to `public_html`, including `classroom.php`, `classroom.js`, `arena.php` and `arena.js`. Install the new modules before replacing API/platform files and publish `index.html` last. SQLite and reference attachments live in `.wordyland-data` in the directory above `public_html`; preserve that directory across releases. Schema changes are additive; deleting a learner account removes its enrollments and duels. Existing accounts retain the adult role and their profiles. Password reset rotates the recovery code and invalidates older sessions.
 
 Passwords are hashed, sessions use Secure/HttpOnly/SameSite Strict cookies, writes require CSRF tokens, SQL uses prepared statements, and every profile/material/group operation checks ownership or membership. Recovery is via the adult's recovery code, not email. Handwriting is checked with an adult, not automatically graded.
 

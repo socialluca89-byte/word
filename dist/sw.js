@@ -1,6 +1,6 @@
 /* Public offline revision only. API calls, accounts and private documents never enter CacheStorage. */
-const CACHE_NAME='wordyland-offline-0f83171febb82701';
-const ASSETS={"/offline.html":"offline.html?v=f67bd2b612ca","/learning.js":"learning.js?v=af98623f80fc","/offline.js":"offline.js?v=7fe23ecb081e","/pwa.css":"pwa.css?v=ad93e3fd12b5","/curriculum.json":"curriculum.json?v=caec47ff5b7d","/manifest.webmanifest":"manifest.webmanifest?v=5e1522f35a54","/icon-192.png":"icon-192.png?v=1f9b3f6f1b02","/icon-512.png":"icon-512.png?v=73f342b30736","/icon-maskable-512.png":"icon-maskable-512.png?v=73f342b30736"};
+const CACHE_NAME='wordyland-offline-ac4cab7b5d609743';
+const ASSETS={"/offline.html":"offline.html?v=83c72c1a2a2a","/learning.js":"learning.js?v=af98623f80fc","/offline.js":"offline.js?v=7fe23ecb081e","/pwa.css":"pwa.css?v=fcf859f6cd05","/curriculum.json":"curriculum.json?v=caec47ff5b7d","/manifest.webmanifest":"manifest.webmanifest?v=5e1522f35a54","/icon-192.png":"icon-192.png?v=1f9b3f6f1b02","/icon-512.png":"icon-512.png?v=73f342b30736","/icon-maskable-512.png":"icon-maskable-512.png?v=73f342b30736"};
 const assetURL=path=>new URL(ASSETS[path],self.registration.scope).href;
 self.addEventListener('install',event=>{
  event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(Object.keys(ASSETS).map(path=>new Request(assetURL(path),{cache:'reload',credentials:'omit'})))));

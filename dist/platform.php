@@ -152,7 +152,9 @@ if(in_array($action,['pending-games','quest-resume'],true)){
     $quests=rows($db,'SELECT * FROM quests WHERE profile_id=? AND completed=0 AND created_at>=? ORDER BY created_at DESC,token LIMIT 20',[$pid,time()-questLifetime()]);
     $duels=rows($db,'SELECT d.* FROM duels d JOIN duel_players dp ON dp.duel=d.id AND dp.profile=? WHERE d.state="active" AND d.expires_at>=? ORDER BY d.created_at DESC,d.id LIMIT 40',[$pid,time()]);
     $pending=[];foreach($duels as $duel){$other=(int)$duel['challenger']===$pid?(int)$duel['opponent']:(int)$duel['challenger'];if(!duelClassmates($db,$pid,$other))continue;$view=duelView($db,$duel,$pid);if($view['step']<$view['total'])$pending[]=$view;}
-    respond(['quests'=>array_map('questSnapshot',$quests),'duels'=>$pending]);
+    $incoming=rows($db,'SELECT challenger FROM duels WHERE opponent=? AND state="pending" AND expires_at>=?',[$pid,time()]);
+    $invites=0;foreach($incoming as $invitation)if(duelClassmates($db,$pid,(int)$invitation['challenger']))$invites++;
+    respond(['quests'=>array_map('questSnapshot',$quests),'duels'=>$pending,'incomingInvites'=>$invites]);
 }
 if ($method === 'GET' && $action === 'hub') {
     $club = (int)($_GET['club'] ?? 0);

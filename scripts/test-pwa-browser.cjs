@@ -11,6 +11,7 @@ assert(['127.0.0.1','localhost'].includes(new URL(base).hostname));assert(root?.
  const cdp=await context.newCDPSession(p);const manifest=await cdp.send('Page.getAppManifest');assert.equal(manifest.errors.length,0,JSON.stringify(manifest.errors));const data=JSON.parse(manifest.data);assert.equal(data.display,'standalone');assert.equal(data.icons.length,3);
  const installability=await cdp.send('Page.getInstallabilityErrors');console.log('Browser installability:',JSON.stringify(installability.installabilityErrors));assert.deepEqual(installability.installabilityErrors,[]);
  await p.locator('.startChoices a[href="#allenati"]').click();await p.locator('[data-lesson=mousepositions]').waitFor();await p.locator('[data-lesson=counting]').click();await p.locator('#readyChallenge').waitFor();
+ await p.locator('#pauseQuest').click();
  // Reusing the same start link must return to the lessons without a hash change.
  await p.locator('.startChoices a[href="#allenati"]').click();await p.locator('[data-lesson=counting]').waitFor();await p.locator('.startChoices a[href="#personaggi"]').click();await p.locator('[data-item=fox]').waitFor();
  await p.locator('.startChoices a[href="#sfide"]').click();await p.getByRole('heading',{name:/compagno|classe|arena|sfide/i}).first().waitFor();

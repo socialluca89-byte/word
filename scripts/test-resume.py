@@ -24,6 +24,7 @@ with tempfile.TemporaryDirectory(prefix='wordyland-resume-') as temporary:
         request(a,'quest-answer',{'profile':pa,'token':token,'step':0,'answer':first['word']},ta,409)
         pending=request(a,f'pending-games&profile={pa}');assert pending['quests'][0]['step']==1 and 'questions' not in json.dumps(pending)
         assert request(b,f'pending-games&profile={pb}')['quests']==[]
+        assert pending['incomingInvites']==0
         device=client();td=request(device,'session')['csrf'];td=request(device,'login',{'username':'luna','password':password},td)['csrf'];continued=request(device,f'quest-resume&profile={pa}&token={token}');assert continued['question']==result['question'] and continued['step']==1
         # Missions survive an overnight break, without extending expiry on reads.
         with sqlite3.connect(temporary+'/data/wordyland.sqlite') as db:db.execute('UPDATE quests SET created_at=? WHERE token=?',(int(time.time())-172800,token))
@@ -44,7 +45,11 @@ with tempfile.TemporaryDirectory(prefix='wordyland-resume-') as temporary:
         with sqlite3.connect(temporary+'/data/wordyland.sqlite') as db:db.execute('UPDATE quests SET created_at=0 WHERE token=?',(expired,))
         request(a,f'quest-resume&profile={pa}&token={expired}',expected=410);assert request(a,f'pending-games&profile={pa}')['quests']==[]
         club=request(a,'club-create',{'profile':pa,'name':'Classe','consent':True},ta);request(b,'club-join',{'profile':pb,'code':club['code'],'consent':True},tb)
-        duel=request(a,'duel-create',{'profile':pa,'opponent':pb,'category':'body'},ta)['duel']['id'];request(b,'duel-accept',{'profile':pb,'duel':duel},tb)
+        duel=request(a,'duel-create',{'profile':pa,'opponent':pb,'category':'body'},ta)['duel']['id']
+        assert request(b,f'pending-games&profile={pb}')['incomingInvites']==1
+        assert request(a,f'pending-games&profile={pa}')['incomingInvites']==0
+        request(b,'duel-accept',{'profile':pb,'duel':duel},tb)
+        assert request(b,f'pending-games&profile={pb}')['incomingInvites']==0
         request(a,'duel-answer',{'profile':pa,'duel':duel,'step':0,'answer':0},ta)
         assert request(device,f'pending-games&profile={pa}')['duels'][0]['step']==1
         with sqlite3.connect(temporary+'/data/wordyland.sqlite') as db:db.execute('DELETE FROM club_profiles WHERE profile_id=?',(pb,))

@@ -53,8 +53,30 @@ jobs:
       - name: Test deployment script in isolation
         run: bash scripts/test-deploy.sh
 
+  browser:
+    if: github.event_name != 'workflow_dispatch' || inputs.mode == 'deploy'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install pinned browser test runtime
+        run: |
+          npm install --prefix /tmp/wordyland-browser-deps --no-audit --no-fund playwright@1.62.1
+          /tmp/wordyland-browser-deps/node_modules/.bin/playwright install --with-deps chromium
+      - name: Verify child journeys in isolated browsers
+        env:
+          WORDYLAND_PLAYWRIGHT_MODULE: /tmp/wordyland-browser-deps/node_modules/playwright
+        run: |
+          export WORDYLAND_CHROMIUM=$(node -p "require(process.env.WORDYLAND_PLAYWRIGHT_MODULE).chromium.executablePath()")
+          for check in ux learning resume presence pwa; do bash scripts/test-browser.sh "$check"; done
+
   deploy:
-    needs: verify
+    needs: [verify, browser]
     if: >-
       github.ref == 'refs/heads/main' && vars.SG_PATH != '' &&
       (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.mode == 'deploy'))

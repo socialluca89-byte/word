@@ -23,16 +23,24 @@
   rememberPlayer = function () { oldRemember(); schedule(); };
   function say(text) { status.textContent = text; }
   async function request(action, body, options = {}) {
-    const response = await fetch('api.php?action=' + action, {
-      method: body === undefined ? 'GET' : 'POST', credentials: 'same-origin', cache: 'no-store', keepalive: options.keepalive === true,
-      headers: body === undefined ? {} : {'Content-Type':'application/json', 'X-CSRF-Token': session?.csrf || ''},
-      body: body === undefined ? undefined : JSON.stringify(body)
-    });
-    let result;
-    try { result = await response.json(); } catch { throw new Error('Salvataggio online non disponibile. Puoi continuare come ospite.'); }
-    if (!response.ok) { const e = new Error(result.error || 'Operazione non riuscita.'); e.code = response.status; throw e; }
-    if (result.csrf && session) session.csrf = result.csrf;
-    return result;
+    const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),20000);
+    try{
+      const response = await fetch('api.php?action=' + action, {
+        method: body === undefined ? 'GET' : 'POST', credentials: 'same-origin', cache: 'no-store', keepalive: options.keepalive === true,signal:controller.signal,
+        headers: body === undefined ? {} : {'Content-Type':'application/json', 'X-CSRF-Token': session?.csrf || ''},
+        body: body === undefined ? undefined : JSON.stringify(body)
+      });
+      if(!response.headers.get('content-type')?.includes('application/json'))throw new Error('Il collegamento al sito richiede una verifica. Riapri WordyLand nel browser; poi riprendi la partita dal salvataggio.');
+      let result;
+      try { result = await response.json(); } catch { throw new Error('Il sito non ha confermato la risposta. Torna online e riprendi dal salvataggio.'); }
+      if (!response.ok) { const e = new Error(result.error || 'Operazione non riuscita.'); e.code = response.status; throw e; }
+      if (result.csrf && session) session.csrf = result.csrf;
+      return result;
+    }catch(error){
+      if(error.name==='AbortError')throw new Error('La connessione è lenta. Verifica la partita con Riprendi dal salvataggio prima di inviare di nuovo.');
+      if(error instanceof TypeError)throw new Error('Connessione interrotta. Le risposte già confermate sono salvate: torna online e riprendi la partita.');
+      throw error;
+    }finally{clearTimeout(timeout);}
   }
   function schedule() {
     if (!active || applying || locked) return;
