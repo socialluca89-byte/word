@@ -6,7 +6,31 @@
   document.querySelector('main').prepend(area);
   const panel = area.querySelector('#accountContent'), status = area.querySelector('#accountStatus');
   let session = null, active = null, revision = 0, pending = false, timer, busy = null, applying = false, locked = false;
-  let initializing=true;
+  let initializing=true, resetToken=null;
+  function captureResetLink(){
+    const match=location.hash.match(/^#password-reset=([a-f0-9]{64})$/);
+    if(match){resetToken=match[1];history.replaceState(null,'','#recupera-password');return true;}
+    return false;
+  }
+  captureResetLink();
+  async function openEmailReset(){
+    await window.wordylandAccount.ready;
+    if(!resetToken)return;
+    window.wordylandUI?.play();area.open=true;area.dataset.exposed='true';
+    if(session?.username){
+      say('Per usare il link di recupero, esci prima dall’account con Esci / Logout. I progressi saranno salvati.');
+      return;
+    }
+    panel.innerHTML='<h3>Scegli una nuova password</h3><p>Il link vale 15 minuti e si può usare una sola volta.</p><form id="emailResetConfirm"><label>Nuova password<input name="password" type="password" autocomplete="new-password" minlength="12" maxlength="72" required></label><label>Ripeti la nuova password<input name="confirmPassword" type="password" autocomplete="new-password" minlength="12" maxlength="72" required></label><button class="primary">Salva la nuova password</button></form>';
+    panel.querySelector('form').onsubmit=async event=>{
+      event.preventDefault();const form=event.currentTarget,button=event.submitter,data=Object.fromEntries(new FormData(form));
+      if(data.password!==data.confirmPassword){say('Le due nuove password non coincidono.');return;}
+      button.disabled=true;
+      try{await request('email-recovery-confirm',{...data,token:resetToken});resetToken=null;form.reset();show();say('Password aggiornata. Accedi con la nuova password. Gli altri dispositivi sono stati scollegati.');}
+      catch(error){say(error.message);}finally{if(button.isConnected)button.disabled=false;}
+    };
+    area.scrollIntoView({block:'start'});panel.querySelector('input').focus({preventScroll:true});
+  }
   const tools=document.createElement('nav');tools.className='accountToolbar';tools.setAttribute('aria-label','Accesso, uscita e password');document.querySelector('header').after(tools);
   const guestKey = 'wordylandGuestBackup', activeKey = 'wordylandActiveProfile';
   function updateAccessTools(){
@@ -53,7 +77,7 @@
   rememberPlayer = function () { oldRemember(); schedule(); };
   function say(text) { status.textContent = text; }
   async function request(action, body, options = {}) {
-    const accessAction=['session','login','register','logout','recover','change-password','class-login','class-register','class-recover'].includes(action);
+    const accessAction=['session','login','register','logout','recover','auth-capabilities','email-recovery-request','email-recovery-confirm','change-password','class-login','class-register','class-recover'].includes(action);
     const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),20000);
     try{
       const response = await fetch('api.php?action=' + action, {
@@ -128,7 +152,7 @@
       signalProfile();return;
     }
     if (!session?.username) {
-      panel.innerHTML = '<h3>Un account per i grandi, un’avventura per ciascuno</h3><p>Accedi da un altro dispositivo per ritrovare i progressi. Crea fino a otto profili con un soprannome. Puoi anche giocare come ospite.</p><form id="accountForm"><label for="accountUser">Email o nome utente dell’adulto</label><input id="accountUser" autocomplete="username" minlength="3" maxlength="254" required><label for="accountPassword">Password · almeno 12 caratteri</label><input id="accountPassword" type="password" autocomplete="current-password" minlength="12" maxlength="72" required><label class="adultCheck"><input id="adultConfirm" type="checkbox"> Sono un adulto e gestirò i profili dei bambini</label><p class="hint">Alla registrazione riceverai un codice per recuperare l’account. Conservalo con cura.</p><button class="primary" name="action" value="login">Accedi</button><button class="audio" name="action" value="register">Crea account adulto</button></form><details id="accountRecovery"><summary>Password dimenticata? Recupera l’accesso</summary><p>Usa il codice di recupero ricevuto alla registrazione. Per gli alunni: riapri il link della classe e scegli Password dimenticata. Il recupero non invia email.</p><form id="recoverAccount"><label>Email o nome utente<input name="username" autocomplete="username" required></label><label>Codice di recupero<input name="code" autocomplete="off" required></label><label>Nuova password<input name="password" type="password" autocomplete="new-password" minlength="12" maxlength="72" required></label><button class="primary">Reimposta password</button></form></details>';
+      panel.innerHTML = '<h3>Un account per i grandi, un’avventura per ciascuno</h3><p>Accedi da un altro dispositivo per ritrovare i progressi. Crea fino a otto profili con un soprannome. Puoi anche giocare come ospite.</p><form id="accountForm"><label for="accountUser">Email o nome utente dell’adulto</label><input id="accountUser" autocomplete="username" minlength="3" maxlength="254" required><label for="accountPassword">Password · almeno 12 caratteri</label><input id="accountPassword" type="password" autocomplete="current-password" minlength="12" maxlength="72" required><label class="adultCheck"><input id="adultConfirm" type="checkbox"> Sono un adulto e gestirò i profili dei bambini</label><p class="hint">Alla registrazione riceverai un codice per recuperare l’account. Conservalo con cura.</p><button class="primary" name="action" value="login">Accedi</button><button class="audio" name="action" value="register">Crea account adulto</button></form><details id="accountRecovery"><summary>Password dimenticata? Recupera l’accesso</summary><p>Usa il codice di recupero ricevuto alla registrazione. Per gli alunni: riapri il link della classe e scegli Password dimenticata. Se non hai il codice, controlla qui sotto la disponibilità del recupero email.</p><form id="recoverAccount"><label>Email o nome utente<input name="username" autocomplete="username" required></label><label>Codice di recupero<input name="code" autocomplete="off" required></label><label>Nuova password<input name="password" type="password" autocomplete="new-password" minlength="12" maxlength="72" required></label><button class="primary">Reimposta password</button></form></details>';
       panel.querySelector('form').onsubmit = async e => {
         e.preventDefault(); const action = e.submitter?.value || 'login';
         if (action === 'register' && !panel.querySelector('#adultConfirm').checked) { say('Per creare un account, conferma di essere un adulto.'); return; }
@@ -141,6 +165,14 @@
           else{show();say('Accesso riuscito. Scegli o crea un profilo.');}
         } catch (e) { say(e.message); buttons.forEach(b => b.disabled = false); }
       };
+      const recoverySection=panel.querySelector('#accountRecovery');
+      const emailInfo=document.createElement('div');emailInfo.id='emailRecovery';emailInfo.innerHTML='<p>Verifica recupero email…</p>';recoverySection.append(emailInfo);
+      request('auth-capabilities').then(capabilities=>{
+        if(!emailInfo.isConnected)return;
+        if(!capabilities.emailRecoveryEnabled){emailInfo.innerHTML='<p>Recupero email non ancora attivo. Se hai perso il codice, contatta il proprietario. Per il primo accesso amministratore serve il link privato di attivazione conservato su SiteGround.</p>';return;}
+        emailInfo.innerHTML='<h4>Non hai il codice? Ricevi un link via email</h4><p>Per gli account adulti con email. Gli alunni usano il recupero della classe.</p><form id="emailRecoveryRequest"><label>Email dell’adulto<input name="email" type="email" autocomplete="email" maxlength="254" required></label><button class="audio">Richiedi il link</button><p role="status"></p></form>';
+        emailInfo.querySelector('form').onsubmit=async event=>{event.preventDefault();const form=event.currentTarget,button=event.submitter;button.disabled=true;try{const result=await request('email-recovery-request',Object.fromEntries(new FormData(form)));form.querySelector('[role="status"]').textContent=result.message;}catch(error){form.querySelector('[role="status"]').textContent=error.message;}finally{if(button.isConnected)button.disabled=false;}};
+      }).catch(()=>{if(emailInfo.isConnected)emailInfo.textContent='Disponibilità del recupero email non verificata. Riprova quando sei online.';});
       panel.querySelector('#recoverAccount').onsubmit = async e => {
         e.preventDefault(); const form=e.currentTarget, button=e.submitter; button.disabled=true;
         try { if(!session?.csrf)session=await request('session');const result=await request('recover',Object.fromEntries(new FormData(form))); session.csrf=result.csrf; recoveryNotice(result.recovery); form.reset(); say('Password aggiornata. Accedi con la nuova password.'); }
@@ -213,6 +245,7 @@
     session={csrf:'',username:null,role:null,profiles:[]};show();
     try{session=await request('session');show();say('Sei uscito. Ora giochi come ospite.');}
     catch{say('Sei uscito dall’account. La connessione non è pronta: usa Accedi per riprovare.');}
+    if(resetToken)openEmailReset();
   }
   async function connect(result) {
     session=result;active=null;pending=false;locked=false;clearTimeout(timer);
@@ -224,7 +257,7 @@
   window.addEventListener('beforeunload', e => { if (pending || busy) { e.preventDefault(); e.returnValue = ''; } });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flush().catch(() => {}); });
   updateAccessTools();
-  window.addEventListener('hashchange',()=>{if(location.hash==='#recupera-password')openAccess('recover');else if(location.hash==='#account')openAccess('login');});
+  window.addEventListener('hashchange',()=>{if(captureResetLink()){openEmailReset();return;}if(location.hash==='#recupera-password')openAccess('recover');else if(location.hash==='#account')openAccess('login');});
   window.wordylandAccount.ready = request('session').then(async result => {
     session = result; show();
     if(session.role==='learner'&&session.profiles.length===1){await choose(session.profiles[0].id);return;}
@@ -236,5 +269,5 @@
       if (cached) { const guest = read(guestKey); if (guest) apply(guest, guest.name); try { localStorage.removeItem(activeKey); } catch {} }
       say(session.username ? 'Scegli il profilo con cui giocare.' : 'Modalità ospite: i progressi restano su questo dispositivo.');
     }
-  }).catch(e => { panel.innerHTML = '<p>Puoi giocare come ospite.</p>'; say(e.message); }).finally(()=>{initializing=false;updateAccessTools();if(location.hash==='#recupera-password')openAccess('recover');else if(location.hash==='#account')openAccess('login');});
+  }).catch(e => { panel.innerHTML = '<p>Puoi giocare come ospite.</p>'; say(e.message); }).finally(()=>{initializing=false;updateAccessTools();if(resetToken){queueMicrotask(openEmailReset);return;}if(location.hash==='#recupera-password')openAccess('recover');else if(location.hash==='#account')openAccess('login');});
 })();

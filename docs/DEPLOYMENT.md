@@ -10,8 +10,8 @@ push to main ──► verify (tests) ──► deploy (SSH to SiteGround) ─�
 
 Workflow: `.github/workflows/deploy.yml` ("Verify and deploy WordyLand").
 
-- **verify** runs on every push to `main`, on pull requests and on manual *deploy* runs: `node --check` on all JavaScript in `dist`, `bash -n` on all scripts, `scripts/test-lessons.mjs`, `scripts/test-pwa.mjs`, `scripts/test-learning.mjs`, `scripts/test-rewards.mjs`, `php -l` on all PHP in `dist`, `scripts/test-api.py`, `scripts/test-access.py`, `scripts/test-classroom.py`, `scripts/test-adventures.py`, `php -l scripts/bootstrap-admin.php`, `scripts/test-community.py`, `scripts/test-presence.py`, `scripts/test-resume.py`, `php -l scripts/siteground-cache.php`, `scripts/test-cache-purge.py`, `scripts/verify-bundle.mjs` and the isolated deployment test `scripts/test-deploy.sh`.
-- **browser** runs UX, feedback, resume, presence, PWA, rewards, motion and access Playwright journeys in disposable local PHP environments, using pinned Playwright 1.62.1. It never uses production data.
+- **verify** runs on every push to `main`, on pull requests and on manual *deploy* runs: `node --check` on all JavaScript in `dist`, `bash -n` on all scripts, `scripts/test-lessons.mjs`, `scripts/test-pwa.mjs`, `scripts/test-learning.mjs`, `scripts/test-rewards.mjs`, `php -l` on all PHP in `dist`, `scripts/test-api.py`, `scripts/test-access.py`, `scripts/test-email-recovery.py`, `scripts/test-classroom.py`, `scripts/test-adventures.py`, `php -l scripts/bootstrap-admin.php`, `scripts/test-community.py`, `scripts/test-presence.py`, `scripts/test-resume.py`, `php -l scripts/siteground-cache.php`, `scripts/test-cache-purge.py`, `scripts/verify-bundle.mjs` and the isolated deployment test `scripts/test-deploy.sh`.
+- **browser** runs UX, feedback, resume, presence, PWA, rewards, motion, access and email recovery Playwright journeys in disposable local PHP environments, using pinned Playwright 1.62.1. It never uses production data.
 - **deploy** runs only on `refs/heads/main` (push or manual *deploy*), only after **verify** and **browser** passed and only when the repository variable `SG_PATH` is set. Pull requests never deploy.
 - All production operations share the concurrency group `wordyland-production` and never cancel each other mid-run.
 - Manual button (Actions → Verify and deploy WordyLand → Run workflow, branch `main`):
@@ -81,3 +81,7 @@ PWA/offline behavior and update instructions are documented in PWA.md. The worke
 ## Public diagnostics for failed live checks
 
 GitHub annotations now distinguish a hosting anti-bot HTML challenge, an unavailable health endpoint, invalid health JSON, and an outdated ordinary homepage or asset. Only fixed diagnostics and validated commit SHAs are published; health response bodies are not printed. A successful automatic rollback is confirmed by reading the server marker and comparing it to the pre-deployment marker; an unverifiable recovery is reported as an error. The isolated deploy suite simulates an HTML hosting challenge and verifies both restored files and marker. Protection responses remain failures; no check is skipped and no hosting protection is disabled.
+
+## Optional account email recovery
+
+See [ACCOUNT_RECOVERY.md](ACCOUNT_RECOVERY.md). Delivery is disabled unless a private hosting configuration explicitly enables it. Test transports and synthetic outboxes are unavailable in production. The read-only owner recovery diagnostic is CLI-only, is never installed in public_html and has not been run against production. Enabling mail or resetting the real owner requires the owner’s specific confirmation.

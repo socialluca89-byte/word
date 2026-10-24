@@ -99,6 +99,67 @@ function validState(mixed $state): array {
 }
 define('WORDYLAND_API', true);
 require __DIR__ . '/classroom.php';
+// Email recovery is opt-in. No credentials or mail configuration live in public_html.
+function recoveryMailSettings(string $directory, bool $test): ?array {
+    if ($test && getenv('WORDYLAND_TEST_MAIL') === '1') return ['transport'=>'test'];
+    if ($test) return null;
+    $path=$directory.'/mail-settings.json';
+    if (!is_file($path) || is_link($path)) return null;
+    $settings=json_decode((string)file_get_contents($path),true);
+    if (!is_array($settings) || ($settings['enabled']??false)!==true || ($settings['transport']??'')!=='php-mail') return null;
+    $from=$settings['from']??'';
+    if (!is_string($from) || preg_match('/[\r\n]/',$from) || !filter_var($from,FILTER_VALIDATE_EMAIL) || !function_exists('mail')) return null;
+    return ['transport'=>'php-mail','from'=>$from];
+}
+$recoveryMail=recoveryMailSettings($dataDir,$testMode);
+if ($method==='GET' && $action==='auth-capabilities') respond(['emailRecoveryEnabled'=>$recoveryMail!==null]);
+if ($method==='POST' && in_array($action,['email-recovery-request','email-recovery-confirm'],true)) {
+    limitAttempts($db,'email-recovery-ip:'.hash('sha256',$_SERVER['REMOTE_ADDR']??''),20);
+    if ($recoveryMail===null) fail('Il recupero email non è ancora attivo. Usa il codice di recupero o contatta il proprietario.',503);
+    $db->exec('CREATE TABLE IF NOT EXISTS password_reset_tokens (token_hash TEXT PRIMARY KEY, account_id INTEGER NOT NULL REFERENCES accounts(id) ON DELETE CASCADE, version INTEGER NOT NULL, expires INTEGER NOT NULL)');
+    $db->prepare('DELETE FROM password_reset_tokens WHERE expires<=?')->execute([time()]);
+    if ($action==='email-recovery-request') {
+        $email=strtolower(trim(is_string($body['email']??null)?$body['email']:''));
+        if (strlen($email)>254 || !filter_var($email,FILTER_VALIDATE_EMAIL)) fail('Inserisci un indirizzo email valido.');
+        limitAttempts($db,'email-recovery-address:'.hash('sha256',$email),5);
+        // Generate the same amount of randomness for unknown addresses; never disclose membership.
+        $token=bin2hex(random_bytes(32));
+        $q=$db->prepare('SELECT id,session_version FROM accounts WHERE username=? AND role IN ("adult","admin")');$q->execute([$email]);$account=$q->fetch();
+        if ($account) {
+            $digest=hash('sha256',$token);
+            $db->prepare('INSERT INTO password_reset_tokens VALUES (?,?,?,?)')->execute([$digest,$account['id'],$account['session_version'],time()+900]);
+            $url='https://wordyland.eu/#password-reset='.$token;
+            $sent=false;
+            if ($recoveryMail['transport']==='test') {
+                $outbox=$dataDir.'/mail-test-outbox';
+                if (!is_dir($outbox)) mkdir($outbox,0700);
+                $sent=file_put_contents($outbox.'/'.$digest.'.json',json_encode(['to'=>$email,'url'=>$url],JSON_THROW_ON_ERROR))!==false;
+            } else {
+                $sent=@mail($email,'WordyLand: recupero password',"Hai richiesto una nuova password. Apri questo link entro 15 minuti:\n$url\n\nSe non eri tu, ignora questa email. Nessuna password è stata cambiata.",['From'=>$recoveryMail['from'],'Content-Type'=>'text/plain; charset=UTF-8']);
+            }
+            if (!$sent) {
+                $db->prepare('DELETE FROM password_reset_tokens WHERE token_hash=?')->execute([$digest]);
+                error_log('WordyLand recovery mail was not accepted by the configured transport');
+            }
+        }
+        respond(['ok'=>true,'message'=>'Se l’indirizzo appartiene a un account adulto, riceverai un link valido per 15 minuti. Controlla anche lo spam.']);
+    }
+    $token=$body['token']??null;$password=$body['password']??null;
+    if (!is_string($token) || !preg_match('/^[a-f0-9]{64}$/',$token)) fail('Link non valido o scaduto. Richiedine uno nuovo.',401);
+    if (!is_string($password) || strlen($password)<12 || strlen($password)>72) fail('La nuova password deve avere 12–72 caratteri.');
+    if ($password!==($body['confirmPassword']??null)) fail('Le due nuove password non coincidono.');
+    $passwordHash=password_hash($password,PASSWORD_DEFAULT);
+    $db->exec('BEGIN IMMEDIATE');
+    $q=$db->prepare('SELECT r.account_id,r.version FROM password_reset_tokens r JOIN accounts a ON a.id=r.account_id WHERE r.token_hash=? AND r.expires>? AND r.version=a.session_version');
+    $q->execute([hash('sha256',$token),time()]);$reset=$q->fetch();
+    if (!$reset) {$db->exec('ROLLBACK');fail('Link non valido o scaduto. Richiedine uno nuovo.',401);}
+    $db->prepare('UPDATE accounts SET password_hash=?,session_version=session_version+1 WHERE id=?')->execute([$passwordHash,$reset['account_id']]);
+    $db->prepare('DELETE FROM password_reset_tokens WHERE account_id=?')->execute([$reset['account_id']]);
+    $db->exec('COMMIT');
+    clearPresenceSession($db);session_regenerate_id(true);
+    $_SESSION=['csrf'=>bin2hex(random_bytes(32))];
+    respond(['ok'=>true,'csrf'=>$_SESSION['csrf']]);
+}
 if ($method === 'GET' && $action === 'health') respond(['ready' => true, 'database' => 'sqlite']);
 if ($method === 'GET' && $action === 'session') {
     $id = $_SESSION['account_id'] ?? null;

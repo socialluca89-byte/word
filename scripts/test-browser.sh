@@ -3,7 +3,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 check=${1:-presence}
-case "$check" in motion) script="scripts/test-motion.cjs";; access|rewards|ux|learning|resume|presence|pwa|community|characters|school) script="scripts/test-${check}-browser.cjs";; *) echo 'Choose motion, access, rewards, ux, learning, resume, presence, pwa, community, characters or school' >&2; exit 2;; esac
+case "$check" in motion) script="scripts/test-motion.cjs";; email|access|rewards|ux|learning|resume|presence|pwa|community|characters|school) script="scripts/test-${check}-browser.cjs";; *) echo 'Choose motion, email, access, rewards, ux, learning, resume, presence, pwa, community, characters or school' >&2; exit 2;; esac
 fixture=$(mktemp -d /tmp/wordyland-browser.XXXXXX)
 mkdir -p "$fixture/data" "$fixture/sessions" "$fixture/public"
 cp dist/* "$fixture/public/"
@@ -12,7 +12,9 @@ import socket
 with socket.socket() as s:s.bind(('127.0.0.1',0));print(s.getsockname()[1])
 PY
 )
-WORDYLAND_TEST=1 WORDYLAND_DATA_DIR="$fixture/data" php -d session.save_path="$fixture/sessions" -S "127.0.0.1:$port" -t "$fixture/public" > "$fixture/server.log" 2>&1 &
+test_mail=0
+if [[ "$check" == email ]]; then test_mail=1; fi
+WORDYLAND_TEST_MAIL="$test_mail" WORDYLAND_TEST=1 WORDYLAND_DATA_DIR="$fixture/data" php -d session.save_path="$fixture/sessions" -S "127.0.0.1:$port" -t "$fixture/public" > "$fixture/server.log" 2>&1 &
 server_pid=$!
 trap 'kill "$server_pid" 2>/dev/null || true; rm -rf -- "$fixture"' EXIT
 export WORDYLAND_TEST_URL="http://127.0.0.1:$port" WORDYLAND_BROWSER_ROOT="$fixture/public" WORDYLAND_BROWSER_DATA="$fixture/data"
