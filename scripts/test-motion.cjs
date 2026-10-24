@@ -5,7 +5,7 @@ const hash=b=>crypto.createHash('sha256').update(b).digest('hex');
 (async()=>{
  const browser=await chromium.launch({executablePath:process.env.WORDYLAND_CHROMIUM||undefined,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
  const base=process.env.WORDYLAND_TEST_URL||'http://127.0.0.1:8093';assert(['localhost','127.0.0.1'].includes(new URL(base).hostname),'Isolated local tests only');
- const p=await browser.newPage({viewport:{width:1280,height:900}}),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.goto(base);await p.waitForFunction(()=>document.querySelector('#islandMap').dataset.render==='3d');
+ const p=await browser.newPage({viewport:{width:1280,height:900}}),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.goto(base);await p.locator('#islandMap').scrollIntoViewIfNeeded();await p.waitForFunction(()=>document.querySelector('#islandMap').dataset.render==='3d');
  const guestBefore=await p.evaluate(()=>localStorage.getItem('wordylandGuestWallet'));
  for(const kind of ['kart','football','space']){
   await p.locator('[data-live-place='+kind+']').click();assert.equal(await p.locator('#islandMap').getAttribute('data-kind'),kind);

@@ -28,8 +28,32 @@ Limite per pubblicazione: la pipeline corrente esegue anche il provisioning prop
 
 Intervento minimo: il proprietario verifica dal proprio SiteGround se esiste `.wordyland-data/admin-activation.txt` e usa personalmente il link già presente. Non incollarlo in chat. Se il file manca, predisporre una procedura di recupero assistito da confermare specificamente; non consentire reset dal solo indirizzo email.
 
+## Blocco 2 — Inizializzazione delle scene fuori schermo
+
+Problema misurato: la mappa dell’isola si trovava sotto la prima schermata (top 1866px a 390px di larghezza, 1199px a 1360px; viewport alta 844px), ma allocava comunque WebGL e veniva ricostruita dagli aggiornamenti iniziali del profilo.
+
+Correzione in `dist/island.js`: inizializzazione quando la mappa arriva entro 120px dalla finestra, o subito se viene usato un comando della scena. Prima dell’avvio gli aggiornamenti conservano l’ultimo personaggio/progresso senza costruire scene inutili. Navigazione, rotazione, zoom, animazioni e feedback restano disponibili. Il fallback senza IntersectionObserver resta immediato.
+
+Misura ripetibile nel nuovo test `scripts/test-performance-browser.cjs` (browser Chromium locale, movimento ridotto, account ospite sintetico):
+
+| Viewport | Prima: inizializzazioni WebGL all’ingresso | Dopo: inizializzazioni all’ingresso | Mappa prima dello scroll | Mappa dopo lo scroll |
+| --- | ---: | ---: | ---: | ---: |
+| 390×844 | 4 | 1 | 0 | 1 |
+| 1360×844 | 4 | 2 | 0 | 1 |
+
+Sono conteggi di chiamate di inizializzazione WebGL riuscite nel test, non una misura di velocità di rete o una promessa di FPS su telefoni reali. L’inizializzazione della mappa viene differita; il peso scaricato degli asset non è diminuito.
+
+Verifiche:
+
+- PASS: nuovo test performance su mobile/desktop; avvio singolo della mappa allo scroll, calcio interattivo, ritorno all’isola e otto destinazioni.
+- PASS: intero job verify rieseguito sul nuovo bundle, inclusi recupero email e deploy simulato.
+- PASS: browser UX e personaggi (sei modelli/accessori, kart/calcio/spazio, persistenza ospite/account, secondo dispositivo, fallback senza WebGL).
+- MOVIMENTO: prima prova fallita nel confronto screenshot «Pause should freeze world»; ripetizione isolata PASS, inclusi pausa, movimento ridotto, gol, missione e pulizia scene. Instabilità del confronto da approfondire; nessuna protezione o asserzione disattivata.
+- Le altre suite browser erano passate nel blocco 1; non ripetute tutte dopo questa modifica circoscritta al caricamento della mappa.
+- NON ESEGUITI: misura su telefono fisico, verifica account reale, invio email reale e pubblicazione. Resta applicabile il limite sul provisioning proprietario descritto sopra.
+
 ## Coda successiva
 
 1. Conservare la memoria degli errori/aiuti alla ripresa di una domanda e distinguere risposte autonome da correzioni, senza cambiare i premi già ottenuti.
-2. Misurare carico iniziale e scene WebGL su telefono; ottimizzare l’inizializzazione fuori schermo mantenendo interazioni e movimento ridotto.
+2. Estendere le misure a telefono fisico e alle altre anteprime; il caricamento differito della mappa è già implementato e misurato nel blocco 2.
 3. Riprodurre l’instabilità del test inviti con diagnostica mirata, poi migliorare navigazione/onboarding e verificare nuovamente mobile/desktop.
