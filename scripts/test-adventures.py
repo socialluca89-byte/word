@@ -103,15 +103,50 @@ with tempfile.TemporaryDirectory(prefix='wordyland-island-test-') as temporary:
                     result=request(session,'duel-answer',{'profile':player,'duel':duel['id'],'step':step,'answer':q['options'].index(q['answer']),'score':99999},csrf)
                 assert result['duel']['score']==50
             assert result['duel']['state']=='completed' and result['duel']['rivalScore']==50
+        new_topics=['counting','penpositions','conversation','aboutme','family','food','clothes','weather','routines']
+        request(a,'quest-start',{'profile':pid,'category':'unknown'},token,400)
+        request(a,'quest-start',{'profile':pid,'category':[]},token,400)
+        for topic in new_topics:
+            lesson=request(a,'quest-start',{'profile':pid,'category':topic},token)
+            q=lesson['question']
+            assert q['word'] in [row[0] for row in curriculum[topic]]
+            assert q['kind']=={'counting':'count','conversation':'dialogue'}.get(topic,'choice')
+            if topic=='counting':
+                assert len(q['options'])==4 and len({row[0] for row in q['options']})==4
+                assert sum(row[0]==q['word'] for row in q['options'])==1
+            if topic=='conversation':
+                assert q['prompt'] and sum(row[3]['prompt']==q['prompt'] for row in q['options'])==1
+            while True:
+                assert 'answer' not in q
+                if q['number']==2 and topic in ['counting','penpositions']:assert q['kind']=='gap'
+                if q['kind']=='gap':
+                    start=q['mask'].index('_');end=start
+                    while end<len(q['mask']) and q['mask'][end]=='_':end+=1
+                    answer=q['word'][start:end]
+                    rejected=request(a,'quest-answer',{'profile':pid,'token':lesson['token'],'step':q['number']-1,'answer':q['word']},token)
+                    assert not rejected['correct'],'A gap must require the missing words, not the whole phrase'
+                elif q['kind']=='missing':answer=q['word'][q['mask'].index('_')]
+                else:answer=q['word']
+                payload={'profile':pid,'token':lesson['token'],'step':q['number']-1,'answer':answer}
+                result=request(a,'quest-answer',payload,token)
+                assert result['correct']
+                if result['done']:
+                    request(a,'quest-answer',payload,token,409)
+                    break
+                q=result['question']
+            assert request(a,f'hub&profile={pid}')['adventures']['classic']==new_topics.index(topic)+1
+            duel=request(a,'duel-create',{'profile':pid,'opponent':other,'category':topic},token)['duel']
+            assert duel['category']==topic
+            request(a,'duel-cancel',{'profile':pid,'duel':duel['id']},token)
         # Simulate the previous schema and verify additive migration preserves rows.
         with sqlite3.connect(temporary+'/data/wordyland.sqlite') as db:
             for table in ['quests','rewards','duels']:
                 db.execute(f'ALTER TABLE {table} DROP COLUMN activity')
         legacy = request(a, f'hub&profile={pid}')
-        assert legacy['adventures']=={'classic':8}
+        assert legacy['adventures']=={'classic':8+len(new_topics)}
         assert legacy['wallet']['equipped']['pet']=='pet-bunny'
         assert request(a, f'arena&profile={pid}')['duels'][0]['activity']=='kart'
-        print('Adventure checks passed: eight verified paths, incorrect answers/replays cannot forge progress, daily caps, isolated ownership, free and earned cosmetics, all three persisted duel modes, and legacy migration.')
+        print('Adventure checks passed: eight verified paths, incorrect answers/replays cannot forge progress, daily caps, isolated ownership, free and earned cosmetics, all three persisted duel modes, nine new lesson/duel topics, count/dialogue/multiword gap validation, and legacy migration.')
     finally:
         process.terminate()
         process.wait(timeout=5)

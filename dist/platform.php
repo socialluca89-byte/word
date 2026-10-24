@@ -194,6 +194,7 @@ if ($method === 'POST' && $action==='quest-start') {
     } else {
         $curriculum=json_decode(file_get_contents(__DIR__.'/curriculum.json'),true,32,JSON_THROW_ON_ERROR);
         $category=$body['category']??'body';
+        if(!is_string($category)||($category!=='personal'&&!isset($curriculum[$category])))fail('Scegli un argomento disponibile.');
         if ($category==='personal') {
             $pool=[]; foreach(rows($db,'SELECT words FROM studies WHERE profile_id=?',[$pid]) as $s)$pool=array_merge($pool,json_decode($s['words'],true));
             if(!$pool)$pool=$curriculum['body'];
@@ -207,6 +208,26 @@ if ($method === 'POST' && $action==='quest-start') {
     foreach($selected as $i=>$word) {
         $kind=$i===count($selected)-1?'write':($i===0?'choice':(random_int(0,1)?'missing':'build'));
         $q=['word'=>$word[0],'translation'=>$word[1],'emoji'=>$word[2],'kind'=>$kind,'answer'=>$word[0]];
+        $meta=$word[3]??[];
+        if(isset($meta['prompt']))$q['prompt']=$meta['prompt'];
+        if($i===0&&($meta['type']??'')==='count') {
+            $q['kind']=$kind='count';$alternatives=[];
+            foreach(['one','two','three','four','five','six','seven','eight','nine','ten'] as $j=>$number) {
+                $phrase=$number.' '.($j===0?$meta['singular']:$meta['plural']);
+                if($phrase!==$word[0])$alternatives[]=[$phrase,'',''];
+            }
+            shuffle($alternatives);$q['options']=array_merge([$word],array_slice($alternatives,0,3));shuffle($q['options']);
+        } elseif($i===0&&($meta['type']??'')==='dialogue') {
+            $q['kind']=$kind='dialogue';$alternatives=array_values(array_filter($pool,fn($r)=>$r[0]!==$word[0]&&($r[3]['prompt']??'')!==$meta['prompt']));
+            shuffle($alternatives);$q['options']=array_merge([$word],array_slice($alternatives,0,3));shuffle($q['options']);
+        }
+        if($i===1) {
+            $pattern=($meta['type']??'')==='count'?'/^([a-z]+)\s/i':'/(?:^|\s)(in front of|next to|between|behind|under|on|in|by)(?=\s|$)/i';
+            if(preg_match($pattern,$word[0],$gap,PREG_OFFSET_CAPTURE)) {
+                $q['kind']=$kind='gap';$q['answer']=$gap[1][0];
+                $q['mask']=substr_replace($word[0],str_repeat('_',strlen($gap[1][0])),$gap[1][1],strlen($gap[1][0]));
+            }
+        }
         if($kind==='missing') {
             preg_match_all('/[a-z]/i',$word[0],$matches,PREG_OFFSET_CAPTURE);$letter=$matches[0][array_rand($matches[0])];
             $q['mask']=substr_replace($word[0],'_', $letter[1],1);$q['answer']=$letter[0];

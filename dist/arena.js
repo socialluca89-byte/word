@@ -1,6 +1,7 @@
 /* Private, turn-based duels. Only server results determine the score. */
 (() => {
   const categories={body:'Il corpo',catpositions:'Gatto e scatola',toys:'Giocattoli',colors:'Colori',hello:'Presentiamoci',school:'A scuola',home:'Casa',animals:'Animali',transport:'Veicoli',sport:'Calcio e sport',space:'Spazio',ocean:'Oceano',dino:'Dinosauri'};
+  Object.assign(categories,Object.fromEntries(Object.entries(lessonTopics).map(([id,t])=>[id,t.name])));
   const modes={kart:'🏎️ Kart',football:'⚽ Calcio',space:'🚀 Spazio'};
   const avatars={fox:'🦊',panda:'🐼',robot:'🤖',dragon:'🐉',octopus:'🐙',lion:'🦁'};
   const text=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
