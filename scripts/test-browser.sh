@@ -3,7 +3,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 check=${1:-presence}
-case "$check" in motion) script="scripts/test-motion.cjs";; rewards|ux|learning|resume|presence|pwa|community|characters|school) script="scripts/test-${check}-browser.cjs";; *) echo 'Choose motion, rewards, ux, learning, resume, presence, pwa, community, characters or school' >&2; exit 2;; esac
+case "$check" in motion) script="scripts/test-motion.cjs";; access|rewards|ux|learning|resume|presence|pwa|community|characters|school) script="scripts/test-${check}-browser.cjs";; *) echo 'Choose motion, access, rewards, ux, learning, resume, presence, pwa, community, characters or school' >&2; exit 2;; esac
 fixture=$(mktemp -d /tmp/wordyland-browser.XXXXXX)
 mkdir -p "$fixture/data" "$fixture/sessions" "$fixture/public"
 cp dist/* "$fixture/public/"

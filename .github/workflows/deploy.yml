@@ -41,6 +41,7 @@ jobs:
         run: |
           for f in dist/*.php; do php -l "$f"; done
           python3 scripts/test-api.py
+          python3 scripts/test-access.py
           python3 scripts/test-classroom.py
           python3 scripts/test-adventures.py
           php -l scripts/bootstrap-admin.php
@@ -74,7 +75,7 @@ jobs:
           WORDYLAND_PLAYWRIGHT_MODULE: /tmp/wordyland-browser-deps/node_modules/playwright
         run: |
           export WORDYLAND_CHROMIUM=$(node -p "require(process.env.WORDYLAND_PLAYWRIGHT_MODULE).chromium.executablePath()")
-          for check in ux learning resume presence pwa rewards motion; do bash scripts/test-browser.sh "$check"; done
+          for check in ux learning resume presence pwa rewards motion access; do bash scripts/test-browser.sh "$check"; done
 
   deploy:
     needs: [verify, browser]

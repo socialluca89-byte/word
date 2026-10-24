@@ -36,3 +36,14 @@ Reports are stored in the private SQLite database. Authors see their own reports
 For the full browser journey, start an isolated local PHP test server with `WORDYLAND_TEST=1`, a fresh `WORDYLAND_DATA_DIR` and a private temporary session directory. Run `node scripts/test-community-browser.cjs`, setting `WORDYLAND_BROWSER_DATA` to that same fresh data directory. This test provisions an administrator only in that test database. It accepts `WORDYLAND_TEST_URL` (localhost only), `WORDYLAND_PLAYWRIGHT_MODULE`, `WORDYLAND_CHROMIUM` and optional `WORDYLAND_BROWSER_SCREENSHOT`. It covers email signup, class creation, the actual enrollment link, pupil enrollment and Arena access, report privacy, private activation, global class/report access, status updates and narrow-screen overflow.
 
 Publication remains subject to the ordinary-homepage/cache checks in DEPLOYMENT.md. A development commit or successful local test is not proof of publication.
+
+
+## Visible access, logout and password controls
+
+A top toolbar shows the current account/profile and offers **Esci / Logout** and **Cambia password** whenever authenticated. Guests see **Accedi** and **Password dimenticata?**. The logout command flushes pending profile saves before ending the server session; unconfirmed requests do not pretend that logout succeeded. After confirmed logout, private recovery notices are removed and the UI clears the account even if the subsequent guest-session refresh fails.
+
+The recovery command opens the existing recovery-code form directly. For a class-link visitor it opens the class-specific recovery form using that class and nickname. `#recupera-password` opens adult recovery directly. Recovery uses the one-time code supplied at registration; this flow does not send email. Reset rotates the recovery code and invalidates old sessions. Class recovery preserves the nickname for the subsequent login.
+
+Authenticated adults and learners can change their own password using the current password, a new 12–72-byte password and confirmation. CSRF, per-account attempt limits and current-password verification apply. Other device sessions are invalidated; the current session regenerates its ID/CSRF and stays connected. Existing profiles, enrollment, rewards and recovery codes are preserved. No account roles change.
+
+`python3 scripts/test-access.py` and `bash scripts/test-browser.sh access` verify password errors, recovery rotation, logout, private code cleanup, session invalidation, preserved wallet/class and learner flows, including mobile and interrupted logout/guest-session refresh. Both are required in CI.

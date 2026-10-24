@@ -154,6 +154,19 @@ if ($accountRole==='learner' && in_array($action,['create-profile','rename-profi
 define('WORDYLAND_BOOTSTRAPPED', true);
 require __DIR__ . '/platform.php';
 require __DIR__ . '/community.php';
+if ($method === 'POST' && $action === 'change-password') {
+    limitAttempts($db,'change-password:'.$id,10);
+    $current=$body['password']??null;$next=$body['newPassword']??null;$confirmation=$body['confirmPassword']??null;
+    if(!is_string($current)||!is_string($next)||strlen($next)<12||strlen($next)>72)fail('Usa la password attuale e una nuova password di 12–72 caratteri.');
+    if(!is_string($confirmation)||$next!==$confirmation)fail('Le due nuove password non coincidono.');
+    $q=$db->prepare('SELECT password_hash,session_version FROM accounts WHERE id=?');$q->execute([$id]);$account=$q->fetch();
+    if(!$account||!password_verify($current,$account['password_hash']))fail('Password attuale non corretta.',401);
+    $q=$db->prepare('UPDATE accounts SET password_hash=?,session_version=session_version+1 WHERE id=? AND password_hash=?');
+    $q->execute([password_hash($next,PASSWORD_DEFAULT),$id,$account['password_hash']]);
+    if(!$q->rowCount())fail('La password è stata aggiornata altrove. Accedi di nuovo.',409);
+    clearPresenceSession($db);session_regenerate_id(true);$_SESSION['version']=(int)$account['session_version']+1;$_SESSION['csrf']=bin2hex(random_bytes(32));
+    respond(['ok'=>true,'csrf'=>$_SESSION['csrf']]);
+}
 if ($method === 'POST' && $action === 'logout') { clearPresenceSession($db); $_SESSION = []; session_destroy(); respond(['ok' => true]); }
 if ($method === 'POST' && $action === 'create-profile') {
     $nickname = is_string($body['nickname'] ?? null) ? trim($body['nickname']) : '';

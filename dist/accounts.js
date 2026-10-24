@@ -6,7 +6,37 @@
   document.querySelector('main').prepend(area);
   const panel = area.querySelector('#accountContent'), status = area.querySelector('#accountStatus');
   let session = null, active = null, revision = 0, pending = false, timer, busy = null, applying = false, locked = false;
+  let initializing=true;
+  const tools=document.createElement('nav');tools.className='accountToolbar';tools.setAttribute('aria-label','Accesso, uscita e password');document.querySelector('header').after(tools);
   const guestKey = 'wordylandGuestBackup', activeKey = 'wordylandActiveProfile';
+  function updateAccessTools(){
+    const authenticated=Boolean(session?.username);tools.dataset.mode=authenticated?'connected':'guest';
+    tools.innerHTML='<span class="accountSessionLabel">'+esc(authenticated?(session.role==='learner'?'Profilo di classe: '+(active?.nickname||session.profiles[0]?.nickname||'Alunno'):'Accesso: '+session.username):session?'Modalità ospite':initializing?'Verifica accesso…':'Accesso da verificare')+'</span>'+(authenticated?'<button type="button" class="audio" id="headerPassword">Cambia password</button><button type="button" class="primary" id="headerLogout">Esci / Logout</button>':'<button type="button" class="primary" id="headerLogin">Accedi</button><button type="button" class="audio" id="headerRecovery">Password dimenticata?</button>')+'<span id="accessStatus" role="status"></span>';
+    tools.querySelector('#headerLogin')?.addEventListener('click',()=>openAccess('login'));
+    tools.querySelector('#headerRecovery')?.addEventListener('click',()=>openAccess('recover'));
+    tools.querySelector('#headerPassword')?.addEventListener('click',()=>openAccess('password'));
+    tools.querySelector('#headerLogout')?.addEventListener('click',async event=>{const button=event.currentTarget;button.disabled=true;try{await logout();tools.querySelector('#accessStatus').textContent='Sei uscito dall’account.';}catch(error){if(button.isConnected)button.disabled=false;tools.querySelector('#accessStatus').textContent='Uscita non confermata. '+error.message;}});
+    if(initializing&&!session)tools.querySelectorAll('button').forEach(button=>button.disabled=true);
+  }
+  async function openAccess(view='login'){
+    try{
+      await window.wordylandAccount.ready;
+      if(!session?.csrf){session=await request('session');show();}
+      if(!session.username&&window.wordylandClassroom?.openAccess(view))return;
+      window.wordylandUI?.play();
+      if(document.body.classList.contains('classEntry'))location.hash=view==='recover'?'#recupera-password':'#account';
+      area.open=true;area.dataset.exposed='true';
+      const section=panel.querySelector(view==='recover'&&!session.username?'#accountRecovery':view==='password'||view==='recover'&&session.username?'#passwordSettings':'#accountForm');
+      if(section?.matches('details'))section.open=true;
+      if(view==='recover'&&session.username){say('Per cambiare la password usa la password attuale nel modulo qui sotto.');panel.querySelector('#passwordSettings').open=true;}
+      requestAnimationFrame(()=>{area.scrollIntoView({block:'start'});(section?.querySelector('input')||panel.querySelector('input'))?.focus({preventScroll:true});});
+    }catch(error){tools.querySelector('#accessStatus').textContent=error.message;}
+  }
+  function passwordSettings(){return '<details id="passwordSettings" class="accountSecurity"><summary>Cambia password</summary><form id="changePasswordForm"><label>Password attuale<input name="password" type="password" autocomplete="current-password" required></label><label>Nuova password · almeno 12 caratteri<input name="newPassword" type="password" autocomplete="new-password" minlength="12" maxlength="72" required></label><label>Ripeti la nuova password<input name="confirmPassword" type="password" autocomplete="new-password" minlength="12" maxlength="72" required></label><button class="primary">Salva la nuova password</button><p>Resterai collegato qui. Gli altri dispositivi dovranno accedere di nuovo.</p></form></details>';}
+  function bindPasswordSettings(){
+    const form=panel.querySelector('#changePasswordForm');if(!form)return;
+    form.onsubmit=async event=>{event.preventDefault();const data=Object.fromEntries(new FormData(form));if(data.newPassword!==data.confirmPassword){say('Le due nuove password non coincidono.');return;}const button=event.submitter;button.disabled=true;try{await flush();await request('change-password',data);form.reset();say('Password aggiornata. Gli altri dispositivi dovranno accedere di nuovo.');signalProfile();}catch(error){say(error.message);}finally{if(button.isConnected)button.disabled=false;}};
+  }
   function recoveryNotice(code) {
     let notice = area.querySelector('#recoveryNotice');
     if (!notice) { notice = document.createElement('div'); notice.id = 'recoveryNotice'; notice.className = 'recoveryNotice'; area.querySelector('.settings').prepend(notice); }
@@ -23,6 +53,7 @@
   rememberPlayer = function () { oldRemember(); schedule(); };
   function say(text) { status.textContent = text; }
   async function request(action, body, options = {}) {
+    const accessAction=['session','login','register','logout','recover','change-password','class-login','class-register','class-recover'].includes(action);
     const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),20000);
     try{
       const response = await fetch('api.php?action=' + action, {
@@ -30,15 +61,15 @@
         headers: body === undefined ? {} : {'Content-Type':'application/json', 'X-CSRF-Token': session?.csrf || ''},
         body: body === undefined ? undefined : JSON.stringify(body)
       });
-      if(!response.headers.get('content-type')?.includes('application/json'))throw new Error('Il collegamento al sito richiede una verifica. Riapri WordyLand nel browser; poi riprendi la partita dal salvataggio.');
+      if(!response.headers.get('content-type')?.includes('application/json'))throw new Error(accessAction?'Il sito richiede una verifica. Riapri WordyLand nel browser e poi verifica l’accesso.':'Il collegamento al sito richiede una verifica. Riapri WordyLand nel browser; poi riprendi la partita dal salvataggio.');
       let result;
-      try { result = await response.json(); } catch { throw new Error('Il sito non ha confermato la risposta. Torna online e riprendi dal salvataggio.'); }
+      try { result = await response.json(); } catch { throw new Error(accessAction?'L’operazione di accesso non è stata confermata. Verifica la connessione prima di riprovare.':'Il sito non ha confermato la risposta. Torna online e riprendi dal salvataggio.'); }
       if (!response.ok) { const e = new Error(result.error || 'Operazione non riuscita.'); e.code = response.status; throw e; }
       if (result.csrf && session) session.csrf = result.csrf;
       return result;
     }catch(error){
-      if(error.name==='AbortError')throw new Error('La connessione è lenta. Verifica la partita con Riprendi dal salvataggio prima di inviare di nuovo.');
-      if(error instanceof TypeError)throw new Error('Connessione interrotta. Le risposte già confermate sono salvate: torna online e riprendi la partita.');
+      if(error.name==='AbortError')throw new Error(accessAction?'La connessione è lenta. Verifica l’accesso prima di riprovare.':'La connessione è lenta. Verifica la partita con Riprendi dal salvataggio prima di inviare di nuovo.');
+      if(error instanceof TypeError)throw new Error(accessAction?'Connessione interrotta. L’operazione di accesso non è confermata.':'Connessione interrotta. Le risposte già confermate sono salvate: torna online e riprendi la partita.');
       throw error;
     }finally{clearTimeout(timeout);}
   }
@@ -87,20 +118,23 @@
     apply(profile.state, profile.nickname); show(); say('✓ Profilo di ' + profile.nickname + ' caricato.');
   }
   function show() {
+    updateAccessTools();
     area.querySelector('summary').textContent=session?.role==='learner'?'Il mio profilo di classe':'Area adulti · account e progressi';
     if (session?.role==='learner') {
-      panel.innerHTML='<h3>Ciao, '+esc(session.profiles[0]?.nickname||'esploratore')+'!</h3><p>Il tuo profilo è iscritto alla classe. I progressi si salvano mentre giochi.</p><button class="audio" id="learnerLogout">Esci dal mio profilo</button>'+(locked?'<p>Il profilo è stato aggiornato su un altro dispositivo. La copia locale resta disponibile.</p><button class="audio" id="learnerReload">Carica la versione online</button>':'');
+      panel.innerHTML='<h3>Ciao, '+esc(session.profiles[0]?.nickname||'esploratore')+'!</h3><p>Il tuo profilo è iscritto alla classe. I progressi si salvano mentre giochi.</p><button class="audio" id="learnerLogout">Esci / Logout</button>'+passwordSettings()+''+(locked?'<p>Il profilo è stato aggiornato su un altro dispositivo. La copia locale resta disponibile.</p><button class="audio" id="learnerReload">Carica la versione online</button>':'');
+      bindPasswordSettings();
       panel.querySelector('#learnerLogout').onclick=()=>logout().catch(e=>say(e.message));
       panel.querySelector('#learnerReload')?.addEventListener('click',()=>{write('wordylandConflictBackup',{profile:active.id,state:snapshot()});choose(active.id,true).catch(e=>say(e.message));});
       signalProfile();return;
     }
     if (!session?.username) {
-      panel.innerHTML = '<h3>Un account per i grandi, un’avventura per ciascuno</h3><p>Accedi da un altro dispositivo per ritrovare i progressi. Crea fino a otto profili con un soprannome. Puoi anche giocare come ospite.</p><form id="accountForm"><label for="accountUser">Email o nome utente dell’adulto</label><input id="accountUser" autocomplete="username" minlength="3" maxlength="254" required><label for="accountPassword">Password · almeno 12 caratteri</label><input id="accountPassword" type="password" autocomplete="current-password" minlength="12" maxlength="72" required><label class="adultCheck"><input id="adultConfirm" type="checkbox"> Sono un adulto e gestirò i profili dei bambini</label><p class="hint">Alla registrazione riceverai un codice per recuperare l’account. Conservalo con cura.</p><button class="primary" name="action" value="login">Accedi</button><button class="audio" name="action" value="register">Crea account adulto</button></form><details><summary>Hai dimenticato la password?</summary><form id="recoverAccount"><label>Email o nome utente<input name="username" autocomplete="username" required></label><label>Codice di recupero<input name="code" autocomplete="off" required></label><label>Nuova password<input name="password" type="password" autocomplete="new-password" minlength="12" maxlength="72" required></label><button class="primary">Recupera account</button></form></details>';
+      panel.innerHTML = '<h3>Un account per i grandi, un’avventura per ciascuno</h3><p>Accedi da un altro dispositivo per ritrovare i progressi. Crea fino a otto profili con un soprannome. Puoi anche giocare come ospite.</p><form id="accountForm"><label for="accountUser">Email o nome utente dell’adulto</label><input id="accountUser" autocomplete="username" minlength="3" maxlength="254" required><label for="accountPassword">Password · almeno 12 caratteri</label><input id="accountPassword" type="password" autocomplete="current-password" minlength="12" maxlength="72" required><label class="adultCheck"><input id="adultConfirm" type="checkbox"> Sono un adulto e gestirò i profili dei bambini</label><p class="hint">Alla registrazione riceverai un codice per recuperare l’account. Conservalo con cura.</p><button class="primary" name="action" value="login">Accedi</button><button class="audio" name="action" value="register">Crea account adulto</button></form><details id="accountRecovery"><summary>Password dimenticata? Recupera l’accesso</summary><p>Usa il codice di recupero ricevuto alla registrazione. Per gli alunni: riapri il link della classe e scegli Password dimenticata. Il recupero non invia email.</p><form id="recoverAccount"><label>Email o nome utente<input name="username" autocomplete="username" required></label><label>Codice di recupero<input name="code" autocomplete="off" required></label><label>Nuova password<input name="password" type="password" autocomplete="new-password" minlength="12" maxlength="72" required></label><button class="primary">Reimposta password</button></form></details>';
       panel.querySelector('form').onsubmit = async e => {
         e.preventDefault(); const action = e.submitter?.value || 'login';
         if (action === 'register' && !panel.querySelector('#adultConfirm').checked) { say('Per creare un account, conferma di essere un adulto.'); return; }
         const buttons = [...panel.querySelectorAll('button')]; buttons.forEach(b => b.disabled = true);
         try {
+          if(!session?.csrf)session=await request('session');
           session = await request(action, {username:panel.querySelector('#accountUser').value, password:panel.querySelector('#accountPassword').value, adult:panel.querySelector('#adultConfirm').checked});
           if (session.recovery) { recoveryNotice(session.recovery); delete session.recovery; }
           if(session.role==='learner'&&session.profiles.length===1){await choose(session.profiles[0].id);say('Accesso riuscito. Sei nel tuo profilo di classe.');}
@@ -109,13 +143,13 @@
       };
       panel.querySelector('#recoverAccount').onsubmit = async e => {
         e.preventDefault(); const form=e.currentTarget, button=e.submitter; button.disabled=true;
-        try { const result=await request('recover',Object.fromEntries(new FormData(form))); session.csrf=result.csrf; recoveryNotice(result.recovery); form.reset(); say('Password aggiornata. Accedi con la nuova password.'); }
+        try { if(!session?.csrf)session=await request('session');const result=await request('recover',Object.fromEntries(new FormData(form))); session.csrf=result.csrf; recoveryNotice(result.recovery); form.reset(); say('Password aggiornata. Accedi con la nuova password.'); }
         catch(e){say(e.message);} finally {button.disabled=false;}
       };
       signalProfile();
       return;
     }
-    panel.innerHTML = '<h3>'+(session.role==='admin'?'Amministratore: ':'Account adulto: ') + esc(session.username) + '</h3><p>' + (active ? 'Stai giocando con il profilo di <b>' + esc(active.nickname) + '</b>.' : 'Scegli un profilo per usare il salvataggio online.') + '</p><div class="profileList">' + session.profiles.map(p => '<button class="audio" data-profile="' + Number(p.id) + '">' + esc(p.nickname) + (active?.id === p.id ? ' ✓' : '') + '</button>').join('') + '</div><form id="newProfile"><label for="profileNickname">Nuovo profilo · usa un soprannome</label><input id="profileNickname" maxlength="20" required autocomplete="off"><button class="primary">Crea profilo</button></form>' + (active ? '<button class="audio" id="syncNow">Salva ora</button><button class="audio" id="copyGuest">Copia qui i progressi ospite</button><div id="studyTools"></div>' : '') + (locked ? '<p>Il profilo è stato aggiornato altrove. La copia locale resta disponibile su questo dispositivo.</p><button class="audio" id="reloadProfile">Carica la versione online</button>' : '') + '<button class="audio" id="logoutAccount">Esci dall’account</button><details class="accountSecurity"><summary>Sicurezza e gestione account</summary><form id="securityAccount"><label>Password attuale<input name="password" type="password" autocomplete="current-password" required></label><button class="audio" value="new-recovery">Genera un nuovo codice di recupero</button><label>Per eliminare account e tutti i profili, scrivi ELIMINA<input name="confirm" autocomplete="off"></label><button class="audio" value="delete-account">Elimina definitivamente account e profili</button></form></details>';
+    panel.innerHTML = '<h3>'+(session.role==='admin'?'Amministratore: ':'Account adulto: ') + esc(session.username) + '</h3><p>' + (active ? 'Stai giocando con il profilo di <b>' + esc(active.nickname) + '</b>.' : 'Scegli un profilo per usare il salvataggio online.') + '</p><div class="profileList">' + session.profiles.map(p => '<button class="audio" data-profile="' + Number(p.id) + '">' + esc(p.nickname) + (active?.id === p.id ? ' ✓' : '') + '</button>').join('') + '</div><form id="newProfile"><label for="profileNickname">Nuovo profilo · usa un soprannome</label><input id="profileNickname" maxlength="20" required autocomplete="off"><button class="primary">Crea profilo</button></form>' + (active ? '<button class="audio" id="syncNow">Salva ora</button><button class="audio" id="copyGuest">Copia qui i progressi ospite</button><div id="studyTools"></div>' : '') + (locked ? '<p>Il profilo è stato aggiornato altrove. La copia locale resta disponibile su questo dispositivo.</p><button class="audio" id="reloadProfile">Carica la versione online</button>' : '') + '<button class="audio" id="logoutAccount">Esci / Logout</button>'+passwordSettings()+'<details class="accountSecurity"><summary>Sicurezza e gestione account</summary><form id="securityAccount"><label>Password attuale<input name="password" type="password" autocomplete="current-password" required></label><button class="audio" value="new-recovery">Genera un nuovo codice di recupero</button><label>Per eliminare account e tutti i profili, scrivi ELIMINA<input name="confirm" autocomplete="off"></label><button class="audio" value="delete-account">Elimina definitivamente account e profili</button></form></details>';
     panel.querySelectorAll('[data-profile]').forEach(b => b.onclick = () => {
       if (locked) { say('Carica prima la versione online del profilo attuale.'); return; }
       choose(Number(b.dataset.profile)).catch(e => say(e.message));
@@ -146,6 +180,7 @@
       write('wordylandConflictBackup', {profile:active.id, state:snapshot()});
       choose(active.id, true).catch(e => say(e.message));
     };
+    bindPasswordSettings();
     panel.querySelector('#logoutAccount').onclick = () => logout().catch(e=>say(e.message));
     panel.querySelector('#securityAccount').onsubmit = async e => {
       e.preventDefault(); const action=e.submitter.value;
@@ -174,17 +209,22 @@
     await flush();await request('logout',{});active=null;pending=false;clearTimeout(timer);
     try{localStorage.removeItem(activeKey);}catch{}
     const guest=read(guestKey);if(guest)apply(guest,guest.name);
-    session=await request('session');show();say('Sei uscito. Ora giochi come ospite.');
+    area.querySelector('#recoveryNotice')?.remove();
+    session={csrf:'',username:null,role:null,profiles:[]};show();
+    try{session=await request('session');show();say('Sei uscito. Ora giochi come ospite.');}
+    catch{say('Sei uscito dall’account. La connessione non è pronta: usa Accedi per riprovare.');}
   }
   async function connect(result) {
     session=result;active=null;pending=false;locked=false;clearTimeout(timer);
     if(result.role==='learner'&&result.profiles.length===1)await choose(result.profiles[0].id);
     else show();
   }
-  window.wordylandAccount = {request, flush, connect, logout,selectProfile:choose,createProfile:async nickname=>{await flush();const p=await request('create-profile',{nickname});session.profiles.push(p);await choose(p.id);return p;}, info:()=>({id:active?.id || null,nickname:active?.nickname || '',username:session?.username || null,role:session?.role||null})};
+  window.wordylandAccount = {request, flush, connect, logout,openAccess,selectProfile:choose,createProfile:async nickname=>{await flush();const p=await request('create-profile',{nickname});session.profiles.push(p);await choose(p.id);return p;}, info:()=>({id:active?.id || null,nickname:active?.nickname || '',username:session?.username || null,role:session?.role||null})};
   window.addEventListener('online', () => flush().catch(() => {}));
   window.addEventListener('beforeunload', e => { if (pending || busy) { e.preventDefault(); e.returnValue = ''; } });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flush().catch(() => {}); });
+  updateAccessTools();
+  window.addEventListener('hashchange',()=>{if(location.hash==='#recupera-password')openAccess('recover');else if(location.hash==='#account')openAccess('login');});
   window.wordylandAccount.ready = request('session').then(async result => {
     session = result; show();
     if(session.role==='learner'&&session.profiles.length===1){await choose(session.profiles[0].id);return;}
@@ -196,5 +236,5 @@
       if (cached) { const guest = read(guestKey); if (guest) apply(guest, guest.name); try { localStorage.removeItem(activeKey); } catch {} }
       say(session.username ? 'Scegli il profilo con cui giocare.' : 'Modalità ospite: i progressi restano su questo dispositivo.');
     }
-  }).catch(e => { panel.innerHTML = '<p>Puoi giocare come ospite.</p>'; say(e.message); });
+  }).catch(e => { panel.innerHTML = '<p>Puoi giocare come ospite.</p>'; say(e.message); }).finally(()=>{initializing=false;updateAccessTools();if(location.hash==='#recupera-password')openAccess('recover');else if(location.hash==='#account')openAccess('login');});
 })();
