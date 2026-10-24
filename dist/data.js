@@ -32,6 +32,13 @@ lists.numbers=[["one", "1", "1"], ["two", "2", "2"], ["three", "3", "3"], ["four
 lists.focus=[["head", "testa", "🧑"], ["hair", "capelli", "💇"], ["eye", "occhio", "👁️"], ["ear", "orecchio", "👂"], ["nose", "naso", "👃"], ["mouth", "bocca", "👄"], ["finger", "dito della mano", "☝️"], ["leg", "gamba", "🦵"], ["foot", "piede", "🦶"], ["arm", "braccio", "💪"], ["hand", "mano", "✋"], ["shoulder", "spalla", "🧍"]];
 const lessonTopics={"counting":{"name":"How many? Conta e rispondi","icon":"🔢","activity":"creative","description":"Conta le figure e scegli la risposta. Uno o tanti?"},"penpositions":{"name":"Preposizioni · La penna e il libro","icon":"🖊️","activity":"pets","description":"Sopra, sotto, davanti e dietro: completa la frase."},"conversation":{"name":"Parliamo in inglese","icon":"💬","activity":"pets","description":"Ascolta la domanda e scegli come rispondere."},"aboutme":{"name":"All about me","icon":"🙋","activity":"creative","description":"Frasi di esempio per parlare di sé e della famiglia."},"family":{"name":"La famiglia","icon":"🏡","activity":"treehouse","description":"Scopri le parole della famiglia."},"food":{"name":"Cibo e bevande","icon":"🍎","activity":"treehouse","description":"Una merenda di parole da ascoltare e scrivere."},"clothes":{"name":"Vestiti e accessori","icon":"👕","activity":"creative","description":"Cosa indossiamo? Gioca con le parole dei vestiti."},"weather":{"name":"Che tempo fa?","icon":"🌦️","activity":"space","description":"Sole, pioggia e vento: esplora il meteo."},"routines":{"name":"La mia giornata","icon":"🌅","activity":"treehouse","description":"Piccole frasi per le azioni di ogni giorno."}};
 Object.assign(hints,{"head": "Osserva le lettere: h · ea · d. Poi ascolta la parola intera.", "mouth": "Osserva le lettere: m · ou · th. Poi ascolta la parola intera.", "shoulder": "Osserva le lettere: sh · ou · l · d · er. Poi ascolta la parola intera.", "ear": "Osserva le lettere: e · a · r. Poi ascolta la parola intera.", "finger": "Osserva le lettere: fin · ger. Poi ascolta la parola intera.", "foot": "Osserva le lettere: f · oo · t. Poi ascolta la parola intera.", "hand": "Osserva le lettere: h · a · n · d. Poi ascolta la parola intera.", "eye": "Osserva le lettere: e · y · e. Poi ascolta la parola intera.", "arm": "Osserva le lettere: a · r · m. Poi ascolta la parola intera.", "hair": "Osserva le lettere: h · air. Poi ascolta la parola intera.", "nose": "Osserva le lettere: n · o · s · e. Poi ascolta la parola intera.", "leg": "Osserva le lettere: l · e · g. Poi ascolta la parola intera."});
+// Keep equivalent expressions available as targets, never as incorrect distractors.
+function lessonChoiceKey(value){
+ const word=String(value??'').toLowerCase().replace(/[’‘]/g,"'").trim().replace(/[?!., ]+$/,'').replace(/\s+/g,' ');
+ if(['hello','hi'].includes(word))return '@greeting';
+ if(/^(?:it's|it is|the (?:cat|mouse|pen|ball) is) (?:by|next to) the (?:book|box|table|desk)$/.test(word))return '@spatial:'+word.replace(/^it is /,"it's ").replace(' next to ',' by ');
+ return word;
+}
 function makeLessonQuestion(row,index,total,pool){
  const meta=row[3]||{},q={word:row[0],translation:row[1],emoji:row[2],kind:index===total-1?'write':index===0?'choice':'build',number:index+1};
  if(meta.prompt)q.prompt=meta.prompt;
@@ -42,7 +49,10 @@ function makeLessonQuestion(row,index,total,pool){
   q.options=shuffle([row,...shuffle(alternatives).slice(0,3)]);
  }else if(index===0&&meta.type==='dialogue'){
   q.kind='dialogue';q.options=shuffle([row,...shuffle(pool.filter(r=>r[0]!==row[0]&&r[3]?.prompt!==meta.prompt)).slice(0,3)]);
- }else if(index===0){q.options=shuffle([row,...shuffle(pool.filter(r=>r[0]!==row[0])).slice(0,3)]);}
+ }else if(index===0){
+  const alternatives=[...new Map(pool.filter(r=>lessonChoiceKey(r[0])!==lessonChoiceKey(row[0])).map(r=>[lessonChoiceKey(r[0]),r])).values()];
+  q.options=shuffle([row,...shuffle(alternatives).slice(0,3)]);
+ }
  if(index===1){
   const match=q.word.match(meta.type==='count'?/^([a-z]+)\s/i:/(?:^|\s)(in front of|next to|between|behind|under|on|in|by)(?=\s|$)/i);
   if(match){q.kind='gap';q.answer=match[1];const start=q.word.indexOf(match[1]);q.mask=q.word.slice(0,start)+'_'.repeat(match[1].length)+q.word.slice(start+match[1].length);}

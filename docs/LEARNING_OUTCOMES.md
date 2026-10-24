@@ -24,3 +24,9 @@ I test usano solo database e account sintetici e verificano migrazione additiva,
 Una parola con tre successi precedenti non deve scomparire dal ripasso se viene appena sbagliata o richiede un aiuto. I metadati additivi `needs_review` e `review_at` tengono separata questa necessità dai successi acquisiti: non azzerano i contatori o i premi. Le parole da rivedere più recenti vengono prima nel prossimo gruppo di domande della stessa scheda/tema. Una correzione dopo errore o aiuto mantiene la richiesta di ripasso; una successiva risposta autonoma la chiude. Il normale credito storico continua a valere.
 
 La migrazione aggiunge le due colonne soltanto se assenti, con controllo sotto lock, e conserva le righe della versione precedente. Non ricostruisce eventi storici sconosciuti. Si riordinano soltanto missioni nuove: le domande già salvate di una missione in pausa restano nell’ordine originale.
+
+## Alternative semanticamente equivalenti
+
+Nelle scelte multiple, hello/hi e le forme spaziali by/next to previste nelle scene non vengono usate come distrattori reciprocamente sbagliati. Restano entrambe disponibili come parole/frasi obiettivo, nelle missioni ospite/account e nelle sfide. Le alternative hanno significati distinti; il normale catalogo e il numero di funzioni non cambiano. Nelle prove di scrittura si allena la forma mostrata/ascoltata: la spiegazione riconosce l’equivalenza e indica la forma della scheda, invece di affermare che una posizione equivalente sia diversa.
+
+La regola è limitata alle equivalenze curate per questi esercizi; non tenta di giudicare automaticamente tutti i sinonimi inglesi. I test usano piccoli dizionari fittizi per verificare entrambe le forme come obiettivi e i punteggi delle sfide.

@@ -113,6 +113,12 @@ function wallet(PDO $db, int $profile): array {
     return $w;
 }
 function normalWord(string $word): string { return trim(preg_replace('/\s+/u', ' ', rtrim(strtolower(str_replace(['’','‘'], "'", $word)), '?!., '))); }
+function lessonChoiceKey(string $value): string {
+    $word=normalWord($value);
+    if(in_array($word,['hello','hi'],true))return '@greeting';
+    if(preg_match("/^(?:it's|it is|the (?:cat|mouse|pen|ball) is) (?:by|next to) the (?:book|box|table|desk)$/",$word))return '@spatial:'.str_replace(' next to ',' by ',preg_replace('/^it is /',"it's ",$word));
+    return $word;
+}
 function publicQuestion(array $q, int $step): array {
     $public = $q; unset($public['answer']);
     $public['number'] = $step + 1;
@@ -316,7 +322,8 @@ if ($method === 'POST' && $action==='quest-start') {
             $q['mask']=substr_replace($word[0],'_', $letter[1],1);$q['answer']=$letter[0];
         }
         if($kind==='choice') {
-            $options=[$word]; foreach($pool as $other)if($other[0]!==$word[0] && count($options)<4)$options[]=$other;
+            $options=[$word];$seen=[lessonChoiceKey($word[0])=>true];
+            foreach($pool as $other){$key=lessonChoiceKey($other[0]);if(!isset($seen[$key]) && count($options)<4){$options[]=$other;$seen[$key]=true;}}
             shuffle($options);$q['options']=$options;
         }
         $questions[]=$q;

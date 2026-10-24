@@ -17,7 +17,9 @@
    if(chosen>=0&&chosen!==count)return 'Hai scelto '+(chosen+1)+'. Conta le figure: sono '+(count+1)+'. '+quote(quantities[count])+' vuol dire '+italian[count]+'.';
    if(kind==='count')return count===0?'Quando è uno solo, il nome non vuole la s finale. Guarda: '+quote(context.expected)+'.':'Sono più di uno. Guarda come si scrive: '+quote(context.expected)+'.';
   }
+  if(['hello','hi'].includes(target)&&['hello','hi'].includes(answer)&&target!==answer)return 'Hi e hello vogliono dire ciao. Qui alleniamo '+quote(context.expected)+': guarda come si scrive.';
   const wantedPosition=position(target),chosenPosition=position(answer);
+  if(['by','next to'].includes(wantedPosition)&&['by','next to'].includes(chosenPosition)&&wantedPosition!==chosenPosition)return 'By e next to indicano vicinanza. Qui alleniamo '+quote(wantedPosition)+': riascolta questa forma.';
   if(wantedPosition&&chosenPosition&&wantedPosition!==chosenPosition)return 'Hai scelto '+quote(positions[chosenPosition])+'. Guarda la scena: qui è '+quote(positions[wantedPosition])+'. In inglese si dice '+quote(wantedPosition)+'.';
   if(kind==='dialogue'){
    const prompt=normal(context.prompt);

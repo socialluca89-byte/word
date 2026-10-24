@@ -56,6 +56,7 @@ jobs:
           python3 scripts/test-resume.py
           python3 scripts/test-autonomy.py
           python3 scripts/test-review.py
+          python3 scripts/test-choice-fairness.py
       - name: Check public bundle
         run: node scripts/verify-bundle.mjs
       - name: Test deployment script in isolation

@@ -62,7 +62,8 @@ if ($action==='duel-create') {
     $unique=[];foreach ($curriculum[$category] as $w) $unique[normalWord($w[0])]=$w;
     $pool=array_values($unique); shuffle($pool); $questions=[];
     foreach (array_slice($pool,0,5) as $w) {
-        $options=array_values(array_filter(array_column($pool,0),fn($word)=>$word!==$w[0]));shuffle($options);
+        $options=[];$seen=[lessonChoiceKey($w[0])=>true];
+        foreach(array_column($pool,0) as $word){$key=lessonChoiceKey($word);if(!isset($seen[$key])){$options[]=$word;$seen[$key]=true;}}shuffle($options);
         $options=array_merge([$w[0]],array_slice($options,0,3));shuffle($options);
         $questions[]=['translation'=>$w[1],'emoji'=>$w[2],'options'=>$options,'answer'=>$w[0]];
     }

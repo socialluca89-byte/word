@@ -44,3 +44,20 @@ assert.ok(!JSON.stringify(curriculum).match(/Chloe|Claudia|Luca/i),'Personal wor
 console.log('New lesson checks passed: shared vocabulary, 1–10, count quantities/plurals/options, multiword gaps, pen/book scenes, dialogue prompts and generic example names.');
 
 assert.ok(evaluate('picture("the mouse is between the boxes","🐭")').includes("Topolino e scatola"));
+
+// Equivalent translations must not be offered as incorrect distractors.
+for(const [target,alias,others] of [
+ ['hello','hi',[['one','uno','1'],['two','due','2']]],
+ ["it's by the book","it's next to the book",[["it's on the book",'sopra','🖊️'],["it's under the book",'sotto','🖊️']]]
+]){
+ const pool=[[target,'vicino','🙂'],[alias,'vicino','🙂'],...others];
+ const q=JSON.parse(evaluate('JSON.stringify(makeLessonQuestion('+JSON.stringify(pool[0])+',0,3,'+JSON.stringify(pool)+'))'));
+ assert(!q.options.some(row=>row[0]===alias),'Equivalent expression cannot be a wrong option: '+alias);
+ assert(q.options.some(row=>row[0]===target),'The target expression remains playable');
+}
+
+const greetingChoices=JSON.parse(evaluate('JSON.stringify(makeLessonQuestion(lists.hello[2],0,3,lists.hello))'));
+const groups=greetingChoices.options.map(row=>evaluate('lessonChoiceKey('+JSON.stringify(row[0])+')'));
+assert.equal(new Set(groups).size,groups.length,'Distractors have distinct meanings');
+assert.equal(evaluate('lists.hello.some(row=>row[0]==="hello") && lists.hello.some(row=>row[0]==="hi")'),true,'Keep both vocabulary targets');
+console.log('Fair choice checks passed: equivalent targets retained, no equivalent wrong option and distinct distractor meanings.');

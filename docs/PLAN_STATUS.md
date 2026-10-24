@@ -16,6 +16,7 @@ Stato di riferimento: release live verificata `22f2d6028b87c0ae22029eaa211c148a7
 | Area adulto/docente e classe privata | Classi, iscritti/presenza, amministrazione, segnalazioni e classifica privata esistenti | API/browser con utenti fittizi PASS | Live; accesso proprietario effettivo dipende dal suo recupero |
 | Accessibilità e velocità | Testi grandi, audio su richiesta, spiegazioni errori, movimento ridotto; mappa caricata su richiesta | UX/learning/motion/performance PASS locali | Live in 22f2d60, incluse notifiche ospite identiche senza ricostruzione delle scene |
 | Web app e offline | Installazione, aggiornamenti e ripasso offline pubblico | PWA/learning PASS | Live; API e dati account non vengono messi nella cache offline |
+| Qualità didattica delle alternative | Espressioni equivalenti non usate come risposte sbagliate; entrambe le forme conservate | Statici, API e regressione completa con school PASS locali | Pronto su work; non pubblicato finché il blocco hosting non è chiarito |
 
 ## Sequenza successiva
 

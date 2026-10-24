@@ -18,3 +18,7 @@ assert.match(explain({expected:'one pencil',answer:'one pencils',kind:'count'}),
 for(const [prompt,rule] of [['What is your name?','il nome'],['How old are you?','quanti anni'],['How are you?','come stai']])assert(explain({expected:'sample',answer:'other',kind:'dialogue',prompt}).includes(rule));
 assert.match(explain({expected:'head',answer:'hand',translation:'testa',chosenTranslation:'mano',kind:'choice'}),/«mano».*«testa».*«head»/);
 console.log('Learning feedback: position meanings, letters, missing/extra spelling, gaps, quantity and dialogue explanations passed.');
+
+assert.match(explain({expected:'hello',answer:'hi',kind:'write'}),/vogliono dire ciao.*«hello»/);
+assert.match(explain({expected:'by',answer:'next to',kind:'gap'}),/indicano vicinanza.*«by»/);
+console.log('Equivalent-form feedback passed: greetings and nearby positions are explained without contradictory meanings.');

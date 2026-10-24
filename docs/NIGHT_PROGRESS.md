@@ -177,3 +177,11 @@ Commit completo `77e071ca24438881121786d0d1cd80d90a71ea99`, run https://github.c
 La release live resta quindi 22f2d60. Non dichiarare pubblicato il ripasso recente e non ripetere un deploy dall’esito incerto: l’esito qui è noto, con ripristino verificato. Nessun controllo allentato, nessun tentativo di superare la verifica anti-bot o cambiare IP/credenziali. Il blocco non è un rifiuto dell’auto-review degli strumenti: è una risposta dell’hosting durante il controllo HTTPS della pipeline.
 
 Il blocco 9 è preparato/testato soltanto su fixture e sarà conservato su work, senza inviarlo a main per generare artificiosamente un nuovo deploy. Nessun reset reale né servizio email attivato. Prima di un’altra pubblicazione servono prove pertinenti o chiarimento della protezione SiteGround, oltre ai controlli normali.
+
+## Blocco 10 — Alternative corrette non penalizzate nelle scelte
+
+Difetto riprodotto con test deterministico: hello come obiettivo e hi come risposta sbagliata proposta (stessa traduzione ciao). Analoga ambiguità tra by/next to nelle scene di vicinanza. Prima della correzione il test falliva con «Equivalent expression cannot be a wrong option: hi».
+
+Correzione su work: chiavi semantiche curate per questi casi, alternative senza equivalenti né duplicati di significato, entrambe le forme mantenute come obiettivi. Applicato a generatore ospite, missioni server e sfide. Le spiegazioni di scrittura riconoscono le due forme equivalenti e richiamano quella da allenare nella scheda, senza spiegazioni contraddittorie come “accanto invece di accanto”. Nessuna variazione a XP/monete/punteggi.
+
+PASS mirati: lessons/learning statici; API con dizionari fittizi, quattro obiettivi equivalenti forzati nelle missioni e tutte le domande delle sfide, con punteggi corretti. PASS completo sul ramo work: tutti i controlli verify, inclusi il nuovo test fairness e la preparazione proprietario su fixture; browser ux, learning, resume, presence, pwa, rewards, motion, access, email, performance, navigation, autonomy, review e school. School completa undici missioni e verifica tredici schede di argomenti, incluse tutte le preposizioni. Nessun deploy mentre il blocco SiteGround resta aperto; nessun uso di dati reali.
