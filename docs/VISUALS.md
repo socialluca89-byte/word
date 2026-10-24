@@ -66,3 +66,8 @@ An active mission or duel uses `body[data-play]` to hide surrounding landing/acc
 The authenticated pending-games response includes only the selected owned profile’s valid class-scoped incoming invitation count. The class shortcut updates from that count; logout/profile changes clear it. Incoming invitations have a stronger visual treatment. Duel listening reads the Italian question without revealing the English answer. Existing server grading, rewards and privacy boundaries remain in effect.
 
 Validation: `bash scripts/test-browser.sh ux`, plus learning, resume, presence, community, characters, school and PWA. Core browser journeys now block deployment alongside existing API/content/deployment verification. Screenshots contain only temporary fixture data.
+
+
+## Repeatable motion regression
+
+Run `bash scripts/test-browser.sh motion` in the same disposable local environment as the other browser suites. The test checks moving frames, global pause, reduced motion, free scene interactions without rewards, retained canvas identity through questions, cleanup when pausing and mobile overflow. It follows the focused exercise UX: success feedback must be visible, the decorative in-question scene remains hidden, and navigation is restored through Pause. This regression is now part of the required browser job before deployment.
