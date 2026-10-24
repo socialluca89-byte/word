@@ -17,7 +17,14 @@ const base=process.env.WORDYLAND_TEST_URL||'http://127.0.0.1:8093';assert(['127.
  // A quiet status refresh must keep the chosen topic and game.
  await b.locator('[data-ready-toggle]').uncheck();await a.locator('.rivalCard .presence-online').waitFor();assert.equal(await a.locator('#duelTopic').inputValue(),'colors');assert.equal(await a.locator('#duelActivity').inputValue(),'football');await b.locator('[data-ready-toggle]').check();await a.locator('.rivalCard .presence-ready').waitFor();
  await b.goto(base+'/#sfide');await b.locator('#duelTopic').selectOption('colors');
- await a.locator('#duelInvite button').click();await b.getByRole('button',{name:'Accetta ⚡',exact:true}).waitFor();await b.getByRole('button',{name:'Accetta ⚡',exact:true}).click();await a.getByRole('button',{name:'Gioca →',exact:true}).waitFor();
+ // Hold a quiet refresh open while the user submits an invitation. The action must not disappear.
+ let releaseRefresh,enteredRefresh,held=false;const refreshGate=new Promise(resolve=>releaseRefresh=resolve),refreshEntered=new Promise(resolve=>enteredRefresh=resolve);
+ await a.route('**/api.php?action=arena*',async route=>{if(!held){held=true;enteredRefresh();await refreshGate;}await route.continue();});
+ await a.evaluate(()=>window.dispatchEvent(new Event('wordyland-presence')));
+ await Promise.race([refreshEntered,a.waitForTimeout(5000).then(()=>{throw Error('Controlled refresh did not start');})]);
+ const inviteSent=a.waitForRequest(request=>request.url().includes('action=duel-create'),{timeout:5000});
+ await a.locator('#duelInvite button').click();releaseRefresh();await inviteSent;await a.unroute('**/api.php?action=arena*');
+ await b.getByRole('button',{name:'Accetta ⚡',exact:true}).waitFor();await b.getByRole('button',{name:'Accetta ⚡',exact:true}).click();await a.getByRole('button',{name:'Gioca →',exact:true}).waitFor();
  await b.getByRole('button',{name:'Gioca →',exact:true}).click();await b.locator('#duelStage .duelOptions').waitFor();
  await a.goto(base+'/#iscritti');await a.locator('.rosterPerson').filter({hasText:'Stellina'}).locator('.presence-busy').waitFor();
  await b.locator('#duelBack').click();await a.locator('.rosterPerson').filter({hasText:'Stellina'}).locator('.presence-ready').waitFor();

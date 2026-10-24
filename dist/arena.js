@@ -6,7 +6,7 @@
   const avatars={fox:'🦊',panda:'🐼',robot:'🤖',dragon:'🐉',octopus:'🐙',lion:'🦁'};
   const text=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   window.wordylandArena={mount(host,profile,openAdults,resumeId=null){
-    let data={opponents:[],duels:[],classes:[]},busy=false,playing=false,sceneView=null,renderedDuels='',renderedOpponents='';
+    let data={opponents:[],duels:[],classes:[]},busy=false,playing=false,sceneView=null,renderedDuels='',renderedOpponents='',loading=null;
     const valid=()=>host.isConnected&&window.wordylandAccount.info().id===profile.id;
     const request=(action,body)=>window.wordylandAccount.request(action,body===undefined?undefined:{...body,profile:profile.id});
     const status=message=>{if(valid()){const e=host.querySelector('#arenaStatus');if(e)e.textContent=message;}};
@@ -59,6 +59,7 @@
     }
     async function load(message='',quiet=false){
       if(busy||playing)return;busy=true;
+      let finished;loading=new Promise(resolve=>finished=resolve);
       try{const result=await request('arena&profile='+profile.id);if(!valid())return;data=result;
         const summary=host.querySelector('.arenaSummary'),incoming=data.duels.filter(d=>d.state==='pending'&&d.incoming).length,readyCount=data.opponents.filter(p=>p.presence==='ready').length;
         if(summary)summary.textContent=incoming?incoming+' inviti da aprire · guarda Le tue sfide':readyCount?readyCount+' compagni pronti a giocare':'Le sfide sono a turni: il compagno può rispondere anche dopo.';
@@ -70,16 +71,19 @@
         return;
       }draw();status(message);}
       catch(e){if(quiet&&valid())host.querySelectorAll('[data-opponent-state]').forEach(node=>node.innerHTML=window.wordylandPresence.badge('unknown'));if(valid()&&!host.querySelector('#arenaRefresh')){host.innerHTML='<div class="arenaEmpty"><h3>Le sfide si fanno attendere.</h3><p id="arenaStatus" role="status"></p><button id="arenaRetry" class="audio">Riprova</button></div>';host.querySelector('#arenaRetry').onclick=()=>load();}status(e.message);}
-      finally{busy=false;}
+      finally{busy=false;loading=null;finished();}
     }
     async function act(action,payload,message){
-      if(busy)return;busy=true;host.querySelectorAll('button').forEach(b=>b.disabled=true);
+      // A status refresh must not swallow a deliberate invite/accept action.
+      if(loading)await loading;
+      if(busy||!valid())return;busy=true;host.querySelectorAll('button').forEach(b=>b.disabled=true);
       try{await request(action,payload);if(!valid())return;window.dispatchEvent(new Event('wordyland-progress-saved'));busy=false;await load(message);}
       catch(e){status(e.message);if(valid())host.querySelectorAll('button').forEach(b=>b.disabled=false);}
       finally{busy=false;}
     }
     async function open(id){
-      if(busy)return;busy=true;
+      if(loading)await loading;
+      if(busy||!valid())return;busy=true;
       try{const result=await request('duel&profile='+profile.id+'&duel='+encodeURIComponent(id));if(!valid())return;
         if(!result.question){busy=false;await load('Questa partita è già terminata oppure non è ancora iniziata.');return;}
         playing=true;showQuestion(result);host.querySelector('#duelStage').scrollIntoView({behavior:'smooth',block:'center'});

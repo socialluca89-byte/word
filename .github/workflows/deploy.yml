@@ -77,7 +77,7 @@ jobs:
           WORDYLAND_PLAYWRIGHT_MODULE: /tmp/wordyland-browser-deps/node_modules/playwright
         run: |
           export WORDYLAND_CHROMIUM=$(node -p "require(process.env.WORDYLAND_PLAYWRIGHT_MODULE).chromium.executablePath()")
-          for check in ux learning resume presence pwa rewards motion access email performance; do bash scripts/test-browser.sh "$check"; done
+          for check in ux learning resume presence pwa rewards motion access email performance navigation; do bash scripts/test-browser.sh "$check"; done
 
   deploy:
     needs: [verify, browser]

@@ -71,8 +71,37 @@ Verifiche:
 
 Limiti espliciti: `practice.good` sul server continua a rappresentare anche risposte corrette dopo errore; questo blocco non ridefinisce tutta la misura di padronanza. La persistenza degli aiuti resta da implementare e testare. Le missioni già salvate prima della correzione non possono ricostruire errori che non erano stati registrati.
 
+## Blocco 4 — Deploy separato dal provisioning proprietario
+
+Eliminata la chiamata a `bootstrap-admin.php` dalla pubblicazione ordinaria. La pipeline non crea più l’account proprietario, non promuove account, non cambia password/codici e non genera file di attivazione. Il provisioning CLI resta privato e richiede un’operazione separatamente autorizzata. Questo risolve il rischio di effetti sull’account che aveva bloccato la pubblicazione dei primi tre blocchi.
+
+Il probe manuale già esistente ora, quando SG_PATH è configurato, esegue la diagnostica CLI di sola lettura e stampa esclusivamente tre booleani: ownerExists, ownerIsAdmin, privateActivationAvailable. Non legge il contenuto del file di attivazione né password/hash. Non è stato eseguito sul server reale: questa sessione non ha un accesso diretto ai secret SSH del runner né uno strumento di dispatch GitHub configurato.
+
+PASS: deploy simulato con proprietario assente (nessuna creazione), poi con proprietario adulto fittizio (ruolo, password/recovery hash, versione sessioni e file privato invariati), probe senza divulgazione dei contenuti, backup/ripristino e controlli HTTPS/cache. Nessuna operazione su account reali.
+
+## Blocco 5 — Inviti affidabili e nuova home mobile
+
+Inviti: riprodotto deterministicamente il clic durante un refresh automatico bloccato. Prima della correzione non partiva alcuna richiesta duel-create (test FAIL per timeout di 5 secondi). Il codice ora attende la lettura in corso prima di eseguire l’azione esplicita, senza invii duplicati. Il test controlla che l’invito arrivi e venga accettato, conservando tema/modalità scelti.
+
+Pausa: il precedente confronto catturava l’intera area della scena, comprese etichette HTML che cambiano al passaggio del mouse e durante il caricamento dei font. Riprodotta la differenza durante hover anche con il mondo fermo. Il confronto ora attende i font e due frame, isola i pixel del mondo mascherando soltanto etichette/feedback sovrapposti, mantiene l’asserzione esatta dei pixel e controlla che l’hover non riavvii il mondo. Nessun retry introdotto.
+
+Home: le tre destinazioni principali vengono prima di suggerimenti e spiegazioni; schede colorate, icone evidenti, frecce e titoli grandi. Adattata anche la disposizione delle icone su tablet dopo aver rilevato visivamente un titolo tagliato. Ripresa e suggerimento restano disponibili subito dopo le scelte principali.
+
+| Larghezza | Fondo terza scelta prima | Dopo | Altezza viewport |
+| --- | ---: | ---: | ---: |
+| 320px | 1109px | 770px | 844px |
+| 390px | 963px | 714px | 844px |
+| 768px | 785px | 586px | 844px |
+| 1360px | 737px | 511px | 844px |
+
+Screenshot fittizi prima/dopo: `/workspace/wordyland-ui-review/before-390.png`, `after-390.png`, e corrispondenti file 320/768/1360. Nessun dato reale nei screenshot.
+
+PASS sul lotto finale: intero job verify, deploy simulato aggiornato e browser ux, learning, resume, presence, pwa, rewards, motion, access, email, performance e navigation. Queste esecuzioni finali sono passate senza retry automatici. Il nuovo test navigation verifica tutti e tre i comandi nella prima schermata, titoli senza fuoriuscite, bersagli almeno 44px e accesso effettivo a esercizi/personaggi/sfide, a quattro larghezze.
+
+Stato prima della pubblicazione: verificati gli effetti del deploy e preservati gli account; la pubblicazione dei miglioramenti mirati rientra nell’autorizzazione utente precedente. Nessuna attivazione email e nessun reset dell’account reale inclusi. Confermare separatamente l’esito del run GitHub dopo il push a main; non dichiarare online le modifiche finché non passano i controlli live.
+
 ## Coda successiva
 
 1. Completare la persistenza degli aiuti e la distinzione server tra risposte autonome e correzioni; la memoria degli errori alla ripresa è già corretta nel blocco 3.
 2. Estendere le misure a telefono fisico e alle altre anteprime; il caricamento differito della mappa è già implementato e misurato nel blocco 2.
-3. Riprodurre l’instabilità del test inviti con diagnostica mirata, poi migliorare navigazione/onboarding e verificare nuovamente mobile/desktop.
+3. Estendere onboarding e verifica a dispositivi fisici; il clic perso sugli inviti è riprodotto e corretto, la nuova navigazione ha misure e screenshot nel blocco 5.

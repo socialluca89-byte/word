@@ -42,3 +42,33 @@ body[data-play]:not([data-play=""]) header .tag{display:none}.questHub #duelStag
 
 .playerVisibility{overflow-wrap:anywhere}
 .accountToolbar{max-width:1280px;margin:0 auto 10px;padding:0 24px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}.accountToolbar .accountSessionLabel{font-size:16px;line-height:1.5;color:#365b49;margin-right:auto;overflow-wrap:anywhere;max-width:100%}.accountToolbar button{font-size:17px;min-height:48px;margin:0;padding:11px 16px}.accountToolbar #accessStatus{font-size:16px;line-height:1.5;color:#633e31;flex-basis:100%;overflow-wrap:anywhere}.accountToolbar #accessStatus:empty{display:none}#accountRecovery>summary,#passwordSettings>summary{font-size:20px;font-weight:700;min-height:48px}#accountRecovery p,#passwordSettings p{font-size:17px;line-height:1.6}#passwordSettings input,#accountRecovery input{font-size:21px;min-height:54px;width:100%;max-width:430px;display:block;box-sizing:border-box}#passwordSettings button,#accountRecovery button{font-size:20px;min-height:54px}body.classEntry .accountArea[data-exposed=true]{display:block!important}body[data-play]:not([data-play=""]) .accountToolbar .accountSessionLabel{display:none}body[data-play]:not([data-play=""]) .accountToolbar[data-mode=guest]{display:none}@media(max-width:560px){.accountToolbar{padding:0 14px;gap:8px}.accountToolbar .accountSessionLabel{flex-basis:100%}.accountToolbar button{font-size:16px;padding:11px 12px}.accountToolbar #headerLogout{margin-left:auto}}
+
+/* Put the three child destinations before suggestions and adult explanations. */
+.startChoices a{position:relative;isolation:isolate;overflow:hidden;border:2px solid #fff;background:linear-gradient(120deg,#c9f1df,#e8f7c9);color:#214d43;box-shadow:0 5px 0 #8cbea6;padding-right:34px}
+.startChoices a:nth-child(2){background:linear-gradient(120deg,#d6e0ff,#e9dcff);border-color:#fff;color:#354573;box-shadow:0 5px 0 #adb8e2}
+.startChoices a:nth-child(3){background:linear-gradient(120deg,#ffdfc1,#ffe5e8);border-color:#fff;color:#70433c;box-shadow:0 5px 0 #dfb6a2}
+.startChoices a:after{content:'›';position:absolute;right:12px;top:50%;transform:translateY(-50%);font:800 30px/1 system-ui;color:currentColor;opacity:.7}
+.startChoices a>span:first-child{display:grid;place-items:center;flex:0 0 54px;width:54px;height:54px;font-size:32px;border-radius:17px;background:#fff9;border:1px solid #fff;box-shadow:0 3px 0 #ffffff7a;transform:rotate(-5deg)}
+.startChoices a:nth-child(2)>span:first-child{transform:rotate(4deg)}
+.startChoices a>span:nth-child(2){min-width:0}
+.startHub .startChoices b{font-size:22px}
+.startHub .startChoices small{font-size:15px;line-height:1.4}
+.startHub .todayQuest{margin-top:22px}
+@media(max-width:650px){
+ .startHub{padding:17px 13px}
+ .startHub>p{font-size:16px;margin-bottom:16px}
+ .startChoices{gap:12px}
+ .startChoices a{min-height:96px;padding:12px 30px 12px 12px;gap:12px;border-radius:19px}
+ .startChoices a>span:first-child{flex-basis:46px;width:46px;height:50px;font-size:29px;border-radius:15px}
+ .startHub .startChoices b{font-size:21px;line-height:1.2}
+ .startHub .startChoices small{font-size:14px;line-height:1.35;margin-top:5px}
+ .startHub .todayQuest{padding:15px 12px;gap:12px}
+ .startHub .todayQuest h3{font-size:23px}
+ .startHub .todayQuest .todayIcon{font-size:38px}
+ .startHub .todayQuest small{font-size:11px}
+}
+@media(min-width:651px) and (max-width:1000px){
+ .startChoices a{flex-direction:column;align-items:flex-start;justify-content:flex-start;padding:16px 26px 16px 16px;gap:12px}
+ .startChoices a>span:nth-child(2){width:100%}
+ .startHub .startChoices b{font-size:21px;overflow-wrap:anywhere}
+}

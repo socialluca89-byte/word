@@ -13,9 +13,14 @@ const hash=b=>crypto.createHash('sha256').update(b).digest('hex');
  }
  assert.equal(await p.evaluate(()=>localStorage.getItem('wordylandGuestWallet')),guestBefore,'Free scene actions must not grant rewards');
  await p.locator('[data-live-place=island]').click();assert.equal(await p.locator('.islandPin').count(),8);
- const snap=()=>p.locator('#islandMap').screenshot({animations:'allow'});
+ // Measure the rendered world independently of hover labels and late font swaps.
+ await p.evaluate(()=>document.fonts.ready);await p.mouse.move(0,0);
+ const snap=()=>p.locator('#islandMap canvas').screenshot({animations:'allow',style:'.islandPin,.sceneReaction{visibility:hidden!important}'});
+ const renderedFrame=()=>p.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
  const a=await snap();await p.waitForTimeout(400);const b=await snap();assert.notEqual(hash(a),hash(b),'World should move without hovering');
- await p.locator('#islandMotion').click();await p.waitForTimeout(150);const paused=await snap();await p.waitForTimeout(300);assert.equal(hash(paused),hash(await snap()),'Pause should freeze world');
+ await p.locator('#islandMotion').click();await renderedFrame();const paused=await snap();await p.waitForTimeout(300);assert.equal(hash(paused),hash(await snap()),'Pause should freeze world');
+ // Pausing the world still allows labels to respond to the pointer.
+ await p.locator('.islandPin').first().hover();assert.equal(await p.locator('.islandPin').first().evaluate(node=>getComputedStyle(node).animationName),'none');assert.equal(hash(paused),hash(await snap()),'Hover labels must not restart the paused world');await p.mouse.move(0,0);
  await p.locator('#islandMotion').click();await p.locator('[data-destination=football]').click();await p.locator('#playPlace').click();await p.locator('#readyChallenge').waitFor();assert(await p.locator('.missionGrid').evaluate(e=>e.hidden),'Active mission must be in front');
  const canvas=await p.locator('#missionWorld canvas').elementHandle();const translation=(await p.locator('.questPicture + p').textContent()).trim();
  await p.locator('#readyChallenge').click();assert(await canvas.evaluate(e=>e.isConnected),'Ready must preserve the scene');
