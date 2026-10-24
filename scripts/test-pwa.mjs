@@ -15,7 +15,7 @@ vm.runInContext(code,context);
 const assets=vm.runInContext('ASSETS',context),name=vm.runInContext('CACHE_NAME',context);
 assert.equal(skipped,0,'Updates must wait for the user');
 let pending;events.install({waitUntil(promise){pending=promise;}});await pending;
-assert.equal(storage.size,8);for(const [pathname,url] of Object.entries(assets)){
+assert.equal(storage.size,9);for(const [pathname,url] of Object.entries(assets)){
  assert(!pathname.includes('api')&&!pathname.includes('account')&&!pathname.includes('admin'));
  const hash=createHash('sha256').update(fs.readFileSync('dist'+pathname)).digest('hex').slice(0,12);
  assert.equal(url,pathname.slice(1)+'?v='+hash);
@@ -32,7 +32,7 @@ assert((await (await fetchTest('/#admin-attiva=not-a-real-token',{mode:'navigate
 assert.equal(await fetchTest('/api.php?action=session',{mode:'navigate'}),undefined);
 assert.equal(await fetchTest('/unrecognized',{mode:'navigate'}),undefined);
 assert((await (await fetchTest('/curriculum.json')).text()).includes('curriculum.json'));
-assert.equal(storage.size,8,'Browsing must not add private or arbitrary URLs');
+assert.equal(storage.size,9,'Browsing must not add private or arbitrary URLs');
 names.push(name);events.activate({waitUntil(promise){pending=promise;}});await pending;assert.deepEqual(deleted,['wordyland-offline-obsolete']);assert.equal(claimed,1);
 events.message({data:{type:'unexpected'}});assert.equal(skipped,0);events.message({data:{type:'SKIP_WAITING'}});assert.equal(skipped,1);
 for(const size of [192,512]){const image=fs.readFileSync('dist/icon-'+size+'.png');assert.equal(image.readUInt32BE(16),size);assert.equal(image.readUInt32BE(20),size);}

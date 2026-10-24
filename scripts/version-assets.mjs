@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import {createHash} from 'node:crypto';
 
 // Run after changing browser assets, before committing a release.
-const assets=['data.js','worlds.js','app.js','accounts.js','classroom.js','arena.js','quests.js','quests.css','arcade.js','arcade.css','island.css','island.js','community.js','presence.js','three.min.js','pwa.css','pwa.js','manifest.webmanifest','icon-192.png'];
+const assets=['data.js','worlds.js','learning.js','app.js','accounts.js','classroom.js','arena.js','quests.js','quests.css','arcade.js','arcade.css','island.css','island.js','community.js','presence.js','three.min.js','pwa.css','pwa.js','manifest.webmanifest','icon-192.png'];
 for(const name of ['race-circuits.webp','race-racers.webp']){
   const hash=createHash('sha256').update(fs.readFileSync('dist/'+name)).digest('hex').slice(0,12);
   const css=fs.readFileSync('dist/arcade.css','utf8').replace(new RegExp(name.replaceAll('.','\\.')+'(?:\\?v=[a-f0-9]+)?','g'),name+'?v='+hash);
@@ -18,9 +18,9 @@ const manifest=JSON.parse(fs.readFileSync('dist/manifest.webmanifest','utf8'));
 manifest.icons.forEach(icon=>{icon.src=versioned(icon.src.split('?')[0]);});
 fs.writeFileSync('dist/manifest.webmanifest',JSON.stringify(manifest,null,2)+'\n');
 let offline=fs.readFileSync('dist/offline.html','utf8');
-for(const name of ['pwa.css','offline.js','icon-192.png'])offline=offline.replace(new RegExp('((?:src|href)=")'+name.replaceAll('.','\\.')+'(?:\\?v=[a-f0-9]+)?(")','g'),'$1'+versioned(name)+'$2');
+for(const name of ['pwa.css','learning.js','offline.js','icon-192.png'])offline=offline.replace(new RegExp('((?:src|href)=")'+name.replaceAll('.','\\.')+'(?:\\?v=[a-f0-9]+)?(")','g'),'$1'+versioned(name)+'$2');
 fs.writeFileSync('dist/offline.html',offline);
-const offlineAssets=Object.fromEntries(['offline.html','offline.js','pwa.css','curriculum.json','manifest.webmanifest','icon-192.png','icon-512.png','icon-maskable-512.png'].map(name=>['/'+name,versioned(name)]));
+const offlineAssets=Object.fromEntries(['offline.html','learning.js','offline.js','pwa.css','curriculum.json','manifest.webmanifest','icon-192.png','icon-512.png','icon-maskable-512.png'].map(name=>['/'+name,versioned(name)]));
 const release=createHash('sha256').update(JSON.stringify(offlineAssets));
 for(const name of fs.readdirSync('dist').sort().filter(name=>!['sw.js','pwa.js','index.html'].includes(name)&&!name.endsWith('.php')))release.update(name).update(fs.readFileSync('dist/'+name));
 release.update(fs.readFileSync('dist/pwa.js','utf8').replace(/const workerURL='[^']+';/,"const workerURL='sw.js';"));

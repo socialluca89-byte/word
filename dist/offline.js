@@ -9,8 +9,8 @@
   feedback.textContent='';next.hidden=true;
   work.innerHTML='<p class="offlinePicture" aria-hidden="true">'+escape(word[2]||'📚')+'</p><p class="offlineHint">Come si dice in inglese?</p><p class="offlinePrompt">'+escape(word[1])+'</p><button id="offlineAudio" type="button">🔊 Ascolta</button><div class="offlineOptions">'+options.map((w,i)=>'<button type="button" data-option="'+i+'">'+escape(w[0])+'</button>').join('')+'</div>';
   work.querySelectorAll('[data-option]').forEach(button=>button.onclick=()=>{
-   if(options[Number(button.dataset.option)][0]===word[0]){button.classList.add('correct');feedback.textContent='Esatto! '+word[0]+' = '+word[1]+'.';next.hidden=false;work.querySelectorAll('[data-option]').forEach(b=>b.disabled=true);next.focus();}
-   else{button.disabled=true;feedback.textContent='Un altro tentativo: prenditi il tuo tempo.';}
+   if(options[Number(button.dataset.option)][0]===word[0]){button.classList.add('correct');window.wordylandLearning.show(feedback,true,{expected:word[0],word:word[0],translation:word[1],button});next.hidden=false;work.querySelectorAll('[data-option]').forEach(b=>b.disabled=true);next.focus({preventScroll:true});}
+   else{button.disabled=true;window.wordylandLearning.show(feedback,false,{expected:word[0],word:word[0],answer:options[Number(button.dataset.option)][0],chosenTranslation:options[Number(button.dataset.option)][1],translation:word[1],kind:'choice',button});}
   });
   work.querySelector('#offlineAudio').onclick=()=>{
    if(!('speechSynthesis'in window)){feedback.textContent='La voce non è disponibile. Puoi leggere le parole e continuare.';return;}

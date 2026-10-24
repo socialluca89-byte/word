@@ -14,7 +14,7 @@ Offline revision awards no XP or coins and does not queue progress or other writ
 
 ## Cache and privacy
 
-The root-scoped worker uses an explicit allowlist of eight public files: offline HTML/JS, PWA CSS, curriculum JSON, manifest and three icons. It precaches content-versioned URLs without credentials. PHP/API requests, POSTs, arbitrary queries, cross-origin resources, study attachments, names, account sessions, class codes and admin/recovery links are not cached. Home navigation is network-first; cached authenticated app screens are never used as an offline fallback. A token in a fragment is neither sent to the server nor used as a cache key.
+The root-scoped worker uses an explicit allowlist of nine public files: offline HTML/JS, shared learning feedback JS, PWA CSS, curriculum JSON, manifest and three icons. It precaches content-versioned URLs without credentials. PHP/API requests, POSTs, arbitrary queries, cross-origin resources, study attachments, names, account sessions, class codes and admin/recovery links are not cached. Home navigation is network-first; cached authenticated app screens are never used as an offline fallback. A token in a fragment is neither sent to the server nor used as a cache key.
 
 `node scripts/version-assets.mjs` first versions offline dependencies, then generates the worker’s cache revision and the registration URL, then refreshes the main page’s asset links. The revision also detects changes to the public game scripts and normalized main markup. Repeating generation is stable. Registration uses `updateViaCache: none` and a versioned script URL to avoid stale hosting/browser copies.
 

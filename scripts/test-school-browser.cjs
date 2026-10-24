@@ -17,7 +17,7 @@ for(const topic of ['catpositions','counting','penpositions','conversation','abo
    if(topic==='counting')assert.equal(await p.locator('.questPicture+p').isVisible(),false);
   }else if(await p.locator('#questAnswer').count()){
    let answer=word;const mask=p.locator('#questWork .questWord');if(await mask.count()){const value=await mask.textContent();const start=value.indexOf('_');let end=start;while(value[end]==='_')end++;answer=word.slice(start,end);}
-   await p.locator('#questAnswer').fill(answer);await p.getByRole('button',{name:'Controlla ✓',exact:true}).click();
+   assert(await p.locator('#questAnswer').evaluate(e=>parseFloat(getComputedStyle(e).fontSize)>=32),'Readable input');await p.locator('#questAnswer').fill(answer);await p.getByRole('button',{name:'Controlla ✓',exact:true}).click();
   }else{
    for(const char of word){const buttons=p.locator('[data-tile]:not(:disabled)');let found=false;for(let i=0;i<await buttons.count();i++)if((await buttons.nth(i).textContent())===(char===' '?'␣':char)){await buttons.nth(i).click();found=true;break;}assert(found,'Missing tile '+char);}
    await p.getByRole('button',{name:'Controlla ✓',exact:true}).click();
