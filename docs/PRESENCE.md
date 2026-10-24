@@ -33,3 +33,14 @@ Multiple tabs share account authentication but have separate random tab keys. Re
 The reusable isolated browser runner is `bash scripts/test-browser.sh presence`. It copies `dist` to a temporary public directory, starts a local PHP server with a disposable database/session directory, runs the browser test, then removes the fixture. It also accepts `pwa`, `community`, `characters` and `school`. Set `WORDYLAND_PLAYWRIGHT_MODULE` and `WORDYLAND_CHROMIUM` for an existing installation; optional `WORDYLAND_BROWSER_SCREENSHOT` captures only fixture data.
 
 The browser test accelerates only its own polling interval and exercises two class players plus an outsider, ready/online/busy transitions, selection preservation, automatic invite/accept updates, visibility pause, logout, admin filters and narrow screens. It never signs into production or sends invitations to real pupils.
+
+
+## Guests, accounts and saved game activity
+
+The roster explicitly labels its server-authorized scope: global administrator or own classes. It shows the current account, and distinguishes registered profiles from accounts without profiles. Only the administrator receives global account totals and the count of accounts with no player profile; a link points to the existing Account dashboard.
+
+The administrator-only `played` filter and count cover confirmed mission attempts (including wrong answers), completed mission rewards and duel answers. The UI calls these mission/duel activities; absence of such activity is not proof that someone never practiced through an older local exercise mode. The default view still lists all registered profiles. Other roles cannot use this filter or receive per-profile activity flags.
+
+Anonymous guest play remains local to that browser and is not an account or enrollment. No guest tracking has been added and past guest identities cannot be recovered from the server. The home screen explains this and tells families to use their class enrollment link. A signed-in adult without a selected profile gets a profile-selection prompt. The configured owner admin account is `luca@perrone.it`; a guest name or another email does not automatically confer its privileges.
+
+API/browser tests cover role scope, activity filtering, registration without a profile, wrong-answer activity, guest notices and absence of diagnostic fields in class-only responses.

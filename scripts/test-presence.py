@@ -25,7 +25,7 @@ with tempfile.TemporaryDirectory(prefix='wordyland-presence-') as temporary:
         # A shared peer's other class must not be disclosed.
         roster=request(a,'roster');assert {x['id'] for x in roster['items']}=={pa,pb};assert 'Classe Privata' not in json.dumps(roster)
         assert 'username' not in json.dumps(roster) and 'account_created_at' not in json.dumps(roster)
-        request(a,'roster&scope=all',expected=403);request(a,'roster&filter=today',expected=403);request(guest,'roster',expected=401)
+        request(a,'roster&scope=all',expected=403);request(a,'roster&filter=today',expected=403);request(a,'roster&filter=played',expected=403);request(guest,'roster',expected=401)
         payload={'profile':pb,'tab':'a'*32,'state':'ready'}
         request(guest,'presence-heartbeat',payload,request(guest,'session')['csrf'],401)
         request(b,'presence-heartbeat',payload,'bad',403);request(a,'presence-heartbeat',payload,ta,404)
@@ -54,6 +54,15 @@ with tempfile.TemporaryDirectory(prefix='wordyland-presence-') as temporary:
         with sqlite3.connect(database) as db:db.execute('UPDATE accounts SET role="admin" WHERE id=(SELECT account_id FROM profiles WHERE id=?)',(pa,))
         all_people=request(a,'roster&scope=all');assert all_people['counts']['registered']==3 and all_people['counts']['online']==1
         assert any(p['username']=='nuvola' for p in all_people['items']);assert request(a,'roster&scope=all&filter=today')['total']==0
+        assert all_people['counts']['accounts']==3 and all_people['counts']['withoutProfile']==0 and all_people['counts']['played']==0
+        # Registration without a player profile must remain visible to the admin as an account.
+        orphan=client();orphan_csrf=request(orphan,'session')['csrf'];request(orphan,'register',{'username':'solo_account','password':password,'adult':True},orphan_csrf)
+        diagnostic=request(a,'roster&scope=all');assert diagnostic['counts']['accounts']==4 and diagnostic['counts']['withoutProfile']==1 and diagnostic['counts']['registered']==3
+        # A wrong answer still proves a real online play attempt; no completion required.
+        quest=request(b,'quest-start',{'profile':pb,'category':'body'},tb)
+        request(b,'quest-answer',{'profile':pb,'token':quest['token'],'step':0,'answer':'wrong'},tb)
+        played=request(a,'roster&scope=all&filter=played');assert played['counts']['played']==1 and played['total']==1 and played['items'][0]['id']==pb and played['items'][0]['has_server_activity']==1
+        own=request(b,'roster');assert 'has_server_activity' not in json.dumps(own) and 'withoutProfile' not in own['counts'] and 'played' not in own['counts']
         assert not any(secret in json.dumps(all_people) for secret in ['session_key','tab_key','session_version','last_seen','password_hash','recovery_hash'])
         # Learner signup today is counted in the Italian day and stays class-scoped.
         learner=client();tl=request(learner,'session')['csrf'];joined=request(learner,'class-register',{'code':club['code'],'nickname':'Stellina','password':password,'consent':True},tl);pl=joined['profiles'][0]['id'];tl=joined['csrf']

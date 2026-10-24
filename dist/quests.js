@@ -56,7 +56,11 @@
     lessonSource=id;activity=place;setWorld(places[activity].world);mission=null;question=null;tab='missions';
     history.replaceState(null,'','#missioni');window.dispatchEvent(new Event('wordyland-play-view'));render();startQuest();
   }
+  const visibilityNote=document.createElement('div');visibilityNote.id='playerVisibility';visibilityNote.className='playerVisibility';document.querySelector('.startChoices').after(visibilityNote);
   function drawContinuations(){
+    const session=window.wordylandAccount.info();visibilityNote.hidden=Boolean(profile.id);
+    if(!profile.id)visibilityNote.innerHTML=session.username?'<b>Account collegato: '+esc(session.username)+'</b><p>Scegli o crea un profilo per salvare le tue avventure come giocatore.</p><button class="audio" id="chooseVisibleProfile">Scegli il profilo →</button>':'<b>Stai giocando come ospite</b><p>Per comparire tra gli iscritti e sfidare i compagni, apri il link della classe e iscriviti. Le partite ospite restano in questo browser.</p>';
+    if(profile.id)visibilityNote.replaceChildren();else{const button=visibilityNote.querySelector('button');if(button)button.onclick=openAdults;}
     const classHint=document.querySelector('.startChoices a[href="#sfide"] small');
     if(classHint)classHint.textContent=profile.id&&pending.incomingInvites?pending.incomingInvites+' inviti ricevuti · apri le tue sfide':'Guarda chi è online e scegli un compagno';
     const draft=!profile.id?guestDraft():null;

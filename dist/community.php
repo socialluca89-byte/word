@@ -24,17 +24,19 @@ if(in_array($action,['presence-heartbeat','presence-leave'],true)){
 }
 if($action==='roster'){
     $all=($_GET['scope']??'class')==='all';if($all&&!$isAdmin)fail('Elenco completo riservato all’amministratore.',403);
-    $filter=$_GET['filter']??'all';if(!in_array($filter,['all','online','today'],true))fail('Filtro non valido.');
-    if($filter==='today'&&!$all)fail('Le date di iscrizione sono riservate all’amministratore.',403);
+    $filter=$_GET['filter']??'all';if(!in_array($filter,['all','online','today','played'],true))fail('Filtro non valido.');
+    if(in_array($filter,['today','played'],true)&&!$all)fail('Questo filtro è riservato all’amministratore.',403);
     $clubs=$all?[]:array_column(communityRows($db,'SELECT DISTINCT c.id FROM clubs c LEFT JOIN club_profiles cp ON cp.club_id=c.id LEFT JOIN profiles p ON p.id=cp.profile_id WHERE c.owner_id=? OR p.account_id=?',[$id,$id]),'id');
     $where=$all?'1=1':'p.account_id=?';$args=$all?[]:[$id];
     if($clubs){$where='('.$where.' OR p.id IN (SELECT profile_id FROM club_profiles WHERE club_id IN ('.implode(',',array_fill(0,count($clubs),'?')).')))';$args=array_merge($args,$clubs);}
+    $played='(EXISTS(SELECT 1 FROM rewards rr WHERE rr.profile_id=p.id) OR EXISTS(SELECT 1 FROM practice pp WHERE pp.profile_id=p.id AND (pp.good>0 OR pp.wrong>0)) OR EXISTS(SELECT 1 FROM duel_players dp WHERE dp.profile=p.id AND dp.step>0))';
     $start=(new DateTimeImmutable('today',new DateTimeZone('Europe/Rome')))->getTimestamp();
     $from=' FROM profiles p JOIN accounts a ON a.id=p.account_id LEFT JOIN wallets w ON w.profile_id=p.id LEFT JOIN (SELECT op.profile_id,MAX(CASE op.state WHEN "busy" THEN 3 WHEN "ready" THEN 2 ELSE 1 END) AS presence_rank FROM online_presence op JOIN profiles pp ON pp.id=op.profile_id JOIN accounts aa ON aa.id=pp.account_id AND aa.session_version=op.session_version WHERE op.last_seen>='.(time()-90).' GROUP BY op.profile_id) pr ON pr.profile_id=p.id WHERE '.$where;
-    $summary=communityRows($db,'SELECT COUNT(*) AS registered,COALESCE(SUM(pr.presence_rank IS NOT NULL),0) AS online,COALESCE(SUM(pr.presence_rank=2),0) AS ready'.($all?',COALESCE(SUM(a.role="learner" AND a.created_at>='.$start.'),0) AS today':'').$from,$args)[0];
-    $extra=$filter==='online'?' AND pr.presence_rank IS NOT NULL':($filter==='today'?' AND a.role="learner" AND a.created_at>='.$start:'');
+    $summary=communityRows($db,'SELECT COUNT(*) AS registered,COALESCE(SUM(pr.presence_rank IS NOT NULL),0) AS online,COALESCE(SUM(pr.presence_rank=2),0) AS ready'.($all?',COALESCE(SUM(a.role="learner" AND a.created_at>='.$start.'),0) AS today,COALESCE(SUM('.$played.'),0) AS played':'').$from,$args)[0];
+    if($all){$summary['accounts']=(int)$db->query('SELECT COUNT(*) FROM accounts')->fetchColumn();$summary['withoutProfile']=(int)$db->query('SELECT COUNT(*) FROM accounts a WHERE NOT EXISTS(SELECT 1 FROM profiles p WHERE p.account_id=a.id)')->fetchColumn();}
+    $extra=$filter==='online'?' AND pr.presence_rank IS NOT NULL':($filter==='today'?' AND a.role="learner" AND a.created_at>='.$start:($filter==='played'?' AND '.$played:''));
     $total=(int)communityRows($db,'SELECT COUNT(*) AS n'.$from.$extra,$args)[0]['n'];
-    $items=communityRows($db,'SELECT p.id,p.nickname,w.equipped,COALESCE(pr.presence_rank,0) AS presence_rank'.($all?',a.username,a.role,a.created_at AS account_created_at':'').$from.$extra.' ORDER BY CASE pr.presence_rank WHEN 2 THEN 0 WHEN 1 THEN 1 WHEN 3 THEN 2 ELSE 3 END,LOWER(p.nickname),p.id LIMIT 20 OFFSET '.$offset,$args);
+    $items=communityRows($db,'SELECT p.id,p.nickname,w.equipped,COALESCE(pr.presence_rank,0) AS presence_rank'.($all?',a.username,a.role,a.created_at AS account_created_at,'.$played.' AS has_server_activity':'').$from.$extra.' ORDER BY CASE pr.presence_rank WHEN 2 THEN 0 WHEN 1 THEN 1 WHEN 3 THEN 2 ELSE 3 END,LOWER(p.nickname),p.id LIMIT 20 OFFSET '.$offset,$args);
     $ids=array_column($items,'id');$classes=[];
     if($ids){$sql='SELECT cp.profile_id,c.name FROM club_profiles cp JOIN clubs c ON c.id=cp.club_id WHERE cp.profile_id IN ('.implode(',',array_fill(0,count($ids),'?')).')';$classArgs=$ids;if(!$all){$sql.=' AND c.id IN ('.($clubs?implode(',',array_fill(0,count($clubs),'?')):'NULL').')';$classArgs=array_merge($classArgs,$clubs);}foreach(communityRows($db,$sql.' ORDER BY c.name',$classArgs) as $row)$classes[(int)$row['profile_id']][]=$row['name'];}
     foreach($items as &$person){$person['equipped']=json_decode($person['equipped']??'{}',true)?:['avatar'=>'fox'];$person['presence']=[0=>'offline',1=>'online',2=>'ready',3=>'busy'][(int)$person['presence_rank']];unset($person['presence_rank']);$person['classes']=$classes[(int)$person['id']]??[];}unset($person);

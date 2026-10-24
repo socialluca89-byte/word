@@ -24,7 +24,7 @@
   try{
    if(location.hash==='#classe-crea')await classroom(current);
    if(location.hash==='#segnalazioni')await reports(current,false);
-   if(location.hash==='#iscritti'){if(!info().username)signIn('Chi c’è nella classe?','Accedi per vedere gli iscritti e i compagni online.');else{root.innerHTML=heading('LA COMMUNITY DELLA CLASSE','Iscritti e compagni online.','Scegli quando renderti disponibile per una sfida.')+'<div id="classRoster"></div>';window.wordylandPresence.mountRoster(root.querySelector('#classRoster'));}}
+   if(location.hash==='#iscritti'){if(!info().username)signIn('Chi c’è nella classe?','Accedi per vedere gli iscritti e i compagni online.');else{root.innerHTML=heading('ISCRITTI E GIOCATORI','Iscritti e compagni online.','L’elenco distingue profili registrati, attività online e disponibilità alle sfide.')+'<div id="classRoster"></div>';window.wordylandPresence.mountRoster(root.querySelector('#classRoster'));}}
    if(location.hash==='#admin'){if(activationCode)activation();else await admin(current);}
   }catch(e){if(current===epoch){root.innerHTML=heading('RIPROVIAMO','Questa sezione si fa attendere.','')+'<p id="communityStatus" role="status"></p><button class="audio" id="communityRetry">Riprova</button>';status(e.message);root.querySelector('#communityRetry').onclick=()=>route();}}
   if(scroll&&current===epoch&&root.isConnected){root.scrollIntoView({behavior:window.wordylandMotion.allowed()?'smooth':'instant',block:'start'});root.querySelector('h2')?.focus({preventScroll:true});}
