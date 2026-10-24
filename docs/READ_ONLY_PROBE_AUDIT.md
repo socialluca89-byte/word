@@ -41,3 +41,7 @@ Non esiste nel probe attuale un comando parametrico autorizzato che restituisca 
 - Supporto: nessun ticket aperto; l’eventuale contatto SiteGround WordyLand resta separato da Caffè Oro e sarà autorizzato dal coordinatore.
 
 Controllo solo statico del codice e metadati runtime. Nessun nuovo test applicativo necessario: non è cambiato codice eseguibile. I test sintetici precedenti non sono risultati del server reale.
+
+## Preparazione successiva, senza esecuzione
+
+Ora esiste una diagnostica separata, descritta in [READ_ONLY_READINESS.md](READ_ONLY_READINESS.md), con trasporto SSH singolo e protocollo ridotto. È stata verificata solo con fixture; il template a runner singolo è fuori da .github/workflows e non è registrato. Non cambia l’esito dell’audit del workflow main né costituisce prova sul vero account o sulla configurazione email.

@@ -38,3 +38,7 @@ Restano parziali la verifica su telefoni fisici e il recupero reale del propriet
 Vedi [DELIVERY_READINESS.md](DELIVERY_READINESS.md): richieste health e limiti dei log storici, HTTP 200 attuale da curl/Chromium attraverso la rete configurata, prova locale dei controlli complementari di integrità, requisiti esatti PHP mail senza richiesta di password SMTP, probe proprietario già in main e conseguenze da autorizzare solo dopo l’esito reale. Include matrice sintetica dei cinque punti e testo unico da sottoporre a SiteGround; nessun contatto o invio è stato eseguito automaticamente.
 
 Audit successivo del probe: [READ_ONLY_PROBE_AUDIT.md](READ_ONLY_PROBE_AUDIT.md). Il workflow completo non è limitato ai tre booleani: include altri metadati e runner di crosscheck. Nessun dispatch eseguito con il nuovo vincolo; account e configurazione email reale restano non verificati. Nessun ticket aperto.
+
+## Chiusura del lotto preparato
+
+Consegna dei cinque punti, anteprime, test e impedimenti residui in [FINAL_HANDOFF.md](FINAL_HANDOFF.md). Diagnostica minimale indipendente pronta e testata con dati fittizi in [READ_ONLY_READINESS.md](READ_ONLY_READINESS.md); restituisce tre booleani e soli stati mail. Nessuna esecuzione reale. Template single-runner fuori da .github/workflows, inattivo; nessuna registrazione o deploy. Le azioni esterne restano in attesa dell’utente, senza estendere il piano.

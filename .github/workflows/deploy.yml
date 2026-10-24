@@ -48,6 +48,8 @@ jobs:
           php -l scripts/bootstrap-admin.php
           php -l scripts/owner-recovery-status.php
           php -l scripts/prepare-owner-recovery.php
+          php -l scripts/read-only-readiness.php
+          python3 scripts/test-read-only-readiness.py
           python3 scripts/test-owner-recovery.py
           php -l scripts/siteground-cache.php
           python3 scripts/test-cache-purge.py

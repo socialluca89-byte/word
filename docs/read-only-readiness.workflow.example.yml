@@ -1,0 +1,36 @@
+# REVIEW TEMPLATE ONLY. Outside .github/workflows: not registered or executable by Actions.
+# Do not move/merge into main while its push would trigger the blocked production deploy.
+name: Private read-only readiness (single runner)
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_read_only:
+        description: 'Only account booleans and mail configuration states; no changes or email'
+        type: boolean
+        required: true
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: wordyland-production
+  cancel-in-progress: false
+jobs:
+  readiness:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/work' && inputs.confirm_read_only
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Read-only account and mail states
+        env:
+          SG_HOST: ${{ vars.SG_HOST }}
+          SG_USER: ${{ vars.SG_USER }}
+          SG_PORT: ${{ vars.SG_PORT }}
+          SG_PATH: ${{ vars.SG_PATH }}
+          SG_PRIVATE_KEY: ${{ secrets.SG_PRIVATE_KEY }}
+          SG_KEY_PASSPHRASE: ${{ secrets.SG_KEY_PASSPHRASE }}
+          SG_KNOWN_HOSTS: ${{ secrets.SG_KNOWN_HOSTS }}
+        run: bash scripts/read-only-readiness.sh --read-only
