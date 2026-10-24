@@ -10,10 +10,11 @@ Vincolo esplicito dell’utente: «home più chiara solo riorganizzata senza tog
 | Otto luoghi e missioni dell’isola | La mia isola; Casa, Animali, Colori, Kart, Calcio, Spazio, Oceano, Dinosauri | motion, adventures API, school |
 | Missioni e ripresa | Scheda Missioni, Da continuare, collegamento continua | resume API/browser, autonomy |
 | Sfide kart/calcio/spazio | Gioca con la classe, menu Sfida un compagno | presence, resume, adventures API |
-| Personaggi, accessori, compagni e premi | Il tuo personaggio, scheda Personaggi e premi | characters, rewards |
+| Personaggi, accessori, compagni e premi | Il tuo personaggio, scheda Personaggi e premi; anteprima gratuita, ritorno al relativo oggetto | characters, rewards, wardrobe |
 | Iscritti e presenza | Menu Iscritti e online | presence API/browser |
 | Creazione e link classe | Menu Crea classe; area adulto | classroom API, community |
-| Programma/schede dell’adulto | Account e progressi, strumenti della scheda personale | api, school |
+| Programma/schede dell’adulto | Account e progressi, strumenti della scheda personale; bozze conservate durante il riepilogo | api, school, parent-summary |
+| Riepilogo missioni dei propri profili | Account e progressi → Progressi nelle missioni, solo adulto proprietario | parent-summary API/browser |
 | Classifica privata e obiettivo classe | Scheda La tua classe | api, community |
 | Idee, bug e relativo stato | Menu Idee e bug | community API/browser |
 | Amministrazione | Menu Amministrazione, solo con ruolo abilitato | community API/browser |

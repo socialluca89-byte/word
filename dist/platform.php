@@ -44,6 +44,9 @@ function markPracticeReview(PDO $db,int $pid,string $word): void {
     runSql($db,'INSERT INTO practice_outcomes(profile_id,word,needs_review,review_at) VALUES (?,?,1,?) ON CONFLICT(profile_id,word) DO UPDATE SET needs_review=1,review_at=excluded.review_at',[$pid,$word,time()]);
 }
 
+function practiceReviewRows(PDO $db,int $pid): array {
+    return rows($db,'SELECT p.word,COALESCE(o.review_at,0) AS review_at FROM practice p LEFT JOIN practice_outcomes o ON o.profile_id=p.profile_id AND o.word=p.word WHERE p.profile_id=? AND (COALESCE(o.needs_review,0)=1 OR (p.wrong>0 AND (p.good-COALESCE(o.observed,0)+COALESCE(o.independent,0))<3)) ORDER BY review_at DESC,p.word',[$pid]);
+}
 function ownedProfile(PDO $db, int $account, mixed $profile): array {
     $p = one($db, 'SELECT * FROM profiles WHERE id=? AND account_id=?', [(int)$profile, $account]);
     if (!$p) fail('Scegli un profilo del tuo account.', 404);
@@ -178,10 +181,20 @@ function questSnapshot(array $quest): array {
 }
 
 require __DIR__ . '/arena.php';
-$platformActions = ['hub','pending-games','quest-resume','quest-start','quest-hint','quest-answer','buy','equip','study-save','study-file','study-remove','club-create','club-join','club-leave','rename-profile'];
+$platformActions = ['learning-summary','hub','pending-games','quest-resume','quest-start','quest-hint','quest-answer','buy','equip','study-save','study-file','study-remove','club-create','club-join','club-leave','rename-profile'];
 if (!in_array($action, $platformActions, true)) return;
+if($action==='learning-summary' && !in_array($accountRole,['adult','admin'],true))fail('Il riepilogo è riservato all’adulto che gestisce i propri profili.',403);
+if($action==='learning-summary' && $method!=='GET')fail('Metodo non consentito.',405);
 $p = ownedProfile($db, $id, $method === 'GET' ? ($_GET['profile'] ?? 0) : ($body['profile'] ?? 0));
 $pid = (int)$p['id'];
+if($method==='GET' && $action==='learning-summary') {
+    $totals=one($db,'SELECT COALESCE(SUM(independent),0) AS independent,COALESCE(SUM(assisted),0) AS assisted,COALESCE(SUM(corrected),0) AS corrected,COALESCE(SUM(observed),0) AS observed FROM practice_outcomes WHERE profile_id=?',[$pid]);
+    foreach($totals as $key=>$value)$totals[$key]=(int)$value;
+    $legacy=(int)one($db,'SELECT COALESCE(SUM(MAX(0,COALESCE(p.good,0)-COALESCE(o.observed,0))),0) AS n FROM practice p LEFT JOIN practice_outcomes o ON o.profile_id=p.profile_id AND o.word=p.word WHERE p.profile_id=?',[$pid])['n'];
+    $review=practiceReviewRows($db,$pid);
+    $balance=one($db,'SELECT coins,xp FROM wallets WHERE profile_id=?',[$pid]);
+    respond(['profile'=>$pid,'nickname'=>$p['nickname'],'scope'=>'owned-online-missions','totals'=>$totals,'legacyCorrect'=>$legacy,'reviewTotal'=>count($review),'reviewWords'=>array_column(array_slice($review,0,12),'word'),'completedMissions'=>(int)one($db,'SELECT COUNT(*) AS n FROM rewards WHERE profile_id=?',[$pid])['n'],'pendingMissions'=>(int)one($db,'SELECT COUNT(*) AS n FROM quests WHERE profile_id=? AND completed=0 AND created_at>=?',[$pid,time()-questLifetime()])['n'],'xp'=>(int)($balance['xp']??0),'coins'=>(int)($balance['coins']??0)]);
+}
 if($method==='POST'&&$action==='rename-profile') {
     $nickname=is_string($body['nickname']??null)?trim($body['nickname']):'';
     if(!$nickname||strlen($nickname)>80)fail('Scegli un soprannome breve.');
@@ -291,7 +304,7 @@ if ($method === 'POST' && $action==='quest-start') {
     }
     $unique=[];foreach($pool as $word)$unique[normalWord($word[0])]=$word; $pool=array_values($unique);
     shuffle($pool);
-    $review=array_column(rows($db,'SELECT p.word,COALESCE(o.review_at,0) AS review_at FROM practice p LEFT JOIN practice_outcomes o ON o.profile_id=p.profile_id AND o.word=p.word WHERE p.profile_id=? AND (COALESCE(o.needs_review,0)=1 OR (p.wrong>0 AND (p.good-COALESCE(o.observed,0)+COALESCE(o.independent,0))<3))',[$pid]),'review_at','word');
+    $review=array_column(practiceReviewRows($db,$pid),'review_at','word');
     usort($pool,fn($a,$b)=>((int)array_key_exists(normalWord($b[0]),$review)<=>(int)array_key_exists(normalWord($a[0]),$review))?:((int)($review[normalWord($b[0])]??0)<=>(int)($review[normalWord($a[0])]??0)));
     $selected=array_slice($pool,0,3);$questions=[];
     foreach($selected as $i=>$word) {

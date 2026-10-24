@@ -194,7 +194,7 @@ if [[ "$mode" == deploy ]]; then
       else
         live_error 'AUTOMATIC ROLLBACK FAILED - restore manually (docs/DEPLOYMENT.md)'
       fi
-      check_health || echo 'Site still unhealthy after rollback.' >&2
+      check_health || echo 'Public health could not be verified after rollback; see the diagnostic above. This alone does not establish a visitor outage.' >&2
     fi
     exit 1
   fi

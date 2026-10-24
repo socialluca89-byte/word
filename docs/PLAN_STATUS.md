@@ -11,10 +11,10 @@ Stato di riferimento: release live verificata `22f2d6028b87c0ae22029eaa211c148a7
 | Accesso, logout, cambio password e recupero | Flussi codice/password esistenti; alternativa email predisposta | API/browser sintetici PASS | Codice/password live; email non attivata, servono trasporto/mittente e consegna verificati |
 | Recupero proprietario Luca | Diagnostica/probe pronti; procedura assistita CLI preparata con conferma esplicita, mai automatica | Solo database fittizio PASS, inclusi rollback e conservazione di profili/premi | Stato reale non verificato: serve dispatch autenticato del probe o controllo personale su SiteGround; nessun reset automatico |
 | Home chiara, progressi e mobile | Tre destinazioni principali, ripresa e proposta di missione conservate | Quattro larghezze, screenshot, raggiungibilità principali PASS | Live 52122a9; nessuna funzione eliminata |
-| Varietà e ripasso guidato | Otto luoghi, tre sfide, temi didattici esistenti; nuova memoria aiuti e distinzione risposte autonome/corrette con aiuto | API/browser e CI PASS per aiuti/conteggi; ripasso degli errori recenti in verifica separata | Giochi, aiuti e conteggi live in 22f2d60; ripasso recente 77e071c testato, deploy bloccato da anti-bot e ripristinato a 22f2d60 |
-| Avatar e premi non punitivi | Sei personaggi, 48 premi; aiuti gratuiti e regole XP/monete conservate | Characters/rewards/learning PASS | Funzioni esistenti live |
-| Area adulto/docente e classe privata | Classi, iscritti/presenza, amministrazione, segnalazioni e classifica privata esistenti | API/browser con utenti fittizi PASS | Live; accesso proprietario effettivo dipende dal suo recupero |
-| Accessibilità e velocità | Testi grandi, audio su richiesta, spiegazioni errori, movimento ridotto; mappa caricata su richiesta | UX/learning/motion/performance PASS locali | Live in 22f2d60, incluse notifiche ospite identiche senza ricostruzione delle scene |
+| Varietà e ripasso guidato | Otto luoghi, tre sfide, temi didattici esistenti; nuova memoria aiuti e distinzione risposte autonome/corrette con aiuto | API/browser e CI PASS per aiuti/conteggi e ripasso recente; vedi esito deploy distinto | Giochi, aiuti e conteggi live in 22f2d60; ripasso recente 77e071c testato, deploy bloccato da anti-bot e ripristinato a 22f2d60 |
+| Avatar e premi non punitivi | Sei personaggi, 48 premi; anteprime gratuite anche degli oggetti non posseduti, focus tastiera conservato | Wardrobe/characters/rewards/learning PASS locali, con quattro viewport | Funzioni esistenti live; nuove anteprime su work, non pubblicate |
+| Area adulto/docente e classe privata | Strumenti esistenti conservati; aggiunto riepilogo delle missioni dei soli profili del proprio account | API parent-summary e browser sintetici PASS: autorizzazioni, sola lettura, cambio profilo, offline e bozze conservate | Area esistente live; nuovo riepilogo su work. Accesso proprietario effettivo ancora dipendente dal recupero |
+| Accessibilità e velocità | Testi grandi, audio su richiesta, spiegazioni errori, movimento ridotto; mappa caricata su richiesta; su work font facoltativi dopo il caricamento e comandi guardaroba più grandi | UX/learning/motion/performance PASS locali, anche con font remoto trattenuto | Live in 22f2d60, incluse notifiche ospite identiche senza ricostruzione delle scene |
 | Web app e offline | Installazione, aggiornamenti e ripasso offline pubblico | PWA/learning PASS | Live; API e dati account non vengono messi nella cache offline |
 | Qualità didattica delle alternative | Espressioni equivalenti non usate come risposte sbagliate; entrambe le forme conservate | Statici, API e regressione completa con school PASS locali | Pronto su work; non pubblicato finché il blocco hosting non è chiarito |
 
@@ -26,3 +26,9 @@ Stato di riferimento: release live verificata `22f2d6028b87c0ae22029eaa211c148a7
 4. Mantenere il recupero reale separato: nessun bootstrap, password nuova o nuovo servizio senza i requisiti già indicati.
 
 Le anteprime consultabili via GitHub sono in docs/review, con dati ospite fittizi. Non trattare i percorsi locali della sessione come link condivisibili. Non è disponibile uno strumento Library/upload in questo ambiente.
+
+## Incremento successivo su work
+
+Anteprime e riepilogo sono sviluppati e testati localmente; tutte le API e 17 suite browser distinte sono PASS nel blocco 11 di NIGHT_PROGRESS.md. Corrette anche dipendenza bloccante dai font e notifica obsoleta dopo un salvataggio confermato. La nuova CI remota non è ancora stata eseguita. Nessun nuovo accesso ai dati dei compagni: il riepilogo richiede adulto/admin e proprietà del profilo anche per l’amministratore globale. Gli strumenti docente esistenti non sono stati sostituiti.
+
+Restano parziali la verifica su telefoni fisici e il recupero reale del proprietario. Restano bloccati consegna email e pubblicazione per le dipendenze indicate. Non è corretto dichiarare tutti i punti completati o questi incrementi live.

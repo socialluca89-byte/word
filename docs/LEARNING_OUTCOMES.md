@@ -30,3 +30,9 @@ La migrazione aggiunge le due colonne soltanto se assenti, con controllo sotto l
 Nelle scelte multiple, hello/hi e le forme spaziali by/next to previste nelle scene non vengono usate come distrattori reciprocamente sbagliati. Restano entrambe disponibili come parole/frasi obiettivo, nelle missioni ospite/account e nelle sfide. Le alternative hanno significati distinti; il normale catalogo e il numero di funzioni non cambiano. Nelle prove di scrittura si allena la forma mostrata/ascoltata: la spiegazione riconosce l’equivalenza e indica la forma della scheda, invece di affermare che una posizione equivalente sia diversa.
 
 La regola è limitata alle equivalenze curate per questi esercizi; non tenta di giudicare automaticamente tutti i sinonimi inglesi. I test usano piccoli dizionari fittizi per verificare entrambe le forme come obiettivi e i punteggi delle sfide.
+
+## Riepilogo per l’adulto (work, non ancora live)
+
+Account e progressi → Progressi nelle missioni carica su richiesta i dati delle sole missioni online confermate del profilo scelto. Richiede ruolo adulto/admin e proprietà del profilo: non aggiunge visibilità sui compagni di classe. Il nuovo GET learning-summary è di sola lettura e non crea wallet o assegna premi.
+
+Mostra risposte autonome, aiutate, corrette dopo un errore, missioni complete/in pausa e fino a dodici parole da ripassare. Aiuto e correzione possono sovrapporsi: non sono voti né categorie da sommare. I successi precedenti senza il nuovo dettaglio sono indicati separatamente. Ospiti, offline e modalità classiche sono esclusi esplicitamente. Errori di rete cancellano il riepilogo obsoleto; risposte arrivate dopo un cambio profilo/account non vengono mostrate. Le bozze delle schede dell’adulto restano inalterate.

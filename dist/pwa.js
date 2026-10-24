@@ -1,7 +1,15 @@
 /* Install and update controls. No private data is stored by the service worker. */
 (()=>{
+ // Optional typography must never hold the first page load or offline play.
+ // Start after load; optional display keeps slow fonts from moving readable controls.
+ window.addEventListener('load',()=>setTimeout(()=>{
+  if(document.querySelector('link[data-wordyland-fonts]'))return;
+  const fonts=document.createElement('link');fonts.rel='stylesheet';fonts.dataset.wordylandFonts='optional';
+  fonts.href='https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@400;500;600;700&display=optional';
+  document.head.append(fonts);
+ },0),{once:true});
  const install=document.querySelector('#installApp'),help=document.querySelector('#installHelp'),status=document.querySelector('#appStatus'),update=document.querySelector('#appUpdate'),reload=document.querySelector('#updateApp');
- const workerURL='sw.js?v=d724e500abf4';
+ const workerURL='sw.js?v=e3614122e3a1';
  let prompt=null,registration=null,reloading=false;
  const standalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
  function installation(){install.hidden=standalone();if(standalone())help.hidden=true;install.textContent=prompt?'Installa WordyLand':'Come installare';}

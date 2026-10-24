@@ -26,7 +26,9 @@ const base=process.env.WORDYLAND_TEST_URL;assert(['localhost','127.0.0.1'].inclu
   await p.goto(base+'/#preposizioni');await p.locator('[data-lesson=catpositions]').click();q=await prepare(p);
   await p.route('**/api.php?action=quest-hint',route=>route.abort('failed'));await p.locator('#questHint').click();await p.locator('#questStatus').getByText(/salvataggio non è confermato/).waitFor();
   const answered=p.waitForResponse(response=>response.url().includes('action=quest-answer'));await correct(p,q);const result=await(await answered).json();assert.equal(result.independent,false);assert.equal(result.assisted,true);assert.equal(await p.evaluate(word=>stats[word].good,q.word),0,'Failed separate help write is carried with the answer');await p.unroute('**/api.php?action=quest-hint');
+  assert.equal(await p.locator('#questStatus').textContent(),'','Confirmed answer clears the old unsaved-help warning');
   await p.locator('#questNext').click();q=await prepare(p);
+  assert.equal(await p.locator('#questStatus').textContent(),'','A new question must not retain a previous unconfirmed-help warning');
   let committed=false;await p.route('**/api.php?action=quest-hint',async route=>{const response=await route.fetch();assert.equal(response.status(),200);committed=true;await route.abort('failed');});
   await p.locator('#questHint').click();await p.locator('#questStatus').getByText(/salvataggio non è confermato/).waitFor();assert(committed);await p.unroute('**/api.php?action=quest-hint');
   const pending=await p.evaluate(async id=>(await wordylandAccount.request('pending-games&profile='+id)).quests[0],profile.id);await p.close();

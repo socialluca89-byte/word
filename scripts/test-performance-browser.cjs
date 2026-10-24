@@ -4,6 +4,18 @@ const base=process.env.WORDYLAND_TEST_URL;assert(['localhost','127.0.0.1'].inclu
 (async()=>{
  const browser=await chromium.launch({executablePath:process.env.WORDYLAND_CHROMIUM||'/usr/bin/chromium',args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']}),results=[];
  try{
+  // Hold the optional external font response: the game must load independently.
+  const fontPage=await browser.newPage({reducedMotion:'reduce'});let releaseFonts;
+  const fontGate=new Promise(resolve=>releaseFonts=resolve);
+  await fontPage.route('https://fonts.googleapis.com/**',async route=>{await fontGate;await route.abort();});
+  const requestedFont=fontPage.waitForRequest(request=>request.url().startsWith('https://fonts.googleapis.com/'));
+  try{
+   await fontPage.goto(base,{waitUntil:'load',timeout:5000});
+   await fontPage.evaluate(()=>wordylandAccount.ready);
+   await fontPage.waitForFunction(()=>document.querySelector('link[data-wordyland-fonts]'));await requestedFont;
+   assert(await fontPage.locator('.startChoices a[href="#allenati"]').isVisible(),'Game is usable while fonts are unavailable');
+   console.log('Optional fonts: page load and main choices ready with remote font stylesheet held pending.');
+  }finally{releaseFonts();await fontPage.close();}
   for(const width of [390,1360]){
    const p=await browser.newPage({viewport:{width,height:844},reducedMotion:'reduce'}),errors=[];p.on('pageerror',e=>errors.push(e.message));
    await p.addInitScript(()=>{window.webglStarts=[];const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(type,...args){const context=original.call(this,type,...args);if(context&&['webgl','webgl2','experimental-webgl'].includes(type))window.webglStarts.push({canvas:this,at:performance.now()});return context;};});

@@ -87,3 +87,9 @@ GitHub annotations now distinguish a hosting anti-bot HTML challenge, an unavail
 See [ACCOUNT_RECOVERY.md](ACCOUNT_RECOVERY.md). Delivery is disabled unless a private hosting configuration explicitly enables it. Test transports and synthetic outboxes are unavailable in production. The read-only owner recovery diagnostic is CLI-only, is never installed in public_html and has not been run against production. Enabling mail or resetting the real owner requires the owner’s specific confirmation.
 
 Owner-recovery preparation remains a separate CLI-only operation requiring specific owner confirmation; ordinary deployment and probe never call it. See ACCOUNT_RECOVERY.md.
+
+## Hosting incident: verification is not an outage diagnosis
+
+Run 40128858645 returned SiteGround's `sgcaptcha` HTML at public health instead of the required JSON. The pipeline refused confirmation and verified rollback marker `22f2d6028b87c0ae22029eaa211c148a7964ef69`. This proves that the runner could not verify the API through that response; it does not prove that ordinary visitors were unable to play. A second intercepted check after rollback must remain described as unverified health, not as a confirmed visitor outage.
+
+Before another production attempt, obtain the hosting rule/reason and an approved resolution from SiteGround or the account owner using their existing Site Tools access. Correlate the failed run time 2026-10-24 20:16:49 UTC with the hosting security log; do not expose credentials, cookies or children's data. No authenticated hosting log access is available in this runtime, so the rule/root cause is not established. Do not disable protections, simulate challenge cookies, change egress to evade the rejection, weaken JSON/checksum checks, or trigger new main pushes merely to retry. Keep independently tested changes on work until there is relevant new evidence. Existing checks and automatic rollback stay in force.

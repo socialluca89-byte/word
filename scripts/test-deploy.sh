@@ -155,6 +155,8 @@ FAKE_HTML_CHALLENGE=1 GITHUB_ACTIONS=true bash scripts/deploy-siteground.sh depl
 grep -q 'anti-bot verification intercepted the health endpoint' "$root/out_challenge" || fail 'hosting challenge not diagnosed'
 grep -q "Automatic rollback completed; verified server marker: $parent" "$root/out_challenge" || fail 'rollback marker not confirmed'
 grep -q 'previous verified release' "$docroot/index.html" || fail 'challenge rollback lost previous files'
+grep -q 'Public health could not be verified after rollback' "$root/out_challenge" || fail 'uncertain public verification not distinguished'
+if grep -q 'Site still unhealthy' "$root/out_challenge"; then fail 'hosting challenge incorrectly presented as a visitor outage'; fi
 [[ $(cat "$docroot/.wordyland-managed") == "$parent" ]] || fail 'challenge rollback marker mismatch'
 
 echo '--- refuses unknown site without marker'
