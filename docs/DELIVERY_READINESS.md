@@ -52,6 +52,8 @@ Dopo tale conferma, serve un test di consegna autorizzato verso una casella dell
 
 ## 3. Luca: stato noto e recupero da autorizzare
 
+**Aggiornamento del vincolo di esecuzione:** il workflow probe completo comprende anche metadati tecnici e crosscheck macOS/Windows, non soltanto i tre booleani. La direttiva successiva consente il dispatch solo entro quel limite: non avviato. La precedente proposta operativa qui sotto resta un percorso tecnico esistente, non una richiesta attuale di avviarlo con questo vincolo. Vedi [READ_ONLY_PROBE_AUDIT.md](READ_ONLY_PROBE_AUDIT.md).
+
 La cronologia riporta il provisioning di `luca@perrone.it`; il codice originale prevedeva password casuale e istruzioni private. Lo stato attuale del vero database non è stato letto: esistenza account, ruolo admin e disponibilità del file non sono confermati. Non confondere il provisioning previsto o i test sintetici con la verifica attuale.
 
 Il probe già presente in main è il primo passo minimo: GitHub → Actions → Verify and deploy WordyLand → Run workflow → branch main → mode **probe**, non deploy/rollback. Usa l’SSH già configurato e restituisce solo `ownerExists`, `ownerIsAdmin`, `privateActivationAvailable`; non stampa password, hash, codici o link e non modifica l’account. Non è stato avviato da questa sessione: non è disponibile uno strumento autenticato per il dispatch. Non occorrono nuove chiavi.
@@ -76,7 +78,9 @@ Conferma specifica richiesta solo se il probe rende applicabile questa procedura
 
 API e 17 suite browser distinte del blocco funzionale PASS locali; dettaglio e fallimenti corretti in NIGHT_PROGRESS.md. La nuova CI remota non è partita perché il push è solo work. La consegna richiede poi CI remota, deploy autorizzato con health e file pubblici conformi, e verifica delle modifiche effettivamente live. Non dichiarare tutto completato.
 
-## Unica richiesta operativa pronta per l’utente
+## Richiesta operativa precedente, da aggiornare dopo audit
+
+Non inoltrare questa richiesta come già approvata: il nuovo limite del probe e l’autorizzazione al contatto SiteGround sono gestiti separatamente dal coordinatore, come documentato nell’audit.
 
 Dal tuo accesso attuale a SiteGround, apri un solo ticket con il testo qui sotto; in parallelo avvia il probe read-only già disponibile su GitHub come indicato sopra. Riporta in un’unica risposta l’esito del ticket, i tre booleani del probe e il mittente del dominio già verificato. Nessuna password, chiave, codice o link privato. Non serve cambiare cron, cache, chiavi o protezioni. Se il probe conferma admin e assenza file, aggiungi soltanto allora la conferma specifica di recupero riportata sopra; in caso contrario segui il ramo pertinente senza rigenerare nulla.
 

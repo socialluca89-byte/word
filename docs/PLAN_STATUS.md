@@ -36,3 +36,5 @@ Restano parziali la verifica su telefoni fisici e il recupero reale del propriet
 ## Diagnosi conclusiva delle dipendenze
 
 Vedi [DELIVERY_READINESS.md](DELIVERY_READINESS.md): richieste health e limiti dei log storici, HTTP 200 attuale da curl/Chromium attraverso la rete configurata, prova locale dei controlli complementari di integrità, requisiti esatti PHP mail senza richiesta di password SMTP, probe proprietario già in main e conseguenze da autorizzare solo dopo l’esito reale. Include matrice sintetica dei cinque punti e testo unico da sottoporre a SiteGround; nessun contatto o invio è stato eseguito automaticamente.
+
+Audit successivo del probe: [READ_ONLY_PROBE_AUDIT.md](READ_ONLY_PROBE_AUDIT.md). Il workflow completo non è limitato ai tre booleani: include altri metadati e runner di crosscheck. Nessun dispatch eseguito con il nuovo vincolo; account e configurazione email reale restano non verificati. Nessun ticket aperto.
