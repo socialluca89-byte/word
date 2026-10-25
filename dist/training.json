@@ -180,6 +180,76 @@
         "I",
         "D"
       ]
+    },
+    {
+      "id": "fg",
+      "letters": [
+        "F",
+        "G"
+      ]
+    },
+    {
+      "id": "hj",
+      "letters": [
+        "H",
+        "J"
+      ]
+    },
+    {
+      "id": "kl",
+      "letters": [
+        "K",
+        "L"
+      ]
+    },
+    {
+      "id": "mn",
+      "letters": [
+        "M",
+        "N"
+      ]
+    },
+    {
+      "id": "op",
+      "letters": [
+        "O",
+        "P"
+      ]
+    },
+    {
+      "id": "qr",
+      "letters": [
+        "Q",
+        "R"
+      ]
+    },
+    {
+      "id": "st",
+      "letters": [
+        "S",
+        "T"
+      ]
+    },
+    {
+      "id": "uv",
+      "letters": [
+        "U",
+        "V"
+      ]
+    },
+    {
+      "id": "wx",
+      "letters": [
+        "W",
+        "X"
+      ]
+    },
+    {
+      "id": "yz",
+      "letters": [
+        "Y",
+        "Z"
+      ]
     }
   ],
   "words": [

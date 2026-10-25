@@ -4,6 +4,9 @@ from pathlib import Path
 content=json.loads(Path('dist/training.json').read_text())
 assert [l['id'] for l in content['letters']]==list('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
 assert all(l['lower']==l['id'].lower() for l in content['letters'])
+assert len(content['blocks'])==13 and len({b['id'] for b in content['blocks']})==13
+assert sorted(letter for block in content['blocks'] for letter in block['letters'])==list('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+assert all(len(block['letters'])==2 and len(set(block['letters']))==2 for block in content['blocks'])
 assert {l['id']:(l['it'],l['en']) for l in content['letters'] if l['id'] in 'ABCEI'}=={'A':('a','ay'),'B':('bi','bee'),'C':('ci','see'),'E':('e','ee'),'I':('i','eye')}
 assert len(content['words'])==6 and len(content['stickers'])==3
 for word in content['words']:assert word['gap'].replace('___',word['id'])==word['phrase']
@@ -71,6 +74,14 @@ with tempfile.TemporaryDirectory(prefix='wordyland-training-') as tmp:
   while not s['done']:result,last=answer(s,helped=True);s=result['session']
   assert set(result['stickers'])=={'first','explore','return'};n=db.execute('SELECT COUNT(*) FROM training_stickers WHERE profile_id=?',(pid,)).fetchone()[0];req(a,'training-answer',last,ta);assert db.execute('SELECT COUNT(*) FROM training_stickers WHERE profile_id=?',(pid,)).fetchone()[0]==n==3
   assert snapshot()==old,'Training must not change game wallets, points, badges, credit, profiles or class standings'
+  seen=set()
+  for block in content['blocks']:
+   s=start('letters',block['id'])
+   while not s['done']:
+    question=s['question'];assert question['answer'] in block['letters'];assert set(question['choices'])==set(block['letters']);seen.add(question['answer']);s=answer(s,audioUsed=False)[0]['session']
+  assert seen==set('ABCDEFGHIJKLMNOPQRSTUVWXYZ'),'Every guided letter must be reachable, not only present in the explorer'
+  assert snapshot()==old,'Full alphabet paths keep old games/economy unchanged'
+  assert db.execute('SELECT COUNT(*) FROM training_stickers WHERE profile_id=?',(pid,)).fetchone()[0]==3
   tables=['training_daily','training_items','training_sessions','training_stickers','training_totals'];before=snapshot(tables);req(a,'training-progress&profile='+str(pid));assert snapshot(tables)==before
   req(b,f'training-state&profile={pid}&token='+s['token'],status=404);req(a,'training-hint',{'profile':pid,'token':s['token'],'step':999,'level':1},ta,409)
   db.execute('UPDATE accounts SET role="admin" WHERE username="training_parent_b"');db.commit();req(b,f'training-progress&profile={pid}',status=404);req(b,f'training-progress&profile={other}')
@@ -84,5 +95,5 @@ with tempfile.TemporaryDirectory(prefix='wordyland-training-') as tmp:
   req(a,'delete-profile',{'profile':pid,'password':password,'confirm':'ELIMINA'},ta)
   for table in ['training_sessions','training_daily','training_items','training_totals','training_stickers']:assert db.execute('SELECT COUNT(*) FROM '+table+' WHERE profile_id=?',(pid,)).fetchone()[0]==0,'Profile deletion must clean training data'
   assert req(b,f'training-state&profile={other}&token='+retained['token'])['session']['token']==retained['token']
-  print('Training API passed: curated content, owned privacy/roles/CSRF, no game economy/ranking mutations, finite idempotent stickers, wrong/hint/reply replay, second-device help, spaced-days fading, reading versus audio skill separation, six words/phrases, private report, expiry unchanged game rewards and owned-profile deletion cleanup.')
+  print('Training API passed: 26 guided letters in 13 blocks, curated content, owned privacy/roles/CSRF, no game economy/ranking mutations, finite idempotent stickers, wrong/hint/reply replay, second-device help, spaced-days fading, reading versus audio skill separation, six words/phrases, private report, expiry unchanged game rewards and owned-profile deletion cleanup.')
  finally:server.terminate();server.wait(timeout=5);log.close()

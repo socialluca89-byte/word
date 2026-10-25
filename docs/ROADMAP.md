@@ -119,3 +119,5 @@ Prossima azione concreta: ottenere versione Android/browser e accesso al corrett
 ## Avanzamento del primo lotto dopo il via dell'utente
 
 Compatibilità applicativa sviluppata/testata su work: mappa leggera con tutte le destinazioni quando manca WebGL/API di scena, avviso di mancato caricamento e controlli browser aggiuntivi. [Riscontri e test](COMPATIBILITY_REVIEW.md). Il punto1 resta **parziale**: ancora necessari verifica hosting e prova tablet; non è una nuova pubblicazione. Le regressioni di classe/sfida, progressi, premi, PWA e Allenamento sono passate senza introdurre funzioni duplicate o cambiare accessi. I punti2–8 non diventano automaticamente completati per il solo superamento di queste regressioni.
+
+Registro operativo dopo il consenso: [ROADMAP_EXECUTION](ROADMAP_EXECUTION.md). Estesi i blocchi guidati di Allenamento a13 per coprire26 lettere, con primi passi visibili e resto espandibile; API/browser verificano copertura e ripresa senza alterare i premi dei giochi. Anche questa estensione è solo work. Pubblicazione, audio reale, tablet e recuperi effettivi restano separati dal codice testato.
