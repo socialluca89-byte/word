@@ -4,7 +4,7 @@ Avviata dopo il consenso dell'utente a procedere dal punto1 ai successivi. Tutto
 
 | Punto della consegna all'utente | Risultato effettivo | Da completare / dipendenza |
 | --- | --- | --- |
-| 1 Affidabilità/tablet | Corretto e provato fallback mappa:0→8 luoghi senza WebGL; observer/animazioni facoltativi; avviso di avvio indipendente. Diagnosi HTTP/HTTPS già documentata | SiteGround: spiegare/correggere risposte di verifica sul percorso legittimo; certificato/HTTPS Enforce da verificare. Android/browser e prova tablet mancanti. Non chiamarlo risolto |
+| 1 Affidabilità/tablet | Corretto e provato fallback mappa:0→8 luoghi senza WebGL; observer/animazioni facoltativi; avviso di avvio indipendente. Diagnosi HTTP/HTTPS già documentata | SiteGround: spiegare/correggere risposte di verifica sul percorso legittimo; certificato/HTTPS Enforce da verificare. Android/browser e prova tablet rimandati su richiesta dell’utente. Non chiamarlo risolto |
 | 2 Account | Recupero email, recupero proprietario e diagnostica minima già predisposti; verifiche sintetiche e di privacy. Nessun reset/provisioning reale | Accesso autenticato autorizzato al contesto WordyLand, stato reale Luca; consegna email/mittente e attivazione da verificare. Nessuna chiave/password in chat |
 | 3 Allenamento/Spelling | Primo modulo precedente conservato; esteso a13 blocchi/26 lettere con presentazione graduale, Y/Z riprendibile; zero nuovi punti/monete o adesivi duplicati | Audio sul dispositivo e rilascio controllato; non è curriculum completo. Espansioni di lessico/fonemi richiedono set revisionati e audio affidabile |
 | 4 Classe/sfide | Regressioni di iscrizione, link, roster privato/online, inviti/annullamento, sfida chiusa/riaperta con domanda/punti e secondo dispositivo | Prova pilota sul sito dopo sblocco; verificare segnalazioni d'uso senza spostamenti automatici o lettura alunni |
@@ -15,4 +15,8 @@ Avviata dopo il consenso dell'utente a procedere dal punto1 ai successivi. Tutto
 
 Per il dettaglio test per lotto vedere COMPATIBILITY_REVIEW.md e NIGHT_PROGRESS.md, non sommare vecchie suite e chiamarle tutte eseguite sull'ultimo commit. Le verifiche sintetiche non confermano consegna email, pronuncia o stato account del proprietario.
 
-Prossima azione esterna concreta: ottenere versione Android/browser (domanda già inviata) e far verificare dal corretto contesto SiteGround i riscontri pubblici del25ottobre. Non è una richiesta di riconfermare il piano; mancano informazioni/accessi tecnici che il codice locale non può sostituire. Il coordinatore gestisce il contatto hosting già autorizzato: nessun ticket duplicato.
+Aggiornamento utente: Chrome/tablet si verifica più avanti; non riproporre la domanda o fermare il lavoro indipendente. Resta da far verificare dal corretto contesto SiteGround i riscontri pubblici del25ottobre. Non è una richiesta di riconfermare il piano; mancano informazioni/accessi tecnici che il codice locale non può sostituire. Il coordinatore gestisce il contatto hosting già autorizzato: nessun ticket duplicato.
+
+## Incremento sfide dopo il rinvio del tablet
+
+Pausa disponibile dopo feedback, recupero con lettura prima di un nuovo tentativo in caso di conferma persa, distinzione del conflitto con secondo dispositivo e pulizia audio/scena. Vedi [DUEL_RELIABILITY](DUEL_RELIABILITY.md). Regole/punteggi/permessi e account reali invariati; solo work, non pubblicato.
