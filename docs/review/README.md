@@ -28,3 +28,7 @@ La stessa fase con una lettera scelta: dopo la correzione il focus resta visibil
 - [Stessa lettera, due lingue, 390px](spelling-letter-390.png): voci **simulate** nel test; non dimostra la pronuncia reale del telefono.
 
 Contenuti, progressi privati, premi separati, test e limiti in [TRAINING_SPELLING](../TRAINING_SPELLING.md).
+
+## Primo lotto roadmap: compatibilità — work, non live
+
+[Mappa leggera senza WebGL, 390px](lightweight-map-390.png): otto destinazioni ancora raggiungibili in un contesto ospite fittizio. Non è un'emulazione del tablet originale. [Prove e limiti](../COMPATIBILITY_REVIEW.md).

@@ -115,3 +115,7 @@ Da completare per l'uso reale:
 Segnali da osservare nel pilota, senza attivare analytics nuovi: il bambino trova come iniziare e riprendere, comprende un errore, distingue progressivamente lettere/parole con meno aiuti in date diverse; il genitore trova il profilo e interpreta il progresso; sfide e salvataggi restano affidabili. Numeri aggregati solo se già disponibili e autorizzati. Non usare classifiche, tempo trascorso o accessi giornalieri come misura principale dell'apprendimento.
 
 Prossima azione concreta: ottenere versione Android/browser e accesso al corretto contesto SiteGround tramite il coordinatore; chiudere la diagnosi prima di qualunque rilascio. In parallelo sono possibili revisione dei contenuti e verifiche locali del codice già pronto, senza nuove funzionalità indiscriminate.
+
+## Avanzamento del primo lotto dopo il via dell'utente
+
+Compatibilità applicativa sviluppata/testata su work: mappa leggera con tutte le destinazioni quando manca WebGL/API di scena, avviso di mancato caricamento e controlli browser aggiuntivi. [Riscontri e test](COMPATIBILITY_REVIEW.md). Il punto1 resta **parziale**: ancora necessari verifica hosting e prova tablet; non è una nuova pubblicazione. Le regressioni di classe/sfida, progressi, premi, PWA e Allenamento sono passate senza introdurre funzioni duplicate o cambiare accessi. I punti2–8 non diventano automaticamente completati per il solo superamento di queste regressioni.

@@ -31,9 +31,18 @@ function showAction(host,kind){
 const palette={sun:[0xffcb55,0xff806d,0x70cfc0],ocean:[0x58bfee,0x8c83eb,0x57d6bd],berry:[0xef87b7,0xac83ed,0xffce79],forest:[0x4fa978,0xb2d86c,0xdfa463],candy:[0xf29fc5,0x9e8ce8,0x8bdad0]};
 function mount(host,options={}){
  if(!host)return {dispose(){},update(){},rotate(){}};
- function fallback(){host.dataset.render='fallback';return {dispose(){clearFeedback(host);},action(){if(options.preview)showAction(host,options.kind);},react(type){feedback(host,type,options.kind);},update(){},rotate(){}};}
+ function fallback(){
+  host.dataset.render='fallback';
+  let choices=null;
+  if((options.kind||'island')==='island'&&options.onSelect){
+   choices=document.createElement('nav');choices.className='islandFallbackChoices';choices.setAttribute('aria-label','Scegli un luogo nella mappa semplificata');
+   Object.entries(places).forEach(([id,place])=>{const b=document.createElement('button');b.type='button';b.dataset.place=id;b.textContent=place.icon+' '+place.name;b.setAttribute('aria-pressed',String(id===options.selected));b.onclick=()=>options.onSelect(id);choices.append(b);});host.append(choices);
+  }
+  return {dispose(){clearFeedback(host);choices?.remove();},action(){if(options.preview)showAction(host,options.kind);},react(type){feedback(host,type,options.kind);},update(next={}){if(next.selected)choices?.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.place===next.selected)));},rotate(){}};
+ }
  const T=window.THREE;
- if(!T)return fallback();
+ // Missing scene-only APIs must not prevent the games or the lightweight map.
+ if(!T||!window.ResizeObserver||!window.IntersectionObserver)return fallback();
  let renderer;
  try{renderer=new T.WebGLRenderer({antialias:true,alpha:true,powerPreference:'low-power'});}catch{return fallback();}
  host.dataset.render='3d';

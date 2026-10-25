@@ -50,3 +50,7 @@ Riprodotta e corretta la perdita del focus nella composizione di lettere delle m
 ## Nuovo primo percorso autorizzato: Allenamento e Spelling
 
 Implementato il primo modulo di basi, senza prerequisiti: lettere IT/EN prima delle parole, sei parole e piccole frasi originali, aiuti/ricomposizione/ripasso, adesivi finiti senza punti/monete/classifica, progressi genitori solo per profili autorizzati. API/browser dedicati e regressioni locali; dettaglio in [TRAINING_SPELLING.md](TRAINING_SPELLING.md) e blocco 17 di NIGHT_PROGRESS.md. Nessun livello Cambridge dedotto, audio reale da controllare sul dispositivo, nessun progresso reale letto o inventato. Preparato su work, non online.
+
+## Esecuzione roadmap: primo lotto compatibilità
+
+Dopo il via dell'utente alla roadmap, corretto il fallback senza WebGL: da0 a8 luoghi selezionabili, senza perdere avvio missioni/ritorno. Observer e animazioni facoltative degradano senza eccezioni; pagina con avviso leggibile per script mancanti/non interpretabili o API essenziali assenti. Vedi [COMPATIBILITY_REVIEW](COMPATIBILITY_REVIEW.md) per i sette scenari, nove regressioni browser e limiti. Nessuna prova del tablet reale o risoluzione automatica di SiteGround; punto1 parziale, codice solo work. Nessun nuovo recupero, email, account reale, merge o deploy.
