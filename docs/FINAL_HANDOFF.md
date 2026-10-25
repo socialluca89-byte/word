@@ -41,3 +41,9 @@ La diagnostica e il template di runner singolo sono descritti in [READ_ONLY_READ
 ## Incremento successivo del 25 ottobre, ancora non live
 
 Vedi [LETTER_COMPOSITION_REVIEW.md](LETTER_COMPOSITION_REVIEW.md): composizione delle lettere nelle missioni corretta da tastiera, testo/spazi accessibili, focus visibile su telefono e guardie di affidabilità. Confronto prima/dopo e nuove prove di annullamento, Indietro/Avanti, doppio click e risposta persa. Questo incremento non cambia l’ultimo live verificato e non sblocca automaticamente hosting, email o recupero proprietario.
+
+## Primo modulo Allenamento e Spelling del 25 ottobre
+
+Sviluppato su work, separato dai giochi: nomi delle lettere IT/EN, alfabeto esplorabile, blocchi da due (A/E, B/C, I/D), sei parole e piccole frasi, composizione/recall, tre adesivi personali finiti e progressi privati per l’adulto proprietario. Nessuna moneta, XP, classifica, voce registrata o nuovo accesso automatico a profili altrui. [Consegna tecnica e limiti](TRAINING_SPELLING.md), [anteprime](review/README.md).
+
+Nomi di lettere, non fonemi: voci locali del dispositivo e controllo adulto prima delle prove di ascolto; senza voce valida l’attività è dichiarata lettura. I test di sintesi sono simulati e non certificano l’audio reale. Non è una preparazione Cambridge completa né una diagnosi/livello assegnato. Nessun deploy; i tre impedimenti esterni rimangono invariati.

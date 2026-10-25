@@ -46,3 +46,7 @@ Consegna dei cinque punti, anteprime, test e impedimenti residui in [FINAL_HANDO
 ## Lotto successivo del 25 ottobre
 
 Riprodotta e corretta la perdita del focus nella composizione di lettere delle missioni: banca stabile, correzione/ritorno alla tessera, nomi accessibili, stato leggibile e guardie durante il salvataggio. Nuove prove per Indietro/Avanti, annullamento, doppio click e ripresa interrotta; anteprime prima/dopo in [LETTER_COMPOSITION_REVIEW.md](LETTER_COMPOSITION_REVIEW.md). Solo work; nessuna destinazione o funzione rimossa, nessuna variazione ai punti. Risultati delle regressioni nel blocco 15 di NIGHT_PROGRESS.md.
+
+## Nuovo primo percorso autorizzato: Allenamento e Spelling
+
+Implementato il primo modulo di basi, senza prerequisiti: lettere IT/EN prima delle parole, sei parole e piccole frasi originali, aiuti/ricomposizione/ripasso, adesivi finiti senza punti/monete/classifica, progressi genitori solo per profili autorizzati. API/browser dedicati e regressioni locali; dettaglio in [TRAINING_SPELLING.md](TRAINING_SPELLING.md) e blocco 17 di NIGHT_PROGRESS.md. Nessun livello Cambridge dedotto, audio reale da controllare sul dispositivo, nessun progresso reale letto o inventato. Preparato su work, non online.

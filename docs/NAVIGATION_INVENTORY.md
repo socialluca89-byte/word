@@ -6,6 +6,7 @@ Vincolo esplicito dell’utente: «home più chiara solo riorganizzata senza tog
 
 | Destinazione | Accesso attuale | Regressioni pertinenti |
 | --- | --- | --- |
+| Allenamento e Spelling, aggiunta autorizzata | Menu Allenamento e Spelling; scheda dedicata in Allenati; ritorno a tutti gli esercizi | training, spelling, navigation |
 | Esercizi e temi, incluse preposizioni | Allenati, scheda Esercizi e temi, collegamento Preposizioni | navigation, ux, learning, school |
 | Otto luoghi e missioni dell’isola | La mia isola; Casa, Animali, Colori, Kart, Calcio, Spazio, Oceano, Dinosauri | motion, adventures API, school |
 | Missioni e ripresa | Scheda Missioni, Da continuare, collegamento continua | resume API/browser, autonomy |
@@ -13,6 +14,7 @@ Vincolo esplicito dell’utente: «home più chiara solo riorganizzata senza tog
 | Personaggi, accessori, compagni e premi | Il tuo personaggio, scheda Personaggi e premi; anteprima gratuita, ritorno al relativo oggetto | characters, rewards, wardrobe |
 | Iscritti e presenza | Menu Iscritti e online | presence API/browser |
 | Creazione e link classe | Menu Crea classe; area adulto | classroom API, community |
+| Progressi Allenamento / Spelling | Account e progressi → progressi privati, solo adulto proprietario; nessun legame genitore-alunno automatico | training API/browser, spelling |
 | Programma/schede dell’adulto | Account e progressi, strumenti della scheda personale; bozze conservate durante il riepilogo | api, school, parent-summary |
 | Riepilogo missioni dei propri profili | Account e progressi → Progressi nelle missioni, solo adulto proprietario | parent-summary API/browser |
 | Classifica privata e obiettivo classe | Scheda La tua classe | api, community |

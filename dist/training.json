@@ -1,0 +1,258 @@
+{
+  "version": 1,
+  "title": "Piccoli passi",
+  "letters": [
+    {
+      "id": "A",
+      "lower": "a",
+      "it": "a",
+      "en": "ay"
+    },
+    {
+      "id": "B",
+      "lower": "b",
+      "it": "bi",
+      "en": "bee"
+    },
+    {
+      "id": "C",
+      "lower": "c",
+      "it": "ci",
+      "en": "see"
+    },
+    {
+      "id": "D",
+      "lower": "d",
+      "it": "di",
+      "en": "dee"
+    },
+    {
+      "id": "E",
+      "lower": "e",
+      "it": "e",
+      "en": "ee"
+    },
+    {
+      "id": "F",
+      "lower": "f",
+      "it": "effe",
+      "en": "ef"
+    },
+    {
+      "id": "G",
+      "lower": "g",
+      "it": "gi",
+      "en": "gee"
+    },
+    {
+      "id": "H",
+      "lower": "h",
+      "it": "acca",
+      "en": "aitch"
+    },
+    {
+      "id": "I",
+      "lower": "i",
+      "it": "i",
+      "en": "eye"
+    },
+    {
+      "id": "J",
+      "lower": "j",
+      "it": "i lunga",
+      "en": "jay"
+    },
+    {
+      "id": "K",
+      "lower": "k",
+      "it": "cappa",
+      "en": "kay"
+    },
+    {
+      "id": "L",
+      "lower": "l",
+      "it": "elle",
+      "en": "el"
+    },
+    {
+      "id": "M",
+      "lower": "m",
+      "it": "emme",
+      "en": "em"
+    },
+    {
+      "id": "N",
+      "lower": "n",
+      "it": "enne",
+      "en": "en"
+    },
+    {
+      "id": "O",
+      "lower": "o",
+      "it": "o",
+      "en": "oh"
+    },
+    {
+      "id": "P",
+      "lower": "p",
+      "it": "pi",
+      "en": "pee"
+    },
+    {
+      "id": "Q",
+      "lower": "q",
+      "it": "cu",
+      "en": "cue"
+    },
+    {
+      "id": "R",
+      "lower": "r",
+      "it": "erre",
+      "en": "ar"
+    },
+    {
+      "id": "S",
+      "lower": "s",
+      "it": "esse",
+      "en": "ess"
+    },
+    {
+      "id": "T",
+      "lower": "t",
+      "it": "ti",
+      "en": "tee"
+    },
+    {
+      "id": "U",
+      "lower": "u",
+      "it": "u",
+      "en": "you"
+    },
+    {
+      "id": "V",
+      "lower": "v",
+      "it": "vu",
+      "en": "vee"
+    },
+    {
+      "id": "W",
+      "lower": "w",
+      "it": "doppia vu",
+      "en": "double you"
+    },
+    {
+      "id": "X",
+      "lower": "x",
+      "it": "ics",
+      "en": "ex"
+    },
+    {
+      "id": "Y",
+      "lower": "y",
+      "it": "ipsilon",
+      "en": "why"
+    },
+    {
+      "id": "Z",
+      "lower": "z",
+      "it": "zeta",
+      "en": "zed"
+    }
+  ],
+  "blocks": [
+    {
+      "id": "ae",
+      "letters": [
+        "A",
+        "E"
+      ]
+    },
+    {
+      "id": "bc",
+      "letters": [
+        "B",
+        "C"
+      ]
+    },
+    {
+      "id": "id",
+      "letters": [
+        "I",
+        "D"
+      ]
+    }
+  ],
+  "words": [
+    {
+      "id": "cat",
+      "meaning": "gatto",
+      "emoji": "🐈",
+      "topic": "animali",
+      "phrase": "I see a cat.",
+      "phraseMeaning": "Vedo un gatto.",
+      "gap": "I see a ___."
+    },
+    {
+      "id": "pen",
+      "meaning": "penna",
+      "emoji": "🖊️",
+      "topic": "scuola",
+      "phrase": "I have a pen.",
+      "phraseMeaning": "Ho una penna.",
+      "gap": "I have a ___."
+    },
+    {
+      "id": "dog",
+      "meaning": "cane",
+      "emoji": "🐕",
+      "topic": "animali",
+      "phrase": "I see a dog.",
+      "phraseMeaning": "Vedo un cane.",
+      "gap": "I see a ___."
+    },
+    {
+      "id": "sun",
+      "meaning": "sole",
+      "emoji": "☀️",
+      "topic": "quotidiano",
+      "phrase": "The sun is yellow.",
+      "phraseMeaning": "Il sole è giallo.",
+      "gap": "The ___ is yellow."
+    },
+    {
+      "id": "book",
+      "meaning": "libro",
+      "emoji": "📕",
+      "topic": "scuola",
+      "phrase": "I have a book.",
+      "phraseMeaning": "Ho un libro.",
+      "gap": "I have a ___."
+    },
+    {
+      "id": "red",
+      "meaning": "rosso",
+      "emoji": "🔴",
+      "topic": "colori",
+      "phrase": "The ball is red.",
+      "phraseMeaning": "La palla è rossa.",
+      "gap": "The ball is ___."
+    }
+  ],
+  "stickers": [
+    {
+      "id": "first",
+      "icon": "🌱",
+      "name": "Il primo piccolo passo"
+    },
+    {
+      "id": "explore",
+      "icon": "🦋",
+      "name": "Quattro scoperte"
+    },
+    {
+      "id": "return",
+      "icon": "🌈",
+      "name": "Nuove esplorazioni"
+    }
+  ]
+}

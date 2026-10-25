@@ -214,6 +214,7 @@ $id = userId();
 if ($accountRole==='learner' && in_array($action,['create-profile','rename-profile','delete-profile','club-create','club-join','club-leave','study-save','study-remove'],true)) fail('Questa operazione è riservata all’adulto che gestisce i profili.',403);
 define('WORDYLAND_BOOTSTRAPPED', true);
 require __DIR__ . '/platform.php';
+require __DIR__ . '/training.php';
 require __DIR__ . '/community.php';
 if ($method === 'POST' && $action === 'change-password') {
     limitAttempts($db,'change-password:'.$id,10);
