@@ -97,3 +97,9 @@ body[data-play]:not([data-play=""]) header .tag{display:none}.questHub #duelStag
 
 .characterPlay p,.characterPlay>span{font-size:17px;line-height:1.55}
 .characterPlay [data-character-play]{font-size:18px;min-height:48px}
+/* Letter composition: visible keyboard position and clear filled/empty slots. */
+.questHub #questBuildStatus{font-size:20px;line-height:1.5;color:#365b49;margin:16px 0}
+.questHub #questSlots button[data-filled=false]{border:2px dashed #b8b4ce;background:#f6f5fa;opacity:.65;cursor:default}
+.questHub #questSlots button[data-filled=true]{background:#ebe4ff;border:2px solid #7961be;color:#453274}
+.questHub #questTiles button:disabled{opacity:.38;cursor:default}
+.questHub #questSlots button:focus-visible,.questHub #questTiles button:focus-visible,.questHub #checkQuest:focus-visible{outline:4px solid #5140a0;outline-offset:3px}

@@ -12,3 +12,10 @@ La release grafica è `52122a9`; il deploy verificato è https://github.com/soci
 - [Anteprima gratuita personaggio, telefono 390×844](wardrobe-preview-390.png)
 
 Schermata ospite fittizia: un oggetto non posseduto si può vedere senza spendere monete. Il testo distingue l’anteprima dal personaggio effettivamente usato nelle avventure. La pubblicazione di questo incremento resta sospesa per il blocco hosting documentato in PLAN_STATUS.md; la schermata non rappresenta la release live.
+
+## Lotto lettere — preparato su work, non live
+
+- [Lettere prima, 390px](tiles-before-390.png)
+- [Lettere dopo, 390px](tiles-after-390.png)
+
+La stessa fase con una lettera scelta: dopo la correzione il focus resta visibile sulla prossima tessera, le caselle vuote sono distinte e il progresso è leggibile. Solo progressi ospite fittizi. Riproduzione e test in [LETTER_COMPOSITION_REVIEW](../LETTER_COMPOSITION_REVIEW.md).

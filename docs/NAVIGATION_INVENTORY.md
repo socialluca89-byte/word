@@ -25,6 +25,7 @@ Vincolo esplicito dell’utente: «home più chiara solo riorganizzata senza tog
 | Ripasso offline | Collegamento Ripasso offline, offline.html | pwa, learning |
 | Sei modalità classiche (journey/write/build/match/paper/look) e scelta del mondo | Sezione di ripasso e comandi dei mondi | learning, school |
 | Audio, aiuti, pausa e movimento ridotto | Comandi dell’esercizio e della scena | learning, motion, autonomy |
+| Composizione di lettere nelle missioni | Banca delle tessere, caselle per togliere una lettera, Controlla; tastiera e touch | tiles, learning, resume |
 
 I menu dell’area assistenza possono essere raccolti in un pannello, ma devono restare apribili. Una destinazione protetta può richiedere l’accesso o il ruolo appropriato: la riorganizzazione non concede nuovi privilegi e non deve cancellare l’ingresso alla funzione. Il recupero email resta configurabile ma non attivato; non presentarlo come servizio funzionante senza verifica reale del trasporto.
 

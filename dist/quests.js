@@ -207,14 +207,14 @@
       work.querySelectorAll('[data-answer]').forEach(b=>b.onclick=()=>submitAnswer(options[Number(b.dataset.answer)][0],b));
     }else if(q.kind==='build'){
       tiles=shuffle([...q.word].map((char,id)=>({char,id})));picked=[];
-      work.innerHTML+='<div id="questSlots" class="questSlots"></div><div id="questTiles" class="questTiles"></div><p class="hint">Tocca una lettera per inserirla, una casella per correggere. ␣ indica uno spazio.</p><button class="primary" id="checkQuest">Controlla ✓</button>';
+      work.innerHTML+='<div id="questSlots" class="questSlots" role="group" aria-label="Parola da comporre"></div><div id="questTiles" class="questTiles" role="group" aria-label="Lettere disponibili"></div><p id="questBuildStatus" role="status" aria-live="polite" aria-atomic="true"></p><p class="hint">Tocca una lettera per inserirla, una casella per correggere. ␣ indica uno spazio.</p><button class="primary" id="checkQuest">Controlla ✓</button>';
       drawTiles();work.querySelector('#checkQuest').onclick=()=>submitAnswer(picked.map(x=>x.char).join(''));
     }else{
       work.innerHTML+=(['missing','gap'].includes(q.kind)?'<div class="questWord">'+esc(q.mask)+'</div>':'')+'<form id="questAnswerForm"><label for="questAnswer">'+(q.kind==='missing'?'La lettera mancante':q.kind==='gap'?'La parola o il gruppo di parole mancante':'Scrivi in inglese')+'</label><input id="questAnswer" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" '+(q.kind==='missing'?'maxlength="1"':'maxlength="100"')+' required><button class="primary">Controlla ✓</button></form>';
       work.querySelector('form').onsubmit=e=>{e.preventDefault();submitAnswer(work.querySelector('input').value);};
     }
     actions.innerHTML='<button class="audio" id="questHint">💡 Un aiuto · sempre gratis</button><div id="questHelp" hidden class="questWord">'+esc(q.word)+'</div>';
-    work.querySelector('input,button')?.focus({preventScroll:true});
+    work.querySelector('input:not(:disabled),button:not(:disabled)')?.focus({preventScroll:true});
     actions.querySelector('button').onclick=()=>{
       const hint=actions.querySelector('#questHelp');hint.hidden=!hint.hidden;question.assisted=true;
       if(!profile.id){persistGuestMission();return;}
@@ -227,11 +227,26 @@
     };
   }
   function drawTiles(){
-    const work=root.querySelector('#questWork');
-    work.querySelector('#questSlots').innerHTML=[...question.word].map((_,i)=>'<button data-slot="'+i+'" aria-label="Casella '+(i+1)+'">'+esc(picked[i]?.char===' '?'␣':picked[i]?.char||'')+'</button>').join('');
-    work.querySelector('#questTiles').innerHTML=tiles.map(t=>'<button data-tile="'+t.id+'" '+(picked.some(x=>x.id===t.id)?'disabled':'')+'>'+esc(t.char===' '?'␣':t.char)+'</button>').join('');
-    work.querySelectorAll('[data-tile]').forEach(b=>b.onclick=()=>{picked.push(tiles.find(t=>t.id===Number(b.dataset.tile)));drawTiles();});
-    work.querySelectorAll('[data-slot]').forEach(b=>b.onclick=()=>{picked.splice(Number(b.dataset.slot),1);drawTiles();});
+    const work=root.querySelector('#questWork'),bank=work.querySelector('#questTiles');
+    const spoken=char=>char===' '?'Spazio':'Lettera '+char.toUpperCase();
+    work.querySelector('#questSlots').innerHTML=[...question.word].map((_,i)=>'<button type="button" data-slot="'+i+'" data-filled="'+Boolean(picked[i])+'" '+(!picked[i]?'disabled':'')+' aria-label="'+(picked[i]?'Togli '+esc(picked[i].char===' '?'lo spazio':'la lettera '+picked[i].char.toUpperCase())+' dalla casella '+(i+1):'Casella '+(i+1)+' vuota')+'">'+esc(picked[i]?.char===' '?'␣':picked[i]?.char||'')+'</button>').join('');
+    // Keep bank nodes stable: rebuilding them discards keyboard focus after every letter.
+    if(!bank.children.length){
+      bank.innerHTML=tiles.map((t,i)=>'<button type="button" data-tile="'+t.id+'" aria-label="'+esc(spoken(t.char))+', tessera '+(i+1)+'">'+esc(t.char===' '?'␣':t.char)+'</button>').join('');
+      bank.querySelectorAll('[data-tile]').forEach(button=>button.onclick=()=>{
+        const index=tiles.findIndex(t=>t.id===Number(button.dataset.tile)),tile=tiles[index];
+        if(busy||!tile||picked.some(t=>t.id===tile.id))return;
+        picked.push(tile);drawTiles();
+        const next=[...tiles.slice(index+1),...tiles.slice(0,index)].find(t=>!picked.some(p=>p.id===t.id));
+        (next?bank.querySelector('[data-tile="'+next.id+'"]'):work.querySelector('#checkQuest')).focus();
+      });
+    }
+    bank.querySelectorAll('[data-tile]').forEach(button=>{button.disabled=picked.some(t=>t.id===Number(button.dataset.tile));});
+    work.querySelectorAll('[data-slot]:not(:disabled)').forEach(button=>button.onclick=()=>{
+      if(busy)return;const index=Number(button.dataset.slot),removed=picked[index];if(!removed)return;
+      picked.splice(index,1);drawTiles();bank.querySelector('[data-tile="'+removed.id+'"]')?.focus();
+    });
+    work.querySelector('#questBuildStatus').textContent=(picked.length?'Parola: '+picked.map(t=>t.char===' '?'spazio':t.char).join(' · ')+'. ':'')+picked.length+' di '+tiles.length+' tessere. '+(picked.length===tiles.length?'Ora premi Controlla.':'');
   }
   async function submitAnswer(answer,chosenButton=null){
     if(busy)return;if(!answer.trim()){say('Inserisci la risposta oppure usa Un aiuto.');return;}busy=true;

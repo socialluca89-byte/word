@@ -17,6 +17,18 @@ const base=process.env.WORDYLAND_TEST_URL||'http://127.0.0.1:8093';assert(['127.
  // A quiet status refresh must keep the chosen topic and game.
  await b.locator('[data-ready-toggle]').uncheck();await a.locator('.rivalCard .presence-online').waitFor();assert.equal(await a.locator('#duelTopic').inputValue(),'colors');assert.equal(await a.locator('#duelActivity').inputValue(),'football');await b.locator('[data-ready-toggle]').check();await a.locator('.rivalCard .presence-ready').waitFor();
  await b.goto(base+'/#sfide');await b.locator('#duelTopic').selectOption('colors');
+ // Cancelling an invitation is reversible for play: no points lost, and double click is one action.
+ let cancellations=0;a.on('request',request=>{if(request.url().includes('action=duel-cancel'))cancellations++;});
+ const initialWallet=await a.evaluate(async id=>(await wordylandAccount.request('hub&profile='+id)).wallet,teacher.id);
+ await a.locator('#duelInvite button').click();await a.getByRole('button',{name:'Annulla invito',exact:true}).waitFor();
+ const cancelledId=await a.getByRole('button',{name:'Annulla invito',exact:true}).getAttribute('data-duel');
+ await a.getByRole('button',{name:'Annulla invito',exact:true}).evaluate(button=>{button.click();button.click();});
+ await a.getByText('Invito annullato',{exact:true}).waitFor();await b.getByText('Invito annullato',{exact:true}).waitFor();
+ assert.equal(cancellations,1);assert.equal(await b.getByRole('button',{name:'Accetta ⚡',exact:true}).count(),0);
+ const cancelledState=await a.evaluate(async({id,duel})=>(await wordylandAccount.request('duel&profile='+id+'&duel='+duel)).duel.state,{id:teacher.id,duel:cancelledId});assert.equal(cancelledState,'cancelled');
+ const afterCancel=await a.evaluate(async id=>(await wordylandAccount.request('hub&profile='+id)).wallet,teacher.id);assert.equal(afterCancel.coins,initialWallet.coins);assert.equal(afterCancel.xp,initialWallet.xp);
+ await a.locator('#duelTopic').selectOption('colors');await a.locator('#duelActivity').selectOption('football');
+
  // Hold a quiet refresh open while the user submits an invitation. The action must not disappear.
  let releaseRefresh,enteredRefresh,held=false;const refreshGate=new Promise(resolve=>releaseRefresh=resolve),refreshEntered=new Promise(resolve=>enteredRefresh=resolve);
  await a.route('**/api.php?action=arena*',async route=>{if(!held){held=true;enteredRefresh();await refreshGate;}await route.continue();});
@@ -39,5 +51,5 @@ const base=process.env.WORDYLAND_TEST_URL||'http://127.0.0.1:8093';assert(['127.
  await a.locator('#rosterFilter').selectOption('all');await a.locator('.rosterPerson').filter({hasText:'Docente'}).waitFor();
  await b.evaluate(async()=>await window.wordylandAccount.logout());await a.locator('.rosterPerson').filter({hasText:'Stellina'}).locator('.presence-offline').waitFor();
  await a.setViewportSize({width:360,height:844});assert(await a.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));assert(await b.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));if(process.env.WORDYLAND_BROWSER_SCREENSHOT)await a.screenshot({path:process.env.WORDYLAND_BROWSER_SCREENSHOT,fullPage:true});
- assert.deepEqual(errors,[]);await browser.close();console.log('Presence browser passed: class-only roster, live ready/online/busy, preserved invitation choices, automatic invite/accept updates, paused hidden-tab polling, logout cleanup, admin global/today roster and mobile.');
+ assert.deepEqual(errors,[]);await browser.close();console.log('Presence browser passed: class-only roster, live ready/online/busy, preserved invitation choices, automatic invite/accept updates, cancel double-click without point loss, paused hidden-tab polling, logout cleanup, admin global/today roster and mobile.');
 })().catch(e=>{console.error(e);process.exit(1)});

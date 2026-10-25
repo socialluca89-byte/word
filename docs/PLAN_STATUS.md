@@ -42,3 +42,7 @@ Audit successivo del probe: [READ_ONLY_PROBE_AUDIT.md](READ_ONLY_PROBE_AUDIT.md)
 ## Chiusura del lotto preparato
 
 Consegna dei cinque punti, anteprime, test e impedimenti residui in [FINAL_HANDOFF.md](FINAL_HANDOFF.md). Diagnostica minimale indipendente pronta e testata con dati fittizi in [READ_ONLY_READINESS.md](READ_ONLY_READINESS.md); restituisce tre booleani e soli stati mail. Nessuna esecuzione reale. Template single-runner fuori da .github/workflows, inattivo; nessuna registrazione o deploy. Le azioni esterne restano in attesa dell’utente, senza estendere il piano.
+
+## Lotto successivo del 25 ottobre
+
+Riprodotta e corretta la perdita del focus nella composizione di lettere delle missioni: banca stabile, correzione/ritorno alla tessera, nomi accessibili, stato leggibile e guardie durante il salvataggio. Nuove prove per Indietro/Avanti, annullamento, doppio click e ripresa interrotta; anteprime prima/dopo in [LETTER_COMPOSITION_REVIEW.md](LETTER_COMPOSITION_REVIEW.md). Solo work; nessuna destinazione o funzione rimossa, nessuna variazione ai punti. Risultati delle regressioni nel blocco 15 di NIGHT_PROGRESS.md.

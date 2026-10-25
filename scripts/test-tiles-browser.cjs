@@ -1,0 +1,37 @@
+const {chromium}=require(process.env.WORDYLAND_PLAYWRIGHT_MODULE||'playwright'),assert=require('assert/strict');
+const fs=require('fs'),{execFileSync}=require('child_process');
+const base=process.env.WORDYLAND_TEST_URL;assert(['localhost','127.0.0.1'].includes(new URL(base).hostname));
+(async()=>{const browser=await chromium.launch({executablePath:process.env.WORDYLAND_CHROMIUM||'/usr/bin/chromium',args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']}),errors=[];
+try{
+ const p=await browser.newPage({viewport:{width:390,height:844},reducedMotion:'reduce'});p.on('pageerror',e=>errors.push(e.message));
+ async function seed(source,words){await p.goto(base);await p.evaluate(()=>wordylandAccount.ready);await p.evaluate(({source,words})=>{localStorage.setItem('wordylandGuestMission',JSON.stringify({id:'1234567890abcdef1234567890abcdef',source,words,step:1,xp:10,activity:'pets',expiresAt:Date.now()+600000,assisted:false,hadErrors:false}));},{source,words});await p.reload();await p.locator('[data-resume-quest=guest]').click();await p.locator('#readyChallenge').click();await p.locator('#questTiles').waitFor();}
+ await seed('body',['head','eye','hand']);
+ assert(await p.evaluate(()=>document.activeElement.matches('#questTiles button:not(:disabled)')),'Challenge starts on an available tile');
+ const first=p.locator('[data-tile]:not(:disabled)').first();await first.focus();await p.keyboard.press('Enter');
+ if(process.env.WORDYLAND_TILE_AFTER){await p.locator('#questWork').screenshot({path:process.env.WORDYLAND_TILE_AFTER});}
+ if(process.env.WORDYLAND_TILE_BEFORE){await p.locator('#questWork').screenshot({path:process.env.WORDYLAND_TILE_BEFORE});}
+ assert(await p.evaluate(()=>document.activeElement.matches('#questTiles button:not(:disabled),#checkQuest')),'Choosing a letter must keep keyboard focus on an available tile or Check');
+ assert.equal(await p.locator('[data-slot]:disabled').count(),2,'Empty slots are not dead keyboard stops');
+ await p.locator('[data-slot="0"]').focus();await p.keyboard.press('Enter');assert.equal(await p.locator('#questSlots button:not(:disabled)').count(),0);
+ assert(await p.evaluate(()=>document.activeElement.matches('#questTiles button:not(:disabled)')),'Removing a letter returns focus to its tile');
+ const available=p.locator('[data-tile]:not(:disabled)').first();await available.evaluate(node=>{node.click();node.click();});assert.equal(await p.locator('#questSlots button:not(:disabled)').count(),1,'A stale double click cannot use the same tile twice');
+ await p.locator('[data-slot="0"]').click();
+ async function spell(word){for(const char of word){const button=await p.locator('[data-tile]:not(:disabled)').filter({hasText:char===' '?'␣':char}).first();await button.focus();await p.keyboard.press('Enter');}assert.equal(await p.evaluate(()=>document.activeElement.id),'checkQuest','Full word focuses Check');}
+ await spell('eye');assert.match(await p.locator('#questBuildStatus').textContent(),/3.*3/);
+ await p.keyboard.press('Enter');await p.locator('#questNext').waitFor();assert(await p.locator('[data-slot="0"]').evaluate(node=>getComputedStyle(node).borderTopStyle==='solid'),'Confirmed letters retain their filled appearance');const draft=await p.evaluate(()=>JSON.parse(localStorage.getItem('wordylandGuestMission')));assert.equal(draft.step,2);
+ await p.locator('#pauseQuest').click();await p.locator('.startChoices a[href="#personaggi"]').click();await p.locator('.shopGrid').waitFor();await p.goBack();await p.locator('[data-resume-quest=guest]').waitFor();await p.goForward();await p.locator('.shopGrid').waitFor();await p.goBack();await p.locator('[data-resume-quest=guest]').click();assert.match(await p.locator('.questStep').textContent(),/PROVA 3 DI 3/);
+ await p.locator('#pauseQuest').click();await seed('hello',['hello','my name is Anna','goodbye!']);
+ assert.equal(await p.getByRole('button',{name:/^Spazio, tessera/}).count(),3,'Spaces have meaningful labels');
+ for(const width of [320,390,768,1360]){await p.setViewportSize({width,height:844});assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Tile overflow '+width);assert(await p.locator('[data-tile]').first().evaluate(node=>node.getBoundingClientRect().height>=44));}
+ await p.setViewportSize({width:320,height:844});await spell('my name is Anna');assert(await p.locator('#checkQuest').evaluate(node=>{const box=node.getBoundingClientRect();return box.top>=0&&box.bottom<=innerHeight;}),'Check stays visible after a long phrase on a small phone');await p.keyboard.press('Enter');await p.locator('#questNext').waitFor();await p.locator('#pauseQuest').click();
+ // Registered fixture: force only the random middle exercise kind in the isolated SQLite DB.
+ const fixture=await p.evaluate(async()=>{const a=wordylandAccount;await a.connect(await a.request('register',{username:'tiles_parent',password:'Tiles-synthetic-password-123',adult:true}));const profile=await a.createProfile('Luna');await a.request('study-save',{profile:profile.id,title:'Tessere sintetiche',confirmed:true,words:[['green','verde','🟩'],['balloon','palloncino','🎈'],['hello','ciao','👋']]});const study=(await a.request('hub&profile='+profile.id)).studies[0].id;const q=await a.request('quest-start',{profile:profile.id,study});await a.request('quest-answer',{profile:profile.id,token:q.token,step:0,answer:q.question.word});return {profile:profile.id,token:q.token};});
+ execFileSync('python3',['-c',"import sqlite3,json,sys;d=sqlite3.connect(sys.argv[1]);q=json.loads(d.execute('SELECT questions FROM quests WHERE token=?',(sys.argv[2],)).fetchone()[0]);q[1]['kind']='build';q[1]['answer']=q[1]['word'];d.execute('UPDATE quests SET questions=? WHERE token=?',(json.dumps(q),sys.argv[2]));d.commit()",process.env.WORDYLAND_BROWSER_DATA+'/wordyland.sqlite',fixture.token]);
+ await p.goto(base+'/#continua');await p.locator('[data-resume-quest="'+fixture.token+'"]').click();const word=(await p.locator('#questWork .questWord').textContent()).trim();await p.locator('#readyChallenge').click();await spell(word);
+ let release,entered,calls=0;const held=new Promise(resolve=>release=resolve),started=new Promise(resolve=>entered=resolve);
+ await p.route('**/api.php?action=quest-answer',async route=>{calls++;const reply=await route.fetch();assert.equal(reply.status(),200);entered();await held;await route.abort('failed');});
+ const before=await p.locator('#questSlots').textContent();await p.locator('#checkQuest').dblclick();await started;
+ await p.locator('[data-slot="0"]').evaluate(node=>node.click());assert.equal(await p.locator('#questSlots').textContent(),before,'Editing cannot race a pending answer');assert.equal(calls,1,'Double Check sends one answer');
+ release();await p.locator('#questSaveStatus').getByText(/Risposta da verificare/).waitFor();await p.unroute('**/api.php?action=quest-answer');await p.getByRole('button',{name:'Riprendi dal salvataggio',exact:true}).click();await p.locator('#readyChallenge').waitFor();assert.match(await p.locator('.questStep').textContent(),/PROVA 3 DI 3/);
+ assert.deepEqual(errors,[]);console.log('Tile browser passed: keyboard focus, undo, repeated letters/spaces, stale double click, four viewports, back/forward, confirmed guest progress, one pending server answer, blocked editing and lost-response resume.');
+}finally{await browser.close();}})().catch(error=>{console.error(error);process.exit(1)});
