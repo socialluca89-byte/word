@@ -29,9 +29,9 @@
   const wallet=()=>profile.id?(hub?.wallet||{coins:0,xp:0,level:1,equipped:{avatar:'fox'},inventory:['fox']}):guest;
   const say=text=>{const e=root.querySelector('#questStatus');if(e)e.textContent=text;};
   const api=(action,data)=>window.wordylandAccount.request(action,data===undefined?undefined:{...data,profile:profile.id});
-  function grantGuestBadges(){const counts={missions:Object.values(guest.adventures).reduce((n,v)=>n+(Number(v)||0),0),activities:Object.values(guest.adventures).filter(v=>Number(v)>0).length};for(const reward of catalog)if(reward.unlock&&Object.entries(reward.unlock).every(([metric,needed])=>counts[metric]>=needed)&&!guest.inventory.includes(reward.id))guest.inventory.push(reward.id);}
+  function grantGuestBadges(state=guest){const counts={missions:Object.values(state.adventures).reduce((n,v)=>n+(Number(v)||0),0),activities:Object.values(state.adventures).filter(v=>Number(v)>0).length};for(const reward of catalog)if(reward.unlock&&Object.entries(reward.unlock).every(([metric,needed])=>counts[metric]>=needed)&&!state.inventory.includes(reward.id))state.inventory.push(reward.id);}
   grantGuestBadges();
-  const storeGuest=()=>{grantGuestBadges();guest.level=1+Math.floor(guest.xp/100);try{localStorage.setItem('wordylandGuestWallet',JSON.stringify(guest));}catch{}};
+  const storeGuest=(state=guest)=>{grantGuestBadges(state);state.level=1+Math.floor(state.xp/100);try{localStorage.setItem('wordylandGuestWallet',JSON.stringify(state));return true;}catch{return false;}};
   const resumeHost=document.createElement('section');resumeHost.id='resumeHub';resumeHost.className='resumeHub';resumeHost.hidden=true;resumeHost.setAttribute('aria-label','Missioni e sfide da continuare');document.querySelector('.startChoices').before(resumeHost);
   let pending={quests:[],duels:[]},pendingEpoch=0,resumeDuel=null;
   const guestMissionKey='wordylandGuestMission';
@@ -315,11 +315,13 @@
     root.querySelector('#questContent').innerHTML='<div class="shopHeading"><div><span class="questEyebrow">IL TUO MONDO, COME PIACE A TE</span><h3>Scegli il tuo personaggio e il tuo stile.</h3><p>Scegli personaggi, accessori, trofei, palloni e razzi con le monete delle missioni. I distintivi si conquistano completando le avventure.</p><p class="hint">Nessun acquisto con denaro reale. Tutte le attività sono già aperte.</p></div></div><nav class="styleTabs" aria-label="Cosa vuoi personalizzare?">'+Object.entries(groups).map(([id,name])=>'<button class="audio" data-style="'+id+'" aria-pressed="'+(shopGroup===id)+'">'+name+'</button>').join('')+'</nav><div class="stylePreview" id="stylePreview" role="region" tabindex="-1" aria-label="Anteprima della tua scelta"><span class="sceneFallback">'+places[previewKind].icon+'</span><span class="previewBadge">'+groups[shopGroup]+' · la tua scelta</span></div><p id="shopPreviewStatus" class="shopPreviewStatus" role="status" aria-live="polite">Le anteprime sono gratis e non cambiano la tua scelta.</p><button type="button" class="audio" id="returnToReward" hidden>Torna all’oggetto</button>'+(shopGroup==='avatar'?'<div class="characterPlay"><p><b>Stai usando: '+esc(item(w?.equipped?.avatar||'fox').name)+'.</b> Il personaggio ti accompagna nelle avventure. Il compagno del rifugio si sceglie a parte.</p><span>Provalo subito:</span><div><button class="audio" data-character-play="kart">🏎️ Guida il kart</button><button class="audio" data-character-play="football">⚽ Gioca a calcio</button><button class="audio" data-character-play="space">🚀 Parti per lo spazio</button></div></div>':'')+'<div class="shopGrid">'+shown.map(it=>{const owned=w?.inventory.includes(it.id),equipped=w?.equipped[it.slot]===it.id;return '<article class="shopItem '+(equipped?'equipped':'')+'" data-reward-card="'+it.id+'" aria-labelledby="reward-title-'+it.id+'"><span '+(it.slot==='avatar'?'class="racerModel" data-racer="'+it.id+'"':'')+' aria-hidden="true">'+(it.slot==='avatar'?'':it.icon)+'</span><h4 id="reward-title-'+it.id+'" tabindex="-1">'+esc(it.name)+'</h4><small>'+(it.unlock?(it.unlock.activities?'Esplora '+it.unlock.activities+' mondi diversi':'Completa '+it.unlock.missions+' mission'+(it.unlock.missions===1?'e':'i')):it.price===0?'Sempre disponibile':it.slot==='effect'?'Effetto scenico':'Per il tuo mondo')+'</small><button type="button" class="audio" data-preview-item="'+it.id+'" aria-label="Anteprima di '+esc(it.name)+'">👀 Anteprima</button><button class="'+(owned?'audio':'primary')+'" data-item="'+it.id+'" aria-label="'+esc(controlName(it,owned,equipped))+'" '+(equipped||it.unlock&&!owned?'disabled':'')+'>'+(equipped?'In uso ✓':owned?(it.slot==='avatar'?'Usa personaggio':'Scegli'):it.unlock?'Da conquistare':it.price===0?'Scegli · gratis':'🪙 '+it.price+' · Sblocca')+'</button></article>';}).join('')+'</div><p class="hint">Gli oggetti cambiano l’aspetto del tuo mondo. Gli aiuti negli esercizi restano gratis per tutti.</p>';
     const previewHost=root.querySelector('#stylePreview');
     function previewReward(candidate=null){
-      sceneView?.dispose();
-      const eq={...w?.equipped};if(candidate)eq[candidate.slot]=candidate.id;
-      if(shopGroup==='avatar'||shopGroup==='badge')eq.pet=eq.avatar||'fox';
-      previewHost.querySelector('.sceneFallback').textContent=candidate?.icon||places[previewKind].icon;
-      sceneView=window.wordylandIsland.mount(previewHost,{kind:previewKind,equipped:eq,preview:true});
+      if(!candidate||previewHost.dataset.previewChoice!==candidate.id){
+        sceneView?.dispose();
+        const eq={...w?.equipped};if(candidate)eq[candidate.slot]=candidate.id;
+        if(shopGroup==='avatar'||shopGroup==='badge')eq.pet=eq.avatar||'fox';
+        previewHost.querySelector('.sceneFallback').textContent=candidate?.icon||places[previewKind].icon;
+        sceneView=window.wordylandIsland.mount(previewHost,{kind:previewKind,equipped:eq,preview:true});
+      }
       if(candidate){
         previewHost.dataset.previewChoice=candidate.id;previewHost.setAttribute('aria-label','Anteprima di '+candidate.name);
         previewHost.querySelector('.previewBadge').textContent='Solo anteprima · '+candidate.name;
@@ -335,12 +337,17 @@
     root.querySelectorAll('[data-character-play]').forEach(b=>b.onclick=()=>chooseActivity(b.dataset.characterPlay,true));
     root.querySelectorAll('[data-style]').forEach(b=>b.onclick=()=>{if(busy)return;shopGroup=b.dataset.style;renderShop();root.querySelector('[data-style="'+shopGroup+'"]')?.focus({preventScroll:true});});
     root.querySelectorAll('[data-item]').forEach(b=>b.onclick=async()=>{
-      if(busy)return;busy=true;const owner=profile.id,it=item(b.dataset.item),owned=w.inventory.includes(it.id);b.disabled=true;
+      if(busy)return;busy=true;const owner=profile.id,it=item(b.dataset.item),owned=w.inventory.includes(it.id);b.closest('article')?.querySelector('.shopPurchaseMessage')?.remove();b.removeAttribute('aria-describedby');b.disabled=true;
       try{
         if(profile.id){const result=await api(owned?'equip':'buy',{item:it.id});if(owner!==profile.id)return;hub.wallet=result.wallet;}
-        else{if(!owned){if(guest.coins<it.price)throw new Error('Ti mancano '+(it.price-guest.coins)+' monete. Puoi scegliere un oggetto gratis o continuare a giocare.');guest.coins-=it.price;guest.inventory.push(it.id);}guest.equipped[it.slot]=it.id;storeGuest();}
+        else{const next={...guest,inventory:[...guest.inventory],equipped:{...guest.equipped}};if(!owned){if(next.coins<it.price)throw new Error('Ti mancano '+(it.price-next.coins)+' monete. Puoi scegliere un oggetto gratis o continuare a giocare.');next.coins-=it.price;next.inventory.push(it.id);}next.equipped[it.slot]=it.id;if(!storeGuest(next))throw new Error('Il browser non ha salvato la scelta. Saldo e oggetti restano come prima. Libera spazio o riprova.');guest=next;}
         render();const heading=root.querySelector('[data-reward-card="'+it.id+'"] h4');heading?.focus({preventScroll:true});heading?.scrollIntoView({block:'nearest',behavior:'auto'});say(it.name+' è pronto per l’avventura!');
-      }catch(e){say(e.message);if(b.isConnected)b.disabled=false;}finally{busy=false;}
+      }catch(e){
+        if(owner!==profile.id)return;
+        const message=owner&&(!e.code||e.code>=500)?'La scelta non è confermata. Ricarica la pagina per verificare saldo e oggetti prima di riprovare.':e.message;
+        say(message);
+        if(b.isConnected){b.disabled=false;const note=document.createElement('p');note.className='shopPurchaseMessage';note.id='purchase-message-'+it.id;note.textContent=message;b.after(note);b.setAttribute('aria-describedby',note.id);b.focus({preventScroll:true});note.scrollIntoView({block:'nearest',behavior:'auto'});}
+      }finally{busy=false;}
     });
   }
   function renderFestival(){

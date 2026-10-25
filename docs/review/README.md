@@ -19,3 +19,5 @@ Schermata ospite fittizia: un oggetto non posseduto si può vedere senza spender
 - [Lettere dopo, 390px](tiles-after-390.png)
 
 La stessa fase con una lettera scelta: dopo la correzione il focus resta visibile sulla prossima tessera, le caselle vuote sono distinte e il progresso è leggibile. Solo progressi ospite fittizi. Riproduzione e test in [LETTER_COMPOSITION_REVIEW](../LETTER_COMPOSITION_REVIEW.md).
+
+- [Scelta ospite non salvata: saldo e personaggio conservati, 390px](guest-wallet-storage-390.png) — fixture, preparato su work; vedi [audit wallet](../WALLET_AUDIT.md).
