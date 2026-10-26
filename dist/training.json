@@ -723,5 +723,65 @@
       "phraseMeaning": "Dico no.",
       "gap": "I say ___."
     }
-  ]
+  ],
+  "phonics": {
+    "version": 1,
+    "guidedOnly": true,
+    "phonemeAudioAvailable": false,
+    "source": {
+      "name": "CMU Pronouncing Dictionary",
+      "commit": "74790861f652b15e4ac49015a90074ad62a27690",
+      "url": "https://github.com/cmusphinx/cmudict/tree/74790861f652b15e4ac49015a90074ad62a27690",
+      "scope": "Solo consonanti iniziali; lessico americano, non validazione di audio o corso Cambridge."
+    },
+    "groups": [
+      {
+        "id": "s",
+        "letter": "S",
+        "sound": "/s/",
+        "arpabet": "S",
+        "words": [
+          "sun",
+          "six",
+          "seven"
+        ],
+        "adultCue": "Modella /s/ come un soffio continuo: non dire il nome inglese ess o quello italiano esse. La lettera può avere altri valori in altre parole, qui usiamo solo questi esempi."
+      },
+      {
+        "id": "p",
+        "letter": "P",
+        "sound": "/p/",
+        "arpabet": "P",
+        "words": [
+          "pen",
+          "pink",
+          "pencil"
+        ],
+        "adultCue": "Modella un /p/ breve all’inizio della parola, senza aggiungere una vocale. Non usare pi, pee o puh come se fossero il suono isolato. L’aspirazione inglese non viene valutata."
+      },
+      {
+        "id": "b",
+        "letter": "B",
+        "sound": "/b/",
+        "arpabet": "B",
+        "words": [
+          "bag",
+          "book"
+        ],
+        "adultCue": "Modella un /b/ breve all’inizio della parola, senza aggiungere una vocale. Il nome inglese della lettera serve allo spelling, non sostituisce il suono /b/."
+      },
+      {
+        "id": "n",
+        "letter": "N",
+        "sound": "/n/",
+        "arpabet": "N",
+        "words": [
+          "nose",
+          "nine",
+          "no"
+        ],
+        "adultCue": "Modella /n/ come un suono nasale, senza aggiungere la vocale del nome en o del nome italiano enne. Non confonderlo con la parola intera no."
+      }
+    ]
+  }
 }

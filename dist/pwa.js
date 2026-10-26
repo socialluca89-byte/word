@@ -9,7 +9,7 @@
   document.head.append(fonts);
  },0),{once:true});
  const install=document.querySelector('#installApp'),help=document.querySelector('#installHelp'),status=document.querySelector('#appStatus'),update=document.querySelector('#appUpdate'),reload=document.querySelector('#updateApp');
- const workerURL='sw.js?v=cb7b421944e8';
+ const workerURL='sw.js?v=d14a98c443a2';
  let prompt=null,registration=null,reloading=false;
  const standalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
  function installation(){install.hidden=standalone();if(standalone())help.hidden=true;install.textContent=prompt?'Installa WordyLand':'Come installare';}

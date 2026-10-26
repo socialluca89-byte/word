@@ -2,6 +2,7 @@
 /** Private profile training. No wallet, points, rankings, diagnosis, or recorded voice. */
 declare(strict_types=1);
 if(!defined('WORDYLAND_BOOTSTRAPPED')){http_response_code(404);exit;}
+if(in_array($action,['phonics-state','phonics-start','phonics-hint','phonics-answer','phonics-progress'],true))phonicsHandle($db,$id,$method,$body,$accountRole,$action);
 $trainingActions=['training-state','training-start','training-hint','training-answer','training-progress'];
 if(!in_array($action,$trainingActions,true))return;
 $db->exec('CREATE TABLE IF NOT EXISTS training_totals(profile_id INTEGER PRIMARY KEY REFERENCES profiles(id) ON DELETE CASCADE,sessions INTEGER NOT NULL,first_day TEXT NOT NULL,last_day TEXT NOT NULL);
@@ -49,7 +50,7 @@ if($step<(int)$session['step']||$session['completed_at']!==null){$db->exec('COMM
 if($step!==(int)$session['step']){$db->exec('ROLLBACK');fail('Riprendi la domanda corrente.',409);}
 if($action==='training-hint'){
     $level=$body['level']??1;if(!is_int($level)||!in_array($level,[1,2],true)){$db->exec('ROLLBACK');fail('Aiuto non valido.');}
-    runSql($db,'UPDATE training_sessions SET helped=1,hint=MAX(hint,?) WHERE token=?',[$level,$token]);$db->exec('COMMIT');
+    runSql($db,'UPDATE training_sessions SET helped=1,hint=MAX(hint,CAST(? AS INTEGER)) WHERE token=?',[$level,$token]);$db->exec('COMMIT');
     respond(['session'=>trainingSnapshot(trainingOwnedSession($db,$tp,$token))]);
 }
 $attempt=$body['attempt']??'';
@@ -153,4 +154,52 @@ function trainingProgress(PDO $db,int $pid):array{
     $items=[];foreach($aggregate as $row){$key=$row['item'];$items[$key]??=['item'=>$key,'completed'=>0,'independent'=>0,'guided'=>0,'errors'=>0,'replays'=>0,'skills'=>[],'days'=>[],'lastDay'=>null,'independentDays'=>0,'competencies'=>[]];$items[$key]['competencies'][]=['skill'=>$row['skill'],'completed'=>(int)$row['completed'],'independent'=>(int)$row['independent'],'guided'=>(int)$row['guided'],'errors'=>(int)$row['errors'],'replays'=>(int)$row['replays'],'independentDays'=>(int)$row['independent_days'],'choicePractice'=>array_values(array_map(fn($c)=>['choices'=>(int)$c['choice_count'],'independent'=>(int)$c['independent'],'independentDays'=>(int)$c['independent_days']],array_filter($choicePractice,fn($c)=>$c['item']===$key&&$c['skill']===$row['skill'])))];foreach(['completed','independent','guided','errors','replays'] as $field)$items[$key][$field]+=(int)$row[$field];$items[$key]['skills'][$row['skill']]=true;$items[$key]['independentDays']=max($items[$key]['independentDays'],(int)$row['independent_days']);}
     foreach($items as &$item){unset($item['days']);$item['skills']=array_keys($item['skills']);$recent=array_filter($daily,fn($r)=>$r['item']===$item['item']&&$r['day']>=gmdate('Y-m-d',time()-7*86400));$item['reviewSuggested']=array_sum(array_column($recent,'errors'))>=2&&array_sum(array_column($recent,'independent'))<3;$item['repeatedIndependently']=(bool)array_filter($item['competencies'],fn($c)=>$c['independent']>=3&&$c['independentDays']>=2);}unset($item);
     return ['profile'=>$pid,'scope'=>'owned-training-only','historyDays'=>90,'items'=>array_values($items),'weeks'=>array_values($weeks),'stickers'=>trainingStickers($db,$pid)];
+}
+
+/** Guided visual onset practice; never phoneme discrimination or pronunciation scoring. */
+function phonicsContent():array{return trainingContent();}
+function phonicsPlan(string $lesson,array $content):array{
+    $groups=$content['phonics']['groups'];$g=$groups[array_search($lesson,array_column($groups,'id'),true)];$words=array_column($content['words'],null,'id');
+    $other=array_values(array_filter($groups,fn($x)=>$x['id']!==$lesson));$distractors=array_map(fn($x)=>$x['words'][0],array_slice($other,0,2));
+    $optionWords=function(string $correct)use($distractors,$words):array{$ids=array_merge([$correct],$distractors);shuffle($ids);return array_map(fn($id)=>['id'=>$id,'label'=>$id,'meaning'=>$words[$id]['meaning'],'emoji'=>$words[$id]['emoji']],$ids);};
+    $concept=function(string $answer)use($g,$words):array{$options=[['id'=>'name','label'=>'I nomi delle lettere'],['id'=>'sound','label'=>'I suoni nella parola']];shuffle($options);return ['kind'=>'concept','group'=>$g,'word'=>$words[$g['words'][0]],'answer'=>$answer,'options'=>$options];};
+    $letters=array_merge([$g['letter']],array_column(array_slice($other,0,2),'letter'));shuffle($letters);
+    $match=function(string $correct,string $anchor)use($g,$words,$optionWords):array{return ['kind'=>'match','group'=>$g,'word'=>$words[$correct],'modelWord'=>$words[$anchor],'answer'=>$correct,'options'=>$optionWords($correct)];};
+    return [
+      ['kind'=>'model','group'=>$g,'word'=>$words[$g['words'][0]],'answer'=>'continue','options'=>[]],$concept('name'),
+      $match($g['words'][1],$g['words'][0]),
+      ['kind'=>'gap','group'=>$g,'word'=>$words[$g['words'][0]],'answer'=>$g['letter'],'options'=>array_map(fn($id)=>['id'=>$id,'label'=>$id],$letters)],
+      $match($g['words'][2]??$g['words'][0],$g['words'][1]),$concept('sound')
+    ];
+}
+function phonicsSnapshot(array $s):array{$plan=json_decode($s['plan'],true,32,JSON_THROW_ON_ERROR);return ['token'=>$s['token'],'lesson'=>$s['lesson'],'step'=>(int)$s['step'],'total'=>count($plan),'done'=>$s['completed_at']!==null,'question'=>$plan[(int)$s['step']]??null,'hint'=>(int)$s['hint'],'errors'=>(int)$s['errors'],'guidedOnly'=>true];}
+function phonicsOwnedSession(PDO $db,int $pid,string $token):array{$s=one($db,'SELECT * FROM phonics_sessions WHERE profile_id=? AND token=?',[$pid,$token]);if(!$s)fail('Percorso non trovato.',404);if((int)$s['created_at']<time()-604800)fail('Questo percorso è scaduto. Le attività confermate restano conservate.',410);return $s;}
+function phonicsHandle(PDO $db,int $account,string $method,array $body,string $role,string $action):void{
+    if($method!==(in_array($action,['phonics-state','phonics-progress'],true)?'GET':'POST'))fail('Metodo non consentito.',405);
+    $p=ownedProfile($db,$account,$method==='GET'?($_GET['profile']??0):($body['profile']??0));$pid=(int)$p['id'];
+    if($action==='phonics-progress'&&!in_array($role,['adult','admin'],true))fail('Le attività guidate sono riservate all’adulto che gestisce questo profilo.',403);
+    $db->exec('CREATE TABLE IF NOT EXISTS phonics_sessions(token TEXT PRIMARY KEY,profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,lesson TEXT NOT NULL,plan TEXT NOT NULL,step INTEGER NOT NULL DEFAULT 0,hint INTEGER NOT NULL DEFAULT 0,errors INTEGER NOT NULL DEFAULT 0,last_attempt TEXT,created_at INTEGER NOT NULL,completed_at INTEGER);
+    CREATE TABLE IF NOT EXISTS phonics_practice(profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,lesson TEXT NOT NULL,skill TEXT NOT NULL,completed INTEGER NOT NULL DEFAULT 0,with_help INTEGER NOT NULL DEFAULT 0,errors INTEGER NOT NULL DEFAULT 0,replays INTEGER NOT NULL DEFAULT 0,last_day TEXT NOT NULL,PRIMARY KEY(profile_id,lesson,skill));
+    CREATE TABLE IF NOT EXISTS phonics_totals(profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,lesson TEXT NOT NULL,sessions INTEGER NOT NULL DEFAULT 0,last_day TEXT NOT NULL,PRIMARY KEY(profile_id,lesson));');
+    if($action==='phonics-progress')respond(['profile'=>$pid,'scope'=>'owned-guided-phonics-only','guidedOnly'=>true,'assessesPronunciation'=>false,'assessesPhonemeListening'=>false,'items'=>rows($db,'SELECT lesson,skill,completed,with_help,errors,replays,last_day FROM phonics_practice WHERE profile_id=? ORDER BY lesson,skill',[$pid]),'lessons'=>rows($db,'SELECT lesson,sessions,last_day FROM phonics_totals WHERE profile_id=? ORDER BY lesson',[$pid])]);
+    if($action==='phonics-state'){
+      if(isset($_GET['token'])){if(!is_string($_GET['token']))fail('Percorso non valido.');respond(['session'=>phonicsSnapshot(phonicsOwnedSession($db,$pid,$_GET['token']))]);}
+      respond(['sessions'=>array_map('phonicsSnapshot',rows($db,'SELECT * FROM phonics_sessions WHERE profile_id=? AND completed_at IS NULL AND created_at>=? ORDER BY rowid DESC LIMIT 4',[$pid,time()-604800])),'lessons'=>rows($db,'SELECT lesson,sessions FROM phonics_totals WHERE profile_id=? ORDER BY lesson',[$pid])]);
+    }
+    if($action==='phonics-start'){
+      $lesson=$body['lesson']??null;$content=phonicsContent();if(!is_string($lesson)||!in_array($lesson,array_column($content['phonics']['groups'],'id'),true))fail('Scegli un gruppo disponibile.');limitAttempts($db,'phonics-start:'.$pid,40);
+      $db->exec('BEGIN IMMEDIATE');$old=one($db,'SELECT * FROM phonics_sessions WHERE profile_id=? AND lesson=? AND completed_at IS NULL AND created_at>=? ORDER BY rowid DESC LIMIT 1',[$pid,$lesson,time()-604800]);if($old){$db->exec('COMMIT');respond(['session'=>phonicsSnapshot($old)]);}
+      $token=bin2hex(random_bytes(24));runSql($db,'INSERT INTO phonics_sessions(token,profile_id,lesson,plan,created_at) VALUES(?,?,?,?,?)',[$token,$pid,$lesson,json_encode(phonicsPlan($lesson,$content),JSON_THROW_ON_ERROR),time()]);runSql($db,'DELETE FROM phonics_sessions WHERE profile_id=? AND created_at<?',[$pid,time()-2592000]);$db->exec('COMMIT');respond(['session'=>phonicsSnapshot(phonicsOwnedSession($db,$pid,$token))]);
+    }
+    $token=is_string($body['token']??null)?$body['token']:'';$step=$body['step']??null;if(!is_int($step)||$step<0)fail('Attività non valida.');phonicsOwnedSession($db,$pid,$token);
+    $db->exec('BEGIN IMMEDIATE');$s=phonicsOwnedSession($db,$pid,$token);if($step>(int)$s['step']){$db->exec('ROLLBACK');fail('Riprendi l’attività corrente.',409);}if($step<(int)$s['step']||$s['completed_at']!==null){$db->exec('COMMIT');respond(['replayed'=>true,'session'=>phonicsSnapshot($s)]);}
+    if($action==='phonics-hint'){$level=$body['level']??1;if(!is_int($level)||!in_array($level,[1,2],true)){$db->exec('ROLLBACK');fail('Aiuto non valido.');}runSql($db,'UPDATE phonics_sessions SET hint=MAX(hint,CAST(? AS INTEGER)) WHERE token=?',[$level,$token]);$db->exec('COMMIT');respond(['session'=>phonicsSnapshot(phonicsOwnedSession($db,$pid,$token))]);}
+    $attempt=$body['attempt']??null;$answer=$body['answer']??null;if(!is_string($attempt)||!preg_match('/^[a-f0-9]{16,64}$/',$attempt)||!is_string($answer)||strlen($answer)>100){$db->exec('ROLLBACK');fail('Risposta non valida.');}
+    if($s['last_attempt']===$attempt){$db->exec('COMMIT');respond(['correct'=>false,'replayed'=>true,'session'=>phonicsSnapshot($s)]);}
+    $plan=json_decode($s['plan'],true,32,JSON_THROW_ON_ERROR);$q=$plan[$step];$correct=$q['kind']==='model'||normalWord($q['answer'])===normalWord($answer);
+    if(!$correct){runSql($db,'UPDATE phonics_sessions SET errors=errors+1,hint=MAX(hint,CAST(? AS INTEGER)),last_attempt=? WHERE token=?',[(int)$s['errors']>=1?2:0,$attempt,$token]);$db->exec('COMMIT');respond(['correct'=>false,'session'=>phonicsSnapshot(phonicsOwnedSession($db,$pid,$token))]);}
+    $skill=match($q['kind']){'concept'=>'concept-'.$q['answer'],'match'=>'visual-initial-match','gap'=>'initial-letter',default=>'guided-model'};
+    $replays=is_int($body['replays']??null)?max(0,min(20,$body['replays'])):0;$help=(int)$s['hint']>0||(int)$s['errors']>0||($body['helped']??false)===true;
+    runSql($db,'INSERT INTO phonics_practice(profile_id,lesson,skill,completed,with_help,errors,replays,last_day) VALUES(?,?,?,1,?,?,?,?) ON CONFLICT(profile_id,lesson,skill) DO UPDATE SET completed=completed+1,with_help=with_help+excluded.with_help,errors=errors+excluded.errors,replays=replays+excluded.replays,last_day=excluded.last_day',[$pid,$s['lesson'],$skill,(int)$help,(int)$s['errors'],$replays,gmdate('Y-m-d')]);
+    $next=$step+1;$done=$next===count($plan);runSql($db,'UPDATE phonics_sessions SET step=?,hint=0,errors=0,last_attempt=NULL,completed_at=? WHERE token=?',[$next,$done?time():null,$token]);if($done)runSql($db,'INSERT INTO phonics_totals(profile_id,lesson,sessions,last_day) VALUES(?,?,1,?) ON CONFLICT(profile_id,lesson) DO UPDATE SET sessions=sessions+1,last_day=excluded.last_day',[$pid,$s['lesson'],gmdate('Y-m-d')]);$db->exec('COMMIT');respond(['correct'=>true,'guidedOnly'=>true,'independent'=>false,'session'=>phonicsSnapshot(phonicsOwnedSession($db,$pid,$token))]);
 }

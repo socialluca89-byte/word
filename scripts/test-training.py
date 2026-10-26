@@ -58,6 +58,7 @@ with tempfile.TemporaryDirectory(prefix='wordyland-training-') as tmp:
   hint={'profile':pid,'token':s['token'],'step':s['step'],'level':1};req(a,'training-hint',hint,ta);assert req(a,'training-hint',hint,ta)['session']['hint']==1
   # A second device sees persisted help, even when the separate hint reply was lost.
   device=client();td=req(device,'login',{'username':'training_parent_a','password':password},req(device,'session')['csrf'])['csrf'];assert req(device,f'training-state&profile={pid}&token='+s['token'])['session']['helped']
+  req(device,'training-hint',{'profile':pid,'token':s['token'],'step':s['step'],'level':2},td);assert req(a,'training-hint',hint,ta)['session']['hint']==2,'An older device must not lower an already confirmed hint'
   r,_=answer(s,audioUsed=False,helped=False);assert not r['independent'];s=r['session']
   s=answer(s)[0]['session'];r,last=answer(s,audioUsed=True,letterAudioVerified=True);assert r['independent'] and r['session']['done'];assert r['stickers']==['first']
   assert req(a,'training-answer',last,ta)['replayed'];assert req(a,'training-progress&profile='+str(pid))['scope']=='owned-training-only'
