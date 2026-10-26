@@ -58,3 +58,5 @@ Dopo il via dell'utente alla roadmap, corretto il fallback senza WebGL: da0 a8 l
 ## Ripresa26ottobre: candidato rilascio verificato
 
 Repo work7367c70/main77e071c riconciliati senza modifiche pendenti;56verify e21browser PASS locali. Aggiunto preflighthealth prima di credenziali/SSH, preservando post-check/rollback e utenti. Nuova evidenza pubblica: home/healthHTTPS200, anche queryverify; non prova l'esito del runner. [Fonti e limiti](RELEASE_2026_10_26.md). Nessun nuovo stato live dichiarato prima della conclusione del run effettivo. Tablet rimandato; nessun recupero/email reale eseguito.
+
+Il primo run di ripresa40386474261 ha passato verify ma fallito browser su una race nel test PWA; deploy saltato, nessun nuovo live. Corretto il test per attendere davvero il documento successivo al reload e provato il salvataggio prima dell'attivazione con gate controllato. Test PWA locale PASS, nessun retry/test rimosso o modifica applicativa; esito della nuova CI ancora da verificare. Fonte e limiti in RELEASE_2026_10_26.md.

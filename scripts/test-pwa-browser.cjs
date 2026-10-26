@@ -36,7 +36,19 @@ assert(['127.0.0.1','localhost'].includes(new URL(base).hostname));assert(root?.
  await p.evaluate(async()=>{await caches.open('another-app-cache');});
  const filename=path.join(root,'sw.js'),original=fs.readFileSync(filename,'utf8');fs.writeFileSync(filename,original.replace(/wordyland-offline-[a-f0-9]+/,'wordyland-offline-browser-update'));
  await p.evaluate(async()=>{const reg=await navigator.serviceWorker.getRegistration();await reg.update();});await p.locator('#appUpdate').waitFor();assert(await p.evaluate(async()=>!!(await navigator.serviceWorker.getRegistration()).waiting));
- await p.locator('#updateApp').click();await p.waitForLoadState('domcontentloaded');await p.waitForFunction(async()=>{const reg=await navigator.serviceWorker.getRegistration();return reg?.active?.state==='activated'&&!(await caches.keys()).some(name=>name.startsWith('wordyland-offline-')&&name!=='wordyland-offline-browser-update');});
+ // Hold the progress flush: the current document is already DOMContentLoaded,
+ // so waitForLoadState alone cannot prove that an update actually reloaded it.
+ await p.evaluate(()=>{window.beforePwaUpdate=true;const flush=wordylandAccount.flush;wordylandAccount.flush=async()=>{await new Promise(resolve=>window.releasePwaUpdateFlush=resolve);return flush();};});
+ const nextDocument=p.waitForEvent('domcontentloaded');
+ await p.locator('#updateApp').click();
+ await p.waitForLoadState('domcontentloaded');
+ assert(await p.evaluate(()=>window.beforePwaUpdate===true),'An already-ready load state still refers to the old document while progress is saving');
+ assert(await p.evaluate(async()=>!!(await navigator.serviceWorker.getRegistration()).waiting),'The waiting worker must not activate before progress flush completes');
+ await p.evaluate(()=>window.releasePwaUpdateFlush());
+ await nextDocument;
+ assert.equal(await p.evaluate(()=>window.beforePwaUpdate),undefined,'Wait for the new document, not the old document load state');
+ await p.evaluate(()=>wordylandAccount.ready);
+ await p.waitForFunction(async()=>{const reg=await navigator.serviceWorker.getRegistration();return reg?.active?.state==='activated'&&!(await caches.keys()).some(name=>name.startsWith('wordyland-offline-')&&name!=='wordyland-offline-browser-update');});
  assert(await p.evaluate(async()=>(await caches.keys()).includes('another-app-cache')));fs.writeFileSync(filename,original);
  await p.locator('.startHub').scrollIntoViewIfNeeded();if(process.env.WORDYLAND_BROWSER_SCREENSHOT)await p.screenshot({path:process.env.WORDYLAND_BROWSER_SCREENSHOT,fullPage:false});
  assert.deepEqual(errors,[]);await context.close();fs.rmSync(profile,{recursive:true,force:true});console.log('PWA browser passed: installable manifest/icons, three shortcuts, repeat navigation, install guidance/prompt, authenticated cache isolation, cold offline launch, five revision topics, retry/next, mobile, real waiting update and unrelated-cache preservation.');

@@ -26,8 +26,9 @@ for _ in range(80):
  except Exception:time.sleep(.05)
 else:raise RuntimeError('Local PHP test server unavailable')
 PY
+printf 'Browser suite %s starting\n' "$check"
 if node "$script" 2>&1 | tee "$fixture/browser.log"; then
-  :
+  if [[ "${GITHUB_ACTIONS:-}" == true ]]; then printf '::notice title=Browser suite::Suite %s passed.\n' "$check"; fi
 else
   result=$?
   # Fixed public annotation: all browser fixtures are synthetic; never expose their private files.
@@ -40,10 +41,11 @@ message=re.sub(r'\x1b\[[0-9;]*m','',message)
 message=re.sub(r'https?://\S+','[URL]',message)
 message=re.sub(r'\b[a-fA-F0-9]{32,}\b','[redacted]',message)
 message=re.sub(r'[\w.+-]+@[\w.-]+','[email]',message)[:300]
-print(message.replace('%','%25').replace('\r','%0D').replace('\n','%0A'))
+location=next((m.group(1)+':'+m.group(2)+':'+m.group(3) for line in lines if (m:=re.search(r'[/\\](scripts[/\\][A-Za-z0-9_.-]+):(\d+):(\d+)',line))), 'No test source location available.')
+print((message+' Location: '+location).replace('%','%25').replace('\r','%0D').replace('\n','%0A'))
 PY
 )
-    printf '::error title=Browser suite %s::Exit %s; %s No retry was performed.\n' "$check" "$result" "$diagnostic"
+    printf '::error title=Browser suite %s::Suite %s; exit %s; %s No retry was performed.\n' "$check" "$check" "$result" "$diagnostic"
   fi
   exit "$result"
 fi
