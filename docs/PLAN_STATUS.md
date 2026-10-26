@@ -1,3 +1,5 @@
+> Aggiornamento26ottobre2026: R2sviluppato35parole/6percorsi, CIcandidato3473591verify+23browserPASS. Deployrun40404823239FERMO alpreflightanti-bot primaSSH, nessunfilecaricato; liveindipendentemente verificatob3ca2308URL/HTTP20021:35:51UTC. Workcontinua soltanto perrifiniture/test, nonnuovideploy. Vedi FOUNDATIONS_PATH.md e REQUIREMENTS_REMAINING.md perstati elimitireali.
+
 # Piano WordyLand — stato verificabile
 
 ## Ultimo live verificato: progressione lettere,26ottobre21:01UTC
