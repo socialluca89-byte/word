@@ -1,3 +1,5 @@
+> Lotto successivo solo work: modulo ospite parole/spelling offline sviluppato e sotto verifica locale, senza deploy. R7parziale:35parole/6temi, vecchi5temi ripasso preservati, progressi solo browser; lettereIT/EN e syncaccount restano esclusi. Diagnosi e bozza noninviata in SITEGROUND_REQUEST_WORDYLAND.md; limiti e prove in OFFLINE_FOUNDATIONS.md. Ultimo live confermato b3ca230 alle21:56:19UTC,8URLHTTP200.
+
 > Aggiornamento26ottobre2026: R2sviluppato35parole/6percorsi, CIcandidato3473591verify+23browserPASS. Deployrun40404823239FERMO alpreflightanti-bot primaSSH, nessunfilecaricato; liveindipendentemente verificatob3ca2308URL/HTTP20021:35:51UTC. Workcontinua soltanto perrifiniture/test, nonnuovideploy. Vedi FOUNDATIONS_PATH.md e REQUIREMENTS_REMAINING.md perstati elimitireali.
 
 # Piano WordyLand — stato verificabile

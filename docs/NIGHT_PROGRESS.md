@@ -352,3 +352,13 @@ PASS testAPI esteso35parole/6percorsi/19sessioni, replay/secondodevice/privacy/s
 ### Blocco27 — esitoCI e stop prima diSSH
 
 347359139b53904c13fad399e871d462062561ce/run40404823239:verify e23browserPASS; deploy21:34:35→21:34:36UTC fallitoalpublic-health-preflight conHTMLsgcaptcha inveceJSON. Annotazionepubblica confermanessunSSH/upload/install/purge: nonèunrollback enonèpubblicato.8URLindipendenti21:35:51UTC confermanob3ca230/HTTP200/readySQLite. Stopnuovideploy finchérisoluzione pertinenteSiteGround; nessunbypass/nuoviticket/accessi/costi. Rifinituraindipendente solo work:opzioniospite nonsempreprimo posto, conshuffleunico eordinepersistente; testdeterministici senza retrycasuali. FOUNDATIONS_PATH.md contieneprova,richiesta esatta modellata, limitiHTTPnonvisibili eazioneprovider minima.
+
+## Blocco28 — diagnosi in sola lettura e primo modulo offline ospite
+
+Nessunnuovodeploy né modifichehosting/sicurezza. Riconfermarun40404823239/commit347359139b53904c13fad399e871d462062561ce:verify+23browserPASS, preflightdeclara sgcaptcha; HTTPnumerico/corpo integrale nonpubblicati, transitorietà nonprovata, nessunSSH/backup/upload/install/marker/purge/rollback eseguito. Bozza SITEGROUND_REQUEST_WORDYLAND.md pronta NONinviata, nessunticketCaffèOro riusato. Letturaordinaria21:56:19UTC8URLHTTP200/hashb3ca230/readySQLite; nonprova sbloccoCI.
+
+Work integra8a81c19 e sua correzioneposizioniospite. Nuovo lottoR7finito parole/spelling35parole/6temi daoffline.html, veccchi5temipreservati, cache10assetpubblici+zeroAPI/account. Statoospiteoffline separato con tessere/testo/aiuti/6sessioniriprendibili, salvataggioprimadelcredito, errquotaonesto, 4viewport,tastiera/annulla e nofalseprovelistening. R7nonècompleto:lettereIT/EN e sincronizzazionerestanoescluse, nessundato inviatoagenitori/terzi. OFFLINE_FOUNDATIONS.md registra test/limiti/anteprima.
+
+Verifica locale finale prodotto:57comandiPASS, nuova offline-trainingPASS e regressioniPWA/foundations/compatibility/navigation/training/letter-progressionPASS. Performance: primo erroreunhandledobserver, poi timeoutload5s osservato, dopoattesePromise.all e diagnosticapendingpath ultimaesecuzionePASS(1contesto iniziale, mappa0fuorischermo,2doposcroll su390/1360). Nessunlimitealzato o retryautomatico; tempilocalinon dichiaratistabili, causaprimoerrore nonricostruita. Accessèverificato separatamente perché ilfallimento precedente loavesse saltato. NessunaCI nuova, nullaonline.
+
+Esito finale accessPASS; nove suitebrowsercorrelate conultimoesitoPASS, restanoannotati2fallimentiperformance prima dellostrumentatopass.57verifyPASS, nessuna nuovapubblicazione/CI. Main3473591/liveb3ca230 invariati. Bozzatecnica noninviata,datiHTTPprecisi demandatiailogprovider, nienteclaimrestrizionetemporanea opermanente.

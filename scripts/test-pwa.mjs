@@ -15,7 +15,7 @@ vm.runInContext(code,context);
 const assets=vm.runInContext('ASSETS',context),name=vm.runInContext('CACHE_NAME',context);
 assert.equal(skipped,0,'Updates must wait for the user');
 let pending;events.install({waitUntil(promise){pending=promise;}});await pending;
-assert.equal(storage.size,9);for(const [pathname,url] of Object.entries(assets)){
+assert.equal(storage.size,10);for(const [pathname,url] of Object.entries(assets)){
  assert(!pathname.includes('api')&&!pathname.includes('account')&&!pathname.includes('admin'));
  const hash=createHash('sha256').update(fs.readFileSync('dist'+pathname)).digest('hex').slice(0,12);
  assert.equal(url,pathname.slice(1)+'?v='+hash);
@@ -24,7 +24,7 @@ async function fetchTest(path,{method='GET',mode='cors'}={}){
  let response;
  const request={url:new URL(path,scope).href,method,mode};events.fetch({request,respondWith(promise){response=promise;}});return response?await response:undefined;
 }
-for(const path of ['/api.php?action=session','/api.php?action=study-file&profile=1','/accounts.js','/.wordyland-managed','https://other.example/offline.js','/curriculum.json?private=anything'])assert.equal(await fetchTest(path),undefined,path);
+for(const path of ['/api.php?action=session','/api.php?action=study-file&profile=1','/accounts.js','/training.php?action=training-progress','/training.json?profile=1','/.wordyland-managed','https://other.example/offline.js','/curriculum.json?private=anything'])assert.equal(await fetchTest(path),undefined,path);
 assert.equal(await fetchTest('/offline.html',{method:'POST'}),undefined);
 assert.match(await (await fetchTest('/',{mode:'navigate'})).text(),/^network:/);
 offline=true;
@@ -32,7 +32,8 @@ assert((await (await fetchTest('/#admin-attiva=not-a-real-token',{mode:'navigate
 assert.equal(await fetchTest('/api.php?action=session',{mode:'navigate'}),undefined);
 assert.equal(await fetchTest('/unrecognized',{mode:'navigate'}),undefined);
 assert((await (await fetchTest('/curriculum.json')).text()).includes('curriculum.json'));
-assert.equal(storage.size,9,'Browsing must not add private or arbitrary URLs');
+assert((await (await fetchTest('/training.json')).text()).includes('training.json'));
+assert.equal(storage.size,10,'Browsing must not add private or arbitrary URLs');
 names.push(name);events.activate({waitUntil(promise){pending=promise;}});await pending;assert.deepEqual(deleted,['wordyland-offline-obsolete']);assert.equal(claimed,1);
 events.message({data:{type:'unexpected'}});assert.equal(skipped,0);events.message({data:{type:'SKIP_WAITING'}});assert.equal(skipped,1);
 for(const size of [192,512]){const image=fs.readFileSync('dist/icon-'+size+'.png');assert.equal(image.readUInt32BE(16),size);assert.equal(image.readUInt32BE(20),size);}
