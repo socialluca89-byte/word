@@ -82,7 +82,7 @@ with tempfile.TemporaryDirectory(prefix='wordyland-training-') as tmp:
   assert seen==set('ABCDEFGHIJKLMNOPQRSTUVWXYZ'),'Every guided letter must be reachable, not only present in the explorer'
   assert snapshot()==old,'Full alphabet paths keep old games/economy unchanged'
   assert db.execute('SELECT COUNT(*) FROM training_stickers WHERE profile_id=?',(pid,)).fetchone()[0]==3
-  tables=['training_daily','training_items','training_sessions','training_stickers','training_totals'];before=snapshot(tables);req(a,'training-progress&profile='+str(pid));assert snapshot(tables)==before
+  tables=['training_daily','training_items','training_sessions','training_stickers','training_totals','training_choice_steps'];before=snapshot(tables);req(a,'training-progress&profile='+str(pid));assert snapshot(tables)==before
   req(b,f'training-state&profile={pid}&token='+s['token'],status=404);req(a,'training-hint',{'profile':pid,'token':s['token'],'step':999,'level':1},ta,409)
   db.execute('UPDATE accounts SET role="admin" WHERE username="training_parent_b"');db.commit();req(b,f'training-progress&profile={pid}',status=404);req(b,f'training-progress&profile={other}')
   # Learners can practice their own profile; the parent report is not exposed to them.
@@ -93,7 +93,7 @@ with tempfile.TemporaryDirectory(prefix='wordyland-training-') as tmp:
   s=start('letters','id');db.execute('UPDATE training_sessions SET created_at=? WHERE token=?',(int(time.time())-604801,s['token']));db.commit();req(a,f'training-state&profile={pid}&token='+s['token'],status=410)
   retained=req(b,'training-start',{'profile':other,'track':'letters','block':'ae'},tb)['session']
   req(a,'delete-profile',{'profile':pid,'password':password,'confirm':'ELIMINA'},ta)
-  for table in ['training_sessions','training_daily','training_items','training_totals','training_stickers']:assert db.execute('SELECT COUNT(*) FROM '+table+' WHERE profile_id=?',(pid,)).fetchone()[0]==0,'Profile deletion must clean training data'
+  for table in ['training_sessions','training_daily','training_items','training_totals','training_stickers','training_choice_steps']:assert db.execute('SELECT COUNT(*) FROM '+table+' WHERE profile_id=?',(pid,)).fetchone()[0]==0,'Profile deletion must clean training data'
   assert req(b,f'training-state&profile={other}&token='+retained['token'])['session']['token']==retained['token']
   print('Training API passed: 26 guided letters in 13 blocks, curated content, owned privacy/roles/CSRF, no game economy/ranking mutations, finite idempotent stickers, wrong/hint/reply replay, second-device help, spaced-days fading, reading versus audio skill separation, six words/phrases, private report, expiry unchanged game rewards and owned-profile deletion cleanup.')
  finally:server.terminate();server.wait(timeout=5);log.close()

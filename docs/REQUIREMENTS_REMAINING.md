@@ -1,0 +1,18 @@
+# Requisiti residui — elenco finito,26ottobre2026
+
+Riferimento live verificato:a52715b, run40391137928. La pubblicazione del primo modulo non ha completato tutte le richieste. Questa lista distingue codice sviluppabile da validazioni/consensi reali: non autorizza nuovi accessi, servizi o spese. Caffè Oro resta fuori dal task; tablet/Chrome rimandati.
+
+| ID | Requisito già discusso | Consegna verificabile | Stato / dipendenza |
+| --- | --- | --- | --- |
+| R1 | Alternative graduali lettere |2→3→4 per competenza, aiuti e ritorno guidato, sessioni/premi conservati; API/browser/CI e verifica live | Sviluppato, collaudo completo in corso; LETTER_CHOICE_PROGRESSION.md |
+| R2 | Percorso didattico di base | Riutilizzare e organizzare i contenuti originali esistenti per corpo, scuola, colori/numeri, presentazioni e preposizioni; sequenza ascolta/riconosci/componi/frase e ripasso, con copertura esplicita di ogni tema | Da completare per l'Allenamento iniziale oltre le6parole, senza duplicare i13temi già nei giochi |
+| R3 | Collegamento genitore–bambino iscritto da link classe | Invito/verifica/consenso del rapporto, autorizzazioni negative provate, revoca e isolamento; nessun abbinamento per nickname/email/linkclasse soltanto | Da progettare e implementare con fixture; nessun accesso a dati reali creato implicitamente |
+| R4 | Materiali foto/PDF | Estrazione locale con limiti, anteprima/correzione adulta prima dell'importazione, errori e file non supportati gestiti; nessun invio dei materiali a terzi | Non implementata l'estrazione automatica. Esistono missioni da testo confermato e allegati privati; non basta a dichiarareOCR |
+| R5 | Gruppi di lettere e suoni | Primo set originale curato, distinzione nomilettera/fonemi, parole/immagini corrette e aiuti; eventuale audio fonemico solo se affidabile/validato | Non completo; non sostituire fonemi con TTS dei nomi né inventare sincronizzazione |
+| R6 | Riferimento Cambridge | Tabella esplicita delle competenze coperte/mancanti confrontata con fonti ufficiali e percorso effettivo; esercizi originali | Non è pronto un curriculum completo o simulazione. Nessuna certificazione/readiness/endorsement; partire dalle basi resta la scelta corrente |
+| R7 | Allenamento offline | Percorso pubblico disponibile senza rete, progressi locali onesti, aggiornamenti e cache isolati. Eventuale sincronizzazione account progettata separatamente con idempotenza/identità | Non implementato per Allenamento; il ripassoPWAoffline esistente è già live e va preservato |
+| R8 | Validazioni reali | Audio sui dispositivi dell'adulto; configurazione/consegna email verificata; stato/recupero privatoLuca secondo procedura autorizzata | Non verificati; invioemail/reset/accessi reali richiedono la conferma specifica prevista. Non dichiararli risolti con testmock |
+
+Già presenti e da conservare: giochi classici/13schede, preposizioni, kart/calcio/spazio e altri mondi,6personaggi/48oggetti, sfide/presenza/pausa/ripresa, segnalazioni, logout/codicepassword, riepiloghi privati e PWA/ripasso pubblico offline. Si correggono difetti riproducibili, senza rimuovere funzioni o aggiungere decorazioni scollegate.
+
+Ordine: chiudere R1 con test e rilascio distinto; poi R2 prima delle estensioni più ampie. R3/R4 possono essere preparati localmente con dati sintetici, ma non devono attivare nuovi accessi o trasferimenti di materiali reali senza le condizioni indicate. R5/R6 richiedono contenuti e copertura dichiarati, non promesse di curriculum infinito. R7 non deve mettere API o account nella cache pubblica. R8 resta distinguibile dalle funzioni sviluppate: l'esito reale non si può dedurre dai mock.

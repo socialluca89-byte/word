@@ -4,7 +4,7 @@
 
 **Live:a52715b61e4deb36e96193650d6d1937d8b3b8de**, run [40391137928](https://github.com/socialluca89-byte/word/actions/runs/40391137928), verify/browser/deploy SUCCESS. Tutte21suite eseguite; confronto indipendente HTTPS di home/health/asset PASS e navigazione ospite reale PASS (26lettere/13blocchi/13schede/48oggetti/7destinazioni). Nessun account reale o dato alunni usato. Il blocco di pubblicazione storico è chiuso per questo rilascio; preflight/backup/rollback restano rigorosi.
 
-Sono pubblicati gli incrementi prima descritti come work: Allenamento/Spelling iniziale, riepiloghi privati, lettere/composizione, mappa leggera, guardaroba e affidabilità sfide. **Restano da sviluppare alternative lettere oltre le2scelte, collegamento genitore–learner verificato, estrazione automatica foto/PDF, phonics e percorso Cambridge completo, Allenamento offline.** Email reale/accesso Luca/audio dispositivo non verificati; tablet rimandato. Il testo sottostante conserva la cronologia e non va letto come stato corrente del deploy. Fonte: RELEASE_2026_10_26.md.
+Sono pubblicati gli incrementi prima descritti come work: Allenamento/Spelling iniziale, riepiloghi privati, lettere/composizione, mappa leggera, guardaroba e affidabilità sfide. **Alternative graduali oltre le2scelte sviluppate suwork e in attesa diCI/rilascio (LETTER_CHOICE_PROGRESSION.md). Restano da sviluppare collegamento genitore–learner verificato, estrazione automatica foto/PDF, phonics e percorso Cambridge completo, Allenamento offline.** Email reale/accesso Luca/audio dispositivo non verificati; tablet rimandato. Il testo sottostante conserva la cronologia e non va letto come stato corrente del deploy. Fonte: RELEASE_2026_10_26.md.
 
 L’utente ha confermato il piano e richiesto l’aggiornamento quando tutti i punti saranno sviluppati. Non dichiarare «tutto completato» se restano dipendenze bloccate. Non avviare attività sulla richiesta separata Caffè Oro: non fa parte di questo task.
 
@@ -68,3 +68,8 @@ Repo work7367c70/main77e071c riconciliati senza modifiche pendenti;56verify e21b
 Il primo run di ripresa40386474261 ha passato verify ma fallito browser su una race nel test PWA; deploy saltato, nessun nuovo live. Corretto il test per attendere davvero il documento successivo al reload e provato il salvataggio prima dell'attivazione con gate controllato. Test PWA locale PASS, nessun retry/test rimosso o modifica applicativa; esito della nuova CI ancora da verificare. Fonte e limiti in RELEASE_2026_10_26.md.
 
 Secondo run40388219350: PWA corretta PASS inCI;17suite PASS, quattro non avviate prima del timeout15min consumato perlopiù dal downloadOS. Deploy saltato. BudgetCI corretto con preparazione separata e limitata, stessa copertura21suite e test8min dentro job30min. Nessun nuovo lotto funzionale o pubblicazione dichiarati prima dell'esito completo; vedi RELEASE_2026_10_26.md.
+
+
+## Lotto successivo R1: alternative2→3→4, candidato
+
+Sviluppato e testato localmente: soglie per lettera/competenza e date distinte, vera pratica atre prima delle quattro, solo distrattori incontrati, aiuto unico/ritorno guidato, piani vecchi e sessioni fra dispositivi conservati, aggregati privati additivi e cancellabili.57verify e22browser PASS locali; nessuna economia o ruolo modificato. CI/rilascio ancora da verificare. Requisiti residui finiti in REQUIREMENTS_REMAINING.md; nessuna promessa di curriculumCambridge completo o nuova lettura di dati reali.

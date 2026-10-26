@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS training_items(profile_id INTEGER NOT NULL REFERENCES
 CREATE TABLE IF NOT EXISTS training_sessions(token TEXT PRIMARY KEY,profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,track TEXT NOT NULL,plan TEXT NOT NULL,step INTEGER NOT NULL DEFAULT 0,helped INTEGER NOT NULL DEFAULT 0,errors INTEGER NOT NULL DEFAULT 0,hint INTEGER NOT NULL DEFAULT 0,last_attempt TEXT,created_at INTEGER NOT NULL,completed_at INTEGER);
 CREATE TABLE IF NOT EXISTS training_daily(profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,day TEXT NOT NULL,item TEXT NOT NULL,skill TEXT NOT NULL,completed INTEGER NOT NULL DEFAULT 0,independent INTEGER NOT NULL DEFAULT 0,guided INTEGER NOT NULL DEFAULT 0,errors INTEGER NOT NULL DEFAULT 0,replays INTEGER NOT NULL DEFAULT 0,PRIMARY KEY(profile_id,day,item,skill));
 CREATE TABLE IF NOT EXISTS training_stickers(profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,sticker TEXT NOT NULL,earned_day TEXT NOT NULL,PRIMARY KEY(profile_id,sticker));');
+$db->exec('CREATE TABLE IF NOT EXISTS training_choice_steps(profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,item TEXT NOT NULL,skill TEXT NOT NULL,choice_count INTEGER NOT NULL CHECK(choice_count IN (3,4)),independent INTEGER NOT NULL DEFAULT 0,independent_days INTEGER NOT NULL DEFAULT 0,last_day TEXT NOT NULL,PRIMARY KEY(profile_id,item,skill,choice_count));');
 $trainingProfile=ownedProfile($db,$id,$method==='GET'?($_GET['profile']??0):($body['profile']??0));$tp=(int)$trainingProfile['id'];
 if($action==='training-progress'){
     if(!in_array($accountRole,['adult','admin'],true))fail('I progressi sono riservati all’adulto che gestisce i propri profili.',403);
@@ -54,6 +55,12 @@ if(!is_string($attempt)||!preg_match('/^[a-f0-9]{16,64}$/',$attempt)){$db->exec(
 if($session['last_attempt']===$attempt){$db->exec('COMMIT');respond(['correct'=>false,'replayed'=>true,'session'=>trainingSnapshot($session),'stickers'=>trainingStickers($db,$tp)]);}
 $plan=json_decode($session['plan'],true,32,JSON_THROW_ON_ERROR);$q=$plan[$step];$answer=$body['answer']??'';
 if(!is_string($answer)||strlen($answer)>100){$db->exec('ROLLBACK');fail('Risposta non valida.');}
+$choiceCount=$body['choiceCount']??2;
+if($q['mode']==='letter'){
+    $mode=($body['audioUsed']??false)===true&&($body['letterAudioVerified']??false)===true?'listening':'reading';
+    $maximum=count($q['choiceSets'][$mode]??$q['choices']);
+    if(!is_int($choiceCount)||!in_array($choiceCount,[2,3,4],true)||$choiceCount>$maximum||((int)$session['hint']>0&&$choiceCount!==2)){$db->exec('ROLLBACK');fail('Riprendi il salvataggio per ritrovare le scelte di questa attività.',409);}
+}
 $correct=$q['mode']==='model'||normalWord($answer)===normalWord($q['answer']);
 if(!$correct){runSql($db,'UPDATE training_sessions SET errors=errors+1,helped=MAX(helped,?),last_attempt=? WHERE token=?',[(int)(($body['helped']??false)===true),$attempt,$token]);$db->exec('COMMIT');respond(['correct'=>false,'session'=>trainingSnapshot(trainingOwnedSession($db,$tp,$token))]);}
 $helped=(int)$session['helped']===1||($body['helped']??false)===true||in_array($q['mode'],['model','build'],true);
@@ -62,6 +69,9 @@ $audio=($body['audioUsed']??false)===true;
 $skill=match($q['mode']){'letter'=>'letter-reading.letter','recognize'=>'word-reading.meaning','build'=>'spelling.compose','recall'=>'spelling.recall','phrase'=>'phrase.match',default=>'model.explore'};
 if($audio&&$q['mode']==='letter'&&($body['letterAudioVerified']??false)===true)$skill='letter-name.letter';
 if($audio&&$q['mode']==='recognize')$skill='heard-word.meaning';
+if($q['mode']==='letter'&&$independent&&$choiceCount>=3){
+    runSql($db,'INSERT INTO training_choice_steps(profile_id,item,skill,choice_count,independent,independent_days,last_day) VALUES(?,?,?,?,1,1,?) ON CONFLICT(profile_id,item,skill,choice_count) DO UPDATE SET independent=independent+1,independent_days=independent_days+CASE WHEN last_day!=excluded.last_day THEN 1 ELSE 0 END,last_day=excluded.last_day',[$tp,$q['item'],$skill,$choiceCount,gmdate('Y-m-d')]);
+}
 $replays=$body['replays']??0;$replays=is_int($replays)?max(0,min(20,$replays)):0;
 runSql($db,'INSERT INTO training_daily(profile_id,day,item,skill,completed,independent,guided,errors,replays) VALUES(?,?,?,?,1,?,?,?,?) ON CONFLICT(profile_id,day,item,skill) DO UPDATE SET completed=completed+1,independent=independent+excluded.independent,guided=guided+excluded.guided,errors=errors+excluded.errors,replays=replays+excluded.replays',[$tp,gmdate('Y-m-d'),$q['item'],$skill,(int)$independent,(int)!$independent,(int)$session['errors'],$replays]);
 runSql($db,'INSERT INTO training_items(profile_id,item,skill,completed,independent,guided,errors,replays,independent_days,last_independent_day) VALUES(?,?,?,1,?,?,?,?,?,?) ON CONFLICT(profile_id,item,skill) DO UPDATE SET completed=completed+1,independent=independent+excluded.independent,guided=guided+excluded.guided,errors=errors+excluded.errors,replays=replays+excluded.replays,independent_days=independent_days+CASE WHEN excluded.independent>0 AND COALESCE(last_independent_day,"")!=excluded.last_independent_day THEN 1 ELSE 0 END,last_independent_day=CASE WHEN excluded.independent>0 THEN excluded.last_independent_day ELSE last_independent_day END',[$tp,$q['item'],$skill,(int)$independent,(int)!$independent,(int)$session['errors'],$replays,(int)$independent,$independent?gmdate('Y-m-d'):null]);
@@ -85,13 +95,28 @@ function trainingFamiliar(PDO $db,int $pid,string $item,string $skill):bool{
     $r=one($db,'SELECT COALESCE(SUM(independent),0) AS successes,COALESCE(MAX(independent_days),0) AS days FROM training_items WHERE profile_id=? AND item=? AND skill=?',[$pid,$item,$skill]);
     return (int)$r['successes']>=3&&(int)$r['days']>=2;
 }
+function trainingLetterChoiceSets(PDO $db,int $pid,string $id,array $pair,array $content):array{
+    // Reading and heard English letter names have separate practice histories.
+    $known=array_column(rows($db,'SELECT DISTINCT item FROM training_items WHERE profile_id=? AND item LIKE "letter:%" AND completed>0',[$pid]),'item');
+    $extra=array_values(array_filter(array_column($content['letters'],'id'),fn($letter)=>!in_array($letter,$pair,true)&&in_array('letter:'.$letter,$known,true)));shuffle($extra);
+    $sets=[];
+    foreach(['reading'=>'letter-reading.letter','listening'=>'letter-name.letter'] as $mode=>$skill){
+        $stats=one($db,'SELECT independent,independent_days FROM training_items WHERE profile_id=? AND item=? AND skill=?',[$pid,'letter:'.$id,$skill]);
+        $recent=one($db,'SELECT COALESCE(SUM(errors),0) AS errors,COALESCE(SUM(independent),0) AS independent FROM training_daily WHERE profile_id=? AND item=? AND skill=? AND day>=?',[$pid,'letter:'.$id,$skill,gmdate('Y-m-d',time()-7*86400)]);
+        $three=one($db,'SELECT independent,independent_days FROM training_choice_steps WHERE profile_id=? AND item=? AND skill=? AND choice_count=3',[$pid,'letter:'.$id,$skill]);
+        $count=(int)($stats['independent']??0)>=6&&(int)($stats['independent_days']??0)>=3&&(int)($three['independent']??0)>=2&&(int)($three['independent_days']??0)>=2?4:((int)($stats['independent']??0)>=3&&(int)($stats['independent_days']??0)>=2?3:2);
+        if((int)$recent['errors']>=2&&(int)$recent['independent']<3)$count=2;
+        $sets[$mode]=array_merge($pair,array_slice($extra,0,$count-2));shuffle($sets[$mode]);
+    }
+    return $sets;
+}
 function trainingPlan(PDO $db,int $pid,string $track,string $block,array $content):array{
     $plan=[];
     if($track==='letters'){
         $pair=$content['blocks'][array_search($block,array_column($content['blocks'],'id'),true)]['letters'];$letters=array_column($content['letters'],null,'id');
         foreach($pair as $id){$base=['item'=>'letter:'.$id,'letter'=>$letters[$id],'answer'=>$id,'choices'=>$pair,'topic'=>'nomi delle lettere'];
             if(!trainingFamiliar($db,$pid,$base['item'],'letter-name.letter'))$plan[]=$base+['mode'=>'model'];
-            $choice=$base;shuffle($choice['choices']);$plan[]=$choice+['mode'=>'letter'];
+            $choice=$base;shuffle($choice['choices']);$choice['choiceSets']=trainingLetterChoiceSets($db,$pid,$id,$pair,$content);$plan[]=$choice+['mode'=>'letter'];
         }
     }else{
         $review=array_column(rows($db,'SELECT item FROM training_daily WHERE profile_id=? AND day>=? AND skill="spelling.recall" GROUP BY item HAVING SUM(errors)>=2 OR SUM(guided)>=2',[$pid,gmdate('Y-m-d',time()-7*86400)]),'item');
@@ -115,13 +140,14 @@ function trainingGrantStickers(PDO $db,int $pid):void{
 }
 function trainingProgress(PDO $db,int $pid):array{
     $aggregate=rows($db,'SELECT * FROM training_items WHERE profile_id=?',[$pid]);
+    $choicePractice=rows($db,'SELECT item,skill,choice_count,independent,independent_days FROM training_choice_steps WHERE profile_id=? ORDER BY choice_count',[$pid]);
     $daily=rows($db,'SELECT day,item,skill,completed,independent,guided,errors,replays FROM training_daily WHERE profile_id=? AND day>=? ORDER BY day,item,skill',[$pid,gmdate('Y-m-d',time()-90*86400)]);$items=[];$weeks=[];
     foreach($daily as $row){
         $week=gmdate('o-\WW',strtotime($row['day'].' UTC'));
         $weeks[$week]??=['week'=>$week,'independent'=>0,'guided'=>0,'completed'=>0];
         foreach(['completed','independent','guided'] as $field)$weeks[$week][$field]+=(int)$row[$field];
     }
-    $items=[];foreach($aggregate as $row){$key=$row['item'];$items[$key]??=['item'=>$key,'completed'=>0,'independent'=>0,'guided'=>0,'errors'=>0,'replays'=>0,'skills'=>[],'days'=>[],'lastDay'=>null,'independentDays'=>0,'competencies'=>[]];$items[$key]['competencies'][]=['skill'=>$row['skill'],'completed'=>(int)$row['completed'],'independent'=>(int)$row['independent'],'guided'=>(int)$row['guided'],'errors'=>(int)$row['errors'],'replays'=>(int)$row['replays'],'independentDays'=>(int)$row['independent_days']];foreach(['completed','independent','guided','errors','replays'] as $field)$items[$key][$field]+=(int)$row[$field];$items[$key]['skills'][$row['skill']]=true;$items[$key]['independentDays']=max($items[$key]['independentDays'],(int)$row['independent_days']);}
+    $items=[];foreach($aggregate as $row){$key=$row['item'];$items[$key]??=['item'=>$key,'completed'=>0,'independent'=>0,'guided'=>0,'errors'=>0,'replays'=>0,'skills'=>[],'days'=>[],'lastDay'=>null,'independentDays'=>0,'competencies'=>[]];$items[$key]['competencies'][]=['skill'=>$row['skill'],'completed'=>(int)$row['completed'],'independent'=>(int)$row['independent'],'guided'=>(int)$row['guided'],'errors'=>(int)$row['errors'],'replays'=>(int)$row['replays'],'independentDays'=>(int)$row['independent_days'],'choicePractice'=>array_values(array_map(fn($c)=>['choices'=>(int)$c['choice_count'],'independent'=>(int)$c['independent'],'independentDays'=>(int)$c['independent_days']],array_filter($choicePractice,fn($c)=>$c['item']===$key&&$c['skill']===$row['skill'])))];foreach(['completed','independent','guided','errors','replays'] as $field)$items[$key][$field]+=(int)$row[$field];$items[$key]['skills'][$row['skill']]=true;$items[$key]['independentDays']=max($items[$key]['independentDays'],(int)$row['independent_days']);}
     foreach($items as &$item){unset($item['days']);$item['skills']=array_keys($item['skills']);$recent=array_filter($daily,fn($r)=>$r['item']===$item['item']&&$r['day']>=gmdate('Y-m-d',time()-7*86400));$item['reviewSuggested']=array_sum(array_column($recent,'errors'))>=2&&array_sum(array_column($recent,'independent'))<3;$item['repeatedIndependently']=(bool)array_filter($item['competencies'],fn($c)=>$c['independent']>=3&&$c['independentDays']>=2);}unset($item);
     return ['profile'=>$pid,'scope'=>'owned-training-only','historyDays'=>90,'items'=>array_values($items),'weeks'=>array_values($weeks),'stickers'=>trainingStickers($db,$pid)];
 }

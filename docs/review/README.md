@@ -36,3 +36,7 @@ Contenuti, progressi privati, premi separati, test e limiti in [TRAINING_SPELLIN
 ## Verifica reale del rilascio26ottobre
 
 [Allenamento online, ospite fresco a390px](live-training-20261026-390.png), commit livea52715b e run40391137928 riuscito. Nessun account o dato di bambini. Voci assenti nel cloud: il testo dichiara modalità lettura; non dimostra la pronuncia reale di un dispositivo. Le due alternative restano lo stato del primo modulo, non la futura progressione.
+
+## Lotto alternative graduali — work, pubblicazione da verificare
+
+[Quattro alternative,390px](letter-progression-4-390.png): storico e voci sintetici; lettura e ascolto possono proporre numeri diversi. Non è uno screenshot di un bambino reale o una validazione della pronuncia. Criteri e limiti in LETTER_CHOICE_PROGRESSION.md.
