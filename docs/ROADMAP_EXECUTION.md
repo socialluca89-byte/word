@@ -1,4 +1,4 @@
-# Esecuzione roadmap — 25 ottobre 2026
+# Esecuzione roadmap — aggiornamento26ottobre2026
 
 Avviata dopo il consenso dell'utente a procedere dal punto1 ai successivi. Tutto il lavoro nuovo resta su work; nessun rilascio o operazione su account reali. I test locali non sostituiscono le verifiche hosting/audio/dispositivi. L'ordine dei blocchi esterni resta prioritario; attività indipendenti possono proseguire senza far finta che i blocchi siano risolti.
 
@@ -20,3 +20,7 @@ Aggiornamento utente: Chrome/tablet si verifica più avanti; non riproporre la d
 ## Incremento sfide dopo il rinvio del tablet
 
 Pausa disponibile dopo feedback, recupero con lettura prima di un nuovo tentativo in caso di conferma persa, distinzione del conflitto con secondo dispositivo e pulizia audio/scena. Vedi [DUEL_RELIABILITY](DUEL_RELIABILITY.md). Regole/punteggi/permessi e account reali invariati; solo work, non pubblicato.
+
+## Rilascio iniziale concluso,20:01UTC26ottobre
+
+Pubblicato a52715b, run40391137928 verify/browser/deploySUCCESS; verifica indipendente8URL e UIospite PASS. Le voci della tabella che descrivono work/primo blocco sono storiche: quel codice è ora live. Non significa roadmap completa. Il prossimo lotto è **incremento graduale delle alternative delle lettere**, al momento sempre2; verrà sviluppato/testato separatamente su work. Collegamento parent-child per learner autonomo, estrazione automatica foto/PDF, phonics/curriculumCambridge e Allenamentooffline non sono implementati. Audio reale/emaildelivery/ownerrecovery non verificati. Fonte dettagliata RELEASE_2026_10_26.md.

@@ -1,10 +1,16 @@
 # Piano WordyLand — stato verificabile
 
+## Ultimo rilascio verificato:26ottobre2026,20:01UTC
+
+**Live:a52715b61e4deb36e96193650d6d1937d8b3b8de**, run [40391137928](https://github.com/socialluca89-byte/word/actions/runs/40391137928), verify/browser/deploy SUCCESS. Tutte21suite eseguite; confronto indipendente HTTPS di home/health/asset PASS e navigazione ospite reale PASS (26lettere/13blocchi/13schede/48oggetti/7destinazioni). Nessun account reale o dato alunni usato. Il blocco di pubblicazione storico è chiuso per questo rilascio; preflight/backup/rollback restano rigorosi.
+
+Sono pubblicati gli incrementi prima descritti come work: Allenamento/Spelling iniziale, riepiloghi privati, lettere/composizione, mappa leggera, guardaroba e affidabilità sfide. **Restano da sviluppare alternative lettere oltre le2scelte, collegamento genitore–learner verificato, estrazione automatica foto/PDF, phonics e percorso Cambridge completo, Allenamento offline.** Email reale/accesso Luca/audio dispositivo non verificati; tablet rimandato. Il testo sottostante conserva la cronologia e non va letto come stato corrente del deploy. Fonte: RELEASE_2026_10_26.md.
+
 L’utente ha confermato il piano e richiesto l’aggiornamento quando tutti i punti saranno sviluppati. Non dichiarare «tutto completato» se restano dipendenze bloccate. Non avviare attività sulla richiesta separata Caffè Oro: non fa parte di questo task.
 
 Vincolo: nessuna funzione rimossa o resa irraggiungibile. La home può soltanto riorganizzare e raggruppare quanto esiste. Vedi NAVIGATION_INVENTORY.md e regressioni navigation/access/community/school.
 
-Stato di riferimento: release live verificata `22f2d6028b87c0ae22029eaa211c148a7964ef69`, run https://github.com/socialluca89-byte/word/actions/runs/40127589132, conclusione SUCCESS e vero passo deploy/live-check success. Include gli aiuti e i conteggi di 6161ca7. Il precedente run 40126383092 era fallito e non aveva eseguito il deploy; non viene considerato una pubblicazione riuscita.
+Riferimento storico precedente: release live verificata `22f2d6028b87c0ae22029eaa211c148a7964ef69`, run https://github.com/socialluca89-byte/word/actions/runs/40127589132, conclusione SUCCESS e vero passo deploy/live-check success. Include gli aiuti e i conteggi di 6161ca7. Il precedente run 40126383092 era fallito e non aveva eseguito il deploy; non viene considerato una pubblicazione riuscita.
 
 | Punto concordato | Sviluppato | Testato | Pubblicato / dipendenza |
 | --- | --- | --- | --- |

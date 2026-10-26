@@ -32,3 +32,7 @@ Contenuti, progressi privati, premi separati, test e limiti in [TRAINING_SPELLIN
 ## Primo lotto roadmap: compatibilità — work, non live
 
 [Mappa leggera senza WebGL, 390px](lightweight-map-390.png): otto destinazioni ancora raggiungibili in un contesto ospite fittizio. Non è un'emulazione del tablet originale. [Prove e limiti](../COMPATIBILITY_REVIEW.md).
+
+## Verifica reale del rilascio26ottobre
+
+[Allenamento online, ospite fresco a390px](live-training-20261026-390.png), commit livea52715b e run40391137928 riuscito. Nessun account o dato di bambini. Voci assenti nel cloud: il testo dichiara modalità lettura; non dimostra la pronuncia reale di un dispositivo. Le due alternative restano lo stato del primo modulo, non la futura progressione.
