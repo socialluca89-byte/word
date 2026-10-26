@@ -69,7 +69,9 @@ jobs:
   browser:
     if: github.event_name != 'workflow_dispatch' || inputs.mode == 'deploy'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # Slow Ubuntu mirrors previously consumed12minutes before the suites began.
+    # Keep test execution separately bounded; do not spend its budget on setup.
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
@@ -77,11 +79,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Install pinned browser test runtime
-        run: |
-          npm install --prefix /tmp/wordyland-browser-deps --no-audit --no-fund playwright@1.62.1
-          /tmp/wordyland-browser-deps/node_modules/.bin/playwright install --with-deps chromium
+      - name: Install pinned Playwright package
+        timeout-minutes: 3
+        run: npm install --prefix /tmp/wordyland-browser-deps --no-audit --no-fund playwright@1.62.1
+      - name: Install Chromium system dependencies
+        timeout-minutes: 15
+        run: /tmp/wordyland-browser-deps/node_modules/.bin/playwright install-deps chromium
+      - name: Install pinned Chromium
+        timeout-minutes: 3
+        run: /tmp/wordyland-browser-deps/node_modules/.bin/playwright install chromium
       - name: Verify child journeys in isolated browsers
+        timeout-minutes: 8
         env:
           WORDYLAND_PLAYWRIGHT_MODULE: /tmp/wordyland-browser-deps/node_modules/playwright
         run: |
