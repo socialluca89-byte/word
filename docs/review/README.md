@@ -40,3 +40,5 @@ Contenuti, progressi privati, premi separati, test e limiti in [TRAINING_SPELLIN
 ## Lotto alternative graduali — work, pubblicazione da verificare
 
 [Quattro alternative,390px](letter-progression-4-390.png): storico e voci sintetici; lettura e ascolto possono proporre numeri diversi. Non è uno screenshot di un bambino reale o una validazione della pronuncia. Criteri e limiti in LETTER_CHOICE_PROGRESSION.md.
+
+[Lotto lettere pubblicato:4scelte in lettura,390px](live-letter-progression-20261026-390.png), releaseb3ca230/run40399687794. Browserospite reale sul sito, storico sintetico salvato soltanto nel contesto locale; nessun alunno o account reale e nessunPOST. Non è una validazione della pronuncia. Aiuto/ripresa verificati dopo la cattura.

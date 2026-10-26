@@ -37,3 +37,11 @@ Nessuna scrittura a portafoglio, XP, stelle, inventario, premi dei giochi, ruoli
 Nuovi test API e browser letter-progression: soglie su date diverse, assenza di salti e distrattori mai incontrati, modalità separate, vera fase atre, piani vecchi/congelati, secondo dispositivo, nonce/replay, aiuti salvati, ritorno guidato, conservazione dopo pausa lunga, cronologia corrotta, focus/tastiera,320/390/768/1360px, report privato, economia invariata e cancellazione completa. Test sintetici; [anteprima](review/letter-progression-4-390.png) con voce simulata.
 
 Collaudo locale:57controlliverifyPASS, inclusa nuovaAPI;22suitebrowserdistintePASS durante il lotto. L’ultimo affinamento UI usa un solo comandoAiuto ed è stato riprovato nella suite nuova, con screenshot verificato. Nessun test saltato/timeoutaumentato/retryautomatico. La CI completa e lo stato live restano da verificare e registrare: non trattare questa descrizione come prova di pubblicazione.
+
+## Pubblicazione verificata
+
+Live:b3ca230ff76ee708bde4d2d760e174e012bfb046; run [40399687794](https://github.com/socialluca89-byte/word/actions/runs/40399687794) verify/browser/deploySUCCESS; install/livecheck20:57:59→20:58:42UTC26ottobre. Tutte22suite eseguite, nessun retry o test eliminato. I controlli normali del deploy verificano checksum/health e33statici.
+
+Sonda indipendente21:01:25UTC:home/index/health/trainingJS/arena/island/PWA/catalogo tutti200, byteidentici al commit, nessuna challenge. Prova pubblica browserospite fresco con solo storico locale sintetico:2,3,4scelte; Aiuto→2 e pausa/ricaricamento→2con aiuto conservato, zeroerrori/POST/CAPTCHA. Nessun account reale creato o progresso alunni letto/modificato; nessuna voce reale validata. [Anteprima del frontend pubblicato](review/live-letter-progression-20261026-390.png), storia sintetica e modalità lettura, controllata visivamente.
+
+Questo chiude R1. Non chiude R2contenuti base, relazione parent-child verificata, estrazione foto/PDF, phonics/Cambridge, Allenamentooffline o verifiche audio/email/owner. La documentazione successiva viene aggiornata solo suwork, senza un nuovo deploy inutile.

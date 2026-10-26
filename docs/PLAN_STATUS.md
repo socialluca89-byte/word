@@ -1,5 +1,9 @@
 # Piano WordyLand — stato verificabile
 
+## Ultimo live verificato: progressione lettere,26ottobre21:01UTC
+
+**b3ca230ff76ee708bde4d2d760e174e012bfb046**, run [40399687794](https://github.com/socialluca89-byte/word/actions/runs/40399687794), verify/browser/deploySUCCESS.57controlli locali e22suitebrowser; confrontiHTTPS e prova reale ospite con storico sintetico2/3/4 e aiuto/ripresa PASS, zeroPOST/CAPTCHA/dati reali. R1 completato, non tutta la roadmap. ProssimoR2: percorso base oltre6parole, mantenendo i13temi già nei giochi. R3–R8 restano distinti e non dichiarati completi; vedi REQUIREMENTS_REMAINING.md. Il testo seguente conserva la cronologia.
+
 ## Ultimo rilascio verificato:26ottobre2026,20:01UTC
 
 **Live:a52715b61e4deb36e96193650d6d1937d8b3b8de**, run [40391137928](https://github.com/socialluca89-byte/word/actions/runs/40391137928), verify/browser/deploy SUCCESS. Tutte21suite eseguite; confronto indipendente HTTPS di home/health/asset PASS e navigazione ospite reale PASS (26lettere/13blocchi/13schede/48oggetti/7destinazioni). Nessun account reale o dato alunni usato. Il blocco di pubblicazione storico è chiuso per questo rilascio; preflight/backup/rollback restano rigorosi.

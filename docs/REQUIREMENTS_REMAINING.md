@@ -1,10 +1,10 @@
 # Requisiti residui — elenco finito,26ottobre2026
 
-Riferimento live verificato:a52715b, run40391137928. La pubblicazione del primo modulo non ha completato tutte le richieste. Questa lista distingue codice sviluppabile da validazioni/consensi reali: non autorizza nuovi accessi, servizi o spese. Caffè Oro resta fuori dal task; tablet/Chrome rimandati.
+Riferimento live verificato:b3ca230, run40399687794. La pubblicazione del primo modulo non ha completato tutte le richieste. Questa lista distingue codice sviluppabile da validazioni/consensi reali: non autorizza nuovi accessi, servizi o spese. Caffè Oro resta fuori dal task; tablet/Chrome rimandati.
 
 | ID | Requisito già discusso | Consegna verificabile | Stato / dipendenza |
 | --- | --- | --- | --- |
-| R1 | Alternative graduali lettere |2→3→4 per competenza, aiuti e ritorno guidato, sessioni/premi conservati; API/browser/CI e verifica live | Sviluppato, collaudo completo in corso; LETTER_CHOICE_PROGRESSION.md |
+| R1 | Alternative graduali lettere |2→3→4 per competenza, aiuti e ritorno guidato, sessioni/premi conservati; API/browser/CI e verifica live | Completato/testato/pubblicato b3ca230, run40399687794; LETTER_CHOICE_PROGRESSION.md |
 | R2 | Percorso didattico di base | Riutilizzare e organizzare i contenuti originali esistenti per corpo, scuola, colori/numeri, presentazioni e preposizioni; sequenza ascolta/riconosci/componi/frase e ripasso, con copertura esplicita di ogni tema | Da completare per l'Allenamento iniziale oltre le6parole, senza duplicare i13temi già nei giochi |
 | R3 | Collegamento genitore–bambino iscritto da link classe | Invito/verifica/consenso del rapporto, autorizzazioni negative provate, revoca e isolamento; nessun abbinamento per nickname/email/linkclasse soltanto | Da progettare e implementare con fixture; nessun accesso a dati reali creato implicitamente |
 | R4 | Materiali foto/PDF | Estrazione locale con limiti, anteprima/correzione adulta prima dell'importazione, errori e file non supportati gestiti; nessun invio dei materiali a terzi | Non implementata l'estrazione automatica. Esistono missioni da testo confermato e allegati privati; non basta a dichiarareOCR |
