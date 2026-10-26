@@ -2,14 +2,25 @@
 import json,os,shlex,socket,sqlite3,subprocess,tempfile,time,urllib.error,urllib.request,http.cookiejar,datetime
 from pathlib import Path
 content=json.loads(Path('dist/training.json').read_text())
+assert len(content['words'])==6 and content['foundationWords'][:6]==content['words'],'Keep the public legacy catalog compatible with old cached clients'
+content['words']=content['foundationWords']
 assert [l['id'] for l in content['letters']]==list('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
 assert all(l['lower']==l['id'].lower() for l in content['letters'])
 assert len(content['blocks'])==13 and len({b['id'] for b in content['blocks']})==13
 assert sorted(letter for block in content['blocks'] for letter in block['letters'])==list('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
 assert all(len(block['letters'])==2 and len(set(block['letters']))==2 for block in content['blocks'])
 assert {l['id']:(l['it'],l['en']) for l in content['letters'] if l['id'] in 'ABCEI'}=={'A':('a','ay'),'B':('bi','bee'),'C':('ci','see'),'E':('e','ee'),'I':('i','eye')}
-assert len(content['words'])==6 and len(content['stickers'])==3
+assert len(content['words'])==35 and {w['id'] for w in content['words'][:6]}=={'cat','pen','dog','sun','book','red'} and len(content['stickers'])==3
 for word in content['words']:assert word['gap'].replace('___',word['id'])==word['phrase']
+assert len(content['wordPacks'])==6 and len({p['id'] for p in content['wordPacks']})==6
+words={w['id']:w for w in content['words']}
+assert set(words)==set(id for p in content['wordPacks'] for id in p['words'])
+assert content['wordPacks'][0]['words']==['cat','pen','dog','sun','book','red']
+for pack in content['wordPacks']:
+ assert 3<=len(pack['words'])<=10 and len(set(pack['words']))==len(pack['words'])
+for word in content['words']:
+ assert word['id'].isalpha() and word['id'].isascii() and word['id'].islower()
+ assert len(word['id'])<=8 and word['gap'].count('___')==1 and word['meaning'] and word['phraseMeaning']
 with tempfile.TemporaryDirectory(prefix='wordyland-training-') as tmp:
  with socket.socket() as sock:sock.bind(('127.0.0.1',0));port=sock.getsockname()[1]
  log=open(tmp+'/server.log','w+');server=subprocess.Popen(shlex.split(os.environ.get('PHP_COMMAND','php'))+['-d','session.save_path='+tmp,'-S',f'127.0.0.1:{port}','-t','dist'],env=dict(os.environ,WORDYLAND_TEST='1',WORDYLAND_DATA_DIR=tmp+'/data'),stdout=log,stderr=log)
@@ -74,6 +85,38 @@ with tempfile.TemporaryDirectory(prefix='wordyland-training-') as tmp:
   while not s['done']:result,last=answer(s,helped=True);s=result['session']
   assert set(result['stickers'])=={'first','explore','return'};n=db.execute('SELECT COUNT(*) FROM training_stickers WHERE profile_id=?',(pid,)).fetchone()[0];req(a,'training-answer',last,ta);assert db.execute('SELECT COUNT(*) FROM training_stickers WHERE profile_id=?',(pid,)).fetchone()[0]==n==3
   assert snapshot()==old,'Training must not change game wallets, points, badges, credit, profiles or class standings'
+  # Every curated theme is reachable and rotates through its complete finite set.
+  for bad in ['unknown',{},['body'],1]:req(a,'training-start',{'profile':pid,'track':'words','pack':bad},ta,400)
+  for pack in content['wordPacks'][1:]:
+   seen_words=set()
+   for round in range(len(pack['words'])):
+    body={'profile':pid,'track':'words','pack':pack['id']};s=req(a,'training-start',body,ta)['session']
+    assert s['track']=='words:'+pack['id'] and s['total']<=9
+    assert req(a,'training-start',body,ta)['session']['token']==s['token']
+    frozen=s['question'];assert req(device,f'training-state&profile={pid}&token='+s['token'])['session']['question']==frozen
+    while not s['done']:
+     q=s['question'];seen_words.add(q['answer']);assert q['answer'] in pack['words']
+     assert q['word']==words[q['answer']]
+     assert len(q['choices'])==3 and len({w['id'] for w in q['choices']})==3
+     assert all(w['id'] in pack['words'] for w in q['choices'])
+     if q['mode']=='recall' and round==0:
+      req(device,'training-hint',{'profile':pid,'token':s['token'],'step':s['step'],'level':2},td)
+      saved=req(a,f'training-state&profile={pid}&token='+s['token'])['session'];assert saved['hint']==2
+     result,payload=answer(s);s=result['session']
+     if q['mode']=='recall' and round==0:assert not result['independent']
+     assert req(a,'training-answer',payload,ta)['replayed']
+    if seen_words==set(pack['words']):break
+   assert seen_words==set(pack['words']),(pack['id'],seen_words)
+  assert {i['item'] for i in req(a,f'training-progress&profile={pid}')['items'] if i['item'].startswith('word:')}=={'word:'+id for id in words}
+  assert snapshot()==old,'All foundation packs preserve every game/account/class/economy table'
+  # More than four paused paths must all be discoverable, with no loss of tokens.
+  active=[]
+  for block in content['blocks']:
+   active.append(req(b,'training-start',{'profile':other,'track':'letters','block':block['id']},tb)['session']['token'])
+  for pack in content['wordPacks']:
+   active.append(req(b,'training-start',{'profile':other,'track':'words','pack':pack['id']},tb)['session']['token'])
+  assert len(active)==19 and set(active)=={s['token'] for s in req(b,f'training-state&profile={other}')['sessions']}
+  assert snapshot()==old
   seen=set()
   for block in content['blocks']:
    s=start('letters',block['id'])
@@ -95,5 +138,5 @@ with tempfile.TemporaryDirectory(prefix='wordyland-training-') as tmp:
   req(a,'delete-profile',{'profile':pid,'password':password,'confirm':'ELIMINA'},ta)
   for table in ['training_sessions','training_daily','training_items','training_totals','training_stickers','training_choice_steps']:assert db.execute('SELECT COUNT(*) FROM '+table+' WHERE profile_id=?',(pid,)).fetchone()[0]==0,'Profile deletion must clean training data'
   assert req(b,f'training-state&profile={other}&token='+retained['token'])['session']['token']==retained['token']
-  print('Training API passed: 26 guided letters in 13 blocks, curated content, owned privacy/roles/CSRF, no game economy/ranking mutations, finite idempotent stickers, wrong/hint/reply replay, second-device help, spaced-days fading, reading versus audio skill separation, six words/phrases, private report, expiry unchanged game rewards and owned-profile deletion cleanup.')
+  print('Training API passed: 26 guided letters in 13 blocks, curated content, owned privacy/roles/CSRF, no game economy/ranking mutations, finite idempotent stickers, wrong/hint/reply replay, second-device help, spaced-days fading, reading versus audio skill separation, 35 words in six packs, complete rotation, 19 paused paths, same-pack distractors, private report, expiry unchanged game rewards and owned-profile deletion cleanup.')
  finally:server.terminate();server.wait(timeout=5);log.close()

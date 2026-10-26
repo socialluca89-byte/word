@@ -324,5 +324,404 @@
       "icon": "🌈",
       "name": "Nuove esplorazioni"
     }
+  ],
+  "wordPacks": [
+    {
+      "id": "first",
+      "title": "Prime parole",
+      "icon": "🌱",
+      "words": [
+        "cat",
+        "pen",
+        "dog",
+        "sun",
+        "book",
+        "red"
+      ]
+    },
+    {
+      "id": "body",
+      "title": "Il mio corpo",
+      "icon": "🖐️",
+      "words": [
+        "ear",
+        "eye",
+        "nose",
+        "mouth",
+        "hand",
+        "foot"
+      ]
+    },
+    {
+      "id": "school",
+      "title": "A scuola",
+      "icon": "🎒",
+      "words": [
+        "pen",
+        "book",
+        "pencil",
+        "bag",
+        "ruler",
+        "notebook"
+      ]
+    },
+    {
+      "id": "colours",
+      "title": "I colori",
+      "icon": "🎨",
+      "words": [
+        "red",
+        "blue",
+        "green",
+        "yellow",
+        "pink",
+        "purple"
+      ]
+    },
+    {
+      "id": "numbers",
+      "title": "Numeri da 1 a 10",
+      "icon": "🔢",
+      "words": [
+        "one",
+        "two",
+        "three",
+        "four",
+        "five",
+        "six",
+        "seven",
+        "eight",
+        "nine",
+        "ten"
+      ]
+    },
+    {
+      "id": "greetings",
+      "title": "Saluti e risposte",
+      "icon": "👋",
+      "words": [
+        "hello",
+        "thanks",
+        "yes",
+        "no"
+      ]
+    }
+  ],
+  "foundationWords": [
+    {
+      "id": "cat",
+      "meaning": "gatto",
+      "emoji": "🐈",
+      "topic": "animali",
+      "phrase": "I see a cat.",
+      "phraseMeaning": "Vedo un gatto.",
+      "gap": "I see a ___."
+    },
+    {
+      "id": "pen",
+      "meaning": "penna",
+      "emoji": "🖊️",
+      "topic": "scuola",
+      "phrase": "I have a pen.",
+      "phraseMeaning": "Ho una penna.",
+      "gap": "I have a ___."
+    },
+    {
+      "id": "dog",
+      "meaning": "cane",
+      "emoji": "🐕",
+      "topic": "animali",
+      "phrase": "I see a dog.",
+      "phraseMeaning": "Vedo un cane.",
+      "gap": "I see a ___."
+    },
+    {
+      "id": "sun",
+      "meaning": "sole",
+      "emoji": "☀️",
+      "topic": "quotidiano",
+      "phrase": "The sun is yellow.",
+      "phraseMeaning": "Il sole è giallo.",
+      "gap": "The ___ is yellow."
+    },
+    {
+      "id": "book",
+      "meaning": "libro",
+      "emoji": "📕",
+      "topic": "scuola",
+      "phrase": "I have a book.",
+      "phraseMeaning": "Ho un libro.",
+      "gap": "I have a ___."
+    },
+    {
+      "id": "red",
+      "meaning": "rosso",
+      "emoji": "🔴",
+      "topic": "colori",
+      "phrase": "The ball is red.",
+      "phraseMeaning": "La palla è rossa.",
+      "gap": "The ball is ___."
+    },
+    {
+      "id": "ear",
+      "meaning": "orecchio",
+      "emoji": "👂",
+      "topic": "corpo",
+      "phrase": "This is an ear.",
+      "phraseMeaning": "Questo è un orecchio.",
+      "gap": "This is an ___."
+    },
+    {
+      "id": "eye",
+      "meaning": "occhio",
+      "emoji": "👁️",
+      "topic": "corpo",
+      "phrase": "This is an eye.",
+      "phraseMeaning": "Questo è un occhio.",
+      "gap": "This is an ___."
+    },
+    {
+      "id": "nose",
+      "meaning": "naso",
+      "emoji": "👃",
+      "topic": "corpo",
+      "phrase": "This is a nose.",
+      "phraseMeaning": "Questo è un naso.",
+      "gap": "This is a ___."
+    },
+    {
+      "id": "mouth",
+      "meaning": "bocca",
+      "emoji": "👄",
+      "topic": "corpo",
+      "phrase": "This is a mouth.",
+      "phraseMeaning": "Questa è una bocca.",
+      "gap": "This is a ___."
+    },
+    {
+      "id": "hand",
+      "meaning": "mano",
+      "emoji": "🖐️",
+      "topic": "corpo",
+      "phrase": "This is a hand.",
+      "phraseMeaning": "Questa è una mano.",
+      "gap": "This is a ___."
+    },
+    {
+      "id": "foot",
+      "meaning": "piede",
+      "emoji": "🦶",
+      "topic": "corpo",
+      "phrase": "This is a foot.",
+      "phraseMeaning": "Questo è un piede.",
+      "gap": "This is a ___."
+    },
+    {
+      "id": "pencil",
+      "meaning": "matita",
+      "emoji": "✏️",
+      "topic": "scuola",
+      "phrase": "I have a pencil.",
+      "phraseMeaning": "Ho una matita.",
+      "gap": "I have a ___."
+    },
+    {
+      "id": "bag",
+      "meaning": "borsa",
+      "emoji": "🎒",
+      "topic": "scuola",
+      "phrase": "I have a bag.",
+      "phraseMeaning": "Ho una borsa.",
+      "gap": "I have a ___."
+    },
+    {
+      "id": "ruler",
+      "meaning": "righello",
+      "emoji": "📏",
+      "topic": "scuola",
+      "phrase": "I have a ruler.",
+      "phraseMeaning": "Ho un righello.",
+      "gap": "I have a ___."
+    },
+    {
+      "id": "notebook",
+      "meaning": "quaderno",
+      "emoji": "📓",
+      "topic": "scuola",
+      "phrase": "I have a notebook.",
+      "phraseMeaning": "Ho un quaderno.",
+      "gap": "I have a ___."
+    },
+    {
+      "id": "blue",
+      "meaning": "blu",
+      "emoji": "🔵",
+      "topic": "colori",
+      "phrase": "The ball is blue.",
+      "phraseMeaning": "La palla è blu.",
+      "gap": "The ball is ___."
+    },
+    {
+      "id": "green",
+      "meaning": "verde",
+      "emoji": "🟢",
+      "topic": "colori",
+      "phrase": "The ball is green.",
+      "phraseMeaning": "La palla è verde.",
+      "gap": "The ball is ___."
+    },
+    {
+      "id": "yellow",
+      "meaning": "giallo",
+      "emoji": "🟡",
+      "topic": "colori",
+      "phrase": "The ball is yellow.",
+      "phraseMeaning": "La palla è gialla.",
+      "gap": "The ball is ___."
+    },
+    {
+      "id": "pink",
+      "meaning": "rosa",
+      "emoji": "🩷",
+      "topic": "colori",
+      "phrase": "The ball is pink.",
+      "phraseMeaning": "La palla è rosa.",
+      "gap": "The ball is ___."
+    },
+    {
+      "id": "purple",
+      "meaning": "viola",
+      "emoji": "🟣",
+      "topic": "colori",
+      "phrase": "The ball is purple.",
+      "phraseMeaning": "La palla è viola.",
+      "gap": "The ball is ___."
+    },
+    {
+      "id": "one",
+      "meaning": "uno",
+      "emoji": "1",
+      "topic": "numeri",
+      "phrase": "I see one star.",
+      "phraseMeaning": "Vedo una stella.",
+      "gap": "I see ___ star."
+    },
+    {
+      "id": "two",
+      "meaning": "due",
+      "emoji": "2",
+      "topic": "numeri",
+      "phrase": "I see two stars.",
+      "phraseMeaning": "Vedo due stelle.",
+      "gap": "I see ___ stars."
+    },
+    {
+      "id": "three",
+      "meaning": "tre",
+      "emoji": "3",
+      "topic": "numeri",
+      "phrase": "I see three stars.",
+      "phraseMeaning": "Vedo tre stelle.",
+      "gap": "I see ___ stars."
+    },
+    {
+      "id": "four",
+      "meaning": "quattro",
+      "emoji": "4",
+      "topic": "numeri",
+      "phrase": "I see four stars.",
+      "phraseMeaning": "Vedo quattro stelle.",
+      "gap": "I see ___ stars."
+    },
+    {
+      "id": "five",
+      "meaning": "cinque",
+      "emoji": "5",
+      "topic": "numeri",
+      "phrase": "I see five stars.",
+      "phraseMeaning": "Vedo cinque stelle.",
+      "gap": "I see ___ stars."
+    },
+    {
+      "id": "six",
+      "meaning": "sei",
+      "emoji": "6",
+      "topic": "numeri",
+      "phrase": "I see six stars.",
+      "phraseMeaning": "Vedo sei stelle.",
+      "gap": "I see ___ stars."
+    },
+    {
+      "id": "seven",
+      "meaning": "sette",
+      "emoji": "7",
+      "topic": "numeri",
+      "phrase": "I see seven stars.",
+      "phraseMeaning": "Vedo sette stelle.",
+      "gap": "I see ___ stars."
+    },
+    {
+      "id": "eight",
+      "meaning": "otto",
+      "emoji": "8",
+      "topic": "numeri",
+      "phrase": "I see eight stars.",
+      "phraseMeaning": "Vedo otto stelle.",
+      "gap": "I see ___ stars."
+    },
+    {
+      "id": "nine",
+      "meaning": "nove",
+      "emoji": "9",
+      "topic": "numeri",
+      "phrase": "I see nine stars.",
+      "phraseMeaning": "Vedo nove stelle.",
+      "gap": "I see ___ stars."
+    },
+    {
+      "id": "ten",
+      "meaning": "dieci",
+      "emoji": "10",
+      "topic": "numeri",
+      "phrase": "I see ten stars.",
+      "phraseMeaning": "Vedo dieci stelle.",
+      "gap": "I see ___ stars."
+    },
+    {
+      "id": "hello",
+      "meaning": "ciao (quando incontri qualcuno)",
+      "emoji": "👋",
+      "topic": "saluti e risposte",
+      "phrase": "I say hello.",
+      "phraseMeaning": "Dico ciao.",
+      "gap": "I say ___."
+    },
+    {
+      "id": "thanks",
+      "meaning": "grazie",
+      "emoji": "🙏",
+      "topic": "saluti e risposte",
+      "phrase": "I say thanks.",
+      "phraseMeaning": "Dico grazie.",
+      "gap": "I say ___."
+    },
+    {
+      "id": "yes",
+      "meaning": "sì",
+      "emoji": "✅",
+      "topic": "saluti e risposte",
+      "phrase": "I say yes.",
+      "phraseMeaning": "Dico sì.",
+      "gap": "I say ___."
+    },
+    {
+      "id": "no",
+      "meaning": "no",
+      "emoji": "🙅",
+      "topic": "saluti e risposte",
+      "phrase": "I say no.",
+      "phraseMeaning": "Dico no.",
+      "gap": "I say ___."
+    }
   ]
 }

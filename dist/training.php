@@ -19,7 +19,7 @@ if($action==='training-progress'){
 if($action==='training-state'){
     if($method!=='GET')fail('Metodo non consentito.',405);
     if(isset($_GET['token']))respond(['session'=>trainingSnapshot(trainingOwnedSession($db,$tp,(string)$_GET['token'])),'stickers'=>trainingStickers($db,$tp)]);
-    $active=rows($db,'SELECT * FROM training_sessions WHERE profile_id=? AND completed_at IS NULL AND created_at>=? ORDER BY rowid DESC LIMIT 4',[$tp,time()-604800]);
+    $active=rows($db,'SELECT * FROM training_sessions WHERE profile_id=? AND completed_at IS NULL AND created_at>=? ORDER BY rowid DESC LIMIT 32',[$tp,time()-604800]);
     respond(['sessions'=>array_map('trainingSnapshot',$active),'stickers'=>trainingStickers($db,$tp)]);
 }
 if($method!=='POST')fail('Metodo non consentito.',405);
@@ -27,11 +27,13 @@ if($action==='training-start'){
     $track=$body['track']??'letters';$block=$body['block']??'ae';$content=trainingContent();
     if(!in_array($track,['letters','words'],true))fail('Scegli un percorso disponibile.');
     if($track==='letters'&&!in_array($block,array_column($content['blocks'],'id'),true))fail('Scegli un blocco disponibile.');
-    $key=$track==='letters'?'letters:'.$block:'words';limitAttempts($db,'training-start:'.$tp,60);
+    $pack=$track==='words'?($body['pack']??'first'):'first';
+    if($track==='words'&&(!is_string($pack)||!in_array($pack,array_column($content['wordPacks'],'id'),true)))fail('Scegli un gruppo di parole disponibile.');
+    $key=$track==='letters'?'letters:'.$block:($pack==='first'?'words':'words:'.$pack);limitAttempts($db,'training-start:'.$tp,60);
     $db->exec('BEGIN IMMEDIATE');
     $old=one($db,'SELECT * FROM training_sessions WHERE profile_id=? AND track=? AND completed_at IS NULL AND created_at>=? ORDER BY rowid DESC LIMIT 1',[$tp,$key,time()-604800]);
     if($old){$db->exec('COMMIT');respond(['session'=>trainingSnapshot($old),'stickers'=>trainingStickers($db,$tp)]);}
-    $plan=trainingPlan($db,$tp,$track,$block,$content);$token=bin2hex(random_bytes(24));
+    $plan=trainingPlan($db,$tp,$track,$block,$content,$pack);$token=bin2hex(random_bytes(24));
     runSql($db,'INSERT INTO training_sessions(token,profile_id,track,plan,created_at) VALUES(?,?,?,?,?)',[$token,$tp,$key,json_encode($plan,JSON_THROW_ON_ERROR),time()]);
     // Only the new training data has retention; no game/account/progress table is pruned.
     runSql($db,'DELETE FROM training_sessions WHERE profile_id=? AND created_at<?',[$tp,time()-2592000]);
@@ -80,7 +82,7 @@ runSql($db,'UPDATE training_sessions SET step=?,helped=0,errors=0,hint=0,last_at
 if($done){runSql($db,'INSERT INTO training_totals(profile_id,sessions,first_day,last_day) VALUES(?,1,?,?) ON CONFLICT(profile_id) DO UPDATE SET sessions=sessions+1,last_day=excluded.last_day',[$tp,gmdate('Y-m-d'),gmdate('Y-m-d')]);trainingGrantStickers($db,$tp);}
 $db->exec('COMMIT');respond(['correct'=>true,'independent'=>$independent,'session'=>trainingSnapshot(trainingOwnedSession($db,$tp,$token)),'stickers'=>trainingStickers($db,$tp)]);
 
-function trainingContent():array{return json_decode(file_get_contents(__DIR__.'/training.json'),true,32,JSON_THROW_ON_ERROR);}
+function trainingContent():array{$content=json_decode(file_get_contents(__DIR__.'/training.json'),true,32,JSON_THROW_ON_ERROR);$content['words']=$content['foundationWords']??$content['words'];$content['wordPacks']??=[['id'=>'first','words'=>array_column($content['words'],'id')]];return $content;}
 function trainingOwnedSession(PDO $db,int $pid,string $token):array{
     $s=one($db,'SELECT * FROM training_sessions WHERE token=? AND profile_id=?',[$token,$pid]);
     if(!$s)fail('Allenamento non trovato.',404);
@@ -110,7 +112,7 @@ function trainingLetterChoiceSets(PDO $db,int $pid,string $id,array $pair,array 
     }
     return $sets;
 }
-function trainingPlan(PDO $db,int $pid,string $track,string $block,array $content):array{
+function trainingPlan(PDO $db,int $pid,string $track,string $block,array $content,string $pack='first'):array{
     $plan=[];
     if($track==='letters'){
         $pair=$content['blocks'][array_search($block,array_column($content['blocks'],'id'),true)]['letters'];$letters=array_column($content['letters'],null,'id');
@@ -120,15 +122,16 @@ function trainingPlan(PDO $db,int $pid,string $track,string $block,array $conten
         }
     }else{
         $review=array_column(rows($db,'SELECT item FROM training_daily WHERE profile_id=? AND day>=? AND skill="spelling.recall" GROUP BY item HAVING SUM(errors)>=2 OR SUM(guided)>=2',[$pid,gmdate('Y-m-d',time()-7*86400)]),'item');
-        $words=$content['words'];$counts=array_column(rows($db,'SELECT item,SUM(completed) AS n FROM training_items WHERE profile_id=? GROUP BY item',[$pid]),'n','item');
+        $ids=$content['wordPacks'][array_search($pack,array_column($content['wordPacks'],'id'),true)]['words'];$pool=array_values(array_filter($content['words'],fn($w)=>in_array($w['id'],$ids,true)));
+        $words=$pool;$counts=array_column(rows($db,'SELECT item,SUM(completed) AS n FROM training_items WHERE profile_id=? GROUP BY item',[$pid]),'n','item');
         usort($words,fn($a,$b)=>((int)in_array('word:'.$b['id'],$review,true)<=>(int)in_array('word:'.$a['id'],$review,true))?:((int)($counts['word:'.$a['id']]??0)<=>(int)($counts['word:'.$b['id']]??0)));
         $selected=array_slice($words,0,2);$unseen=array_values(array_filter($words,fn($w)=>(int)($counts['word:'.$w['id']]??0)===0));
         if($unseen&&!array_filter($selected,fn($w)=>(int)($counts['word:'.$w['id']]??0)===0))$selected[1]=$unseen[0];
-        foreach($selected as $word){$base=['item'=>'word:'.$word['id'],'word'=>$word,'answer'=>$word['id'],'choices'=>array_slice(array_values(array_filter($content['words'],fn($w)=>$w['id']!==$word['id'])),0,2),'topic'=>$word['topic']];$base['choices'][]=$word;shuffle($base['choices']);
+        foreach($selected as $word){$base=['item'=>'word:'.$word['id'],'word'=>$word,'answer'=>$word['id'],'choices'=>array_slice(array_values(array_filter($pool,fn($w)=>$w['id']!==$word['id'])),0,2),'topic'=>$word['topic']];$base['choices'][]=$word;shuffle($base['choices']);
             if(!trainingFamiliar($db,$pid,$base['item'],'spelling.recall'))$plan[]=$base+['mode'=>'model'];
             foreach(['recognize','build','recall'] as $mode)$plan[]=$base+['mode'=>$mode];
         }
-        $word=$selected[0];$choices=array_slice(array_values(array_filter($content['words'],fn($w)=>$w['id']!==$word['id'])),0,2);$choices[]=$word;shuffle($choices);$plan[]=['item'=>'word:'.$word['id'],'word'=>$word,'answer'=>$word['id'],'mode'=>'phrase','choices'=>$choices,'topic'=>'piccole frasi'];
+        $word=$selected[0];$choices=array_slice(array_values(array_filter($pool,fn($w)=>$w['id']!==$word['id'])),0,2);$choices[]=$word;shuffle($choices);$plan[]=['item'=>'word:'.$word['id'],'word'=>$word,'answer'=>$word['id'],'mode'=>'phrase','choices'=>$choices,'topic'=>'piccole frasi'];
     }
     return $plan;
 }
