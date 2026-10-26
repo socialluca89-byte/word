@@ -1,6 +1,6 @@
 # Bozza tecnica per SiteGround — WordyLand
 
-**Bozza non inviata.** Nessun ticket aperto o riutilizzato; nessun collegamento con Caffè Oro.
+**Bozza non inviata. Autorizzazione specifica all’invio richiesta dal coordinatore e ancora in attesa: questo task non deve inviarla.** Nessun ticket aperto o riutilizzato; nessun collegamento con Caffè Oro.
 
 Oggetto: challenge anti-bot sul controllo pubblico GitHub Actions di wordyland.eu
 

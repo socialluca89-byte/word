@@ -56,10 +56,19 @@
       requestAnimationFrame(()=>{area.scrollIntoView({block:'start'});(section?.querySelector('input')||panel.querySelector('input'))?.focus({preventScroll:true});});
     }catch(error){tools.querySelector('#accessStatus').textContent=error.message;}
   }
-  function passwordSettings(){return '<details id="passwordSettings" class="accountSecurity"><summary>Cambia password</summary><form id="changePasswordForm"><label>Password attuale<input name="password" type="password" autocomplete="current-password" required></label><label>Nuova password · almeno 12 caratteri<input name="newPassword" type="password" autocomplete="new-password" minlength="12" maxlength="72" required></label><label>Ripeti la nuova password<input name="confirmPassword" type="password" autocomplete="new-password" minlength="12" maxlength="72" required></label><button class="primary">Salva la nuova password</button><p>Resterai collegato qui. Gli altri dispositivi dovranno accedere di nuovo.</p></form></details>';}
+  function passwordSettings(){return '<details id="passwordSettings" class="accountSecurity"><summary>Cambia password</summary><form id="changePasswordForm"><label>Password attuale<input name="password" type="password" autocomplete="current-password" required></label><label>Nuova password · almeno 12 caratteri<input name="newPassword" type="password" autocomplete="new-password" minlength="12" maxlength="72" required></label><label>Ripeti la nuova password<input name="confirmPassword" type="password" autocomplete="new-password" minlength="12" maxlength="72" required></label><button class="primary">Salva la nuova password</button><p>Resterai collegato qui. Gli altri dispositivi dovranno accedere di nuovo.</p><p id="passwordChangeStatus" role="status" aria-live="polite"></p></form></details>';}
   function bindPasswordSettings(){
     const form=panel.querySelector('#changePasswordForm');if(!form)return;
-    form.onsubmit=async event=>{event.preventDefault();const data=Object.fromEntries(new FormData(form));if(data.newPassword!==data.confirmPassword){say('Le due nuove password non coincidono.');return;}const button=event.submitter;button.disabled=true;try{await flush();await request('change-password',data);form.reset();say('Password aggiornata. Gli altri dispositivi dovranno accedere di nuovo.');signalProfile();}catch(error){say(error.message);}finally{if(button.isConnected)button.disabled=false;}};
+    // Sync messages use accountStatus; the security result remains in its own form.
+    const feedback=form.querySelector('#passwordChangeStatus');
+    const passwordSay=text=>{feedback.textContent=text;say(text);};
+    form.onsubmit=async event=>{
+      event.preventDefault();const data=Object.fromEntries(new FormData(form));
+      if(data.newPassword!==data.confirmPassword){passwordSay('Le due nuove password non coincidono.');return;}
+      const button=event.submitter;button.disabled=true;passwordSay('Verifica della modifica in corso…');
+      try{await flush();await request('change-password',data);form.reset();passwordSay('Password aggiornata. Gli altri dispositivi dovranno accedere di nuovo.');signalProfile();}
+      catch(error){passwordSay(error.message);}finally{if(button.isConnected)button.disabled=false;}
+    };
   }
   function recoveryNotice(code) {
     let notice = area.querySelector('#recoveryNotice');
