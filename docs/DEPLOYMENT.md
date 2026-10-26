@@ -101,3 +101,7 @@ See [READ_ONLY_READINESS.md](READ_ONLY_READINESS.md). scripts/read-only-readines
 ## Training assets prepared on work (not deployed)
 
 The reviewed bundle now contains 39 public application files, adding training.php, training.js and training.json. Both runner and remote allowlists include them; training.php precedes api.php, index.html remains last, 33 static assets are checked over HTTPS. The isolated deploy/rollback suite passed with this allowlist; this does not confirm a production deploy. The catalog URL is hashed in training.js, and all private APIs remain excluded from the offline cache. New training-only schema does not change game wallets, credits, rewards or standings. See TRAINING_SPELLING.md.
+
+## Preflight pubblico prima di SSH (preparato il26ottobre)
+
+Il modo deploy ora verifica per primo l'health pubblico, prima di caricare credenziali SSH o eseguire operazioni remote. Il rifiuto/intercettazione blocca il run senza upload/install/cache purge; nessun retry nel preflight. Controlli dopo installazione e rollback restano obbligatori. Probe/rollback non cambiano. Vedi [ripresa del26ottobre](RELEASE_2026_10_26.md) per evidenze e differenza fra test/cloud/CI/live. Le prove fittizie coprono sia un problema già presente sia uno comparso dopo l'installazione; non è un'esenzione per l'anti-bot.

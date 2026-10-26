@@ -28,6 +28,26 @@ trap cleanup EXIT
 live_error() { echo "$1" >&2; if [[ "${GITHUB_ACTIONS:-}" == true ]]; then printf '::error title=Live verification::%s\n' "$1"; fi; }
 live_notice() { echo "$1"; if [[ "${GITHUB_ACTIONS:-}" == true ]]; then printf '::notice title=Site version::%s\n' "$1"; fi; }
 
+check_health() {
+  local token health
+  local -a health_options=(-fsS --max-time 30)
+  if [[ "${1:-}" != preflight ]]; then health_options+=(--retry 3 --retry-delay 5); fi
+  token="verify-${GITHUB_RUN_ID:-local}-$(date +%s%N)"
+  health=$(curl "${health_options[@]}" "$SITE_URL/api.php?action=health&$token") || { live_error 'Health endpoint unreachable'; return 1; }
+  if [[ "$health" == *sgcaptcha* ]]; then live_error 'SiteGround anti-bot verification intercepted the health endpoint (HTML instead of JSON).'; return 1; fi
+  python3 -c 'import json,sys; d=json.loads(sys.argv[1]); sys.exit(0 if d.get("ready") is True and d.get("database")=="sqlite" else 1)' "$health" 2>/dev/null \
+    || { live_error 'Health check failed: the API did not confirm ready=true and database=sqlite.'; return 1; }
+  echo 'Health: ready=true, database=sqlite'
+}
+
+# Stop on the known public-health rejection before loading any SSH key or
+# contacting/mutating the server. This is not a substitute for post-install checks.
+if [[ "$mode" == deploy ]]; then
+  need SG_PATH
+  deploy_phase=public-health-preflight
+  check_health preflight || { live_error 'Public health preflight failed; no SSH connection, upload, install or cache purge was attempted.'; exit 1; }
+fi
+
 # Host identity: keyscan output is only a candidate and is printed for comparison.
 if [[ -z "${SG_KNOWN_HOSTS:-}" ]]; then
   [[ "$mode" == probe ]] || { echo 'Missing GitHub configuration: SG_KNOWN_HOSTS' >&2; exit 1; }
@@ -104,7 +124,7 @@ case "$mode" in
           exit 0
         fi
       fi
-      # Bundle exactly the 36 verified files plus checksums; upload to the private directory.
+      # Bundle exactly the 39 verified files plus checksums; upload to the private directory.
       mkdir "$work/bundle"
       for f in "${FILES[@]}"; do install -m 644 "dist/$f" "$work/bundle/$f"; done
       (cd "$work/bundle" && sha256sum "${FILES[@]}" > SHA256SUMS)
@@ -145,15 +165,7 @@ purge_cache() {
 }
 # Verify ordinary visitor URLs as well as cache-busting asset requests.
 expect_sha=${sha:-}
-check_health() {
-  local token health
-  token="verify-${GITHUB_RUN_ID:-local}-$(date +%s%N)"
-  health=$(curl -fsS --retry 3 --retry-delay 5 --max-time 30 "$SITE_URL/api.php?action=health&$token") || { live_error 'Health endpoint unreachable'; return 1; }
-  if [[ "$health" == *sgcaptcha* ]]; then live_error 'SiteGround anti-bot verification intercepted the health endpoint (HTML instead of JSON).'; return 1; fi
-  python3 -c 'import json,sys; d=json.loads(sys.argv[1]); sys.exit(0 if d.get("ready") is True and d.get("database")=="sqlite" else 1)' "$health" 2>/dev/null \
-    || { live_error 'Health check failed: the API did not confirm ready=true and database=sqlite.'; return 1; }
-  echo 'Health: ready=true, database=sqlite'
-}
+
 check_files() {
   local token f want body got
   want=$(sha256sum dist/index.html | cut -d' ' -f1)

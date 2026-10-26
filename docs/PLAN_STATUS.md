@@ -54,3 +54,7 @@ Implementato il primo modulo di basi, senza prerequisiti: lettere IT/EN prima de
 ## Esecuzione roadmap: primo lotto compatibilità
 
 Dopo il via dell'utente alla roadmap, corretto il fallback senza WebGL: da0 a8 luoghi selezionabili, senza perdere avvio missioni/ritorno. Observer e animazioni facoltative degradano senza eccezioni; pagina con avviso leggibile per script mancanti/non interpretabili o API essenziali assenti. Vedi [COMPATIBILITY_REVIEW](COMPATIBILITY_REVIEW.md) per i sette scenari, nove regressioni browser e limiti. Nessuna prova del tablet reale o risoluzione automatica di SiteGround; punto1 parziale, codice solo work. Nessun nuovo recupero, email, account reale, merge o deploy.
+
+## Ripresa26ottobre: candidato rilascio verificato
+
+Repo work7367c70/main77e071c riconciliati senza modifiche pendenti;56verify e21browser PASS locali. Aggiunto preflighthealth prima di credenziali/SSH, preservando post-check/rollback e utenti. Nuova evidenza pubblica: home/healthHTTPS200, anche queryverify; non prova l'esito del runner. [Fonti e limiti](RELEASE_2026_10_26.md). Nessun nuovo stato live dichiarato prima della conclusione del run effettivo. Tablet rimandato; nessun recupero/email reale eseguito.

@@ -4,7 +4,7 @@
 # the public site. Never touches the real server.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-root=$(mktemp -d); trap 'kill ${php_pid:-0} 2>/dev/null || true; rm -rf -- "$root"' EXIT
+root=$(mktemp -d); trap 'result=$?; if [[ $result != 0 && -f "$root/php.log" ]]; then tail -n 8 "$root/php.log" >&2; fi; kill ${php_pid:-0} 2>/dev/null || true; rm -rf -- "$root"' EXIT
 home="$root/home"; site="$home/www/wordyland.eu"; docroot="$site/public_html"
 mkdir -p "$docroot/.well-known" "$site/.wordyland-data" "$root/bin"
 echo keep > "$docroot/.well-known/acme"; echo db > "$site/.wordyland-data/keep"
@@ -15,6 +15,8 @@ cat > "$root/bin/ssh" <<'FAKE'
 #!/usr/bin/env bash
 while [[ $# -gt 0 ]]; do case "$1" in -p|-o|-i) shift 2;; -*) shift;; *) break;; esac; done
 shift # user@host
+printf '%s\n' "$*" >> "$FAKE_HOME/ssh-calls"
+if [[ "$*" == *'bash -s -- install '* ]]; then touch "$FAKE_HOME/install-attempted"; fi
 [[ -n "${FAKE_SSH_FAIL_ON:-}" && "$*" == *"$FAKE_SSH_FAIL_ON"* ]] && { echo 'simulated transfer failure' >&2; exit 255; }
 cd "$FAKE_HOME"; HOME="$FAKE_HOME" exec bash -c "$*"
 FAKE
@@ -28,9 +30,10 @@ if [[ " $* " == *' -X PURGE '* ]]; then
   printf '%s\n' "${!#}" >> "$FAKE_HOME/cache-purges"
   printf '%s' "${FAKE_PURGE_STATUS:-200}"; exit 0
 fi
+if [[ "${FAKE_HEALTH_FAILURE_AFTER_INSTALL:-}" == 1 && -f "$FAKE_HOME/install-attempted" && "${!#}" == *'api.php?action=health'* ]]; then echo 'simulated post-install connection failure' >&2; exit 7; fi
 "$WORDYLAND_REAL_CURL" "$@" || exit $?
 
-if [[ "${FAKE_HTML_CHALLENGE:-}" == 1 && "${!#}" == *'api.php?action=health'* ]]; then printf '%s' '<html>sgcaptcha hosting verification</html>'; fi
+if [[ ( "${FAKE_HTML_CHALLENGE:-}" == 1 || ( "${FAKE_HTML_CHALLENGE_AFTER_INSTALL:-}" == 1 && -f "$FAKE_HOME/install-attempted" ) ) && "${!#}" == *'api.php?action=health'* ]]; then printf '%s' '<html>sgcaptcha hosting verification</html>'; fi
 if [[ "${FAKE_STALE_HOME:-}" == 1 ]]; then
   output=''; previous=''
   for arg in "$@"; do [[ "$previous" == -o ]] && output=$arg; previous=$arg; done
@@ -44,11 +47,17 @@ ssh-keygen -q -t ed25519 -N 'test pass' -f "$root/key" -C test >/dev/null
 export SG_HOST=ssh.example.test SG_USER=tester SG_PORT=18765 SG_PATH="$docroot"
 export SG_PRIVATE_KEY="$(cat "$root/key")" SG_KEY_PASSPHRASE='test pass'
 export SG_KNOWN_HOSTS="[ssh.example.test]:18765 $(cat "$root/key.pub")"
-export SITE_URL=http://127.0.0.1:8765 GITHUB_RUN_ID=test
-php -S 127.0.0.1:8765 -t "$docroot" >/dev/null 2>&1 & php_pid=$!
+port=$(python3 - <<'PORT'
+import socket
+with socket.socket() as sock:
+    sock.bind(('127.0.0.1',0));print(sock.getsockname()[1])
+PORT
+)
+export SITE_URL="http://127.0.0.1:$port" GITHUB_RUN_ID=test
+php -S "127.0.0.1:$port" -t "$docroot" >"$root/php.log" 2>&1 & php_pid=$!
 
 # Existing site: older WordyLand version with an unmarked root and a stray PHP copy.
-cp dist/index.html dist/api.php dist/platform.php "$docroot/"
+cp dist/index.html dist/api.php dist/platform.php dist/classroom.php "$docroot/"
 echo '<?php echo "secret";' > "$docroot/api.php.wordyland-previous"
 git_sha=$(git rev-parse HEAD)
 
@@ -132,10 +141,27 @@ grep -q 'old page' "$docroot/index.html" || fail 'rollback did not restore the p
 bash scripts/deploy-siteground.sh deploy >/dev/null || fail 'redeploy after rollback failed'
 cmp -s dist/index.html "$docroot/index.html" || fail 'redeploy did not restore release'
 
+echo '--- public-health rejection stops before SSH, credentials, upload or cache purge'
+parent=$(git rev-parse HEAD~1)
+printf '%s\n' "$parent" > "$docroot/.wordyland-managed"; echo 'untouched preflight release WordyLand' > "$docroot/index.html"
+before_calls=$(wc -l < "$home/ssh-calls"); before_purges=$(wc -l < "$home/cache-purges"); before_releases=$(ls "$site/.wordyland-deploy/releases" | sort)
+FAKE_HTML_CHALLENGE=1 SG_PRIVATE_KEY=synthetic-invalid-key GITHUB_ACTIONS=true bash scripts/deploy-siteground.sh deploy >"$root/out_preflight" 2>&1 && fail 'preflight accepted hosting verification'
+grep -q 'anti-bot verification intercepted the health endpoint' "$root/out_preflight" || fail 'preflight did not identify hosting rejection'
+grep -q 'no SSH connection, upload, install or cache purge was attempted' "$root/out_preflight" || fail 'missing no-mutation diagnostic'
+[[ $(wc -l < "$home/ssh-calls") == "$before_calls" ]] || fail 'preflight rejection contacted SSH'
+[[ $(wc -l < "$home/cache-purges") == "$before_purges" ]] || fail 'preflight rejection purged cache'
+[[ $(ls "$site/.wordyland-deploy/releases" | sort) == "$before_releases" ]] || fail 'preflight rejection changed backups'
+grep -q 'untouched preflight release' "$docroot/index.html" || fail 'preflight changed public files'
+[[ $(cat "$docroot/.wordyland-managed") == "$parent" ]] || fail 'preflight changed marker'
+SITE_URL=http://127.0.0.1:1 bash scripts/deploy-siteground.sh deploy >"$root/out_unreachable" 2>&1 && fail 'unreachable preflight was accepted'
+[[ $(wc -l < "$home/ssh-calls") == "$before_calls" ]] || fail 'unreachable preflight contacted SSH'
+grep -q 'no SSH connection' "$root/out_unreachable" || fail 'unreachable preflight not diagnosed'
+
 echo '--- failed HTTPS checks after publishing restore the previous release'
 parent=$(git rev-parse HEAD~1)
 printf '%s\n' "$parent" > "$docroot/.wordyland-managed"; echo 'previous page WordyLand' > "$docroot/index.html"
-SITE_URL=http://127.0.0.1:1 bash scripts/deploy-siteground.sh deploy >"$root/out_live" 2>&1 && fail 'deploy passed with failing live checks'
+rm -f "$home/install-attempted"
+FAKE_HEALTH_FAILURE_AFTER_INSTALL=1 bash scripts/deploy-siteground.sh deploy >"$root/out_live" 2>&1 && fail 'deploy passed with failing live checks'
 grep -q 'restoring backup' "$root/out_live" || fail 'no rollback after live check failure'
 grep -q 'previous page' "$docroot/index.html" || fail 'previous index.html not restored after live failure'
 [[ $(cat "$docroot/.wordyland-managed") == "$parent" ]] || fail 'marker not restored after live failure'
@@ -151,7 +177,8 @@ bash scripts/deploy-siteground.sh deploy >/dev/null || fail 'redeploy after cach
 
 echo '--- hosting verification is diagnosed and rollback marker is confirmed'
 printf '%s\n' "$parent" > "$docroot/.wordyland-managed"; echo 'previous verified release WordyLand' > "$docroot/index.html"
-FAKE_HTML_CHALLENGE=1 GITHUB_ACTIONS=true bash scripts/deploy-siteground.sh deploy >"$root/out_challenge" 2>&1 && fail 'hosting HTML was accepted as API health'
+rm -f "$home/install-attempted"
+FAKE_HTML_CHALLENGE_AFTER_INSTALL=1 GITHUB_ACTIONS=true bash scripts/deploy-siteground.sh deploy >"$root/out_challenge" 2>&1 && fail 'hosting HTML was accepted as API health'
 grep -q 'anti-bot verification intercepted the health endpoint' "$root/out_challenge" || fail 'hosting challenge not diagnosed'
 grep -q "Automatic rollback completed; verified server marker: $parent" "$root/out_challenge" || fail 'rollback marker not confirmed'
 grep -q 'previous verified release' "$docroot/index.html" || fail 'challenge rollback lost previous files'
