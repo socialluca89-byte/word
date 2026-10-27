@@ -1,0 +1,80 @@
+{
+  "scope": "Official original bytes, local worker protocol pinned to Tesseract.js 6.0.1, no CDN runtime",
+  "packages": [
+    {
+      "name": "tesseract.js",
+      "version": "6.0.1",
+      "tarball": "https://registry.npmjs.org/tesseract.js/-/tesseract.js-6.0.1.tgz",
+      "integrity": "sha512-/sPvMvrCtgxnNRCjbTYbr7BRu0yfWDsMZQ2a/T5aN/L1t8wUQN6tTWv6p6FwzpoEBA0jrN2UD2SX4QQFRdoDbA==",
+      "license": "Apache-2.0",
+      "source": "dist/worker.min.js",
+      "file": "ocr-worker.min.js"
+    },
+    {
+      "name": "tesseract.js-core",
+      "version": "6.1.2",
+      "tarball": "https://registry.npmjs.org/tesseract.js-core/-/tesseract.js-core-6.1.2.tgz",
+      "integrity": "sha512-pv4GjmramjdObhDyR1q85Td8X60Puu/lGQn7Kw2id05LLgHhAcWgnz6xSdMCSxBMWjQDmMyDXPTC2aqADdpiow==",
+      "license": "Apache-2.0",
+      "source": "tesseract-core-lstm.wasm.js",
+      "file": "ocr-core-775a35df6f2a.js"
+    },
+    {
+      "name": "@tesseract.js-data/eng",
+      "version": "1.0.0",
+      "tarball": "https://registry.npmjs.org/@tesseract.js-data/eng/-/eng-1.0.0.tgz",
+      "integrity": "sha512-mbTumm6KQPUHyzTPQaF3ObXYnx0SqqfV2nabqFVQBwD6Kl7PhGSLSzOlfFTWy0P3BjghaSKA2W9GB19Jk+ZcTg==",
+      "license": "MIT",
+      "source": "4.0.0_best_int/eng.traineddata.gz",
+      "file": "ocr-eng-45b4cb346724.traineddata.gz"
+    },
+    {
+      "name": "@tesseract.js-data/ita",
+      "version": "1.0.0",
+      "tarball": "https://registry.npmjs.org/@tesseract.js-data/ita/-/ita-1.0.0.tgz",
+      "integrity": "sha512-Sx19NVYve5VAxEBDL6CWTX+evlvzV+iAS5ejJywcHVsmir/C9Tzw2fExoh97QFc06t48tYZA8VrMobsBzMAEhA==",
+      "license": "MIT",
+      "source": "4.0.0_best_int/ita.traineddata.gz",
+      "file": "ocr-ita-f702fcfad297.traineddata.gz"
+    }
+  ],
+  "files": {
+    "ocr-worker.min.js": {
+      "sha256": "38645599043239c0eb6db08a6504a92dcdc292200535f3e9339cd77c4443b842",
+      "bytes": 111162
+    },
+    "ocr-core-775a35df6f2a.js": {
+      "sha256": "775a35df6f2ae100e02609443e6bd5cafcd07983dd6175454ca4a432a7730687",
+      "bytes": 3954181
+    },
+    "ocr-eng-45b4cb346724.traineddata.gz": {
+      "sha256": "45b4cb346724ac1774f1c36f42f182b887bcdb28ebe63e6fff90ac41f3fcff91",
+      "bytes": 2952873
+    },
+    "ocr-ita-f702fcfad297.traineddata.gz": {
+      "sha256": "f702fcfad297ce028ede3626d1467b67939f23ff23595f9badd54681cf25a4d3",
+      "bytes": 1660998
+    }
+  },
+  "licenses": {
+    "tesseract-js-LICENSE.md": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1",
+    "tesseract-js-core-LICENSE": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1",
+    "tesseract-js-dist-worker.min.js.LICENSE.txt": "45f54171aeaa1d10c0c1a66f374b7bba1f02472b1487fbe892eec04f840002ac",
+    "OCR_MODELS_LICENSE.txt": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "OCR_TESSDATA_LICENSE.txt": "a6cba85bc92e0cff7a450b1d873c0eaa2e9fc96bf472df0247a26bec77bf3ff9",
+    "OCR_BUFFER_LICENSE.txt": "06bafa45fdad2579ba0e43b0c9b2c6290287c99c4203c300254a462b38a307f6",
+    "OCR_IEEE754_LICENSE.txt": "18d45466ba3253deae04667e267a91ea8de8548f18c1125264d1c9db28194cc1",
+    "OCR_REGENERATOR_LICENSE.txt": "51887a3d47051ac2fce1210562e5b9fe0830a8a8fabeb272c2d586eeb18a05fd",
+    "OCR_ZLIB_LICENSE.txt": "131afe3f7bdce1698beb292fb8de1a968de01bce876122a60ef5db230471c866"
+  },
+  "licenseSources": [
+    "Official npm archives above (SDK/core/worker notices)",
+    "https://raw.githubusercontent.com/naptha/tessdata/gh-pages/LICENSE",
+    "https://raw.githubusercontent.com/tesseract-ocr/tessdata_best/main/LICENSE",
+    "https://raw.githubusercontent.com/feross/buffer/v6.0.3/LICENSE",
+    "https://raw.githubusercontent.com/feross/ieee754/v1.2.1/LICENSE",
+    "https://raw.githubusercontent.com/facebook/regenerator/main/LICENSE",
+    "https://raw.githubusercontent.com/imaya/zlib.js/master/LICENSE"
+  ],
+  "note": "Language package metadata lists MIT; upstream distributed models carry the retained Apache-2.0 license. Full original bytes and notices retained. License text retained; final empty line normalized in the core license copy."
+}

@@ -1,0 +1,321 @@
+{
+  "parentCheckpoint": "5a29d5295aa60d51b217a984090b9cd602804313",
+  "scope": "Local synthetic fixtures only; no deploy/provider message/real account/email or document transfer",
+  "verify": [
+    {
+      "command": "node --check dist/accounts.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/app.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/arcade.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/arena.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/classroom.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/community.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/data.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/island.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/offline.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/pwa.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/quests.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/sw.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/three.min.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/worlds.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/presence.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/learning.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/study-import.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/study-ocr.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/ocr-worker.min.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/ocr-core-775a35df6f2a.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/training.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/pdf.worker.min.mjs",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/pdf.min.mjs",
+      "exit": 0
+    },
+    {
+      "command": "bash -n scripts/deploy-siteground.sh",
+      "exit": 0
+    },
+    {
+      "command": "bash -n scripts/pull-siteground.sh",
+      "exit": 0
+    },
+    {
+      "command": "bash -n scripts/siteground-remote.sh",
+      "exit": 0
+    },
+    {
+      "command": "bash -n scripts/test-deploy.sh",
+      "exit": 0
+    },
+    {
+      "command": "bash -n scripts/test-browser.sh",
+      "exit": 0
+    },
+    {
+      "command": "bash -n scripts/read-only-readiness.sh",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/test-lessons.mjs",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/test-pwa.mjs",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/test-learning.mjs",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/test-rewards.mjs",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/verify-bundle.mjs",
+      "exit": 0
+    },
+    {
+      "command": "php -l dist/api.php",
+      "exit": 0
+    },
+    {
+      "command": "php -l dist/arena.php",
+      "exit": 0
+    },
+    {
+      "command": "php -l dist/classroom.php",
+      "exit": 0
+    },
+    {
+      "command": "php -l dist/community.php",
+      "exit": 0
+    },
+    {
+      "command": "php -l dist/platform.php",
+      "exit": 0
+    },
+    {
+      "command": "php -l dist/training.php",
+      "exit": 0
+    },
+    {
+      "command": "php -l scripts/bootstrap-admin.php",
+      "exit": 0
+    },
+    {
+      "command": "php -l scripts/owner-recovery-status.php",
+      "exit": 0
+    },
+    {
+      "command": "php -l scripts/prepare-owner-recovery.php",
+      "exit": 0
+    },
+    {
+      "command": "php -l scripts/read-only-readiness.php",
+      "exit": 0
+    },
+    {
+      "command": "php -l scripts/siteground-cache.php",
+      "exit": 0
+    },
+    {
+      "command": "python3 scripts/test-api.py",
+      "exit": 0
+    },
+    {
+      "command": "python3 scripts/test-access.py",
+      "exit": 0
+    },
+    {
+      "command": "python3 scripts/test-email-recovery.py",
+      "exit": 0
+    },
+    {
+      "command": "python3 scripts/test-owner-recovery.py",
+      "exit": 0
+    },
+    {
+      "command": "python3 scripts/test-read-only-readiness.py",
+      "exit": 0
+    },
+    {
+      "command": "python3 scripts/test-classroom.py",
+      "exit": 0
+    },
+    {
+      "command": "python3 scripts/test-adventures.py",
+      "exit": 0
+    },
+    {
+      "command": "python3 scripts/test-community.py",
+      "exit": 0
+    },
+    {
+      "command": "python3 scripts/test-presence.py",
+      "exit": 0
+    },
+    {
+      "command": "python3 scripts/test-resume.py",
+      "exit": 0
+    },
+    {
+      "command": "python3 scripts/test-autonomy.py",
+      "exit": 0
+    },
+    {
+      "command": "python3 scripts/test-review.py",
+      "exit": 0
+    },
+    {
+      "command": "python3 scripts/test-choice-fairness.py",
+      "exit": 0
+    },
+    {
+      "command": "python3 scripts/test-parent-summary.py",
+      "exit": 0
+    },
+    {
+      "command": "python3 scripts/test-training.py",
+      "exit": 0
+    },
+    {
+      "command": "python3 scripts/test-phonics.py",
+      "exit": 0
+    },
+    {
+      "command": "python3 scripts/test-letter-progression.py",
+      "exit": 0
+    },
+    {
+      "command": "python3 scripts/test-cache-purge.py",
+      "exit": 0
+    },
+    {
+      "command": "bash scripts/test-deploy.sh",
+      "exit": 0
+    }
+  ],
+  "browser": {
+    "suites": [
+      "ocr",
+      "materials",
+      "duel-resilience",
+      "compatibility",
+      "ux",
+      "learning",
+      "resume",
+      "presence",
+      "pwa",
+      "rewards",
+      "motion",
+      "access",
+      "email",
+      "performance",
+      "navigation",
+      "autonomy",
+      "review",
+      "wardrobe",
+      "parent-summary",
+      "tiles",
+      "wallet",
+      "training",
+      "spelling",
+      "letter-progression",
+      "foundations",
+      "offline-training",
+      "offline-letters",
+      "phonics"
+    ],
+    "exit": 0,
+    "evidence": "OCR/materials group exit0, other25 browser suites group exit0, final isolated performance exit0. After adding public license comments: syntax, bundle, PWA, fake47-file deployment and real OCR exit0."
+  },
+  "measurements": {
+    "syntheticJpegOcrMs": 1733,
+    "syntheticJpegBytes": 20767,
+    "vendorBytes": 8679214,
+    "homepageDomMs": 1425.2,
+    "homepageLoadMs": 1496.8,
+    "homepageBudgetMs": 5000,
+    "ocrDeadlineMs": 45000,
+    "method": "Individual local samples; not matched before/after, real-device memory or accuracy benchmark"
+  },
+  "initialFailure": {
+    "command": "python3 scripts/test-community.py",
+    "result": "register timed out after5seconds with concurrent local browser/OCR test load",
+    "final": "All64 verify passed when run without concurrent browser jobs; five-second timeout unchanged",
+    "rootCause": "Not proven; added sanitized action/method/elapsed/cgroup diagnostic; no automatic retry or product API change",
+    "preservedLog": "/tmp/wordyland-ocr-verify-initial-failure-20261027.log"
+  },
+  "limits": [
+    "No handwriting accuracy guarantee",
+    "No automatic rasterization/OCR of scanned PDFs",
+    "No hard process-memory cap or immediate RAM-reclamation guarantee",
+    "No old-tablet/device validation",
+    "No real documents or children data used",
+    "No new CI or publication verified"
+  ]
+}

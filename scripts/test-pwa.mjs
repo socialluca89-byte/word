@@ -24,7 +24,7 @@ async function fetchTest(path,{method='GET',mode='cors'}={}){
  let response;
  const request={url:new URL(path,scope).href,method,mode};events.fetch({request,respondWith(promise){response=promise;}});return response?await response:undefined;
 }
-for(const path of ['/api.php?action=session','/api.php?action=study-file&profile=1','/accounts.js','/study-import.js','/pdf.min.mjs','/pdf.worker.min.mjs','/private-photo.png','/training.php?action=training-progress','/training.json?profile=1','/.wordyland-managed','https://other.example/offline.js','/curriculum.json?private=anything'])assert.equal(await fetchTest(path),undefined,path);
+for(const path of ['/api.php?action=session','/api.php?action=study-file&profile=1','/accounts.js','/study-import.js','/pdf.min.mjs','/pdf.worker.min.mjs','/study-ocr.js','/ocr-worker.min.js','/ocr-eng-45b4cb346724.traineddata.gz','/private-photo.png','/training.php?action=training-progress','/training.json?profile=1','/.wordyland-managed','https://other.example/offline.js','/curriculum.json?private=anything'])assert.equal(await fetchTest(path),undefined,path);
 assert.equal(await fetchTest('/offline.html',{method:'POST'}),undefined);
 assert.match(await (await fetchTest('/',{mode:'navigate'})).text(),/^network:/);
 offline=true;

@@ -1,5 +1,7 @@
 # Materiali foto/PDF — estrazione locale con revisione adulta
 
+> Documento del lotto 5a29d52: i limiti OCR descritti sotto sono storici. Il successivo [OCR_IMPORT.md](OCR_IMPORT.md) aggiunge OCR locale sperimentale per immagini stampate, non rasterizzazione dei PDF scansionati né garanzie sulla calligrafia. Le parti PDF/manuale restano valide.
+
 Lotto R4 sviluppato solo su **work**, dopo il checkpoint 49083dd. Nessun deploy o messaggio a SiteGround. Main resta 3473591 e l'ultimo live verificato resta b3ca230 (confronto del 26 ottobre, non una verifica live rinnovata da questo lotto).
 
 ## Cosa funziona

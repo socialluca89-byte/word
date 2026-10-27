@@ -14,8 +14,9 @@ fs.writeFileSync('dist/island.css',fs.readFileSync('dist/island.css','utf8').rep
 // Update offline dependencies first, then the worker, then its registration URL.
 const digest=name=>createHash('sha256').update(fs.readFileSync('dist/'+name)).digest('hex').slice(0,12);
 const versioned=name=>name+'?v='+digest(name);
+fs.writeFileSync('dist/study-ocr.js',fs.readFileSync('dist/study-ocr.js','utf8').replace(/const workerURL='[^']+';/,"const workerURL='"+versioned('ocr-worker.min.js')+"';"));
 let importer=fs.readFileSync('dist/study-import.js','utf8');
-for(const name of ['pdf.min.mjs','pdf.worker.min.mjs'])importer=importer.replace(new RegExp(name.replaceAll('.','\\.')+'(?:\\?v=[a-f0-9]+)?','g'),versioned(name));
+for(const name of ['pdf.min.mjs','pdf.worker.min.mjs','study-ocr.js'])importer=importer.replace(new RegExp(name.replaceAll('.','\\.')+'(?:\\?v=[a-f0-9]+)?','g'),versioned(name));
 fs.writeFileSync('dist/study-import.js',importer);
 fs.writeFileSync('dist/training.js',fs.readFileSync('dist/training.js','utf8').replace(/const contentURL='[^']+';/,"const contentURL='"+versioned('training.json')+"';"));
 const manifest=JSON.parse(fs.readFileSync('dist/manifest.webmanifest','utf8'));

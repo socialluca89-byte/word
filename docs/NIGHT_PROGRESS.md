@@ -391,3 +391,12 @@ R4 parziale su work: PDF testuale con PDF.js ufficiale6.4.299 vendorizzato/integ
 PASS61verify finali e27suitebrowser distinte; dopo rifiniture manuale/fallback ripetute materials/parent-summary/navigation e verify. Performance isolata DOM1851.5/load1971.8ms, budget5s invariato; non benchmark del tablet. Prove solo sintetiche, password/hang simulati esplicitamente; fixture corrette per marginiPDF/details/dialogo, nessunretryautomatico. Dettagli/anteprima/provenienza in MATERIAL_IMPORT.md e MATERIAL_IMPORT_VERIFICATION.json.
 
 Non OCR completo: foto, scansioni e calligrafia non estratte. Piano locale Tesseract/modelli/rendering/risorse/revisione ancora da realizzare, senza servizi o spese. Nessun merge/main/deploy, ticket o email; main3473591 e ultimo live verificatob3ca230 restano distinti. Nessuna associazione/account reale o modifica alla sicurezza hosting.
+
+
+## Lotto 32 — OCR stampato locale dopo5a29d52, solo work
+
+Motore Tesseract.js6.0.1/core6.1.2 e modelli eng/ita ufficiali, archiviSRI verificati/byte originali e licenze conservati. Componenti8.679.214byte caricati soltanto al comando OCR; piccolo controllo header alla selezione. Una immagine stampata≤4MB/8Mpixel, ridotta≤2Mpixel/lato2000, worker posseduto subito dall’applicazione/terminabile, scadenza45s, modelli senza cacheIDB, nessun invio di documento/testo a terzi. Bozza fallibile, revisione/proposta/conferma adulte obbligatorie, allegato opt-in e PDFtestuali/manuale conservati. Bundle47file, cachepubblica10asset invariata, nessun deploy/ticket/email/account reale.
+
+PASS64verify e28suitebrowser. Primo verify concorrente aveva timeout5s di test-community/register: conservato, aggiunta diagnostica sicura e intero verify riprovato una volta in isolamento PASS, senza cambiare timeout o API. Causa precisa non dimostrata. Dopo commenti con licenze pubbliche: sintassi/bundle/PWA/deployfinto/OCR ricontrollati. Ultimi campioni JPEGsintetico1.733s ehome1.497s con soglia5s, nessun benchmark del tablet. OCR_VERIFICATION.json e OCR_IMPORT.md, anteprima sintetica review/ocr-390.png.
+
+Limiti: riconoscimento di foto/calligrafia reale non validato; PDFscansionati non rasterizzati, ritaglio/rotazione assistiti esclusi, nessun tetto assoluto RAM garantito. La riuscita su due righe originali stampate non è prova di accuratezza generale. Main3473591 eultimo live verificatob3ca230, autorizzazione comunicazioneSiteGround ancora pendente.

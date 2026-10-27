@@ -25,8 +25,15 @@ with tempfile.TemporaryDirectory(prefix='wordyland-community-') as temporary:
     def client():return urllib.request.build_opener(urllib.request.ProxyHandler({}),urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
     def request(session,action,body=None,csrf='',expected=200):
         req=urllib.request.Request(base+action,data=None if body is None else json.dumps(body).encode(),headers={'Content-Type':'application/json','X-CSRF-Token':csrf})
+        started=time.monotonic()
         try:response=session.open(req,timeout=5)
         except urllib.error.HTTPError as error:response=error
+        except (TimeoutError,urllib.error.URLError):
+            # Synthetic fixture diagnostic only: never print bodies, usernames or tokens.
+            cpu=Path('/sys/fs/cgroup/cpu.stat')
+            counters={line.split()[0]:int(line.split()[1]) for line in cpu.read_text().splitlines()} if cpu.is_file() else {}
+            print('Community request diagnostic:',json.dumps({'action':action.split('&')[0],'method':'POST' if body is not None else 'GET','elapsed':round(time.monotonic()-started,3),'cpu_throttled_total_usec':counters.get('throttled_usec')},sort_keys=True),flush=True)
+            raise
         data=response.read().decode();assert response.status==expected,(action,response.status,data)
         return json.loads(data)
     def bootstrap():

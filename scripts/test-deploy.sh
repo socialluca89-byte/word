@@ -82,7 +82,7 @@ bash scripts/deploy-siteground.sh deploy | tee "$root/out1"
 [[ ! -e "$docroot/api.php.wordyland-previous" ]] || fail 'stray PHP copy still public'
 [[ -z $(find "$docroot" \( -name '*.wordyland-*' -o -name '*.tar' -o -name SHA256SUMS \) ! -name .wordyland-managed) ]] || fail 'temporary files in docroot'
 [[ -f "$docroot/.well-known/acme" && -f "$site/.wordyland-data/keep" ]] || fail 'preserved files lost'
-for f in community.php classroom.php arena.php api.php platform.php classroom.js presence.js arena.js curriculum.json quests.css data.js worlds.js learning.js app.js accounts.js quests.js community.js arcade.css arcade.js island.css island.js island-places.webp three.min.js study-import.js pdf.min.mjs pdf.worker.min.mjs race-world.webp race-circuits.webp race-racers.webp manifest.webmanifest icon-192.png icon-512.png icon-maskable-512.png offline.html offline.js pwa.css pwa.js sw.js index.html; do
+for f in community.php classroom.php arena.php api.php platform.php classroom.js presence.js arena.js curriculum.json quests.css data.js worlds.js learning.js app.js accounts.js quests.js community.js arcade.css arcade.js island.css island.js island-places.webp three.min.js study-import.js pdf.min.mjs pdf.worker.min.mjs study-ocr.js ocr-worker.min.js ocr-core-775a35df6f2a.js ocr-eng-45b4cb346724.traineddata.gz ocr-ita-f702fcfad297.traineddata.gz race-world.webp race-circuits.webp race-racers.webp manifest.webmanifest icon-192.png icon-512.png icon-maskable-512.png offline.html offline.js pwa.css pwa.js sw.js index.html; do
   cmp -s "dist/$f" "$docroot/$f" || fail "$f differs"
 done
 priv="$site/.wordyland-deploy"; [[ $(stat -c %a "$priv") == 700 ]] || fail 'private dir not 700'

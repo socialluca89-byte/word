@@ -1,6 +1,6 @@
 # Requisiti e passi residui — chiusura del 27 ottobre 2026
 
-Aggiornamento R4 successivo alla chiusura: [MATERIAL_IMPORT.md](MATERIAL_IMPORT.md), solo work; nuova CI e rilascio non verificati.
+Aggiornamento R4 successivo alla chiusura: OCR locale immagini in [OCR_IMPORT.md](OCR_IMPORT.md), solo work, più il precedente lotto PDF in [MATERIAL_IMPORT.md](MATERIAL_IMPORT.md), solo work; nuova CI e rilascio non verificati.
 
 Questo quadro sostituisce le precedenti liste cumulative. Cronologia in NIGHT_PROGRESS.md; revisione e prove in [TECHNICAL_CLOSEOUT.md](TECHNICAL_CLOSEOUT.md). Un prototipo o un mock non dimostrano completamento o funzionamento reale.
 
@@ -23,7 +23,7 @@ Questo quadro sostituisce le precedenti liste cumulative. Cronologia in NIGHT_PR
 | R1: lettere IT/EN, alternative 2→3→4 | Pubblicato b3ca230, progressione per competenza, aiuti e sessioni conservati | Audio reale da verificare; offline a due alternative guidate |
 | R2: ascolto, parola/immagine, composizione, frase e ripasso | Work: 35 parole/6 percorsi, scelte ospite mescolate e congelate, storici conservati | Pubblicazione bloccata; non ogni contenuto possibile della classe |
 | R3: progresso del bambino iscritto separatamente da link classe | Report privati dei profili già posseduti presenti; collegamento sicuro fra account separati **non implementato** | Progettare/provare invito verificabile, scadenza, consenso, revoca e isolamento con fixture. Associazioni reali solo con rapporto verificato; mai abbinare per nickname/email/link classe |
-| R4: materiali foto/PDF | Work: estrazione locale dei PDF con testo, anteprima foto, revisione obbligatoria e allegato opt-in; percorso manuale e allegati privati conservati | **OCR foto/scansioni non implementato**. Piano concreto in MATERIAL_IMPORT.md; nessun trasferimento a terzi o spesa. Qualità su materiale reale e MIME/worker del futuro hosting da validare |
+| R4: materiali foto/PDF | Work: PDF testuale e OCR sperimentale locale di una singola immagine stampata, revisione obbligatoria, allegato opt-in; manuale conservato | OCR reale riuscito solo su fixture sintetiche, non garanzia sulle foto reali/calligrafia. PDF scansionati non rasterizzati, ritaglio/rotazione assistiti mancanti; validazione reale e futura consegna MIME/worker/WASM da verificare. OCR_IMPORT.md |
 | R5: nome lettera distinto dal suono nella parola | Work: percorso guidato S/P/B/N, 11 parole verificate e 24 attività; report sempre guidato | Mancano quattro audio fonemici affidabili, revisione qualificata e ulteriori gruppi/vocali/digrafi. TTS di parole/nomi non equivale ai fonemi; nessuna valutazione della pronuncia |
 | R6: futuro supporto Cambridge | Basi originali e riferimenti ufficiali individuati | Inventario competenze coperte/mancanti ancora da sviluppare; curriculum completo/simulazioni non pronti. Revisione insegnante e futuro formato/livello per estensione specifica, senza garanzie d'esame |
 | R7: web app e offline | PWA/cinque temi di ripasso live; work aggiunge parole/spelling 35/6 e lettere IT/EN 26/13 blocchi, ripresa e fallback lettura | Ospite del browser condiviso, non profilo privato. Sync account, adattività offline 2→3→4 e cold-start fonetica non implementati |
@@ -32,7 +32,7 @@ Questo quadro sostituisce le precedenti liste cumulative. Cronologia in NIGHT_PR
 
 1. **Pubblicazione:** autorizzazione all'invio della [bozza SiteGround](SITEGROUND_REQUEST_WORDYLAND.md) pendente; ottenere diagnosi health/regola e prova della risoluzione. Poi riconciliare versioni, CI completa, workflow e confronto live. Nessun retry o aggiramento nel frattempo.
 2. **R3:** prototipo sintetico e revisione autorizzazioni prima di associazioni reali genitore–alunno. Codice preparatorio sviluppabile senza dati reali; attivazione reale richiede rapporto verificato e consenso.
-3. **R4:** validare il lotto PDF testuale e completare, se sostenibile sul dispositivo, OCR locale di foto/scansioni secondo MATERIAL_IMPORT.md. Restano modelli, gestione immagini/risorse e qualità da provare; materiali reali soltanto se forniti/confermati. Nessun trasferimento o costo implicito.
+3. **R4:** validare PDF testuale e OCR stampato su dispositivi/materiali reali forniti e confermati dall’adulto. Il motore locale funziona su fixture; restano PDF scansionati multipagina, ritaglio/rotazione assistiti e limiti di qualità. Nessun trasferimento o costo implicito; OCR_IMPORT.md.
 4. **R5/R6:** inventario e ulteriori esercizi originali sviluppabili; quattro clip /s,p,b,n/ con diritti, modello inglese e revisione qualificata necessari prima delle prove autonome d'ascolto. Estendere il primo set senza promettere curriculum Cambridge completo.
 5. **Validazioni reali:** voci sui dispositivi dell'adulto, configurazione non segreta trasporto/mittente e procedura privata Luca. Invio email di prova, reset o nuovi accessi richiedono autorizzazione specifica; mock non dimostrano consegna o recupero.
 
