@@ -411,3 +411,10 @@ Riprodotto difetto UI nuovo: selettorepagina compariva anche senzaPDF perCSSlabe
 Community isolato PASSregister0.386/0.348s; cumulativo inizialePASS0.310/0.298s; cumulativo finalePASS0.377/0.378s, maxclass-register0.397s, deltaCPU0. NessunaAPI o soglia modificata; il vecchio timeout5s non riprodotto, causa originaria non dimostrata. Diagnostica sicura conserva azione/durata/status/deltaCPU senza dati utenti o segreti.
 
 Documenti: PDF_SCANNED_IMPORT.md, PDF_SCAN_VERIFICATION.json, CUMULATIVE_REVIEW_2026_10_27.md e REQUIREMENTS_REMAINING.md. Preview sintetica review/pdf-scan-390.png. Restano verifiche reali, collegamento sicuro genitore–alunno, copertura didattica/fonemi/Cambridge e accessi/email autorizzati; batch/crop/rotazione e syncprivata esclusi. Nessun deploy, invioSiteGround, account reale o modifica sicurezzahosting; main3473591/ultimo live verificatob3ca230.
+
+
+## Pubblicazione27ottobre2026 conclusa
+
+Autorizzazione esplicita08:33UTC. PreflightordinarioHTTP200/JSONreadySQLite senza challenge08:34:53; primo run40474605853pubblica2d4f2e1. Verifica indipendente scopre MIMEassente dei.mjs: browserimportfalliscepurconbytecorretti. Correzione3c661f5rinominaSDKin.js mantenendoSHAoriginali e aggiungeMIMEcheckobbligatorio/rollbacknegativoprovato. Nessunaconfigurazionehosting/security/chiave/accountcambiata.
+
+Run40476917297SUCCESS09:01:53UTC:verify/browser/deployPASS,29suitebrowser/41staticiMIME.17URLpubbliciverificati09:03:19,home/API/assetidentici. Guestsmoke eOCRfoto/PDFsintetici da componenti livePASS:zeroPOST/accountreali/errori. PDFpagina2su2lettain5401ms,immagine10481ms,nonbenchmark. Nessunaregessionepostfixrilevata;main/live3c661f51a8306d79b66fcc101b4cefc0518fb8f8. Icommitsuccessivisoltanto suwork documentano e non ripubblicano. RELEASE_2026_10_27.md e relativoJSON. Residui invariati:validazionireali,rapporto genitore-alunno separato,coperturadidattica/audio/Cambridge,email/recuperoautorizzati,estensionioffline/batch/cropescluse. NessuninvioSiteGround.
