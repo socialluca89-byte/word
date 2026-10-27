@@ -1,6 +1,6 @@
 /* Local material review. Documents are never fetched, stored or uploaded here. */
 (() => {
-  const libraryURL='pdf.min.mjs?v=57456c8e0c81',workerURL='pdf.worker.min.mjs?v=9536359f1b83';
+  const libraryURL='pdf.min.js?v=57456c8e0c81',workerURL='pdf.worker.min.js?v=9536359f1b83';
   const ocrURL='study-ocr.js?v=a0d7b8dc26ce';
   const MAX_BYTES=4000000,MAX_PAGES=10,MAX_TEXT=12000;
   window.wordylandStudyImport={mount(form,{valid,invalidate}){

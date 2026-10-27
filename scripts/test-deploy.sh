@@ -31,6 +31,10 @@ if [[ " $* " == *' -X PURGE '* ]]; then
   printf '%s' "${FAKE_PURGE_STATUS:-200}"; exit 0
 fi
 if [[ "${FAKE_HEALTH_FAILURE_AFTER_INSTALL:-}" == 1 && -f "$FAKE_HOME/install-attempted" && "${!#}" == *'api.php?action=health'* ]]; then echo 'simulated post-install connection failure' >&2; exit 7; fi
+if [[ "${FAKE_BAD_SCRIPT_MIME:-}" == 1 && "${!#}" == *'/pdf.min.js?'* ]]; then
+  "$WORDYLAND_REAL_CURL" "$@" >/dev/null || exit $?
+  printf '%s' 'text/plain'; exit 0
+fi
 "$WORDYLAND_REAL_CURL" "$@" || exit $?
 
 if [[ ( "${FAKE_HTML_CHALLENGE:-}" == 1 || ( "${FAKE_HTML_CHALLENGE_AFTER_INSTALL:-}" == 1 && -f "$FAKE_HOME/install-attempted" ) ) && "${!#}" == *'api.php?action=health'* ]]; then printf '%s' '<html>sgcaptcha hosting verification</html>'; fi
@@ -82,7 +86,7 @@ bash scripts/deploy-siteground.sh deploy | tee "$root/out1"
 [[ ! -e "$docroot/api.php.wordyland-previous" ]] || fail 'stray PHP copy still public'
 [[ -z $(find "$docroot" \( -name '*.wordyland-*' -o -name '*.tar' -o -name SHA256SUMS \) ! -name .wordyland-managed) ]] || fail 'temporary files in docroot'
 [[ -f "$docroot/.well-known/acme" && -f "$site/.wordyland-data/keep" ]] || fail 'preserved files lost'
-for f in community.php classroom.php arena.php api.php platform.php classroom.js presence.js arena.js curriculum.json quests.css data.js worlds.js learning.js app.js accounts.js quests.js community.js arcade.css arcade.js island.css island.js island-places.webp three.min.js study-import.js pdf.min.mjs pdf.worker.min.mjs study-ocr.js ocr-worker.min.js ocr-core-775a35df6f2a.js ocr-eng-45b4cb346724.traineddata.gz ocr-ita-f702fcfad297.traineddata.gz race-world.webp race-circuits.webp race-racers.webp manifest.webmanifest icon-192.png icon-512.png icon-maskable-512.png offline.html offline.js pwa.css pwa.js sw.js index.html; do
+for f in community.php classroom.php arena.php api.php platform.php classroom.js presence.js arena.js curriculum.json quests.css data.js worlds.js learning.js app.js accounts.js quests.js community.js arcade.css arcade.js island.css island.js island-places.webp three.min.js study-import.js pdf.min.js pdf.worker.min.js study-ocr.js ocr-worker.min.js ocr-core-775a35df6f2a.js ocr-eng-45b4cb346724.traineddata.gz ocr-ita-f702fcfad297.traineddata.gz race-world.webp race-circuits.webp race-racers.webp manifest.webmanifest icon-192.png icon-512.png icon-maskable-512.png offline.html offline.js pwa.css pwa.js sw.js index.html; do
   cmp -s "dist/$f" "$docroot/$f" || fail "$f differs"
 done
 priv="$site/.wordyland-deploy"; [[ $(stat -c %a "$priv") == 700 ]] || fail 'private dir not 700'
@@ -167,6 +171,14 @@ grep -q 'previous page' "$docroot/index.html" || fail 'previous index.html not r
 [[ $(cat "$docroot/.wordyland-managed") == "$parent" ]] || fail 'marker not restored after live failure'
 bash scripts/deploy-siteground.sh deploy >/dev/null || fail 'redeploy after live failure'
 cmp -s dist/index.html "$docroot/index.html" || fail 'redeploy content'
+
+echo '--- valid script bytes with wrong MIME fail and restore previous release'
+printf '%s\n' "$parent" > "$docroot/.wordyland-managed"; echo 'previous MIME page WordyLand' > "$docroot/index.html"
+FAKE_BAD_SCRIPT_MIME=1 bash scripts/deploy-siteground.sh deploy >"$root/out_mime" 2>&1 && fail 'bad JavaScript MIME was accepted'
+grep -q 'lacks a supported JavaScript MIME' "$root/out_mime" || fail 'MIME failure not diagnosed'
+grep -q 'previous MIME page' "$docroot/index.html" || fail 'MIME failure did not restore previous release'
+[[ $(cat "$docroot/.wordyland-managed") == "$parent" ]] || fail 'MIME failure did not restore marker'
+bash scripts/deploy-siteground.sh deploy >/dev/null || fail 'redeploy after MIME fixture failed'
 
 echo '--- a stale ordinary homepage fails even when cache-busting checks are fresh'
 printf '%s\n' "$parent" > "$docroot/.wordyland-managed"; echo 'previous cached page WordyLand' > "$docroot/index.html"

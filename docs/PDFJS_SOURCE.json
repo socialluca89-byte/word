@@ -5,7 +5,12 @@
   "upstream": "https://github.com/mozilla/pdf.js",
   "license": "Apache-2.0",
   "files": {
-    "pdf.min.mjs": "57456c8e0c81e46be31174b499ef77f2b9f5ee46d04412ba627320a36755d4c2",
-    "pdf.worker.min.mjs": "9536359f1b8367850d485731ca1d5e45c159a7b7a0912325e539937aa21ceb18"
-  }
+    "pdf.min.js": "57456c8e0c81e46be31174b499ef77f2b9f5ee46d04412ba627320a36755d4c2",
+    "pdf.worker.min.js": "9536359f1b8367850d485731ca1d5e45c159a7b7a0912325e539937aa21ceb18"
+  },
+  "upstreamFiles": {
+    "pdf.min.js": "build/pdf.min.mjs",
+    "pdf.worker.min.js": "build/pdf.worker.min.mjs"
+  },
+  "deliveryNote": "Original upstream bytes unchanged; served with .js names to get the standard JavaScript MIME on SiteGround, no hosting configuration changes."
 }

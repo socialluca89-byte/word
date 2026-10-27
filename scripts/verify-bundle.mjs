@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import {createHash} from 'node:crypto';
 const html=fs.readFileSync('dist/index.html','utf8');
-const expected=['index.html','learning.js','app.js','data.js','worlds.js','accounts.js','api.php','quests.js','quests.css','platform.php','curriculum.json','arena.php','arena.js','classroom.php','classroom.js','arcade.js','arcade.css','race-world.webp','race-circuits.webp','race-racers.webp','island.js','island.css','island-places.webp','three.min.js','community.php','community.js','presence.js','manifest.webmanifest','icon-192.png','icon-512.png','icon-maskable-512.png','offline.html','offline.js','pwa.css','pwa.js','sw.js','training.js','training.php','training.json','study-import.js','pdf.min.mjs','pdf.worker.min.mjs','study-ocr.js','ocr-worker.min.js','ocr-core-775a35df6f2a.js','ocr-eng-45b4cb346724.traineddata.gz','ocr-ita-f702fcfad297.traineddata.gz'];
+const expected=['index.html','learning.js','app.js','data.js','worlds.js','accounts.js','api.php','quests.js','quests.css','platform.php','curriculum.json','arena.php','arena.js','classroom.php','classroom.js','arcade.js','arcade.css','race-world.webp','race-circuits.webp','race-racers.webp','island.js','island.css','island-places.webp','three.min.js','community.php','community.js','presence.js','manifest.webmanifest','icon-192.png','icon-512.png','icon-maskable-512.png','offline.html','offline.js','pwa.css','pwa.js','sw.js','training.js','training.php','training.json','study-import.js','pdf.min.js','pdf.worker.min.js','study-ocr.js','ocr-worker.min.js','ocr-core-775a35df6f2a.js','ocr-eng-45b4cb346724.traineddata.gz','ocr-ita-f702fcfad297.traineddata.gz'];
 for(const name of ['learning.js','app.js','data.js','worlds.js','accounts.js','quests.js','arena.js','classroom.js','arcade.js','island.js','community.js','presence.js','three.min.js','pwa.js','training.js','study-import.js']) {
   const hash=createHash('sha256').update(fs.readFileSync('dist/'+name)).digest('hex').slice(0,12);
   if(!html.includes('src="'+name+'?v='+hash+'"')) throw Error('Missing or outdated public dependency: '+name+'; run node scripts/version-assets.mjs');
@@ -38,7 +38,7 @@ const trainingHash=createHash('sha256').update(fs.readFileSync('dist/training.js
 if(!fs.readFileSync('dist/training.js','utf8').includes('training.json?v='+trainingHash))throw Error('Outdated training content');
 
 const importer=fs.readFileSync('dist/study-import.js','utf8');
-for(const name of ['pdf.min.mjs','pdf.worker.min.mjs']){
+for(const name of ['pdf.min.js','pdf.worker.min.js']){
  const hash=createHash('sha256').update(fs.readFileSync('dist/'+name)).digest('hex').slice(0,12);
  if(!importer.includes(name+'?v='+hash))throw Error('Outdated local PDF library: '+name);
 }

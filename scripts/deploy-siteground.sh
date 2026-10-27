@@ -6,7 +6,7 @@
 set -euo pipefail
 mode=${1:-deploy}; backup=${2:-latest}
 cd "$(dirname "$0")/.."
-FILES=(community.php classroom.php arena.php training.php api.php platform.php classroom.js presence.js arena.js curriculum.json training.json quests.css data.js worlds.js learning.js app.js accounts.js quests.js community.js training.js arcade.css arcade.js island.css island.js island-places.webp three.min.js study-import.js pdf.min.mjs pdf.worker.min.mjs study-ocr.js ocr-worker.min.js ocr-core-775a35df6f2a.js ocr-eng-45b4cb346724.traineddata.gz ocr-ita-f702fcfad297.traineddata.gz race-world.webp race-circuits.webp race-racers.webp manifest.webmanifest icon-192.png icon-512.png icon-maskable-512.png offline.html offline.js pwa.css pwa.js sw.js index.html)
+FILES=(community.php classroom.php arena.php training.php api.php platform.php classroom.js presence.js arena.js curriculum.json training.json quests.css data.js worlds.js learning.js app.js accounts.js quests.js community.js training.js arcade.css arcade.js island.css island.js island-places.webp three.min.js study-import.js pdf.min.js pdf.worker.min.js study-ocr.js ocr-worker.min.js ocr-core-775a35df6f2a.js ocr-eng-45b4cb346724.traineddata.gz ocr-ita-f702fcfad297.traineddata.gz race-world.webp race-circuits.webp race-racers.webp manifest.webmanifest icon-192.png icon-512.png icon-maskable-512.png offline.html offline.js pwa.css pwa.js sw.js index.html)
 SITE_URL=${SITE_URL:-https://wordyland.eu}
 
 need() { for n in "$@"; do [[ -n "${!n:-}" ]] || { echo "Missing GitHub configuration: $n" >&2; exit 1; }; done; }
@@ -167,7 +167,7 @@ purge_cache() {
 expect_sha=${sha:-}
 
 check_files() {
-  local token f want body got
+  local token f want body got mime static_count=0
   want=$(sha256sum dist/index.html | cut -d' ' -f1)
   for f in / /index.html; do
     curl -fsS --retry 2 --retry-delay 2 --max-time 30 -o "$work/live" "$SITE_URL$f" || return 1
@@ -179,14 +179,21 @@ check_files() {
     fi
   done
   token="verify-${GITHUB_RUN_ID:-local}-$(date +%s%N)"
-  for f in index.html classroom.js presence.js arena.js curriculum.json training.json quests.css data.js worlds.js learning.js app.js accounts.js quests.js community.js training.js arcade.css arcade.js island.css island.js island-places.webp three.min.js study-import.js pdf.min.mjs pdf.worker.min.mjs study-ocr.js ocr-worker.min.js ocr-core-775a35df6f2a.js ocr-eng-45b4cb346724.traineddata.gz ocr-ita-f702fcfad297.traineddata.gz race-world.webp race-circuits.webp race-racers.webp manifest.webmanifest icon-192.png icon-512.png icon-maskable-512.png offline.html offline.js pwa.css pwa.js sw.js; do
+  for f in index.html classroom.js presence.js arena.js curriculum.json training.json quests.css data.js worlds.js learning.js app.js accounts.js quests.js community.js training.js arcade.css arcade.js island.css island.js island-places.webp three.min.js study-import.js pdf.min.js pdf.worker.min.js study-ocr.js ocr-worker.min.js ocr-core-775a35df6f2a.js ocr-eng-45b4cb346724.traineddata.gz ocr-ita-f702fcfad297.traineddata.gz race-world.webp race-circuits.webp race-racers.webp manifest.webmanifest icon-192.png icon-512.png icon-maskable-512.png offline.html offline.js pwa.css pwa.js sw.js; do
     want=$(sha256sum "dist/$f" | cut -d' ' -f1)
-    curl -fsS --retry 3 --retry-delay 5 --max-time 30 -o "$work/live" "$SITE_URL/$f?$token" || { live_error "Live $f unreachable"; return 1; }
+    mime=$(curl -fsS --retry 3 --retry-delay 5 --max-time 30 -o "$work/live" --write-out '%{content_type}' "$SITE_URL/$f?$token") || { live_error "Live $f unreachable"; return 1; }
     got=$(sha256sum "$work/live" | cut -d' ' -f1)
     [[ "$want" == "$got" ]] || { live_error "Live $f does not match commit $expect_sha"; return 1; }
+    if [[ "$f" == *.js || "$f" == *.mjs ]]; then
+      case "${mime%%;*}" in
+        application/javascript|text/javascript|application/ecmascript|text/ecmascript|application/x-javascript) ;;
+        *) live_error "Live $f lacks a supported JavaScript MIME type; refusing to confirm publication."; return 1 ;;
+      esac
+    fi
+    static_count=$((static_count+1))
   done
   echo "Ordinary / and /index.html match the release."
-  echo "Live site serves the files of commit $expect_sha (33 static files compared byte-for-byte)."
+  echo "Live site serves the files of commit $expect_sha ($static_count static files compared byte-for-byte; JavaScript MIME checked)."
 }
 if [[ "$mode" == deploy ]]; then
   deploy_phase=cache-and-live-checks

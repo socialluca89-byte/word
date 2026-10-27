@@ -18,7 +18,7 @@
 #       deploy.lock, current, deploy.log
 set -euo pipefail
 umask 077
-FILES=(community.php classroom.php arena.php training.php api.php platform.php classroom.js presence.js arena.js curriculum.json training.json quests.css data.js worlds.js learning.js app.js accounts.js quests.js community.js training.js arcade.css arcade.js island.css island.js island-places.webp three.min.js study-import.js pdf.min.mjs pdf.worker.min.mjs study-ocr.js ocr-worker.min.js ocr-core-775a35df6f2a.js ocr-eng-45b4cb346724.traineddata.gz ocr-ita-f702fcfad297.traineddata.gz race-world.webp race-circuits.webp race-racers.webp manifest.webmanifest icon-192.png icon-512.png icon-maskable-512.png offline.html offline.js pwa.css pwa.js sw.js index.html)
+FILES=(community.php classroom.php arena.php training.php api.php platform.php classroom.js presence.js arena.js curriculum.json training.json quests.css data.js worlds.js learning.js app.js accounts.js quests.js community.js training.js arcade.css arcade.js island.css island.js island-places.webp three.min.js study-import.js pdf.min.js pdf.worker.min.js study-ocr.js ocr-worker.min.js ocr-core-775a35df6f2a.js ocr-eng-45b4cb346724.traineddata.gz ocr-ita-f702fcfad297.traineddata.gz race-world.webp race-circuits.webp race-racers.webp manifest.webmanifest icon-192.png icon-512.png icon-maskable-512.png offline.html offline.js pwa.css pwa.js sw.js index.html)
 PHP_FILES=(community.php classroom.php arena.php training.php api.php platform.php)
 KEEP_RELEASES=5
 
