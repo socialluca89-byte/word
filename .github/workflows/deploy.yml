@@ -31,7 +31,7 @@ jobs:
           fetch-depth: 0
       - name: Check application JavaScript and shell scripts
         run: |
-          for f in dist/*.js; do node --check "$f"; done
+          for f in dist/*.js dist/*.mjs; do node --check "$f"; done
           for f in scripts/*.sh; do bash -n "$f"; done
           node scripts/test-lessons.mjs
           node scripts/test-pwa.mjs
@@ -96,7 +96,7 @@ jobs:
           WORDYLAND_PLAYWRIGHT_MODULE: /tmp/wordyland-browser-deps/node_modules/playwright
         run: |
           export WORDYLAND_CHROMIUM=$(node -p "require(process.env.WORDYLAND_PLAYWRIGHT_MODULE).chromium.executablePath()")
-          for check in duel-resilience compatibility ux learning resume presence pwa rewards motion access email performance navigation autonomy review wardrobe parent-summary tiles wallet training spelling letter-progression foundations offline-training offline-letters phonics; do bash scripts/test-browser.sh "$check"; done
+          for check in materials duel-resilience compatibility ux learning resume presence pwa rewards motion access email performance navigation autonomy review wardrobe parent-summary tiles wallet training spelling letter-progression foundations offline-training offline-letters phonics; do bash scripts/test-browser.sh "$check"; done
 
   deploy:
     needs: [verify, browser]

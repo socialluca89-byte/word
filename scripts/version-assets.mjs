@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import {createHash} from 'node:crypto';
 
 // Run after changing browser assets, before committing a release.
-const assets=['data.js','worlds.js','learning.js','app.js','accounts.js','classroom.js','arena.js','quests.js','quests.css','arcade.js','arcade.css','island.css','island.js','community.js','presence.js','three.min.js','pwa.css','pwa.js','training.js','manifest.webmanifest','icon-192.png'];
+const assets=['data.js','worlds.js','learning.js','app.js','accounts.js','classroom.js','arena.js','quests.js','quests.css','arcade.js','arcade.css','island.css','island.js','community.js','presence.js','three.min.js','pwa.css','pwa.js','training.js','study-import.js','manifest.webmanifest','icon-192.png'];
 for(const name of ['race-circuits.webp','race-racers.webp']){
   const hash=createHash('sha256').update(fs.readFileSync('dist/'+name)).digest('hex').slice(0,12);
   const css=fs.readFileSync('dist/arcade.css','utf8').replace(new RegExp(name.replaceAll('.','\\.')+'(?:\\?v=[a-f0-9]+)?','g'),name+'?v='+hash);
@@ -14,6 +14,9 @@ fs.writeFileSync('dist/island.css',fs.readFileSync('dist/island.css','utf8').rep
 // Update offline dependencies first, then the worker, then its registration URL.
 const digest=name=>createHash('sha256').update(fs.readFileSync('dist/'+name)).digest('hex').slice(0,12);
 const versioned=name=>name+'?v='+digest(name);
+let importer=fs.readFileSync('dist/study-import.js','utf8');
+for(const name of ['pdf.min.mjs','pdf.worker.min.mjs'])importer=importer.replace(new RegExp(name.replaceAll('.','\\.')+'(?:\\?v=[a-f0-9]+)?','g'),versioned(name));
+fs.writeFileSync('dist/study-import.js',importer);
 fs.writeFileSync('dist/training.js',fs.readFileSync('dist/training.js','utf8').replace(/const contentURL='[^']+';/,"const contentURL='"+versioned('training.json')+"';"));
 const manifest=JSON.parse(fs.readFileSync('dist/manifest.webmanifest','utf8'));
 manifest.icons.forEach(icon=>{icon.src=versioned(icon.src.split('?')[0]);});

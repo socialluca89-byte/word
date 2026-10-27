@@ -382,3 +382,12 @@ Protocolloseparato in training.php e3tabellenuoveadditive, stessiownedProfile/CS
 Nessundeploy/main,challengeSGnonaggirato, richiestanoninviata/autorizzazionependente; nominatiR3/R4/R6/R8restanodistinti. IlsetnonèuncorsoCambridge,nèunatestautonomodipercezionefonemica.PHONICS_FOUNDATION.mdcontienefonte,limiti,datimancanti,privacyepreview.
 
 Chiusura30:58verifyPASS, tutte26suitebrowserPASS conexitcodecontrollato. PerformanceseparataDOM1669.8/load1796.3ms(soglia5simmutata),1WebGLiniziale/2doposcroll390/1360. Pontealfabeto/ritorno allo stessopassoPASS, helperquote/replays/ruoliprofiloprotetti, datilegacy+adesivoesistenteconservati. PrimoFAILhintMAX documentato ecorrettoCAST (ancheoldtraining). Nessunfeature/testtolto, nessunretryotimeoutaumentato. Solo work; noCI nuova/main/deploy/supportticket. Limiti e4audioqualificati/licenziatipendenti inPHONICS_FOUNDATION.md, R5noncompletoCambridge/foneticaautonoma.
+
+
+## Lotto 31 — materiali locali dopo checkpoint 49083dd (27 ottobre 2026)
+
+R4 parziale su work: PDF testuale con PDF.js ufficiale6.4.299 vendorizzato/integrità verificata, worker dedicato, foto in anteprima e trascrizione manuale, revisione adulta obbligatoria e proposta selezionabile. Allegato privato solo opt-in. Annullamento/scadenza/limiti, vecchio testo e percorso manuale conservati, risposte tardive/FileReader non attraversano i profili; fallback manuale quando manca il modulo. Cache sempre10asset pubblici, nessun documento/API memorizzato o inviato a terzi. Bundle42file, allowlist e deploy finto aggiornati senza eseguire il workflow reale.
+
+PASS61verify finali e27suitebrowser distinte; dopo rifiniture manuale/fallback ripetute materials/parent-summary/navigation e verify. Performance isolata DOM1851.5/load1971.8ms, budget5s invariato; non benchmark del tablet. Prove solo sintetiche, password/hang simulati esplicitamente; fixture corrette per marginiPDF/details/dialogo, nessunretryautomatico. Dettagli/anteprima/provenienza in MATERIAL_IMPORT.md e MATERIAL_IMPORT_VERIFICATION.json.
+
+Non OCR completo: foto, scansioni e calligrafia non estratte. Piano locale Tesseract/modelli/rendering/risorse/revisione ancora da realizzare, senza servizi o spese. Nessun merge/main/deploy, ticket o email; main3473591 e ultimo live verificatob3ca230 restano distinti. Nessuna associazione/account reale o modifica alla sicurezza hosting.

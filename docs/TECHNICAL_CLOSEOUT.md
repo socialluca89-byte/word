@@ -1,5 +1,7 @@
 # Chiusura tecnica WordyLand — 27 ottobre 2026
 
+> Documento storico del checkpoint 49083dd. Il lotto successivo di acquisizione locale PDF/foto e le nuove prove sono in [MATERIAL_IMPORT.md](MATERIAL_IMPORT.md); il quadro corrente resta REQUIREMENTS_REMAINING.md. Le 39 risorse e il codice 6ba13cf descritti sotto si riferiscono alla chiusura precedente.
+
 Revisione cumulativa del codice `6ba13cfa84b9a501832601e03e9942f22a73af6e` rispetto all'ultimo live verificato `b3ca230ff76ee708bde4d2d760e174e012bfb046`. Chiusura senza nuove funzionalità, deploy, comunicazioni, dati di alunni reali o modifiche ad account/hosting. I documenti successivi a 6ba13cf non modificano l'applicazione.
 
 ## Versioni e pubblicazione

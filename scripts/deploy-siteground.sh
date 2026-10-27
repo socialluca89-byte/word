@@ -6,7 +6,7 @@
 set -euo pipefail
 mode=${1:-deploy}; backup=${2:-latest}
 cd "$(dirname "$0")/.."
-FILES=(community.php classroom.php arena.php training.php api.php platform.php classroom.js presence.js arena.js curriculum.json training.json quests.css data.js worlds.js learning.js app.js accounts.js quests.js community.js training.js arcade.css arcade.js island.css island.js island-places.webp three.min.js race-world.webp race-circuits.webp race-racers.webp manifest.webmanifest icon-192.png icon-512.png icon-maskable-512.png offline.html offline.js pwa.css pwa.js sw.js index.html)
+FILES=(community.php classroom.php arena.php training.php api.php platform.php classroom.js presence.js arena.js curriculum.json training.json quests.css data.js worlds.js learning.js app.js accounts.js quests.js community.js training.js arcade.css arcade.js island.css island.js island-places.webp three.min.js study-import.js pdf.min.mjs pdf.worker.min.mjs race-world.webp race-circuits.webp race-racers.webp manifest.webmanifest icon-192.png icon-512.png icon-maskable-512.png offline.html offline.js pwa.css pwa.js sw.js index.html)
 SITE_URL=${SITE_URL:-https://wordyland.eu}
 
 need() { for n in "$@"; do [[ -n "${!n:-}" ]] || { echo "Missing GitHub configuration: $n" >&2; exit 1; }; done; }
@@ -124,7 +124,7 @@ case "$mode" in
           exit 0
         fi
       fi
-      # Bundle exactly the 39 verified files plus checksums; upload to the private directory.
+      # Bundle exactly the 42 verified files plus checksums; upload to the private directory.
       mkdir "$work/bundle"
       for f in "${FILES[@]}"; do install -m 644 "dist/$f" "$work/bundle/$f"; done
       (cd "$work/bundle" && sha256sum "${FILES[@]}" > SHA256SUMS)
@@ -179,7 +179,7 @@ check_files() {
     fi
   done
   token="verify-${GITHUB_RUN_ID:-local}-$(date +%s%N)"
-  for f in index.html classroom.js presence.js arena.js curriculum.json training.json quests.css data.js worlds.js learning.js app.js accounts.js quests.js community.js training.js arcade.css arcade.js island.css island.js island-places.webp three.min.js race-world.webp race-circuits.webp race-racers.webp manifest.webmanifest icon-192.png icon-512.png icon-maskable-512.png offline.html offline.js pwa.css pwa.js sw.js; do
+  for f in index.html classroom.js presence.js arena.js curriculum.json training.json quests.css data.js worlds.js learning.js app.js accounts.js quests.js community.js training.js arcade.css arcade.js island.css island.js island-places.webp three.min.js study-import.js pdf.min.mjs pdf.worker.min.mjs race-world.webp race-circuits.webp race-racers.webp manifest.webmanifest icon-192.png icon-512.png icon-maskable-512.png offline.html offline.js pwa.css pwa.js sw.js; do
     want=$(sha256sum "dist/$f" | cut -d' ' -f1)
     curl -fsS --retry 3 --retry-delay 5 --max-time 30 -o "$work/live" "$SITE_URL/$f?$token" || { live_error "Live $f unreachable"; return 1; }
     got=$(sha256sum "$work/live" | cut -d' ' -f1)

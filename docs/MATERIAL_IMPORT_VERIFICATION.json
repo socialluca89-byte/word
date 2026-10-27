@@ -1,0 +1,303 @@
+{
+  "parentCheckpoint": "49083dd74faae89648492a8004d2441ebd60b178",
+  "scope": "Local synthetic fixtures only; no CI, deploy, live account access, real email or provider communication",
+  "verify": [
+    {
+      "command": "node --check dist/accounts.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/app.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/arcade.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/arena.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/classroom.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/community.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/data.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/island.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/offline.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/pwa.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/quests.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/sw.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/three.min.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/worlds.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/presence.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/learning.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/study-import.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/training.js",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/pdf.worker.min.mjs",
+      "exit": 0
+    },
+    {
+      "command": "node --check dist/pdf.min.mjs",
+      "exit": 0
+    },
+    {
+      "command": "bash -n scripts/deploy-siteground.sh",
+      "exit": 0
+    },
+    {
+      "command": "bash -n scripts/pull-siteground.sh",
+      "exit": 0
+    },
+    {
+      "command": "bash -n scripts/siteground-remote.sh",
+      "exit": 0
+    },
+    {
+      "command": "bash -n scripts/test-deploy.sh",
+      "exit": 0
+    },
+    {
+      "command": "bash -n scripts/test-browser.sh",
+      "exit": 0
+    },
+    {
+      "command": "bash -n scripts/read-only-readiness.sh",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/test-lessons.mjs",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/test-pwa.mjs",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/test-learning.mjs",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/test-rewards.mjs",
+      "exit": 0
+    },
+    {
+      "command": "node scripts/verify-bundle.mjs",
+      "exit": 0
+    },
+    {
+      "command": "php -l dist/api.php",
+      "exit": 0
+    },
+    {
+      "command": "php -l dist/arena.php",
+      "exit": 0
+    },
+    {
+      "command": "php -l dist/classroom.php",
+      "exit": 0
+    },
+    {
+      "command": "php -l dist/community.php",
+      "exit": 0
+    },
+    {
+      "command": "php -l dist/platform.php",
+      "exit": 0
+    },
+    {
+      "command": "php -l dist/training.php",
+      "exit": 0
+    },
+    {
+      "command": "php -l scripts/bootstrap-admin.php",
+      "exit": 0
+    },
+    {
+      "command": "php -l scripts/owner-recovery-status.php",
+      "exit": 0
+    },
+    {
+      "command": "php -l scripts/prepare-owner-recovery.php",
+      "exit": 0
+    },
+    {
+      "command": "php -l scripts/read-only-readiness.php",
+      "exit": 0
+    },
+    {
+      "command": "php -l scripts/siteground-cache.php",
+      "exit": 0
+    },
+    {
+      "command": "python3 scripts/test-api.py",
+      "exit": 0
+    },
+    {
+      "command": "python3 scripts/test-access.py",
+      "exit": 0
+    },
+    {
+      "command": "python3 scripts/test-email-recovery.py",
+      "exit": 0
+    },
+    {
+      "command": "python3 scripts/test-owner-recovery.py",
+      "exit": 0
+    },
+    {
+      "command": "python3 scripts/test-read-only-readiness.py",
+      "exit": 0
+    },
+    {
+      "command": "python3 scripts/test-classroom.py",
+      "exit": 0
+    },
+    {
+      "command": "python3 scripts/test-adventures.py",
+      "exit": 0
+    },
+    {
+      "command": "python3 scripts/test-community.py",
+      "exit": 0
+    },
+    {
+      "command": "python3 scripts/test-presence.py",
+      "exit": 0
+    },
+    {
+      "command": "python3 scripts/test-resume.py",
+      "exit": 0
+    },
+    {
+      "command": "python3 scripts/test-autonomy.py",
+      "exit": 0
+    },
+    {
+      "command": "python3 scripts/test-review.py",
+      "exit": 0
+    },
+    {
+      "command": "python3 scripts/test-choice-fairness.py",
+      "exit": 0
+    },
+    {
+      "command": "python3 scripts/test-parent-summary.py",
+      "exit": 0
+    },
+    {
+      "command": "python3 scripts/test-training.py",
+      "exit": 0
+    },
+    {
+      "command": "python3 scripts/test-phonics.py",
+      "exit": 0
+    },
+    {
+      "command": "python3 scripts/test-letter-progression.py",
+      "exit": 0
+    },
+    {
+      "command": "python3 scripts/test-cache-purge.py",
+      "exit": 0
+    },
+    {
+      "command": "bash scripts/test-deploy.sh",
+      "exit": 0
+    }
+  ],
+  "browser": {
+    "suites": [
+      "materials",
+      "duel-resilience",
+      "compatibility",
+      "ux",
+      "learning",
+      "resume",
+      "presence",
+      "pwa",
+      "rewards",
+      "motion",
+      "access",
+      "email",
+      "performance",
+      "navigation",
+      "autonomy",
+      "review",
+      "wardrobe",
+      "parent-summary",
+      "tiles",
+      "wallet",
+      "training",
+      "spelling",
+      "letter-progression",
+      "foundations",
+      "offline-training",
+      "offline-letters",
+      "phonics"
+    ],
+    "exit": 0,
+    "evidence": "Sequential 26-suite regression exited 0; separate final performance exited 0. After final manual fallback and text-preservation refinements, materials/parent-summary/navigation exited 0 again."
+  },
+  "performance": {
+    "domMs": 1851.5,
+    "loadMs": 1971.8,
+    "unchangedBudgetMs": 5000,
+    "webglInitial": 1,
+    "webglAfterMap": 2,
+    "method": "Local optional-font hold; not a matched real-device benchmark"
+  },
+  "runtime": {
+    "node": "v24.19.0",
+    "chromium": "Chromium 154.0.8037.57 built on Debian GNU/Linux 13 (trixie)"
+  },
+  "notValidated": [
+    "Photo/scanned PDF OCR",
+    "Real family documents or handwriting accuracy",
+    "All encrypted PDF variants (password lifecycle mocked)",
+    "Old tablet/browser compatibility",
+    "SiteGround MIME/module worker delivery",
+    "Real email/owner recovery"
+  ]
+}

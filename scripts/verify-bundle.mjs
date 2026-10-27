@@ -1,8 +1,8 @@
 import fs from 'node:fs';
 import {createHash} from 'node:crypto';
 const html=fs.readFileSync('dist/index.html','utf8');
-const expected=['index.html','learning.js','app.js','data.js','worlds.js','accounts.js','api.php','quests.js','quests.css','platform.php','curriculum.json','arena.php','arena.js','classroom.php','classroom.js','arcade.js','arcade.css','race-world.webp','race-circuits.webp','race-racers.webp','island.js','island.css','island-places.webp','three.min.js','community.php','community.js','presence.js','manifest.webmanifest','icon-192.png','icon-512.png','icon-maskable-512.png','offline.html','offline.js','pwa.css','pwa.js','sw.js','training.js','training.php','training.json'];
-for(const name of ['learning.js','app.js','data.js','worlds.js','accounts.js','quests.js','arena.js','classroom.js','arcade.js','island.js','community.js','presence.js','three.min.js','pwa.js','training.js']) {
+const expected=['index.html','learning.js','app.js','data.js','worlds.js','accounts.js','api.php','quests.js','quests.css','platform.php','curriculum.json','arena.php','arena.js','classroom.php','classroom.js','arcade.js','arcade.css','race-world.webp','race-circuits.webp','race-racers.webp','island.js','island.css','island-places.webp','three.min.js','community.php','community.js','presence.js','manifest.webmanifest','icon-192.png','icon-512.png','icon-maskable-512.png','offline.html','offline.js','pwa.css','pwa.js','sw.js','training.js','training.php','training.json','study-import.js','pdf.min.mjs','pdf.worker.min.mjs'];
+for(const name of ['learning.js','app.js','data.js','worlds.js','accounts.js','quests.js','arena.js','classroom.js','arcade.js','island.js','community.js','presence.js','three.min.js','pwa.js','training.js','study-import.js']) {
   const hash=createHash('sha256').update(fs.readFileSync('dist/'+name)).digest('hex').slice(0,12);
   if(!html.includes('src="'+name+'?v='+hash+'"')) throw Error('Missing or outdated public dependency: '+name+'; run node scripts/version-assets.mjs');
 }
@@ -22,7 +22,7 @@ for(const name of ['race-circuits.webp','race-racers.webp']){
 }
 const islandHash=createHash('sha256').update(fs.readFileSync('dist/island-places.webp')).digest('hex').slice(0,12);
 if(!fs.readFileSync('dist/island.css','utf8').includes('island-places.webp?v='+islandHash))throw Error('Outdated island illustration');
-console.log('Public bundle verified: thirty-nine application files, no configuration, database or keys.');
+console.log('Public bundle verified: forty-two application files, no configuration, database or keys.');
 
 const manifest=JSON.parse(fs.readFileSync('dist/manifest.webmanifest','utf8'));
 if(manifest.start_url!=='/'||manifest.scope!=='/'||manifest.display!=='standalone')throw Error('Invalid PWA entry point');
@@ -36,3 +36,15 @@ if(!html.includes('rel="manifest"'))throw Error('PWA manifest missing');
 
 const trainingHash=createHash('sha256').update(fs.readFileSync('dist/training.json')).digest('hex').slice(0,12);
 if(!fs.readFileSync('dist/training.js','utf8').includes('training.json?v='+trainingHash))throw Error('Outdated training content');
+
+const importer=fs.readFileSync('dist/study-import.js','utf8');
+for(const name of ['pdf.min.mjs','pdf.worker.min.mjs']){
+ const hash=createHash('sha256').update(fs.readFileSync('dist/'+name)).digest('hex').slice(0,12);
+ if(!importer.includes(name+'?v='+hash))throw Error('Outdated local PDF library: '+name);
+}
+
+const pdfSource=JSON.parse(fs.readFileSync('docs/PDFJS_SOURCE.json','utf8'));
+for(const [name,expectedHash] of Object.entries(pdfSource.files)){
+ if(createHash('sha256').update(fs.readFileSync('dist/'+name)).digest('hex')!==expectedHash)throw Error('Official PDF.js bytes differ: '+name);
+}
+if(!fs.readFileSync('docs/PDFJS_LICENSE.txt','utf8').includes('Apache License'))throw Error('Missing PDF.js license');
