@@ -46,3 +46,5 @@ Contenuti, progressi privati, premi separati, test e limiti in [TRAINING_SPELLIN
 - `materials-390.png`: anteprima del modulo adulto R4 con PDF/testo originali sintetici, solo locale/work, non OCR delle foto e non live.
 
 - `ocr-390.png`: OCR reale locale di stampato JPEG originale sintetico, nel modulo adulto; bozza fallibile da rivedere, non fotografia di un bambino né versione live.
+
+- `pdf-scan-390.png`: modulo adulto con OCR reale di pagina2su2 di un PDF originale composto soltanto da immagini sintetiche; non live, nessun documento di alunni.

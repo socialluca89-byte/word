@@ -23,18 +23,28 @@ with tempfile.TemporaryDirectory(prefix='wordyland-community-') as temporary:
     server=subprocess.Popen(php+['-d','session.save_path='+temporary,'-S',f'127.0.0.1:{port}','-t','dist'],env=environment,stdout=log,stderr=log)
     base=f'http://127.0.0.1:{port}/api.php?action='
     def client():return urllib.request.build_opener(urllib.request.ProxyHandler({}),urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+    def cpu_throttled():
+        try:
+            return int(dict(line.split() for line in Path('/sys/fs/cgroup/cpu.stat').read_text().splitlines()).get('throttled_usec',0))
+        except (OSError,ValueError):return None
+    timings=[]
     def request(session,action,body=None,csrf='',expected=200):
         req=urllib.request.Request(base+action,data=None if body is None else json.dumps(body).encode(),headers={'Content-Type':'application/json','X-CSRF-Token':csrf})
-        started=time.monotonic()
-        try:response=session.open(req,timeout=5)
-        except urllib.error.HTTPError as error:response=error
+        started=time.monotonic();cpu_before=cpu_throttled()
+        event={'action':action.split('&')[0],'method':'POST' if body is not None else 'GET'}
+        try:
+            try:response=session.open(req,timeout=5)
+            except urllib.error.HTTPError as error:response=error
+            data=response.read().decode();event['status']=response.status
         except (TimeoutError,urllib.error.URLError):
-            # Synthetic fixture diagnostic only: never print bodies, usernames or tokens.
-            cpu=Path('/sys/fs/cgroup/cpu.stat')
-            counters={line.split()[0]:int(line.split()[1]) for line in cpu.read_text().splitlines()} if cpu.is_file() else {}
-            print('Community request diagnostic:',json.dumps({'action':action.split('&')[0],'method':'POST' if body is not None else 'GET','elapsed':round(time.monotonic()-started,3),'cpu_throttled_total_usec':counters.get('throttled_usec')},sort_keys=True),flush=True)
+            event['elapsed']=round(time.monotonic()-started,3);cpu_after=cpu_throttled()
+            event['cpu_throttled_delta_usec']=cpu_after-cpu_before if cpu_after is not None and cpu_before is not None else None
+            print('Community request diagnostic:',json.dumps(event,sort_keys=True),flush=True)
             raise
-        data=response.read().decode();assert response.status==expected,(action,response.status,data)
+        event['elapsed']=round(time.monotonic()-started,3);cpu_after=cpu_throttled()
+        event['cpu_throttled_delta_usec']=cpu_after-cpu_before if cpu_after is not None and cpu_before is not None else None
+        timings.append(event)
+        assert response.status==expected,(action,response.status,data)
         return json.loads(data)
     def bootstrap():
         return subprocess.run(php+['scripts/bootstrap-admin.php'],env=dict(os.environ,WORDYLAND_BOOTSTRAP_DATA=temporary+'/data'),capture_output=True,text=True)
@@ -105,4 +115,6 @@ with tempfile.TemporaryDirectory(prefix='wordyland-community-') as temporary:
         assert request(admin,'feedback-list&scope=all')['total']==2
         print('Community checks passed: email login, reserved owner identity, private one-time bootstrap, password preservation/session invalidation, server admin permissions, private pupil reports, status updates, pagination, class sharing and account-deletion cleanup.')
     finally:
+        if timings:print('Community timing summary:',json.dumps({'requests':len(timings),'max':max(timings,key=lambda e:e['elapsed']),'register':[e for e in timings if e['action']=='register']},sort_keys=True),flush=True)
+
         server.terminate();server.wait(timeout=5);log.close()

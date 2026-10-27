@@ -1,5 +1,7 @@
 # OCR locale di una singola immagine — lotto finito R4
 
+> Documento storico del lotto ce7a93d. Il successivo [PDF_SCANNED_IMPORT.md](PDF_SCANNED_IMPORT.md) aggiunge OCR della singola pagina PDF selezionata; i limiti PDF scansionati descritti sotto erano quelli del primo lotto immagini. Il motore e i limiti per le foto restano gli stessi.
+
 Sviluppo successivo a `5a29d52`, esclusivamente su **work**. Nessun deploy, contatto SiteGround o invio di documenti a terzi. Main resta 3473591; ultimo live verificato b3ca230, non ricontrollato da questo incremento.
 
 ## Consegna

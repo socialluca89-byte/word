@@ -400,3 +400,14 @@ Motore Tesseract.js6.0.1/core6.1.2 e modelli eng/ita ufficiali, archiviSRI verif
 PASS64verify e28suitebrowser. Primo verify concorrente aveva timeout5s di test-community/register: conservato, aggiunta diagnostica sicura e intero verify riprovato una volta in isolamento PASS, senza cambiare timeout o API. Causa precisa non dimostrata. Dopo commenti con licenze pubbliche: sintassi/bundle/PWA/deployfinto/OCR ricontrollati. Ultimi campioni JPEGsintetico1.733s ehome1.497s con soglia5s, nessun benchmark del tablet. OCR_VERIFICATION.json e OCR_IMPORT.md, anteprima sintetica review/ocr-390.png.
 
 Limiti: riconoscimento di foto/calligrafia reale non validato; PDFscansionati non rasterizzati, ritaglio/rotazione assistiti esclusi, nessun tetto assoluto RAM garantito. La riuscita su due righe originali stampate non è prova di accuratezza generale. Main3473591 eultimo live verificatob3ca230, autorizzazione comunicazioneSiteGround ancora pendente.
+
+
+## Lotto33 — OCR pagina PDF selezionata dopoce7a93d, solo work
+
+Nessuna dipendenza nuova. PDFmax4MB/10pagine, una pagina scelta renderizzata≤2Mpixel/lato2000, immaginiincorporate≤8Mpixel, annotazioni/eval/XFAdisabilitate. PDFworker chiuso prima diOCRworker, cancel render+canvas e abort fetch, nuova scadenza specifica60s senza alterare5scommunity/20sPDFtesto/45sfoto. Bozza fallibile/revisione/proposta/conferma, allegato originale completo soltanto opt-in; PDFtestuale/foto/manuale e storici/premi/permessi preservati. Bundle47/cache10invariati.
+
+Riprodotto difetto UI nuovo: selettorepagina compariva anche senzaPDF perCSSlabel. Corretto conregola scopedmaterialImport[hidden] e test negativi senzaPDF/foto. Sul codice finale dopo questa correzione: sequenza64verify+29browser PASS senza retry e senza concorrenza. PDFimmagini sintetico pagina2su2 letto realmente in1437ms, home2336.5ms/soglia5000. Nessuna garanzia su dispositivi, memoria o calligrafia.
+
+Community isolato PASSregister0.386/0.348s; cumulativo inizialePASS0.310/0.298s; cumulativo finalePASS0.377/0.378s, maxclass-register0.397s, deltaCPU0. NessunaAPI o soglia modificata; il vecchio timeout5s non riprodotto, causa originaria non dimostrata. Diagnostica sicura conserva azione/durata/status/deltaCPU senza dati utenti o segreti.
+
+Documenti: PDF_SCANNED_IMPORT.md, PDF_SCAN_VERIFICATION.json, CUMULATIVE_REVIEW_2026_10_27.md e REQUIREMENTS_REMAINING.md. Preview sintetica review/pdf-scan-390.png. Restano verifiche reali, collegamento sicuro genitore–alunno, copertura didattica/fonemi/Cambridge e accessi/email autorizzati; batch/crop/rotazione e syncprivata esclusi. Nessun deploy, invioSiteGround, account reale o modifica sicurezzahosting; main3473591/ultimo live verificatob3ca230.

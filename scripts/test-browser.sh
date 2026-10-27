@@ -3,7 +3,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 check=${1:-presence}
-case "$check" in motion) script="scripts/test-motion.cjs";; ocr|materials|phonics|offline-letters|offline-training|foundations|letter-progression|duel-resilience|compatibility|training|spelling|wallet|tiles|parent-summary|wardrobe|review|autonomy|navigation|performance|email|access|rewards|ux|learning|resume|presence|pwa|community|characters|school) script="scripts/test-${check}-browser.cjs";; *) echo 'Choose ocr, materials, phonics, offline-letters, offline-training, foundations, letter-progression, duel-resilience, compatibility, motion, training, spelling, wallet, tiles, parent-summary, wardrobe, review, autonomy, navigation, performance, email, access, rewards, ux, learning, resume, presence, pwa, community, characters or school' >&2; exit 2;; esac
+case "$check" in motion) script="scripts/test-motion.cjs";; pdf-scan|ocr|materials|phonics|offline-letters|offline-training|foundations|letter-progression|duel-resilience|compatibility|training|spelling|wallet|tiles|parent-summary|wardrobe|review|autonomy|navigation|performance|email|access|rewards|ux|learning|resume|presence|pwa|community|characters|school) script="scripts/test-${check}-browser.cjs";; *) echo 'Choose pdf-scan, ocr, materials, phonics, offline-letters, offline-training, foundations, letter-progression, duel-resilience, compatibility, motion, training, spelling, wallet, tiles, parent-summary, wardrobe, review, autonomy, navigation, performance, email, access, rewards, ux, learning, resume, presence, pwa, community, characters or school' >&2; exit 2;; esac
 fixture=$(mktemp -d /tmp/wordyland-browser.XXXXXX)
 mkdir -p "$fixture/data" "$fixture/sessions" "$fixture/public"
 cp dist/* "$fixture/public/"
