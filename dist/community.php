@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 if(!defined('WORDYLAND_API')){http_response_code(404);exit;}
-$communityActions=['feedback-create','feedback-list','feedback-status','managed-classes','admin-overview','presence-heartbeat','presence-leave','roster'];
+$communityActions=['feedback-create','feedback-list','feedback-status','managed-classes','admin-overview','admin-class-add','presence-heartbeat','presence-leave','roster'];
 if(!in_array($action,$communityActions,true))return;
 if(($method==='GET')!==in_array($action,['feedback-list','managed-classes','admin-overview','roster'],true))fail('Metodo non consentito.',405);
 $db->exec('CREATE TABLE IF NOT EXISTS feedback(id INTEGER PRIMARY KEY,account_id INTEGER REFERENCES accounts(id) ON DELETE CASCADE,profile_id INTEGER REFERENCES profiles(id) ON DELETE SET NULL,kind TEXT NOT NULL,title TEXT NOT NULL,body TEXT NOT NULL,screen TEXT NOT NULL,status TEXT NOT NULL DEFAULT "open",created_at INTEGER NOT NULL,updated_at INTEGER NOT NULL);
@@ -9,6 +9,26 @@ CREATE INDEX IF NOT EXISTS feedback_account ON feedback(account_id,id);');
 $isAdmin=$accountRole==='admin';
 $offset=max(0,min(1000000,(int)($_GET['offset']??0)));$pageSize=20;
 function communityRows(PDO $db,string $sql,array $args=[]): array{$q=$db->prepare($sql);$q->execute($args);return $q->fetchAll();}
+if($action==='admin-class-add'){
+    if(!$isAdmin)fail('Solo il super amministratore può iscrivere un profilo esistente.',403);
+    if(($body['consent']??false)!==true)fail('Conferma la partecipazione alla classe con soprannome, avatar e punti.');
+    $club=$body['club']??null;$profile=$body['member']??null;
+    if(!is_int($club)||$club<1||!is_int($profile)||$profile<1)fail('Scegli una classe e un profilo validi.');
+    limitAttempts($db,'admin-class-add:'.$id,100);
+    $db->exec('BEGIN IMMEDIATE');
+    try{
+        $class=one($db,'SELECT id,name FROM clubs WHERE id=?',[$club]);
+        $person=one($db,'SELECT id,account_id,nickname FROM profiles WHERE id=?',[$profile]);
+        if(!$class||!$person){$db->exec('ROLLBACK');fail('Classe o profilo non disponibile.',404);}
+        $exists=(bool)one($db,'SELECT 1 FROM club_profiles WHERE club_id=? AND profile_id=?',[$club,$profile]);
+        if(!$exists&&one($db,'SELECT 1 FROM club_profiles cp JOIN profiles p ON p.id=cp.profile_id WHERE cp.club_id=? AND LOWER(p.nickname)=LOWER(?)',[$club,$person['nickname']])){$db->exec('ROLLBACK');fail('Questo soprannome è già usato nella classe. Cambialo nel profilo prima di iscriverlo.',409);}
+        if(!$exists&&(int)one($db,'SELECT COUNT(*) AS n FROM club_profiles WHERE club_id=?',[$club])['n']>=100){$db->exec('ROLLBACK');fail('La classe è al completo.',409);}
+        runSql($db,'INSERT OR IGNORE INTO club_accounts(club_id,account_id) VALUES (?,?)',[$club,(int)$person['account_id']]);
+        runSql($db,'INSERT OR IGNORE INTO club_profiles(club_id,profile_id) VALUES (?,?)',[$club,$profile]);
+        $db->exec('COMMIT');
+    }catch(Throwable $error){try{$db->exec('ROLLBACK');}catch(Throwable $ignored){}throw $error;}
+    respond(['added'=>!$exists,'className'=>$class['name'],'nickname'=>$person['nickname']]);
+}
 if(in_array($action,['presence-heartbeat','presence-leave'],true)){
     $profile=ownedProfile($db,$id,$body['profile']??0);$tab=$body['tab']??'';
     if(!is_string($tab)||!preg_match('/^[a-f0-9]{32}$/D',$tab))fail('Scheda non valida.');

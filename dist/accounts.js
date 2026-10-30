@@ -6,7 +6,7 @@
   document.querySelector('main').prepend(area);
   const panel = area.querySelector('#accountContent'), status = area.querySelector('#accountStatus');
   let session = null, active = null, revision = 0, pending = false, timer, busy = null, applying = false, locked = false;
-  let initializing=true, resetToken=null;
+  let initializing=true, resetToken=null, profileChanging=false, profileChoice=0, profileOperation=0, profileLockSession=null;
   function captureResetLink(){
     const match=location.hash.match(/^#password-reset=([a-f0-9]{64})$/);
     if(match){resetToken=match[1];history.replaceState(null,'','#recupera-password');return true;}
@@ -24,10 +24,10 @@
     panel.innerHTML='<h3>Scegli una nuova password</h3><p>Il link vale 15 minuti e si può usare una sola volta.</p><form id="emailResetConfirm"><label>Nuova password<input name="password" type="password" autocomplete="new-password" minlength="12" maxlength="72" required></label><label>Ripeti la nuova password<input name="confirmPassword" type="password" autocomplete="new-password" minlength="12" maxlength="72" required></label><button class="primary">Salva la nuova password</button></form>';
     panel.querySelector('form').onsubmit=async event=>{
       event.preventDefault();const form=event.currentTarget,button=event.submitter,data=Object.fromEntries(new FormData(form));
-      if(data.password!==data.confirmPassword){say('Le due nuove password non coincidono.');return;}
+      if(data.password!==data.confirmPassword){formSay(form,'Le due nuove password non coincidono.',form.elements.confirmPassword);return;}
       button.disabled=true;
       try{await request('email-recovery-confirm',{...data,token:resetToken});resetToken=null;form.reset();show();say('Password aggiornata. Accedi con la nuova password. Gli altri dispositivi sono stati scollegati.');}
-      catch(error){say(error.message);}finally{if(button.isConnected)button.disabled=false;}
+      catch(error){formSay(form,error.message);}finally{if(button.isConnected)button.disabled=false;}
     };
     area.scrollIntoView({block:'start'});panel.querySelector('input').focus({preventScroll:true});
   }
@@ -64,7 +64,7 @@
     const passwordSay=text=>{feedback.textContent=text;say(text);};
     form.onsubmit=async event=>{
       event.preventDefault();const data=Object.fromEntries(new FormData(form));
-      if(data.newPassword!==data.confirmPassword){passwordSay('Le due nuove password non coincidono.');return;}
+      if(data.newPassword!==data.confirmPassword){passwordSay('Le due nuove password non coincidono.');const confirmation=form.elements.confirmPassword;confirmation.setAttribute('aria-invalid','true');confirmation.setAttribute('aria-describedby','passwordChangeStatus');confirmation.focus();return;}
       const button=event.submitter;button.disabled=true;passwordSay('Verifica della modifica in corso…');
       try{await flush();await request('change-password',data);form.reset();passwordSay('Password aggiornata. Gli altri dispositivi dovranno accedere di nuovo.');signalProfile();}
       catch(error){passwordSay(error.message);}finally{if(button.isConnected)button.disabled=false;}
@@ -73,9 +73,11 @@
   function recoveryNotice(code) {
     let notice = area.querySelector('#recoveryNotice');
     if (!notice) { notice = document.createElement('div'); notice.id = 'recoveryNotice'; notice.className = 'recoveryNotice'; area.querySelector('.settings').prepend(notice); }
+    notice.setAttribute('role','region');notice.setAttribute('aria-label','Conserva il codice di recupero');notice.tabIndex=-1;
     notice.innerHTML = '<b>Conserva il codice di recupero in un luogo sicuro.</b><p>Ti servirà se dimentichi la password. Questo codice viene mostrato solo ora.</p><code></code><br><button class="audio">L’ho conservato: nascondi</button>';
     notice.querySelector('code').textContent = code.match(/.{1,4}/g).join('-');
-    notice.querySelector('button').onclick = () => notice.remove();
+    notice.querySelector('button').onclick = () => {notice.remove();(panel.querySelector('[data-profile][aria-pressed="true"]')||panel.querySelector('[data-profile]')||panel.querySelector('#profileNickname')||panel.querySelector('#accountUser'))?.focus({preventScroll:true});};
+    requestAnimationFrame(()=>{if(notice.isConnected){notice.focus({preventScroll:true});notice.scrollIntoView({block:'nearest',behavior:'auto'});}});
   }
   function signalProfile() { window.dispatchEvent(new CustomEvent('wordyland-profile', {detail:{id:active?.id || null, nickname:active?.nickname || '', username:session?.username || null, role:session?.role || null}})); }
   const read = key => { try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch { return null; } };
@@ -85,6 +87,24 @@
   save = function () { oldSave(); schedule(); };
   rememberPlayer = function () { oldRemember(); schedule(); };
   function say(text) { status.textContent = text; }
+  // Form results stay next to the action even when autosave updates accountStatus.
+  function formSay(form,text,field=null,focus=true){
+    let feedback=form.querySelector('[data-form-feedback]');
+    if(!feedback){feedback=document.createElement('p');feedback.id=form.id+'Feedback';feedback.className='formFeedback';feedback.dataset.formFeedback='';feedback.setAttribute('role','status');feedback.setAttribute('aria-live','polite');feedback.setAttribute('aria-atomic','true');feedback.tabIndex=-1;form.append(feedback);}
+    feedback.textContent=text;say(text);
+    if(field){field.setAttribute('aria-invalid','true');const described=field.getAttribute('aria-describedby')||'';if(!described.split(/\s+/).includes(feedback.id))field.setAttribute('aria-describedby',(described+' '+feedback.id).trim());}
+    if(focus){(field||feedback).focus({preventScroll:true});feedback.scrollIntoView({block:'nearest',behavior:'auto'});}
+  }
+  panel.addEventListener('input',event=>event.target.removeAttribute('aria-invalid'));
+  panel.addEventListener('change',event=>event.target.removeAttribute('aria-invalid'));
+  function setProfileBusy(value,operation=null){
+    if(operation!==null&&operation!==profileOperation)return;
+    if(value||operation===null)profileOperation++;
+    profileLockSession=value?session:null;
+    profileChanging=value;panel.querySelector('.profileList')?.setAttribute('aria-busy',String(value));
+    panel.querySelectorAll('[data-profile],#newProfile button').forEach(button=>button.disabled=value);
+    return profileOperation;
+  }
   async function request(action, body, options = {}) {
     const accessAction=['session','login','register','logout','recover','auth-capabilities','email-recovery-request','email-recovery-confirm','change-password','class-login','class-register','class-recover'].includes(action);
     const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),20000);
@@ -143,14 +163,18 @@
     queue = []; home(); applying = false;
   }
   async function choose(id, force = false) {
+    const ownerSession=session,choice=++profileChoice;
     if (!force) await flush();
+    if(session!==ownerSession||!session?.username||choice!==profileChoice)return;
     const profile = await request('profile&id=' + Number(id));
+    if(session!==ownerSession||!session?.username||choice!==profileChoice)return;
     if (!active && !read(activeKey)) write(guestKey, {...snapshot(), name:playerName});
     active = profile; revision = profile.revision; pending = false; locked = false;
     write(activeKey, {id:profile.id, username:session.username});
     apply(profile.state, profile.nickname); show(); say('✓ Profilo di ' + profile.nickname + ' caricato.');
   }
   function show() {
+    if(profileChanging&&profileLockSession!==session)setProfileBusy(false);
     updateAccessTools();
     area.querySelector('summary').textContent=session?.role==='learner'?'Il mio profilo di classe':'Area adulti · account e progressi';
     if (session?.role==='learner') {
@@ -162,47 +186,60 @@
     }
     if (!session?.username) {
       panel.innerHTML = '<h3>Un account per i grandi, un’avventura per ciascuno</h3><p>Accedi da un altro dispositivo per ritrovare i progressi. Crea fino a otto profili con un soprannome. Puoi anche giocare come ospite.</p><form id="accountForm"><label for="accountUser">Email o nome utente dell’adulto</label><input id="accountUser" autocomplete="username" minlength="3" maxlength="254" required><label for="accountPassword">Password · almeno 12 caratteri</label><input id="accountPassword" type="password" autocomplete="current-password" minlength="12" maxlength="72" required><label class="adultCheck"><input id="adultConfirm" type="checkbox"> Sono un adulto e gestirò i profili dei bambini</label><p class="hint">Alla registrazione riceverai un codice per recuperare l’account. Conservalo con cura.</p><button class="primary" name="action" value="login">Accedi</button><button class="audio" name="action" value="register">Crea account adulto</button></form><details id="accountRecovery"><summary>Password dimenticata? Recupera l’accesso</summary><p>Usa il codice di recupero ricevuto alla registrazione. Per gli alunni: riapri il link della classe e scegli Password dimenticata. Se non hai il codice, controlla qui sotto la disponibilità del recupero email.</p><form id="recoverAccount"><label>Email o nome utente<input name="username" autocomplete="username" required></label><label>Codice di recupero<input name="code" autocomplete="off" required></label><label>Nuova password<input name="password" type="password" autocomplete="new-password" minlength="12" maxlength="72" required></label><button class="primary">Reimposta password</button></form></details>';
+      const accountHint=document.createElement('p');accountHint.id='adultAccountHelp';accountHint.className='hint';accountHint.textContent='Hai già un account? Inserisci le tue credenziali e scegli Accedi. La conferma adulto serve solo per creare un nuovo account. Per un profilo alunno, usa il link della tua classe.';panel.querySelector('#accountForm').prepend(accountHint);panel.querySelector('#accountUser').setAttribute('aria-describedby',accountHint.id);
       panel.querySelector('form').onsubmit = async e => {
         e.preventDefault(); const action = e.submitter?.value || 'login';
-        if (action === 'register' && !panel.querySelector('#adultConfirm').checked) { say('Per creare un account, conferma di essere un adulto.'); return; }
+        const form=e.currentTarget;
+        if (action === 'register' && !panel.querySelector('#adultConfirm').checked) { formSay(form,'Per creare un account, conferma di essere un adulto.',panel.querySelector('#adultConfirm')); return; }
         const buttons = [...panel.querySelectorAll('button')]; buttons.forEach(b => b.disabled = true);
+        form.setAttribute('aria-busy','true');formSay(form,action==='register'?'Creazione dell’account in corso.':'Accesso in corso.',null,false);
         try {
           if(!session?.csrf)session=await request('session');
           session = await request(action, {username:panel.querySelector('#accountUser').value, password:panel.querySelector('#accountPassword').value, adult:panel.querySelector('#adultConfirm').checked});
           if (session.recovery) { recoveryNotice(session.recovery); delete session.recovery; }
           if(session.role==='learner'&&session.profiles.length===1){await choose(session.profiles[0].id);say('Accesso riuscito. Sei nel tuo profilo di classe.');}
-          else{show();say('Accesso riuscito. Scegli o crea un profilo.');}
-        } catch (e) { say(e.message); buttons.forEach(b => b.disabled = false); }
+          else{show();say('Accesso riuscito. Scegli o crea un profilo.');(panel.querySelector('[data-profile]')||panel.querySelector('#profileNickname'))?.focus({preventScroll:true});}
+        } catch (e) { formSay(form,e.message); buttons.forEach(b => b.disabled = false); }
+        finally{if(form.isConnected)form.setAttribute('aria-busy','false');}
       };
       const recoverySection=panel.querySelector('#accountRecovery');
       const emailInfo=document.createElement('div');emailInfo.id='emailRecovery';emailInfo.innerHTML='<p>Verifica recupero email…</p>';recoverySection.append(emailInfo);
       request('auth-capabilities').then(capabilities=>{
         if(!emailInfo.isConnected)return;
-        if(!capabilities.emailRecoveryEnabled){emailInfo.innerHTML='<p>Recupero email non ancora attivo. Se hai perso il codice, contatta il proprietario. Per il primo accesso amministratore serve il link privato di attivazione conservato su SiteGround.</p>';return;}
+        if(!capabilities.emailRecoveryEnabled){emailInfo.innerHTML='<p>Recupero email non ancora attivo. Se non hai il codice, chiedi assistenza a chi gestisce WordyLand. Non creare un secondo account: i progressi restano nel profilo esistente.</p>';return;}
         emailInfo.innerHTML='<h4>Non hai il codice? Ricevi un link via email</h4><p>Per gli account adulti con email. Gli alunni usano il recupero della classe.</p><form id="emailRecoveryRequest"><label>Email dell’adulto<input name="email" type="email" autocomplete="email" maxlength="254" required></label><button class="audio">Richiedi il link</button><p role="status"></p></form>';
         emailInfo.querySelector('form').onsubmit=async event=>{event.preventDefault();const form=event.currentTarget,button=event.submitter;button.disabled=true;try{const result=await request('email-recovery-request',Object.fromEntries(new FormData(form)));form.querySelector('[role="status"]').textContent=result.message;}catch(error){form.querySelector('[role="status"]').textContent=error.message;}finally{if(button.isConnected)button.disabled=false;}};
       }).catch(()=>{if(emailInfo.isConnected)emailInfo.textContent='Disponibilità del recupero email non verificata. Riprova quando sei online.';});
       panel.querySelector('#recoverAccount').onsubmit = async e => {
         e.preventDefault(); const form=e.currentTarget, button=e.submitter; button.disabled=true;
         try { if(!session?.csrf)session=await request('session');const result=await request('recover',Object.fromEntries(new FormData(form))); session.csrf=result.csrf; recoveryNotice(result.recovery); form.reset(); say('Password aggiornata. Accedi con la nuova password.'); }
-        catch(e){say(e.message);} finally {button.disabled=false;}
+        catch(e){formSay(form,e.message);} finally {button.disabled=false;}
       };
       signalProfile();
       return;
     }
-    panel.innerHTML = '<h3>'+(session.role==='admin'?'Amministratore: ':'Account adulto: ') + esc(session.username) + '</h3><p>' + (active ? 'Stai giocando con il profilo di <b>' + esc(active.nickname) + '</b>.' : 'Scegli un profilo per usare il salvataggio online.') + '</p><div class="profileList">' + session.profiles.map(p => '<button class="audio" data-profile="' + Number(p.id) + '">' + esc(p.nickname) + (active?.id === p.id ? ' ✓' : '') + '</button>').join('') + '</div><form id="newProfile"><label for="profileNickname">Nuovo profilo · usa un soprannome</label><input id="profileNickname" maxlength="20" required autocomplete="off"><button class="primary">Crea profilo</button></form>' + (active ? '<button class="audio" id="syncNow">Salva ora</button><button class="audio" id="copyGuest">Copia qui i progressi ospite</button><div id="studyTools"></div>' : '') + (locked ? '<p>Il profilo è stato aggiornato altrove. La copia locale resta disponibile su questo dispositivo.</p><button class="audio" id="reloadProfile">Carica la versione online</button>' : '') + '<button class="audio" id="logoutAccount">Esci / Logout</button>'+passwordSettings()+'<details class="accountSecurity"><summary>Sicurezza e gestione account</summary><form id="securityAccount"><label>Password attuale<input name="password" type="password" autocomplete="current-password" required></label><button class="audio" value="new-recovery">Genera un nuovo codice di recupero</button><label>Per eliminare account e tutti i profili, scrivi ELIMINA<input name="confirm" autocomplete="off"></label><button class="audio" value="delete-account">Elimina definitivamente account e profili</button></form></details>';
-    panel.querySelectorAll('[data-profile]').forEach(b => b.onclick = () => {
+    panel.innerHTML = '<h3>'+(session.role==='admin'?'Amministratore: ':'Account adulto: ') + esc(session.username) + '</h3><p>' + (active ? 'Stai giocando con il profilo di <b>' + esc(active.nickname) + '</b>.' : 'Scegli un profilo per usare il salvataggio online.') + '</p><div class="profileList" role="group" aria-label="Scegli il profilo" aria-busy="false">' + session.profiles.map(p => '<button class="audio" aria-pressed="'+(active?.id===p.id)+'" data-profile="' + Number(p.id) + '">' + esc(p.nickname) + (active?.id === p.id ? ' ✓' : '') + '</button>').join('') + '</div><form id="newProfile"><label for="profileNickname">Nuovo profilo · usa un soprannome</label><input id="profileNickname" maxlength="20" required autocomplete="off" aria-describedby="profileCount"><p class="hint" id="profileCount">Profili creati: ' + session.profiles.length + ' di 8. Scegli un soprannome, senza nome completo.</p><button class="primary">Crea profilo</button></form>' + (active ? '<button class="audio" id="syncNow">Salva ora</button><button class="audio" id="copyGuest">Copia qui i progressi ospite</button><div id="studyTools"></div>' : '') + (locked ? '<p>Il profilo è stato aggiornato altrove. La copia locale resta disponibile su questo dispositivo.</p><button class="audio" id="reloadProfile">Carica la versione online</button>' : '') + '<button class="audio" id="logoutAccount">Esci / Logout</button>'+passwordSettings()+'<details class="accountSecurity"><summary>Sicurezza e gestione account</summary><form id="securityAccount"><label>Password attuale<input name="password" type="password" autocomplete="current-password" required></label><button class="audio" value="new-recovery">Genera un nuovo codice di recupero</button><label>Per eliminare account e tutti i profili, scrivi ELIMINA<input name="confirm" autocomplete="off"></label><button class="audio" value="delete-account">Elimina definitivamente account e profili</button></form></details>';
+    panel.querySelectorAll('[data-profile]').forEach(b => b.onclick = async () => {
+      if(profileChanging)return;
       if (locked) { say('Carica prima la versione online del profilo attuale.'); return; }
-      choose(Number(b.dataset.profile)).catch(e => say(e.message));
+      const wanted=Number(b.dataset.profile),ownerSession=session,operation=setProfileBusy(true);say('Caricamento del profilo in corso.');
+      try{await choose(wanted);if(session!==ownerSession||operation!==profileOperation)return;panel.querySelector('[data-profile="'+wanted+'"]')?.focus({preventScroll:true});}
+      catch(e){if(session===ownerSession&&operation===profileOperation){say(e.message);b.focus({preventScroll:true});}}
+      finally{setProfileBusy(false,operation);}
     });
     panel.querySelector('#newProfile').onsubmit = async e => {
-      e.preventDefault(); const button = e.submitter; button.disabled = true;
+      e.preventDefault(); if(profileChanging)return;const form=e.currentTarget,ownerSession=session,operation=setProfileBusy(true);form.setAttribute('aria-busy','true');formSay(form,'Creazione del profilo in corso.',null,false);
       try {
         await flush();
+        if(session!==ownerSession||operation!==profileOperation)return;
         if (locked) throw new Error('Risolvi prima il conflitto del profilo attuale.');
         const p = await request('create-profile', {nickname:panel.querySelector('#profileNickname').value});
+        if(session!==ownerSession||operation!==profileOperation)return;
         session.profiles.push(p); await choose(p.id);
-      } catch (e) { say(e.message); button.disabled = false; }
+        if(session!==ownerSession||operation!==profileOperation)return;
+        panel.querySelector('[data-profile="'+p.id+'"]')?.focus({preventScroll:true});
+      } catch (e) { if(session===ownerSession&&operation===profileOperation)formSay(form,e.message); }
+      finally{setProfileBusy(false,operation);if(form.isConnected)form.setAttribute('aria-busy','false');}
     };
     if (active) {
       panel.querySelector('#syncNow').onclick = () => { if (!locked) { schedule(); flush().catch(() => {}); } };
@@ -247,7 +284,7 @@
   }
   async function logout() {
     if(locked)throw new Error('Carica la versione online prima di uscire. La copia locale è conservata.');
-    await flush();await request('logout',{});active=null;pending=false;clearTimeout(timer);
+    await flush();await request('logout',{});setProfileBusy(false);active=null;pending=false;clearTimeout(timer);
     try{localStorage.removeItem(activeKey);}catch{}
     const guest=read(guestKey);if(guest)apply(guest,guest.name);
     area.querySelector('#recoveryNotice')?.remove();
@@ -257,6 +294,7 @@
     if(resetToken)openEmailReset();
   }
   async function connect(result) {
+    setProfileBusy(false);
     session=result;active=null;pending=false;locked=false;clearTimeout(timer);
     if(result.role==='learner'&&result.profiles.length===1)await choose(result.profiles[0].id);
     else show();
