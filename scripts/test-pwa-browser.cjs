@@ -18,6 +18,9 @@ assert(['127.0.0.1','localhost'].includes(new URL(base).hostname));assert(root?.
  await p.locator('#installApp').click();await p.locator('#installHelp').waitFor();await p.locator('#installHelp').getByText(/Su iPhone o iPad/).waitFor();
  // Exercise the deferred install prompt without pretending to install the browser app.
  await p.evaluate(()=>{const e=new Event('beforeinstallprompt');e.prompt=async()=>{window.installPromptUsed=true;};e.userChoice=Promise.resolve({outcome:'dismissed'});window.dispatchEvent(e);});await p.locator('#installApp').getByText('Installa WordyLand').waitFor();await p.locator('#installApp').click();assert(await p.evaluate(()=>window.installPromptUsed));
+ // A rejected browser prompt leaves readable installation help, not an unhandled error.
+ await p.evaluate(()=>{const e=new Event('beforeinstallprompt');e.prompt=async()=>{throw Error('Synthetic install unavailable');};e.userChoice=Promise.resolve({outcome:'dismissed'});window.dispatchEvent(e);});
+ await p.locator('#installApp').click();await p.locator('#appStatus').getByText(/finestra di installazione/).waitFor();assert(await p.locator('#installHelp').isVisible());assert(await p.locator('#installApp').isEnabled());
  // Authentication must not add session bodies or usernames to any SW cache.
  await p.evaluate(async()=>{const a=window.wordylandAccount;await a.ready;await a.connect(await a.request('register',{username:'pwa_private_test',password:'Pwa-browser-test-123',adult:true}));});
  const urls=await p.evaluate(async()=>{const result=[];for(const name of await caches.keys())for(const request of await(await caches.open(name)).keys())result.push(request.url);return result;});assert.equal(urls.length,10);assert(urls.every(url=>!url.includes('api.php')&&!url.includes('pwa_private_test')));
@@ -36,6 +39,18 @@ assert(['127.0.0.1','localhost'].includes(new URL(base).hostname));assert(root?.
  await p.evaluate(async()=>{await caches.open('another-app-cache');});
  const filename=path.join(root,'sw.js'),original=fs.readFileSync(filename,'utf8');fs.writeFileSync(filename,original.replace(/wordyland-offline-[a-f0-9]+/,'wordyland-offline-browser-update'));
  await p.evaluate(async()=>{const reg=await navigator.serviceWorker.getRegistration();await reg.update();});await p.locator('#appUpdate').waitFor();assert(await p.evaluate(async()=>!!(await navigator.serviceWorker.getRegistration()).waiting));
+ // Update/offline notices remain visible on focused adult pages where the home is hidden.
+ await p.goto(base+'/#segnalazioni');await p.locator('.communityPage').waitFor();await p.locator('#appUpdate').waitFor();assert(!(await p.locator('.startHub').isVisible()));assert.equal(await p.locator('main #appUpdate').count(),0);
+ await context.setOffline(true);await p.locator('#connectionNotice').waitFor();await context.setOffline(false);await p.waitForFunction(()=>document.querySelector('#connectionNotice').hidden);
+ await p.evaluate(()=>{window.beforeBlockedUpdate=true;window.originalUpdateInfo=wordylandAccount.info;wordylandAccount.info=()=>({...window.originalUpdateInfo(),pending:true,locked:true});});
+ await p.locator('#updateApp').click();await p.locator('#appStatus').getByText(/Prima di aggiornare/).waitFor();assert(await p.locator('#updateApp').isEnabled());assert(await p.evaluate(()=>window.beforeBlockedUpdate===true));assert(await p.evaluate(async()=>!!(await navigator.serviceWorker.getRegistration()).waiting));
+ await p.evaluate(()=>{wordylandAccount.info=()=>({...window.originalUpdateInfo(),working:true});});
+ await p.locator('#updateApp').click();await p.locator('#appStatus').getByText(/termina l’operazione/).waitFor();assert(await p.locator('#updateApp').isEnabled());assert(await p.evaluate(()=>window.beforeBlockedUpdate===true));
+ await p.evaluate(()=>{wordylandAccount.info=()=>({...window.originalUpdateInfo(),recoveryPending:true});});
+ await p.locator('#updateApp').click();await p.locator('#appStatus').getByText(/codici di recupero/).waitFor();assert(await p.locator('#updateApp').isEnabled());assert(await p.evaluate(async()=>!!(await navigator.serviceWorker.getRegistration()).waiting));
+ await p.evaluate(()=>{wordylandAccount.info=()=>({...window.originalUpdateInfo(),authExpired:true});});
+ await p.locator('#updateApp').click();await p.locator('#appStatus').getByText(/conferma di nuovo il tuo accesso/).waitFor();assert(await p.locator('#updateApp').isEnabled());assert(await p.evaluate(()=>window.beforeBlockedUpdate===true));
+ await p.evaluate(()=>{wordylandAccount.info=window.originalUpdateInfo;delete window.originalUpdateInfo;});
  // Hold the progress flush: the current document is already DOMContentLoaded,
  // so waitForLoadState alone cannot prove that an update actually reloaded it.
  await p.evaluate(()=>{window.beforePwaUpdate=true;const flush=wordylandAccount.flush;wordylandAccount.flush=async()=>{await new Promise(resolve=>window.releasePwaUpdateFlush=resolve);return flush();};});
@@ -49,7 +64,15 @@ assert(['127.0.0.1','localhost'].includes(new URL(base).hostname));assert(root?.
  assert.equal(await p.evaluate(()=>window.beforePwaUpdate),undefined,'Wait for the new document, not the old document load state');
  await p.evaluate(()=>wordylandAccount.ready);
  await p.waitForFunction(async()=>{const reg=await navigator.serviceWorker.getRegistration();return reg?.active?.state==='activated'&&!(await caches.keys()).some(name=>name.startsWith('wordyland-offline-')&&name!=='wordyland-offline-browser-update');});
- assert(await p.evaluate(async()=>(await caches.keys()).includes('another-app-cache')));fs.writeFileSync(filename,original);
- await p.locator('.startHub').scrollIntoViewIfNeeded();if(process.env.WORDYLAND_BROWSER_SCREENSHOT)await p.screenshot({path:process.env.WORDYLAND_BROWSER_SCREENSHOT,fullPage:false});
+ assert(await p.evaluate(async()=>(await caches.keys()).includes('another-app-cache')));
+ // An update activated by another tab leaves this document open and offers an explicit reload.
+ fs.writeFileSync(filename,original.replace(/wordyland-offline-[a-f0-9]+/,'wordyland-offline-second-tab'));
+ await p.evaluate(async()=>{window.beforeOtherTabUpdate=true;window.otherTabControllerChanged=false;navigator.serviceWorker.addEventListener('controllerchange',()=>window.otherTabControllerChanged=true,{once:true});await(await navigator.serviceWorker.getRegistration()).update();});await p.locator('#appUpdate').waitFor();
+ const other=await context.newPage();await other.goto(base);await other.evaluate(()=>wordylandAccount.ready);await other.locator('#appUpdate').waitFor();await other.locator('#updateApp').click();
+ await p.waitForFunction(async()=>!(await navigator.serviceWorker.getRegistration()).waiting&&(await caches.keys()).includes('wordyland-offline-second-tab'));
+ await p.waitForFunction(()=>window.otherTabControllerChanged===true);
+ assert(await p.evaluate(()=>window.beforeOtherTabUpdate===true));await p.locator('#appUpdate').waitFor();
+ const ownReload=p.waitForEvent('domcontentloaded');await p.locator('#updateApp').click();await ownReload;assert.equal(await p.evaluate(()=>window.beforeOtherTabUpdate),undefined);await other.close();fs.writeFileSync(filename,original);
+ await p.goto(base);await p.locator('.startHub').scrollIntoViewIfNeeded();if(process.env.WORDYLAND_BROWSER_SCREENSHOT)await p.screenshot({path:process.env.WORDYLAND_BROWSER_SCREENSHOT,fullPage:false});
  assert.deepEqual(errors,[]);await context.close();fs.rmSync(profile,{recursive:true,force:true});console.log('PWA browser passed: installable manifest/icons, three shortcuts, repeat navigation, install guidance/prompt, authenticated cache isolation, cold offline launch, five revision topics, retry/next, mobile, real waiting update and unrelated-cache preservation.');
 })().catch(e=>{console.error(e);process.exit(1)});

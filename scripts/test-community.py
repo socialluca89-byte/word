@@ -12,6 +12,7 @@ import subprocess
 import tempfile
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 
 with tempfile.TemporaryDirectory(prefix='wordyland-community-') as temporary:
@@ -134,6 +135,27 @@ with tempfile.TemporaryDirectory(prefix='wordyland-community-') as temporary:
         request(admin,'feedback-status',{'id':feedback['id'],'status':'fixed'},tc)
         assert request(learner,'feedback-list')['items'][0]['status']=='fixed'
         request(admin,'feedback-status',{'id':feedback['id'],'status':'not-a-state'},tc,400)
+        # Admin search is literal, private and paginated across the whole dataset.
+        request(a,'admin-overview&view=profiles&q=Nuvola',expected=403)
+        assert request(admin,'admin-overview&view=profiles&q=NUVOLA')['items'][0]['id']==pb
+        assert request(admin,'admin-overview&view=classes&q=nostra')['items'][0]['id']==club['id']
+        assert request(admin,'admin-overview&view=profiles&q='+urllib.parse.quote("' OR 1=1 --"))['total']==0
+        assert request(admin,'admin-overview&view=profiles&q=%25')['total']==0
+        request(admin,'admin-overview&q%5B%5D=bad',expected=400)
+        request(admin,'admin-overview&q='+('x'*241),expected=400)
+        with sqlite3.connect(temporary+'/data/wordyland.sqlite') as database:
+            owner=database.execute('SELECT account_id FROM profiles WHERE id=?',(pb,)).fetchone()[0]
+            hidden=database.execute('INSERT INTO profiles(account_id,nickname,state) VALUES (?,"HiddenNeedle","{}")',(owner,)).lastrowid
+            search_ids=[hidden]
+            for index in range(25):search_ids.append(database.execute('INSERT INTO profiles(account_id,nickname,state) VALUES (?,?,?)',(owner,'Probe_'+str(index),'{}')).lastrowid)
+        first=request(admin,'admin-overview&view=profiles&q=Probe_');second=request(admin,'admin-overview&view=profiles&q=Probe_&offset=20')
+        assert first['total']==second['total']==25 and len(first['items'])==20 and len(second['items'])==5
+        assert set(row['id'] for row in first['items']).isdisjoint(row['id'] for row in second['items'])
+        assert request(admin,'admin-overview&view=profiles&q=HiddenNeedle')['items'][0]['id']==hidden
+        assert request(admin,'admin-overview&view=profiles&q=ProbeX')['total']==0
+        assert first['summary']['profiles']>first['total'] and first['query']=='Probe_'
+        with sqlite3.connect(temporary+'/data/wordyland.sqlite') as database:
+            database.execute('PRAGMA foreign_keys=ON');database.executemany('DELETE FROM profiles WHERE id=?',[(pid,) for pid in search_ids])
         database_path=temporary+'/data/wordyland.sqlite'
         with sqlite3.connect(database_path) as db:
             bid=db.execute('SELECT account_id FROM profiles WHERE id=?',(pb,)).fetchone()[0]
