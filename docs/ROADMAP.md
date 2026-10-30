@@ -1,5 +1,7 @@
 # Roadmap WordyLand
 
+> Piano storico del 25 ottobre: le tabelle «live/work» e i blocchi sottostanti non descrivono la consegna attuale. Stato e dipendenze verificati: [30 ottobre 2026](CURRENT_STATUS_2026_10_30.md).
+
 Aggiornata il 25 ottobre 2026. Pubblico: bambini di 6–7 anni, prima classe pilota; genitori/docenti con accessi distinti. Obiettivo: imparare l'inglese con un gioco chiaro, piacevole e affidabile. Cambridge è un possibile traguardo futuro, non una promessa di preparazione completa.
 
 Questa roadmap ordina le richieste e propone passi successivi: non autorizza da sola pubblicazioni, servizi, costi, raccolte dati o cambiamenti agli accessi. Nessuna funzione esistente va rimossa o resa irraggiungibile. Le stime di calendario richiedono prima la chiusura dei blocchi esterni; qui usiamo traguardi verificabili.

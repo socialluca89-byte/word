@@ -198,7 +198,14 @@ if($method==='GET' && $action==='learning-summary') {
 if($method==='POST'&&$action==='rename-profile') {
     $nickname=is_string($body['nickname']??null)?trim($body['nickname']):'';
     if(!$nickname||strlen($nickname)>80)fail('Scegli un soprannome breve.');
+    $db->exec('BEGIN IMMEDIATE');
+    $current=one($db,'SELECT nickname FROM profiles WHERE id=? AND account_id=?',[$pid,$id]);
+    if(!$current){$db->exec('ROLLBACK');fail('Profilo non disponibile.',404);}
+    if($nickname!==$current['nickname']&&one($db,'SELECT 1 FROM club_profiles own JOIN club_profiles other ON other.club_id=own.club_id JOIN profiles p ON p.id=other.profile_id WHERE own.profile_id=? AND p.id<>? AND lower(p.nickname)=lower(?) LIMIT 1',[$pid,$pid,$nickname])){
+        $db->exec('ROLLBACK');fail('Questo soprannome è già usato in una delle tue classi. Scegline un altro.',409);
+    }
     runSql($db,'UPDATE profiles SET nickname=? WHERE id=? AND account_id=?',[$nickname,$pid,$id]);
+    $db->exec('COMMIT');
     respond(['nickname'=>$nickname,'profiles'=>profiles($db,$id)]);
 }
 if(in_array($action,['pending-games','quest-resume'],true)){
@@ -409,7 +416,14 @@ if ($method==='POST' && $action==='club-join') {
     if(($body['consent']??false)!==true)fail('Conferma la partecipazione con soprannome e avatar.');
     limitAttempts($db,'club-join:'.$id,20);$code=strtolower(trim((string)($body['code']??'')));
     $club=one($db,'SELECT c.id FROM clubs c LEFT JOIN class_links l ON l.club_id=c.id WHERE c.invite_hash=? OR l.code=? LIMIT 1',[hash('sha256',$code),$code]);if(!$club)fail('Codice gruppo non valido.',404);
-    $db->exec('BEGIN IMMEDIATE');if((int)one($db,'SELECT COUNT(*) AS n FROM club_profiles WHERE club_id=?',[$club['id']])['n']>=100){$db->exec('ROLLBACK');fail('Il gruppo è completo.');}
+    $db->exec('BEGIN IMMEDIATE');
+    $joined=one($db,'SELECT 1 FROM club_profiles WHERE club_id=? AND profile_id=?',[$club['id'],$pid]);
+    if(!$joined){
+        if((int)one($db,'SELECT COUNT(*) AS n FROM club_profiles WHERE club_id=?',[$club['id']])['n']>=100){$db->exec('ROLLBACK');fail('Il gruppo è completo.');}
+        $current=one($db,'SELECT nickname FROM profiles WHERE id=? AND account_id=?',[$pid,$id]);
+        if(!$current){$db->exec('ROLLBACK');fail('Profilo non disponibile.',404);}
+        if(one($db,'SELECT 1 FROM club_profiles cp JOIN profiles p ON p.id=cp.profile_id WHERE cp.club_id=? AND lower(p.nickname)=lower(?) LIMIT 1',[$club['id'],$current['nickname']])){$db->exec('ROLLBACK');fail('Questo soprannome è già usato nella classe. Scegline un altro prima di entrare.',409);}
+    }
     runSql($db,'INSERT OR IGNORE INTO club_accounts(club_id,account_id) VALUES (?,?)',[$club['id'],$id]);runSql($db,'INSERT OR IGNORE INTO club_profiles(club_id,profile_id) VALUES (?,?)',[$club['id'],$pid]);$db->exec('COMMIT');respond(['id'=>$club['id']]);
 }
 if ($method==='POST' && $action==='club-leave') {

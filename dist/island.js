@@ -156,13 +156,15 @@ const pin=document.createElement('button');pin.type='button';pin.className='isla
   const introEase=1-Math.pow(1-intro,3);
   camera.position.copy(initialCamera).multiplyScalar(zoom*(1+(1-introEase)*.13)-pulse*.015);camera.lookAt(0,kind==='island'?0:kind==='space'&&options.preview&&actionAge<3.2?1.3:.7,0);
   renderer.render(scene,camera);
-  for(const {pin,point,id}of pins){const v=point.clone().applyMatrix4(root.matrixWorld).project(camera);pin.style.left=(v.x*.5+.5)*100+'%';pin.style.top=(-v.y*.5+.5)*100+'%';pin.setAttribute('aria-pressed',String(selected===id));}
+  for(const {pin,point,id}of pins){const v=point.clone().applyMatrix4(root.matrixWorld).project(camera);pin.style.left='clamp(var(--pin-x-inset,34px),'+(v.x*.5+.5)*100+'%,calc(100% - var(--pin-x-inset,34px)))';pin.style.top='clamp(var(--pin-y-inset,34px),'+(-v.y*.5+.5)*100+'%,calc(100% - var(--pin-y-inset,34px)))';pin.setAttribute('aria-pressed',String(selected===id));}
   if(moving&&visible&&!document.hidden)frame=requestAnimationFrame(tick);
  }
  function tick(now){frame=0;if(disposed||!visible||document.hidden)return;if(now-last>=32)render(now);else frame=requestAnimationFrame(tick);}
  function requestDraw(){if(!frame&&!disposed)frame=requestAnimationFrame(render);}
  function resize(){const w=host.clientWidth,h=host.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();requestDraw();}
- const ro=new ResizeObserver(resize);ro.observe(host);
+ // Pin labels grow on selection/focus. Measure only when their size changes,
+ // keeping their full touch target and focus ring inside the clipped map.
+ const ro=new ResizeObserver(entries=>{let hostChanged=false;for(const entry of entries){if(entry.target===host){hostChanged=true;continue;}const box=Array.isArray(entry.borderBoxSize)?entry.borderBoxSize[0]:entry.borderBoxSize;entry.target.style.setProperty('--pin-x-inset',((box?.inlineSize||entry.target.offsetWidth)/2+12)+'px');entry.target.style.setProperty('--pin-y-inset',((box?.blockSize||entry.target.offsetHeight)/2+12)+'px');}if(hostChanged)resize();});ro.observe(host);pins.forEach(({pin})=>ro.observe(pin));
  const io=new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;if(visible)requestDraw();else{cancelAnimationFrame(frame);frame=0;last=0;}},{rootMargin:'80px'});io.observe(host);
  const onVisibility=()=>{if(document.hidden){cancelAnimationFrame(frame);frame=0;last=0;}else if(visible)requestDraw();};document.addEventListener('visibilitychange',onVisibility);
  const onMotion=()=>{cancelAnimationFrame(frame);frame=0;requestDraw();};motion.addEventListener('change',onMotion);

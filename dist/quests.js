@@ -183,7 +183,7 @@
     const previousWorld=stage.querySelector('#missionWorld');if(!previousWorld)clearScene();
     root.querySelector('.missionGrid').hidden=true;stage.hidden=false;
     window.wordylandUI.play('mission');stage.dataset.phase=challenge?'challenge':'learn';
-    const q=question;stage.innerHTML='<div class="missionWorld" id="missionWorld"><span class="sceneFallback">'+places[mission.activity].icon+'</span><span class="worldProgressLabel">'+(q.number-1)+' / '+mission.total+' tappe</span></div><div class="missionPause"><button class="audio" id="pauseQuest">⏸ Pausa</button><small>Le risposte confermate si salvano automaticamente.</small></div><div class="questStep">PROVA '+q.number+' DI '+mission.total+'<span>'+currentWorld().icon+' '+currentWorld().name+'</span></div><div class="questTrack"><i style="width:'+((q.number-1)/mission.total*100)+'%"></i></div><div class="questPicture">'+picture(q.word,q.emoji)+'</div><p>'+esc(q.translation)+'</p><button class="audio" id="questListen">🔊 Ascolta</button><div id="questWork"></div><div id="questFeedback" role="status" aria-live="polite"></div><div id="questActions"></div>';
+    const q=question;stage.innerHTML='<div class="missionWorld" id="missionWorld"><span class="sceneFallback">'+places[mission.activity].icon+'</span><span class="worldProgressLabel">'+(q.number-1)+' / '+mission.total+' tappe</span></div><div class="missionPause"><button class="audio" id="pauseQuest">⏸ Pausa</button><small>Le risposte confermate si salvano automaticamente.</small></div><div class="questStep">PROVA '+q.number+' DI '+mission.total+'<span>'+currentWorld().icon+' '+currentWorld().name+'</span></div><div class="questTrack" role="progressbar" aria-label="Risposte confermate nella missione" aria-valuemin="0" aria-valuemax="'+mission.total+'" aria-valuenow="'+(q.number-1)+'" aria-valuetext="'+(q.number-1)+' di '+mission.total+' risposte confermate"><i style="width:'+((q.number-1)/mission.total*100)+'%"></i></div><div class="questPicture">'+picture(q.word,q.emoji)+'</div><p>'+esc(q.translation)+'</p><button class="audio" id="questListen">🔊 Ascolta</button><div id="questWork"></div><div id="questFeedback" role="status" aria-live="polite"></div><div id="questActions"></div>';
     if(previousWorld)stage.querySelector('#missionWorld').replaceWith(previousWorld);
     else sceneView=window.wordylandIsland.mount(stage.querySelector('#missionWorld'),{kind:mission.activity,equipped:wallet()?.equipped,progress:(q.number-1)/mission.total});
     stage.querySelector('#pauseQuest').onclick=async()=>{if(busy)return;if(!profile.id&&!persistGuestMission()){say('Il browser non può salvare la missione: tieni aperta questa pagina.');return;}mission=null;question=null;tab='adventures';location.hash='#continua';render();await refreshPending();if(!resumeHost.hidden)resumeHost.scrollIntoView({block:'start'});};
@@ -282,7 +282,7 @@
       window.wordylandLearning.show(feedback,true,learning);
       sceneView?.update({progress:question.number/mission.total});
       if(!result.done)sceneView?.react('success');
-      const progressLabel=root.querySelector('.worldProgressLabel');if(progressLabel)progressLabel.textContent=question.number+' / '+mission.total+' tappe';
+      const progressLabel=root.querySelector('.worldProgressLabel');if(progressLabel)progressLabel.textContent=question.number+' / '+mission.total+' tappe';const progressBar=root.querySelector('.questTrack');if(progressBar){progressBar.setAttribute('aria-valuenow',question.number);progressBar.setAttribute('aria-valuetext',question.number+' di '+mission.total+' risposte confermate');progressBar.querySelector('i').style.width=(question.number/mission.total*100)+'%';}
       if(result.done){
         window.wordylandUI.play();
         if(hub)hub.wallet=result.wallet;
@@ -290,7 +290,7 @@
         const previousWorld=root.querySelector('#missionWorld');
         const completedActivity=mission.activity,place=places[completedActivity];
         const stage=root.querySelector('#missionStage');stage.dataset.phase='complete';
-        stage.innerHTML='<div class="missionWorld" id="completedWorld"><span class="sceneFallback">'+place.icon+'</span></div><div class="openTreasure">🎉</div><div id="completedFeedback" role="status"></div><span class="questEyebrow">MISSIONE COMPLETATA</span><h3>'+place.name+': ce l’hai fatta!</h3><p>Ogni tentativo ti ha portato fin qui.</p><div class="missionRewards"><b>✦ '+result.xp+' XP</b><b>🪙 '+result.coins+' monete</b></div><p>'+(result.coins?'La tua isola cresce con te! Scegli un oggetto per il personaggio, la casa o il kart.':'Hai già raccolto i premi per queste parole o le monete di oggi. Puoi continuare a giocare, senza perdere nulla.')+'</p><button class="primary" id="rewardShop">Personalizza il tuo mondo ✨</button><button class="audio" id="anotherQuest">Un’altra avventura</button>';
+        stage.innerHTML='<div class="missionWorld" id="completedWorld"><span class="sceneFallback">'+place.icon+'</span></div><div class="openTreasure">🎉</div><div id="completedFeedback" role="status"></div><span class="questEyebrow">MISSIONE COMPLETATA</span><h3 id="missionCompleteTitle" tabindex="-1">'+place.name+': ce l’hai fatta!</h3><p>Ogni tentativo ti ha portato fin qui.</p><div class="missionRewards"><b>✦ '+result.xp+' XP</b><b>🪙 '+result.coins+' monete</b></div><p>'+(result.coins?'La tua isola cresce con te! Scegli un oggetto per il personaggio, la casa o il kart.':'Hai già raccolto i premi per queste parole o le monete di oggi. Puoi continuare a giocare, senza perdere nulla.')+'</p><button class="primary" id="rewardShop">Personalizza il tuo mondo ✨</button><button class="audio" id="anotherQuest">Un’altra avventura</button>';
         if(previousWorld){previousWorld.id='completedWorld';stage.querySelector('#completedWorld').replaceWith(previousWorld);previousWorld.querySelector('.worldProgressLabel').textContent='Tutte le tappe completate!';}
         else sceneView=window.wordylandIsland.mount(stage.querySelector('#completedWorld'),{kind:completedActivity,equipped:w.equipped,progress:1});
         const earnedBadges=catalog.filter(it=>it.unlock&&w.inventory.includes(it.id)&&!previousInventory.includes(it.id));
@@ -300,10 +300,10 @@
         window.dispatchEvent(new CustomEvent('wordyland-celebrate'));
         mission=null;question=null;
         stage.querySelector('#rewardShop').onclick=()=>{shopGroup={treehouse:'home',pets:'pet',creative:'palette',kart:'kart'}[completedActivity]||'avatar';tab='shop';render();};stage.querySelector('#anotherQuest').onclick=()=>render();
-        if(profile.id){const result=await api('hub&profile='+profile.id+(club?'&club='+club:''));if(owner===profile.id)hub=result;}
+        stage.querySelector('#missionCompleteTitle').focus({preventScroll:true});stage.scrollIntoView({block:'start'});if(profile.id){const result=await api('hub&profile='+profile.id+(club?'&club='+club:''));if(owner===profile.id)hub=result;}
       }else{
         root.querySelector('#questActions').innerHTML='<button class="primary" id="questNext">Continua →</button>';
-        root.querySelector('#questNext').onclick=()=>{question=result.question;drawQuestion();};mission.nextQuestion=result.question;
+        const next=root.querySelector('#questNext');next.onclick=()=>{question=result.question;drawQuestion();};next.focus({preventScroll:true});mission.nextQuestion=result.question;
       }
     }catch(e){saveNote.textContent='Risposta da verificare · usa Riprendi dal salvataggio';feedback.textContent=e.message;if(owner===profile.id&&mission?.token===token&&profile.id){const retry=document.createElement('button');retry.className='audio';retry.textContent='Riprendi dal salvataggio';retry.onclick=()=>resumeQuest(token);root.querySelector('#questActions')?.append(retry);}}finally{busy=false;const pause=root.querySelector('#pauseQuest');if(pause)pause.disabled=false;}
   }

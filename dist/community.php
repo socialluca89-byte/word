@@ -100,6 +100,15 @@ if($action==='admin-overview'){
     // Platform tables are initialized before querying the dashboard.
     $tables=['accounts'=>'accounts','profiles'=>'profiles','classes'=>'clubs','duels'=>'duels'];$summary=[];
     foreach($tables+['feedback'=>'feedback'] as $key=>$table){$summary[$key]=(int)$db->query('SELECT COUNT(*) FROM '.$table)->fetchColumn();}
-    $items=communityRows($db,$sqls[$type].' LIMIT 20 OFFSET '.$offset);
-    respond(['summary'=>$summary,'view'=>$type,'items'=>$items,'total'=>$summary[$type],'offset'=>$offset,'pageSize'=>$pageSize]);
+    $query=$_GET['q']??'';if(!is_string($query)||strlen($query)>240)fail('Ricerca non valida.');$query=trim($query);
+    $searchFields=['accounts'=>['a.username'],'profiles'=>['p.nickname','a.username'],'classes'=>['c.name','a.username'],'duels'=>['p.nickname','r.nickname','d.category','d.state']];
+    $searchIds=['accounts'=>'a.id','profiles'=>'p.id','classes'=>'c.id','duels'=>'d.id'];
+    [$selection,$order]=explode(' ORDER BY ',$sqls[$type],2);$args=[];
+    if($query!==''){
+        $selection.=' WHERE ('.implode(' OR ',array_map(static fn(string $field):string=>'INSTR(LOWER('.$field.'),LOWER(?))>0',$searchFields[$type])).' OR CAST('.$searchIds[$type].' AS TEXT)=?)';
+        $args=array_fill(0,count($searchFields[$type])+1,$query);
+    }
+    $total=(int)communityRows($db,'SELECT COUNT(*) AS n FROM ('.$selection.')',$args)[0]['n'];
+    $items=communityRows($db,$selection.' ORDER BY '.$order.' LIMIT 20 OFFSET '.$offset,$args);
+    respond(['summary'=>$summary,'view'=>$type,'items'=>$items,'total'=>$total,'offset'=>$offset,'pageSize'=>$pageSize,'query'=>$query]);
 }

@@ -1,5 +1,7 @@
 # Consegna: diagnosi dei tre impedimenti
 
+> Diagnosi storica dell'incidente del 24 ottobre. Le condizioni e i blocchi di quel momento non sono lo stato attuale: vedere il [quadro del 30 ottobre 2026](CURRENT_STATUS_2026_10_30.md). Le evidenze originali restano conservate qui.
+
 Riferimento del codice funzionale: `e4b9d2d3c3928426f352f18d1e60c2a926058eb3`, ramo work, testato localmente e non pubblicato. Ultima release live verificata: `22f2d6028b87c0ae22029eaa211c148a7964ef69`. Main remoto era `77e071ca24438881121786d0d1cd80d90a71ea99`; il suo deploy era fallito con rollback verificato. Nessun altro deploy è stato tentato per questa diagnosi.
 
 ## 1. Pubblicazione: prove, limiti e azione richiesta
