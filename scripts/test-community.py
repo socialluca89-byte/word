@@ -54,12 +54,12 @@ with tempfile.TemporaryDirectory(prefix='wordyland-community-') as temporary:
             try:request(a,'session');break
             except urllib.error.URLError:time.sleep(.05)
         password='Community-test-password-123'
-        def register(c,name):
+        def register(c,name,nickname='Docente'):
             token=request(c,'session')['csrf'];result=request(c,'register',{'username':name,'password':password,'adult':True,'role':'admin'},token)
             assert result['role']=='adult'
-            profile=request(c,'create-profile',{'nickname':'Docente'},result['csrf'])['id']
+            profile=request(c,'create-profile',{'nickname':nickname},result['csrf'])['id']
             return result['csrf'],profile
-        ta,pa=register(a,'teacher_'+secrets.token_hex(3)+'@example.test');tb,pb=register(b,'another_'+secrets.token_hex(3))
+        ta,pa=register(a,'teacher_'+secrets.token_hex(3)+'@example.test');tb,pb=register(b,'another_'+secrets.token_hex(3),'Nuvola')
         request(guest,'feedback-list',expected=401);request(guest,'admin-overview',expected=401)
         token=request(guest,'session')['csrf'];request(guest,'register',{'username':'luca@perrone.it','password':password,'adult':True},token,403)
         request(a,'admin-overview',expected=403);request(a,'feedback-list&scope=all',expected=403)
@@ -90,6 +90,44 @@ with tempfile.TemporaryDirectory(prefix='wordyland-community-') as temporary:
             data=request(admin,'admin-overview&view='+view)
             assert data['summary']['accounts']==4 and not any(key in json.dumps(data) for key in ['password_hash','recovery_hash','session_version','invite_hash'])
         assert request(admin,'class-link',{'club':club['id']},tc)['code']==club['code']
+        # The admin enrolls an existing profile, preserving account and progress.
+        enrollment={'club':club['id'],'member':pb,'consent':True}
+        request(guest,'admin-class-add',enrollment,request(guest,'session')['csrf'],401)
+        request(a,'admin-class-add',enrollment,ta,403)
+        request(learner,'admin-class-add',enrollment,tl,403)
+        request(admin,'admin-class-add',enrollment,'invalid',403)
+        request(admin,'admin-class-add',expected=405)
+        request(admin,'admin-class-add',{**enrollment,'consent':False},tc,400)
+        request(admin,'admin-class-add',{**enrollment,'member':999999},tc,404)
+        request(admin,'admin-class-add',{**enrollment,'club':999999},tc,404)
+        request(admin,'admin-class-add',{**enrollment,'member':str(pb)},tc,400)
+        duplicate=request(b,'create-profile',{'nickname':'docente'},tb)['id']
+        request(admin,'admin-class-add',{**enrollment,'member':duplicate},tc,409)
+        with sqlite3.connect(temporary+'/data/wordyland.sqlite') as database:
+            preserved={table:database.execute('SELECT * FROM '+table+' ORDER BY 1').fetchall() for table in ['accounts','profiles','wallets']}
+        added=request(admin,'admin-class-add',enrollment,tc)
+        assert added['added'] is True and added['className']=='La nostra classe'
+        assert request(admin,'admin-class-add',enrollment,tc)['added'] is False
+        with sqlite3.connect(temporary+'/data/wordyland.sqlite') as database:
+            assert preserved=={table:database.execute('SELECT * FROM '+table+' ORDER BY 1').fetchall() for table in preserved}
+            assert database.execute('SELECT COUNT(*) FROM club_profiles WHERE club_id=? AND profile_id=?',(club['id'],pb)).fetchone()[0]==1
+        assert next(p for p in request(b,'class-invite&code='+club['code'])['profiles'] if p['id']==pb)['joined'] is True
+        # A full class rejects new members, but re-submitting an existing one is safe.
+        with sqlite3.connect(temporary+'/data/wordyland.sqlite') as database:
+            owner=database.execute('SELECT account_id FROM profiles WHERE id=?',(pb,)).fetchone()[0]
+            missing=100-database.execute('SELECT COUNT(*) FROM club_profiles WHERE club_id=?',(club['id'],)).fetchone()[0]
+            fillers=[]
+            for index in range(missing):
+                synthetic=database.execute('INSERT INTO profiles(account_id,nickname,state) VALUES (?,?,?)',(owner,'Capacity_'+str(index),'{}')).lastrowid
+                fillers.append(synthetic)
+                database.execute('INSERT INTO club_profiles(club_id,profile_id) VALUES (?,?)',(club['id'],synthetic))
+        request(b,'rename-profile',{'profile':duplicate,'nickname':'Another'},tb)
+        request(admin,'admin-class-add',{**enrollment,'member':duplicate},tc,409)
+        assert request(admin,'admin-class-add',enrollment,tc)['added'] is False
+        with sqlite3.connect(temporary+'/data/wordyland.sqlite') as database:
+            assert database.execute('SELECT COUNT(*) FROM club_profiles WHERE club_id=?',(club['id'],)).fetchone()[0]==100
+            database.execute('PRAGMA foreign_keys=ON')
+            database.executemany('DELETE FROM profiles WHERE id=?',[(pid,) for pid in fillers])
         request(b,'class-link',{'club':club['id']},tb,403)
         assert request(a,'managed-classes')['items'][0]['id']==club['id']
         all_reports=request(admin,'feedback-list&scope=all');assert all_reports['total']==2 and all('username' in row for row in all_reports['items'])

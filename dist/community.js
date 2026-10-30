@@ -4,14 +4,15 @@
  const text=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const info=()=>window.wordylandAccount.info(),request=(action,body)=>window.wordylandAccount.request(action,body);
  const statuses={open:'Aperta',planned:'In valutazione',fixed:'Risolta',closed:'Chiusa'};
- let epoch=0,offset=0,adminView='accounts',activationCode=null,newRecovery=null;
- const heading=(eyebrow,title,description)=>'<div class="communityHeading"><span class="questEyebrow">'+eyebrow+'</span><h2 tabindex="-1">'+title+'</h2><p>'+description+'</p></div>';
+ let epoch=0,offset=0,adminView='accounts',activationCode=null,newRecovery=null,recoveryAnnounced=false;
+ const heading=(eyebrow,title,description)=>'<div class="communityHeading"><span class="questEyebrow">'+eyebrow+'</span><h2 tabindex="-1" aria-level="1">'+title+'</h2><p>'+description+'</p><a class="communityButton" href="#">← Torna al gioco</a></div>';
  const status=message=>{const el=root.querySelector('#communityStatus');if(el)el.textContent=message;};
  const openAccount=()=>{const el=document.querySelector('.accountArea');el.open=true;el.scrollIntoView({behavior:'smooth',block:'start'});el.querySelector('#accountUser')?.focus({preventScroll:true});};
  function navigation(){document.querySelectorAll('.serviceNav a').forEach(a=>{if(a.hash===location.hash)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});}
  async function route(scroll=false){
   const current=++epoch;navigation();const hash=location.hash;
   if(['#continua','#sfide','#personaggi','#allenati','#preposizioni','#classe-crea','#segnalazioni','#admin','#iscritti'].includes(hash)||hash.startsWith('#admin-attiva='))window.wordylandUI?.play();
+  document.body.classList.toggle('communityPage',['#classe-crea','#segnalazioni','#admin','#iscritti'].includes(hash)||hash.startsWith('#admin-attiva='));
   if(!info().username)newRecovery=null;
   const match=hash.match(/^#admin-attiva=([a-f0-9]{64})$/);if(match){activationCode=match[1];history.replaceState(null,'','#admin');}
   if(hash==='#allenamento'){window.wordylandUI?.play();root.hidden=true;document.querySelector('.questHub').hidden=true;window.dispatchEvent(new Event('wordyland-training-open'));return;}
@@ -57,22 +58,56 @@
  }
  function adminTabs(){return '<nav class="adminTabs" aria-label="Dati amministratore">'+Object.entries({accounts:'Account',profiles:'Profili',classes:'Classi',duels:'Sfide',feedback:'Bug e idee'}).map(([id,label])=>'<button class="audio" data-admin-view="'+id+'" aria-pressed="'+(adminView===id)+'">'+label+'</button>').join('')+'</nav>';}
  function bindAdminTabs(){root.querySelectorAll('[data-admin-view]').forEach(b=>b.onclick=()=>{adminView=b.dataset.adminView;offset=0;admin(++epoch).catch(e=>status(e.message));});}
+ function enrollmentForm(data,classes){
+  if(!data.items.length)return '';
+  if(!classes.length)return '<p>Per iscrivere un profilo, <a href="#classe-crea">crea prima una classe</a>.</p>';
+  return '<form class="adminEnrollmentForm" id="adminEnrollmentForm"><h3>Iscrivi un profilo esistente</h3><p>Il profilo mantiene account, password e progressi. Scegli il soprannome e controlla l’account associato.</p><label>Profilo<select name="member" required><option value="">Scegli un profilo</option>'+data.items.map(p=>'<option value="'+p.id+'">'+text(p.nickname)+' · '+text(p.username)+'</option>').join('')+'</select></label><label>Classe<select name="club" required><option value="">Scegli una classe</option>'+classes.map(c=>'<option value="'+c.id+'">'+text(c.name)+' · '+text(c.owner)+'</option>').join('')+'</select></label><label class="adultCheck"><input type="checkbox" name="consent" required> Confermo la partecipazione del profilo con soprannome, avatar e punti.</label><button class="primary">Iscrivi il profilo</button><p id="adminEnrollmentStatus" class="formFeedback" role="status" tabindex="-1"></p></form>';
+ }
+ function bindEnrollment(){
+  const form=root.querySelector('#adminEnrollmentForm');if(!form)return;
+  let pending=false;
+  form.onsubmit=async e=>{
+   e.preventDefault();if(pending)return;
+   const fields=new FormData(form),owner=info().username,version=epoch,button=form.querySelector('button'),feedback=form.querySelector('#adminEnrollmentStatus');
+   const controls=Array.from(form.querySelectorAll('input,select,button'));
+   pending=true;controls.forEach(control=>control.disabled=true);form.setAttribute('aria-busy','true');feedback.textContent='Iscrizione in corso…';feedback.removeAttribute('data-state');
+   try{
+    const result=await request('admin-class-add',{member:Number(fields.get('member')),club:Number(fields.get('club')),consent:fields.get('consent')==='on'});
+    if(version!==epoch||owner!==info().username||!form.isConnected)return;
+    const refreshed=++epoch;
+    try{await admin(refreshed);}catch(refreshError){
+     if(refreshed===epoch&&owner===info().username&&form.isConnected){feedback.textContent='Iscrizione confermata. L’elenco non si è aggiornato: riapri Profili per controllarlo.';feedback.dataset.state='success';feedback.focus({preventScroll:true});}
+     return;
+    }
+    if(refreshed!==epoch||owner!==info().username)return;
+    status(result.nickname+(result.added?' è ora iscritto a ':' è già iscritto a ')+result.className+'.');
+    const notice=root.querySelector('#communityStatus');if(notice){notice.classList.add('formFeedback');notice.dataset.state='success';notice.tabIndex=-1;notice.focus({preventScroll:true});notice.scrollIntoView({block:'nearest'});}
+   }catch(error){if(version===epoch&&owner===info().username&&form.isConnected){feedback.textContent=error.message;feedback.dataset.state='error';feedback.focus({preventScroll:true});}}
+   finally{pending=false;if(form.isConnected){controls.forEach(control=>control.disabled=false);form.removeAttribute('aria-busy');}}
+  };
+ }
  async function admin(current){
   if(!info().username){signIn('Accedi all’amministrazione.','Usa il tuo account amministratore.');return;}
   if(info().role!=='admin'){root.innerHTML=heading('AMMINISTRAZIONE','Questo account non ha i permessi amministratore.','La gestione completa è disponibile soltanto agli account abilitati dal proprietario del sito.')+'<p id="communityStatus" role="status"></p>';return;}
   if(adminView==='feedback'){await reports(current,true);return;}
   const data=await request('admin-overview&view='+adminView+'&offset='+offset);if(current!==epoch)return;
+  const classes=[];
+  if(adminView==='profiles'){
+   let classOffset=0;
+   do{const page=await request('admin-overview&view=classes&offset='+classOffset);if(current!==epoch)return;classes.push(...page.items);classOffset+=page.items.length;if(!page.items.length||classOffset>=page.total)break;}while(true);
+  }
   const labels={accounts:'Account',profiles:'Profili',classes:'Classi',duels:'Sfide',feedback:'Segnalazioni'};
   const columns={accounts:{id:'ID',username:'Email / utente',role:'Ruolo',profiles:'Profili'},profiles:{id:'ID',nickname:'Soprannome',username:'Account',role:'Ruolo',xp:'XP',coins:'Monete',classes:'Classi'},classes:{id:'ID',name:'Classe',owner:'Proprietario',members:'Partecipanti'},duels:{id:'ID',challenger:'Giocatore',opponent:'Compagno',category:'Tema',state:'Stato'}}[adminView];
-  root.innerHTML=heading('SUPER AMMINISTRATORE','Tutta WordyLand, in un solo posto.','Account, profili, classi, sfide e segnalazioni. I privilegi sono verificati dal server.')+'<a class="communityButton" href="#iscritti">Vedi iscritti e chi è online →</a>'+(newRecovery?'<div class="recoveryNotice"><b>Conserva il nuovo codice di recupero in un luogo sicuro.</b><code>'+text(newRecovery)+'</code><button class="audio" id="hideAdminRecovery">L’ho conservato</button></div>':'')+'<div class="adminStats">'+Object.entries(data.summary).map(([id,count])=>'<span><b>'+count+'</b>'+labels[id]+'</span>').join('')+'</div>'+adminTabs()+'<p id="communityStatus" role="status"></p><div class="communityTable"><table><thead><tr>'+Object.values(columns).map(name=>'<th>'+name+'</th>').join('')+(adminView==='classes'?'<th>Iscrizioni</th>':'')+'</tr></thead><tbody>'+data.items.map(row=>'<tr>'+Object.keys(columns).map(id=>'<td>'+text(row[id])+'</td>').join('')+(adminView==='classes'?'<td><button class="audio" data-share-class="'+row.id+'">Mostra link</button><div data-class-link="'+row.id+'"></div></td>':'')+'</tr>').join('')+'</tbody></table></div><div id="communityPager" class="communityPager"></div>';
-  root.querySelector('#hideAdminRecovery')?.addEventListener('click',()=>{newRecovery=null;route();});bindAdminTabs();bindShares();pager(data,()=>admin(++epoch));
+  root.innerHTML=heading('SUPER AMMINISTRATORE','Tutta WordyLand, in un solo posto.','Account, profili, classi, sfide e segnalazioni. I privilegi sono verificati dal server.')+'<a class="communityButton" href="#iscritti">Vedi iscritti e chi è online →</a>'+(newRecovery?'<div class="recoveryNotice"><b>Conserva il nuovo codice di recupero in un luogo sicuro.</b><code>'+text(newRecovery)+'</code><button class="audio" id="hideAdminRecovery">L’ho conservato</button></div>':'')+'<div class="adminStats">'+Object.entries(data.summary).map(([id,count])=>'<span><b>'+count+'</b>'+labels[id]+'</span>').join('')+'</div>'+adminTabs()+'<p id="communityStatus" role="status"></p>'+(adminView==='profiles'?enrollmentForm(data,classes):'')+'<div class="communityTable" tabindex="0" role="region" aria-label="Tabella '+labels[adminView]+'"><table><thead><tr>'+Object.values(columns).map(name=>'<th>'+name+'</th>').join('')+(adminView==='classes'?'<th>Iscrizioni</th>':'')+'</tr></thead><tbody>'+data.items.map(row=>'<tr>'+Object.keys(columns).map(id=>'<td>'+text(row[id])+'</td>').join('')+(adminView==='classes'?'<td><button class="audio" data-share-class="'+row.id+'">Mostra link</button><div data-class-link="'+row.id+'"></div></td>':'')+'</tr>').join('')+'</tbody></table></div><div id="communityPager" class="communityPager"></div>';
+  if(newRecovery&&!recoveryAnnounced){recoveryAnnounced=true;const notice=root.querySelector('.recoveryNotice');if(notice){notice.setAttribute('role','region');notice.setAttribute('aria-label','Codice di recupero amministratore');notice.tabIndex=-1;notice.focus({preventScroll:true});notice.scrollIntoView({block:'center'});}}
+  root.querySelector('#hideAdminRecovery')?.addEventListener('click',async()=>{newRecovery=null;recoveryAnnounced=false;await route();root.querySelector('h2')?.focus({preventScroll:true});});bindAdminTabs();bindShares();bindEnrollment();pager(data,()=>admin(++epoch));
  }
  function activation(){
   root.innerHTML=heading('PRIMO ACCESSO PRIVATO','Attiva il tuo accesso amministratore.','Scegli la password del tuo account. Il link di attivazione è utilizzabile una sola volta.')+'<form id="activateAdmin"><label>Email<input name="username" type="email" value="luca@perrone.it" readonly></label><label>Nuova password<input name="password" type="password" minlength="12" maxlength="72" autocomplete="new-password" required></label><button class="primary">Attiva e accedi</button></form><p id="communityStatus" role="status"></p>';
   root.querySelector('form').onsubmit=async e=>{e.preventDefault();const fields=Object.fromEntries(new FormData(e.currentTarget));e.submitter.disabled=true;try{const recovered=await request('recover',{...fields,code:activationCode});activationCode=null;newRecovery=recovered.recovery;await window.wordylandAccount.connect(await request('login',fields));await route();}catch(error){status(error.message);if(e.submitter.isConnected)e.submitter.disabled=false;}};
  }
  document.addEventListener('click',e=>{const link=e.target.closest('.serviceNav a,.startChoices a,.prepositionsFeature,.lessonShortcut');if(link&&link.hash===location.hash&&!e.defaultPrevented){e.preventDefault();offset=0;route(true);}});
- window.addEventListener('wordyland-play-view',()=>{root.hidden=true;document.querySelector('.questHub').hidden=false;navigation();});
+ window.addEventListener('wordyland-play-view',()=>{document.body.classList.remove('communityPage');root.hidden=true;document.querySelector('.questHub').hidden=false;navigation();});
  window.addEventListener('hashchange',()=>{offset=0;route(true);});
  window.addEventListener('wordyland-profile',()=>route());
  window.wordylandAccount.ready.then(()=>route(true));

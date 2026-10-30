@@ -12,4 +12,14 @@ const adminContext=await browser.newContext({viewport:{width:1360,height:1000},r
 await admin.locator('[data-admin-view=feedback]').click();await admin.locator('.feedbackList').getByText('La voce non parte',{exact:true}).waitFor();await admin.locator('[data-feedback-state]').selectOption('fixed');await admin.locator('#communityStatus').getByText('Stato aggiornato.',{exact:true}).waitFor();
 await pupil.goto(base+'/#segnalazioni');await pupil.locator('.feedbackList').getByText(/Risolta/).waitFor();
 await admin.locator('[data-admin-view=classes]').click();await admin.locator('[data-share-class]').click();await admin.locator('.classShareUrl').waitFor();assert.equal(await admin.locator('.classShareUrl').inputValue(),link);if(process.env.WORDYLAND_BROWSER_SCREENSHOT)await admin.screenshot({path:process.env.WORDYLAND_BROWSER_SCREENSHOT,fullPage:true});
+// A super administrator can enroll an existing profile without new credentials.
+const existingContext=await browser.newContext({viewport:{width:390,height:844},reducedMotion:'reduce'}),existing=await existingContext.newPage();
+await existing.goto(base);await existing.evaluate(()=>window.wordylandAccount.ready);
+const existingProfile=await existing.evaluate(async password=>{const result=await wordylandAccount.request('register',{username:'existing_'+Date.now()+'@example.test',password,adult:true});await wordylandAccount.connect(result);return (await wordylandAccount.createProfile('Nuvola')).id;},password);
+await admin.locator('[data-admin-view=profiles]').click();await admin.locator('#adminEnrollmentForm').waitFor();
+await admin.locator('#adminEnrollmentForm [name=member]').selectOption(String(existingProfile));await admin.locator('#adminEnrollmentForm [name=club]').selectOption({index:1});await admin.locator('#adminEnrollmentForm [name=consent]').check();await admin.locator('#adminEnrollmentForm button').click();
+await admin.locator('#communityStatus').getByText(/Nuvola è ora iscritto a La nostra classe/).waitFor();
+await existing.goto(link);await existing.getByRole('heading',{name:'Ci sei, Nuvola!',exact:true}).waitFor();
+assert.equal((await existing.evaluate(async code=>wordylandAccount.request('class-invite&code='+code),new URL(link).hash.split('=')[1])).profiles.find(p=>p.id===existingProfile).joined,true);
+await existingContext.close();
 await admin.setViewportSize({width:360,height:844});assert(await admin.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));assert(await pupil.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));assert.deepEqual(errors,[]);await browser.close();console.log('Community browser passed: email login, direct class creation and real share link, learner enrollment/duel route, private feedback, denied learner admin view, private activation, global admin class/report access, status updates, mobile and no errors.');})().catch(e=>{console.error(e);process.exit(1)});

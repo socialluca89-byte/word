@@ -408,7 +408,7 @@ if ($method==='POST' && $action==='club-create') {
 if ($method==='POST' && $action==='club-join') {
     if(($body['consent']??false)!==true)fail('Conferma la partecipazione con soprannome e avatar.');
     limitAttempts($db,'club-join:'.$id,20);$code=strtolower(trim((string)($body['code']??'')));
-    $club=one($db,'SELECT id FROM clubs WHERE invite_hash=?',[hash('sha256',$code)]);if(!$club)fail('Codice gruppo non valido.',404);
+    $club=one($db,'SELECT c.id FROM clubs c LEFT JOIN class_links l ON l.club_id=c.id WHERE c.invite_hash=? OR l.code=? LIMIT 1',[hash('sha256',$code),$code]);if(!$club)fail('Codice gruppo non valido.',404);
     $db->exec('BEGIN IMMEDIATE');if((int)one($db,'SELECT COUNT(*) AS n FROM club_profiles WHERE club_id=?',[$club['id']])['n']>=100){$db->exec('ROLLBACK');fail('Il gruppo è completo.');}
     runSql($db,'INSERT OR IGNORE INTO club_accounts(club_id,account_id) VALUES (?,?)',[$club['id'],$id]);runSql($db,'INSERT OR IGNORE INTO club_profiles(club_id,profile_id) VALUES (?,?)',[$club['id'],$pid]);$db->exec('COMMIT');respond(['id'=>$club['id']]);
 }
