@@ -1,0 +1,261 @@
+{
+  "commit": "95963fa4d5104b55459841dc7d44297d15e86f99",
+  "records": [
+    {
+      "phase": "verify",
+      "command": "for f in dist/*.js dist/*.mjs; do node --check \"$f\"; done",
+      "exit": 0,
+      "seconds": 1.23
+    },
+    {
+      "phase": "verify",
+      "command": "for f in scripts/*.sh; do bash -n \"$f\"; done",
+      "exit": 0,
+      "seconds": 0.03
+    },
+    {
+      "phase": "verify",
+      "command": "node scripts/test-lessons.mjs",
+      "exit": 0,
+      "seconds": 0.2
+    },
+    {
+      "phase": "verify",
+      "command": "node scripts/test-pwa.mjs",
+      "exit": 0,
+      "seconds": 1.01
+    },
+    {
+      "phase": "verify",
+      "command": "node scripts/test-learning.mjs",
+      "exit": 0,
+      "seconds": 0.23
+    },
+    {
+      "phase": "verify",
+      "command": "node scripts/test-rewards.mjs",
+      "exit": 0,
+      "seconds": 0.13
+    },
+    {
+      "phase": "verify",
+      "command": "for f in dist/*.php; do php -l \"$f\"; done",
+      "exit": 0,
+      "seconds": 0.22
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-api.py",
+      "exit": 0,
+      "seconds": 6.34
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-access.py",
+      "exit": 0,
+      "seconds": 4.68
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-email-recovery.py",
+      "exit": 0,
+      "seconds": 3.75
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-classroom.py",
+      "exit": 0,
+      "seconds": 28.99
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-adventures.py",
+      "exit": 0,
+      "seconds": 2.86
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-holidays.py",
+      "exit": 0,
+      "seconds": 4.58
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-journey.py",
+      "exit": 0,
+      "seconds": 5.68
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-elf.py",
+      "exit": 0,
+      "seconds": 2.82
+    },
+    {
+      "phase": "verify",
+      "command": "php -l scripts/bootstrap-admin.php",
+      "exit": 0,
+      "seconds": 0.34
+    },
+    {
+      "phase": "verify",
+      "command": "php -l scripts/owner-recovery-status.php",
+      "exit": 0,
+      "seconds": 0.21
+    },
+    {
+      "phase": "verify",
+      "command": "php -l scripts/prepare-owner-recovery.php",
+      "exit": 0,
+      "seconds": 0.03
+    },
+    {
+      "phase": "verify",
+      "command": "php -l scripts/read-only-readiness.php",
+      "exit": 0,
+      "seconds": 0.02
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-read-only-readiness.py",
+      "exit": 0,
+      "seconds": 37.99
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-owner-recovery.py",
+      "exit": 0,
+      "seconds": 0.92
+    },
+    {
+      "phase": "verify",
+      "command": "php -l scripts/siteground-cache.php",
+      "exit": 0,
+      "seconds": 0.02
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-cache-purge.py",
+      "exit": 0,
+      "seconds": 0.5
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-community.py",
+      "exit": 0,
+      "seconds": 4.36
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-presence.py",
+      "exit": 0,
+      "seconds": 2.97
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-resume.py",
+      "exit": 0,
+      "seconds": 1.55
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-autonomy.py",
+      "exit": 0,
+      "seconds": 1.69
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-review.py",
+      "exit": 0,
+      "seconds": 1.04
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-choice-fairness.py",
+      "exit": 0,
+      "seconds": 1.0
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-parent-summary.py",
+      "exit": 0,
+      "seconds": 1.22
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-training.py",
+      "exit": 0,
+      "seconds": 6.51
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-phonics.py",
+      "exit": 0,
+      "seconds": 1.88
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-letter-progression.py",
+      "exit": 0,
+      "seconds": 1.81
+    },
+    {
+      "phase": "verify",
+      "command": "node scripts/verify-bundle.mjs",
+      "exit": 0,
+      "seconds": 0.12
+    },
+    {
+      "phase": "verify",
+      "command": "bash scripts/test-deploy.sh",
+      "exit": 0,
+      "seconds": 32.36
+    },
+    {
+      "phase": "browser",
+      "command": "bash scripts/test-browser.sh navigation",
+      "exit": 0,
+      "seconds": 58.29
+    },
+    {
+      "phase": "browser",
+      "command": "bash scripts/test-browser.sh motion",
+      "exit": 0,
+      "seconds": 26.58
+    },
+    {
+      "phase": "browser",
+      "command": "bash scripts/test-browser.sh characters",
+      "exit": 0,
+      "seconds": 47.78
+    }
+  ],
+  "elapsed_seconds": 292.29,
+  "planned": 38,
+  "browser_suites": 3,
+  "scope": "All 35 mandatory verify checks, plus navigation/motion/characters regressions on exact application candidate. The full 38-suite browser matrix remains required in production CI.",
+  "focused_browser": [
+    {
+      "suite": "classic-illustrated",
+      "result": "PASS",
+      "evidence": "Real summary/card entry, six original atlas cells/modes, actual mobile start visible and focus on game, error/correct/progress, close/reopen, owned avatar/crown vs temporary preview, wallet preserved."
+    },
+    {
+      "suite": "illustrated",
+      "result": "PASS",
+      "evidence": "Eight default worlds, twenty portraits, real targets/replay, actor rectangles do not overlap targets, original artwork, guest no API writes, retained classic option."
+    },
+    {
+      "suite": "illustrated-actions",
+      "result": "PASS",
+      "evidence": "Eight real objects/animations, actual local page football/space tap, reduced motion/pause, rapid clicks, replay chest reset, cleanup, no API writes."
+    }
+  ],
+  "independent_review": "No remaining static blocker identified after fixes to replay visual state and duplicate fallback avatar.",
+  "privacy": "Synthetic fixtures only. No real accounts, children data, membership, permissions, API or hosting configuration changed.",
+  "limits": [
+    "Local Chromium; not proof of original tablet compatibility or real audio pronunciation.",
+    "Illustrated portraits remain animated pawns; existing physical accessories/furniture remain reachable through classic3D.",
+    "No claim that tests cover every possible user interaction."
+  ]
+}
