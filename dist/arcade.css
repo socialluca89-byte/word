@@ -26,3 +26,8 @@ header{max-width:1320px;padding:22px 28px;align-items:center}.brand{display:flex
 .racerModel[data-racer="santa"]{background-position:100.0% 66.66666666666667%}.racerModel[data-racer="santa"]::after{content:none}
 .racerModel[data-racer="nutcracker"]{background-position:0.0% 100.0%}.racerModel[data-racer="nutcracker"]::after{content:none}
 .racerModel[data-racer="yeti"]{background-position:33.333333333333336% 100.0%}.racerModel[data-racer="yeti"]::after{content:none}
+
+/* The classic exercise box keeps its illustrated circuit and owned character throughout the lesson. */
+.classicWorldFrame{margin:0 0 20px;width:100%;min-width:0}.classicWorldScene{position:relative;width:100%;height:230px;min-height:0;border-radius:18px;overflow:hidden;background:#dcecf7}.classicWorldScene>canvas{display:block;width:100%;height:100%}.classicWorldFrame>.sceneViewModes{margin:10px 0 0}.classicWorldScene .illustratedActor{width:82px;height:82px}.classicWorldScene .sceneReaction{max-width:calc(100% - 24px);font-size:17px}.classicWorldScene[data-render=fallback]{display:grid;place-items:center}.classicWorldScene .sceneFallback{font-size:64px}@media(max-width:480px){.classicWorldScene{height:195px}.classicWorldScene .illustratedActor{width:70px;height:70px}.classicWorldFrame>.sceneViewModes button{font-size:14px}}
+
+.hasClassicScene>.classicAvatarFallback{display:none}

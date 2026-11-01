@@ -11,7 +11,7 @@ for(const name of ['race-circuits.webp','race-racers.webp','character-portraits.
 const islandArt='island-places.webp';
 const islandHash=createHash('sha256').update(fs.readFileSync('dist/'+islandArt)).digest('hex').slice(0,12);
 fs.writeFileSync('dist/island.css',fs.readFileSync('dist/island.css','utf8').replace(/island-places\.webp(?:\?v=[a-f0-9]+)?/g,islandArt+'?v='+islandHash));
-for(const name of ['island-places.webp','holiday-worlds.png']){
+for(const name of ['island-places.webp','holiday-worlds.png','race-circuits.webp']){
  const hash=createHash('sha256').update(fs.readFileSync('dist/'+name)).digest('hex').slice(0,12);
  fs.writeFileSync('dist/island.js',fs.readFileSync('dist/island.js','utf8').replace(new RegExp(name.replaceAll('.','\\.')+'(?:\\?v=[a-f0-9]+)?','g'),name+'?v='+hash));
 }

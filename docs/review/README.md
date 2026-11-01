@@ -1,3 +1,13 @@
+# Correzione dei percorsi di gioco — 1 novembre 2026
+
+Schermate della pagina locale completa, con soli dati sintetici. [Difetti riprodotti e test](../PLAY_EXPERIENCE_FIX_2026_11_01.md). Stato di pubblicazione da verificare nel relativo run: queste schermate da sole non dimostrano il deploy.
+
+- [Esercizio del Box di allenamento con circuito e personaggio effettivo](classic-exercise-fixed.png)
+- [Pulsante Tira in porta: pallone nella porta, 390px](football-action-fixed-390.png)
+- [Pulsante Lancia il razzo: razzo visibile e personaggio libero dai bersagli, 390px](space-action-fixed-390.png)
+
+---
+
 # Illustrazioni nei mondi e nei personaggi — candidato PR8
 
 Schermate reali del renderer predefinito, con dati esclusivamente sintetici. Preparato e testato, **non ancora pubblicato**. Stesse illustrazioni delle schede nei mondi; stessi ritratti durante il gioco. La vista 3D classica resta selezionabile.

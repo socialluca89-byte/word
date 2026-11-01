@@ -22,7 +22,7 @@ for(const name of ['race-circuits.webp','race-racers.webp','character-portraits.
 }
 const islandHash=createHash('sha256').update(fs.readFileSync('dist/island-places.webp')).digest('hex').slice(0,12);
 if(!fs.readFileSync('dist/island.css','utf8').includes('island-places.webp?v='+islandHash))throw Error('Outdated island illustration');
-for(const name of ['island-places.webp','holiday-worlds.png']){const hash=createHash('sha256').update(fs.readFileSync('dist/'+name)).digest('hex').slice(0,12);if(!fs.readFileSync('dist/island.js','utf8').includes(name+'?v='+hash))throw Error('Outdated playable illustration: '+name);}
+for(const name of ['island-places.webp','holiday-worlds.png','race-circuits.webp']){const hash=createHash('sha256').update(fs.readFileSync('dist/'+name)).digest('hex').slice(0,12);if(!fs.readFileSync('dist/island.js','utf8').includes(name+'?v='+hash))throw Error('Outdated playable illustration: '+name);}
 console.log('Public bundle verified: forty-nine application files, no configuration, database or keys.');
 
 const manifest=JSON.parse(fs.readFileSync('dist/manifest.webmanifest','utf8'));
