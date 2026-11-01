@@ -1,0 +1,46 @@
+{
+  "status": "developed-local-not-published",
+  "only_synthetic_test_accounts": true,
+  "production_mutations": false,
+  "route": "#scoperte",
+  "new_collections": [
+    "Bosco",
+    "Viaggio",
+    "Sogni"
+  ],
+  "new_reward_count": 12,
+  "new_playable_characters": [
+    "bunny",
+    "koala"
+  ],
+  "total_pending_catalog_entries": 97,
+  "progress_namespace": "journey:v1",
+  "new_tasks_per_date": 3,
+  "incomplete_missions_survive_skipped_dates": true,
+  "reward_reset_on_missed_days": false,
+  "finite_catalog_notice": "First series has twelve items; future original collections require curated additions. Daily practice continues after collecting them.",
+  "passed": [
+    "journey API: ninety confirmed exercises, ownership, retry, resume, cross-year and unchanged economy",
+    "journey browser: pause across eight skipped dates, committed lost response, twelve goals, ten real meshes, two earned pilots in six game scenes, offline handling and four viewports",
+    "existing holiday API and browser",
+    "adventure API",
+    "wallet browser",
+    "motion browser",
+    "navigation browser",
+    "reward catalog PHP/JS parity",
+    "PWA cache isolation",
+    "public bundle asset hashes",
+    "PHP/JS/shell syntax",
+    "git diff whitespace",
+    "performance browser: 1759.4 ms local load, within unchanged 5000 ms budget; map initialized once"
+  ],
+  "not_run": [
+    "full cumulative release CI",
+    "real-device validation",
+    "deployment",
+    "live release checks"
+  ],
+  "local_homepage_load_ms": 1759.4,
+  "homepage_budget_ms": 5000,
+  "later_pending_extension": "Nine more Christmas avatars bring the festive cast to twelve; year-round collections/ownership unchanged."
+}

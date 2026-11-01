@@ -1,3 +1,18 @@
+# Illustrazioni nei mondi e nei personaggi — candidato PR8
+
+Schermate reali del renderer predefinito, con dati esclusivamente sintetici. Preparato e testato, **non ancora pubblicato**. Stesse illustrazioni delle schede nei mondi; stessi ritratti durante il gioco. La vista 3D classica resta selezionabile.
+
+- [Mondo marino durante la raccolta, 390px](illustrated-ocean-found-390.png)
+- [Mondo kart, 390px](illustrated-kart-390.png)
+- [Mondo spazio, desktop](illustrated-space-desktop.png)
+- [Babbo Natale nel guardaroba, 390px](illustrated-santa-390.png)
+- [Personaggio e corona posseduti durante una missione, 390px](illustrated-owned-mission-390.png)
+- [Villaggio natalizio, 390px](illustrated-christmas-390.png)
+
+[Verifiche e limiti del candidato](../CHARACTER_FIDELITY_VERIFICATION.json). I ritratti sono pedine illustrate animate; la vista classica conserva modelli, arredi e accessori fisici. Le prove precedenti qui sotto sono storiche e non certificano lo stato live attuale.
+
+---
+
 # Anteprima mobile — dati fittizi
 
 Le immagini sono schermate ospite, senza account o dati di alunni reali. Sono conservate nel repository per essere consultabili attraverso GitHub, senza dipendere dai percorsi della sessione cloud.
@@ -48,3 +63,17 @@ Contenuti, progressi privati, premi separati, test e limiti in [TRAINING_SPELLIN
 - `ocr-390.png`: OCR reale locale di stampato JPEG originale sintetico, nel modulo adulto; bozza fallibile da rivedere, non fotografia di un bambino né versione live.
 
 - `pdf-scan-390.png`: modulo adulto con OCR reale di pagina2su2 di un PDF originale composto soltanto da immagini sintetiche; non live, nessun documento di alunni.
+
+
+## Revisione grafica del 1 novembre — solo work, non online
+
+- [Personaggi 3D natalizi](christmas-cast-20261101.png): nove nuovi modelli, in aggiunta al trio precedente. Abbigliamento combinato da fixture per verificare la compatibilità; non rappresenta oggetti già guadagnati da un bambino.
+- [Passaporto, schermo da390px](journey-20261101-390.png): missione raggiungibile prima della raccolta, progresso personale sintetico e pannello espandibile.
+- [Scherzo facoltativo dell’elfo,390px](elf-20261101-390.png): lettere grandi e comandi separati dalla missione.
+
+Le schermate sono locali; il link “Vai al contenuto” è visibile perché il test naviga anche da tastiera. Date, voci e storici delle fixture non dimostrano pronuncia o collaudo su un dispositivo reale. [Skill e piano visivo](../VISUAL_DESIGN_2026_11_01.md); [stato del rilascio e blocco](../RELEASE_READINESS_2026_11_01.md).
+
+
+## Otto mondi giocabili — ramo feature, non online
+
+[Un giro tra i segnali,390px](world-play-390.png): kart realmente sul segnale scelto, oggetto raccolto segnato e prossimo obiettivo. Progressi solo locali/sintetici; nessun bambino reale. Gli otto mondi offrono tre scoperte3D con comandi equivalenti grandi; non si tratta di un simulatore con guida analogica o avversari già implementati. [Attività, limiti e test](../PLAYABLE_WORLDS.md). Il ramo include gli eventi c1a13b9; non è stato pubblicato da questo lotto.

@@ -3,7 +3,7 @@
   const categories={body:'Il corpo',catpositions:'Preposizioni · Gatto e scatola',toys:'Giocattoli',colors:'Colori',hello:'Presentiamoci',school:'A scuola',home:'Casa',animals:'Animali',transport:'Veicoli',sport:'Calcio e sport',space:'Spazio',ocean:'Oceano',dino:'Dinosauri'};
   Object.assign(categories,Object.fromEntries(Object.entries(lessonTopics).map(([id,t])=>[id,t.name])));
   const modes={kart:'🏎️ Kart',football:'⚽ Calcio',space:'🚀 Spazio'};
-  const avatars={fox:'🦊',panda:'🐼',robot:'🤖',dragon:'🐉',octopus:'🐙',lion:'🦁'};
+  const avatars={fox:'🦊',panda:'🐼',robot:'🤖',dragon:'🐉',octopus:'🐙',lion:'🦁',reindeer:'🦌',penguin:'🐧',snowpal:'☃️',bunny:'🐰',koala:'🐨','elf-boy':'🧝‍♂️','elf-girl':'🧝‍♀️','polar-bear':'🐻‍❄️','gingerbread':'🍪','silver-reindeer':'🦌','mrs-claus':'🤶','santa':'🎅','nutcracker':'🥁','yeti':'☁️'};
   const text=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   window.wordylandArena={mount(host,profile,openAdults,resumeId=null){
     let data={opponents:[],duels:[],classes:[]},busy=false,playing=false,sceneView=null,renderedDuels='',renderedOpponents='',loading=null,questionSpeech=null;

@@ -33,7 +33,7 @@ assert(process.env.WORDYLAND_BROWSER_DATA,'Use an isolated local database');
   assert((await models('#missionWorld')).some(m=>m.type==='robot'&&m.crown),'Selected character in '+kind);
   assert.equal(await p.locator('.passport [data-racer]').getAttribute('data-racer'),'robot');console.log('Rendered selected character in:',kind);
  }
- await p.goto(base+'/#segnalazioni');await p.locator('.startChoices a[href="#personaggi"]').click();await p.locator('.shopGrid').waitFor();
+ await p.goto(base+'/#segnalazioni');await p.locator('#communityHub .communityHeading a[href="#"]').click();await p.locator('.startChoices a[href="#personaggi"]').click();await p.locator('.shopGrid').waitFor();
  await p.locator('[data-style=home]').click();await p.locator('.startChoices a[href="#sfide"]').click();await p.locator('.startChoices a[href="#personaggi"]').click();await p.locator('[data-item=fox]').waitFor();
  // Exercise a real server account and two isolated owned profiles.
  const credentials={username:'characters_'+Date.now(),password:'Character-test-password-123',adult:true};

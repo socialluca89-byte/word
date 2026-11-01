@@ -1,0 +1,247 @@
+{
+  "published_commit": "3c661f51a8306d79b66fcc101b4cefc0518fb8f8",
+  "run": {
+    "id": "40476917297",
+    "url": "https://github.com/socialluca89-byte/word/actions/runs/40476917297",
+    "verify": "success",
+    "browser": "success",
+    "browserSuites": 29,
+    "deploy": "success",
+    "finishedUTC": "2026-10-27T09:01:53Z",
+    "finishTimeSource": "independent coordinator log verification"
+  },
+  "publicHTTP": {
+    "utc": "2026-10-27T09:03:19.644074+00:00",
+    "expected_commit": "3c661f51a8306d79b66fcc101b4cefc0518fb8f8",
+    "run": "40474605853",
+    "all_pass": true,
+    "results": [
+      {
+        "path": "/",
+        "exit": 0,
+        "http": 200,
+        "content_type": "text/html",
+        "bytes": 25188,
+        "sha256": "c31896101e796ffa9820131de5c3142755e7c2841ac8f099a603b5053b614f4e",
+        "matches": true,
+        "challenge": false
+      },
+      {
+        "path": "/index.html",
+        "exit": 0,
+        "http": 200,
+        "content_type": "text/html",
+        "bytes": 25188,
+        "sha256": "c31896101e796ffa9820131de5c3142755e7c2841ac8f099a603b5053b614f4e",
+        "matches": true,
+        "challenge": false
+      },
+      {
+        "path": "/api.php?action=health",
+        "exit": 0,
+        "http": 200,
+        "content_type": "application/json; charset=utf-8",
+        "bytes": 34,
+        "matches": true,
+        "challenge": false
+      },
+      {
+        "path": "/training.js?v=2e2d2c301e2b",
+        "exit": 0,
+        "http": 200,
+        "content_type": "application/javascript",
+        "bytes": 60854,
+        "sha256": "2e2d2c301e2babd49de0f165918eb579c8e73335bcf29bef3bd0daebed98ce8e",
+        "matches": true,
+        "mime_ok": true,
+        "challenge": false
+      },
+      {
+        "path": "/accounts.js?v=c3f3e76e9c95",
+        "exit": 0,
+        "http": 200,
+        "content_type": "application/javascript",
+        "bytes": 28074,
+        "sha256": "c3f3e76e9c957063df6ea72f90a718d9c175545585623de234d4656ee797bba0",
+        "matches": true,
+        "mime_ok": true,
+        "challenge": false
+      },
+      {
+        "path": "/quests.js?v=f8ab079ca3a3",
+        "exit": 0,
+        "http": 200,
+        "content_type": "application/javascript",
+        "bytes": 70147,
+        "sha256": "f8ab079ca3a3ff149454bc1d851287493755c2f6272b65a7214b8deb0ed493aa",
+        "matches": true,
+        "mime_ok": true,
+        "challenge": false
+      },
+      {
+        "path": "/study-import.js?v=b3ab8dff7bbd",
+        "exit": 0,
+        "http": 200,
+        "content_type": "application/javascript",
+        "bytes": 19422,
+        "sha256": "b3ab8dff7bbd97a6add02817f5b51d9a759935c8fdb52e58edae2c3c53dba8c4",
+        "matches": true,
+        "mime_ok": true,
+        "challenge": false
+      },
+      {
+        "path": "/pwa.js?v=2c8ce3d8ca78",
+        "exit": 0,
+        "http": 200,
+        "content_type": "application/javascript",
+        "bytes": 3546,
+        "sha256": "2c8ce3d8ca7805bfe91fb81a282d49b7f60f4a0851629c1f06c5f6e06295efe1",
+        "matches": true,
+        "mime_ok": true,
+        "challenge": false
+      },
+      {
+        "path": "/training.json?v=d4e94a260613",
+        "exit": 0,
+        "http": 200,
+        "content_type": "application/json",
+        "bytes": 15896,
+        "sha256": "d4e94a260613bfa02e88410ea50d80e1646e2a0222df7f514cebfbf1889719b0",
+        "matches": true,
+        "challenge": false
+      },
+      {
+        "path": "/study-ocr.js?v=a0d7b8dc26ce",
+        "exit": 0,
+        "http": 200,
+        "content_type": "application/javascript",
+        "bytes": 24025,
+        "sha256": "a0d7b8dc26ce988e5a815ebe6a0bf26127184a868f9027207bf14f1ad80750dc",
+        "matches": true,
+        "mime_ok": true,
+        "challenge": false
+      },
+      {
+        "path": "/pdf.min.js?v=57456c8e0c81",
+        "exit": 0,
+        "http": 200,
+        "content_type": "application/javascript",
+        "bytes": 458904,
+        "sha256": "57456c8e0c81e46be31174b499ef77f2b9f5ee46d04412ba627320a36755d4c2",
+        "matches": true,
+        "mime_ok": true,
+        "challenge": false
+      },
+      {
+        "path": "/pdf.worker.min.js?v=9536359f1b83",
+        "exit": 0,
+        "http": 200,
+        "content_type": "application/javascript",
+        "bytes": 1264342,
+        "sha256": "9536359f1b8367850d485731ca1d5e45c159a7b7a0912325e539937aa21ceb18",
+        "matches": true,
+        "mime_ok": true,
+        "challenge": false
+      },
+      {
+        "path": "/ocr-worker.min.js?v=386455990432",
+        "exit": 0,
+        "http": 200,
+        "content_type": "application/javascript",
+        "bytes": 111162,
+        "sha256": "38645599043239c0eb6db08a6504a92dcdc292200535f3e9339cd77c4443b842",
+        "matches": true,
+        "mime_ok": true,
+        "challenge": false
+      },
+      {
+        "path": "/ocr-core-775a35df6f2a.js",
+        "exit": 0,
+        "http": 200,
+        "content_type": "application/javascript",
+        "bytes": 3954181,
+        "sha256": "775a35df6f2ae100e02609443e6bd5cafcd07983dd6175454ca4a432a7730687",
+        "matches": true,
+        "mime_ok": true,
+        "challenge": false
+      },
+      {
+        "path": "/ocr-eng-45b4cb346724.traineddata.gz",
+        "exit": 0,
+        "http": 200,
+        "content_type": "application/octet-stream",
+        "bytes": 2952873,
+        "sha256": "45b4cb346724ac1774f1c36f42f182b887bcdb28ebe63e6fff90ac41f3fcff91",
+        "matches": true,
+        "challenge": false
+      },
+      {
+        "path": "/ocr-ita-f702fcfad297.traineddata.gz",
+        "exit": 0,
+        "http": 200,
+        "content_type": "application/octet-stream",
+        "bytes": 1660998,
+        "sha256": "f702fcfad297ce028ede3626d1467b67939f23ff23595f9badd54681cf25a4d3",
+        "matches": true,
+        "challenge": false
+      },
+      {
+        "path": "/offline.html",
+        "exit": 0,
+        "http": 200,
+        "content_type": "text/html",
+        "bytes": 2390,
+        "sha256": "37f31b7297ccbf66eb48455d7660042275f236ac3fe4ee6a7b1371ee0fcdf0d9",
+        "matches": true,
+        "challenge": false
+      }
+    ]
+  },
+  "guestSmoke": {
+    "url": "https://wordyland.eu",
+    "mode": "fresh anonymous guest; synthetic OCR only",
+    "checks": [
+      "anonymous homepage",
+      "prepositions reachable",
+      "characters and wardrobe reachable",
+      "duels correctly require login",
+      "six word themes, IT/EN letter exercise and pause",
+      "offline revision page reachable",
+      "live OCR components recognize original synthetic print locally"
+    ],
+    "posts": 0,
+    "errors": [],
+    "syntheticOCRms": 10481,
+    "all_pass": true,
+    "utc": "2026-10-27T09:07:07.512Z"
+  },
+  "syntheticScannedPDF": {
+    "mode": "live public components, fresh guest, original synthetic image-only PDF; zero account mutations",
+    "posts": 0,
+    "errors": [],
+    "rasterOCRms": 5401,
+    "pdfBytes": 32682,
+    "all_pass": true,
+    "utc": "2026-10-27T09:03:37.685Z"
+  },
+  "firstRelease": {
+    "commit": "2d4f2e140b397b4e80a4b48c285f2930957f8a14",
+    "run": "40474605853",
+    "workflow": "success",
+    "additionalIssue": "PDF .mjs bytes correct but Content-Type absent; real browser import failed. Fixed with identical upstream bytes under .js names and mandatory JS MIME checks."
+  },
+  "noActions": [
+    "No real account login/creation/reset/role changes",
+    "No real pupil or document data read",
+    "No hosting/firewall/key/permission change",
+    "No support message",
+    "No challenge bypass or identity/IP rotation"
+  ],
+  "remaining": [
+    "Real-device/real-material/audio validation incl old tablet",
+    "Secure parent-to-separate-learner relationship",
+    "Expanded didactic/phoneme inventory and Cambridge coverage",
+    "Real mail delivery and owner recovery separately authorised",
+    "Batch/crop/rotation/private offline sync are excluded extensions"
+  ]
+}

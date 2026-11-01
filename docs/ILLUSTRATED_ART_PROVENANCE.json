@@ -1,0 +1,44 @@
+{
+  "original_assets_preserved": [
+    "island-places.webp",
+    "race-racers.webp"
+  ],
+  "new_art": [
+    {
+      "file": "character-portraits.png",
+      "sha256": "326109fa7e4d5a4bd2299cfa03f632b56144dbdb9d451df7a4ef2ee720f26cb4",
+      "bytes": 2568009,
+      "pixels": [
+        1261,
+        1247
+      ],
+      "provenance": "Original artwork generated with image_gen from the existing public WordyLand illustration style; exact original PNG bytes copied, no post-edit or external service integration."
+    },
+    {
+      "file": "holiday-worlds.png",
+      "sha256": "286124dff4a8e1a31101896b0593f7dbea18a1574ee04b8b5ed49ca5f08df751",
+      "bytes": 3509394,
+      "pixels": [
+        1774,
+        887
+      ],
+      "provenance": "Original artwork generated with image_gen from the existing public WordyLand illustration style; exact original PNG bytes copied, no post-edit or external service integration."
+    }
+  ],
+  "portrait_row_major_ids": [
+    "reindeer",
+    "penguin",
+    "snowpal",
+    "bunny",
+    "koala",
+    "elf-boy",
+    "elf-girl",
+    "polar-bear",
+    "gingerbread",
+    "silver-reindeer",
+    "mrs-claus",
+    "santa",
+    "nutcracker",
+    "yeti"
+  ]
+}

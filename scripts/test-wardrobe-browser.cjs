@@ -30,6 +30,25 @@ const base=process.env.WORDYLAND_TEST_URL;assert(['localhost','127.0.0.1'].inclu
    await p.setViewportSize({width,height:844});assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'No wardrobe overflow '+width);
    assert(await p.locator('[data-preview-item=panda]').evaluate(node=>node.getBoundingClientRect().height>=44),'Preview touch target '+width);
   }
-  assert.deepEqual(errors,[]);console.log('Wardrobe browser passed: keyboard focus, distinct names, free unowned 3D preview, unchanged wallet/inventory, return control, actual owned character in game and four viewport sizes.');
+  // All Christmas items are persistent free choices, with real meshes in the preview.
+  await p.locator('[data-style=christmas]').click();assert.equal(await p.locator('[data-reward-card]').count(),28);
+  const festiveBefore=await p.evaluate(()=>JSON.parse(localStorage.getItem('wordylandGuestWallet')));
+  for(const id of ['hat-santa','hat-elf','hat-reindeer','neck-scarf','effect-snow','kart-christmas','trophy-tree','hat-snowman','hat-cookie','hat-gift','effect-stars','rocket-christmas']){
+   await p.locator('[data-preview-item="'+id+'"]').click();assert(await p.evaluate(id=>{let found=false;wardrobeScenes.slice(-1).forEach(s=>s.traverse(n=>{if(n.userData.reward===id)found=true;}));return found;},id),'Actual festive geometry '+id);
+   assert.deepEqual(await p.evaluate(()=>JSON.parse(localStorage.getItem('wordylandGuestWallet'))),festiveBefore,'Preview is free and temporary '+id);
+  }
+  assert.equal(await p.locator('[data-item=hat-santa]').isDisabled(),true);assert.equal(await p.locator('[data-item=reindeer]').isDisabled(),true);
+  // Model-only regression uses explicitly synthetic local ownership. Real unlocks are
+  // exercised through holiday API/browser tests; neither preview nor a click grants them.
+  await p.evaluate(()=>{const g=JSON.parse(localStorage.getItem('wordylandGuestWallet'));g.inventory=[...new Set([...g.inventory,'hat-santa','neck-scarf','effect-snow'])];localStorage.setItem('wordylandGuestWallet',JSON.stringify(g));});await p.reload();await p.locator('[data-style=christmas]').click();
+  for(const id of ['hat-santa','neck-scarf','effect-snow']){await p.locator('[data-item="'+id+'"]').click();await p.locator('[data-item="'+id+'"]').getByText('In uso ✓').waitFor();}
+  await p.reload();await p.locator('[data-style=christmas]').click();assert.equal(await p.locator('[data-item=neck-scarf]').isDisabled(),true);
+  const equipped=await p.evaluate(()=>JSON.parse(localStorage.getItem('wordylandGuestWallet')));assert.equal(equipped.coins,festiveBefore.coins);assert.equal(equipped.xp,festiveBefore.xp);assert.equal(equipped.inventory.filter(x=>x==='hat-santa').length,1);assert.equal(equipped.equipped.hat,'hat-santa');assert.equal(equipped.equipped.effect,'effect-snow');
+  await p.locator('[data-item=neck-none]').click();await p.locator('[data-item=neck-none]').getByText('In uso ✓').waitFor();await p.locator('[data-preview-item=hat-santa]').click();assert(!await p.evaluate(()=>{let found=false;wardrobeScenes.slice(-1).forEach(s=>s.traverse(n=>{if(n.userData.reward==='neck-scarf')found=true;}));return found;}),'Scarf can be removed');
+  // Retain the festive outfit on every character, using only local synthetic ownership.
+  for(const avatar of ['fox','panda','robot','dragon','octopus','lion']){await p.evaluate(avatar=>{const g=JSON.parse(localStorage.getItem('wordylandGuestWallet'));if(!g.inventory.includes(avatar))g.inventory.push(avatar);g.equipped.avatar=avatar;localStorage.setItem('wordylandGuestWallet',JSON.stringify(g));},avatar);await p.reload();await p.locator('[data-style=christmas]').click();await p.locator('[data-preview-item=hat-santa]').click();assert(await p.evaluate(avatar=>{let found=false;wardrobeScenes.slice(-1).forEach(s=>s.traverse(n=>{if(n.userData.character===avatar)n.traverse(c=>{if(c.userData.reward==='hat-santa')found=true;});}));return found;},avatar),'Hat attached to '+avatar);}
+  for(const width of [320,390,768,1360]){await p.setViewportSize({width,height:844});assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'Christmas tab overflow '+width);}
+  if(process.env.WORDYLAND_CHRISTMAS_SCREENSHOT){await p.setViewportSize({width:390,height:844});await p.locator('#stylePreview').screenshot({path:process.env.WORDYLAND_CHRISTMAS_SCREENSHOT});}
+  assert.deepEqual(errors,[]);console.log('Wardrobe browser passed: keyboard focus, distinct names, free unowned 3D preview, unchanged wallet/inventory, return control, actual owned character in game four viewport sizes, twelve real festive meshes, twenty-eight festive choices, scarf removal, persisted outfit and six original avatar variants and earned-only Christmas controls.');
  }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exit(1)});

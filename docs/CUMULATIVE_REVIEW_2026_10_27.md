@@ -1,3 +1,5 @@
+> Revisione precedente alla pubblicazione: il codice qui discusso è ora online in3c661f5, verificato dal run40476917297. [Rilascio conclusivo](RELEASE_2026_10_27.md); le indicazioni solo-work/liveb3ca230 sotto sono cronologia.
+
 # Revisione cumulativa — ultimo lotto foto/PDF
 
 Questa revisione chiude soltanto il lotto corrente, non tutta WordyLand. Confronto funzionale con ultimo live verificato `b3ca230`, conservando i checkpoint tecnici precedenti. Sviluppo successivo soltanto su work; main3473591 non coincide col sito verificato. Nessun deploy, ticket, email, account reale o intervento sulla sicurezza hosting.
