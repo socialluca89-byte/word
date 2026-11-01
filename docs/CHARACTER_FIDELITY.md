@@ -42,4 +42,4 @@ La nuova suite illustrated verifica il default reale senza preferenza forzata: v
 
 Il bundle passa da47 a49 file, con entrambi gli atlas nella stessa allowlist stretta e nelle verifiche byte per byte del deploy normale. Non cambia alcun segreto, percorso, protezione, cron, dato account, schema o catalogo dei premi rispetto al candidato704b577. La CI pull_request resta solo verify/browser.
 
-Esiti cumulativi, SHA e anteprime delle pagine reali da registrare a fine verifica. Nessuna pubblicazione o nuova GET a produzione da questo lotto; il rilascio resta coordinato sulla stessa PR8.
+Esiti cumulativi e SHA in [CHARACTER_FIDELITY_VERIFICATION.json](CHARACTER_FIDELITY_VERIFICATION.json); schermate reali in [review/README.md](review/README.md). Nessuna pubblicazione o nuova GET a produzione da questo lotto; il rilascio resta coordinato sulla stessa PR8.

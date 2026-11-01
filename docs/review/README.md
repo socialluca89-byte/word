@@ -1,3 +1,18 @@
+# Illustrazioni nei mondi e nei personaggi — candidato PR8
+
+Schermate reali del renderer predefinito, con dati esclusivamente sintetici. Preparato e testato, **non ancora pubblicato**. Stesse illustrazioni delle schede nei mondi; stessi ritratti durante il gioco. La vista 3D classica resta selezionabile.
+
+- [Mondo marino durante la raccolta, 390px](illustrated-ocean-found-390.png)
+- [Mondo kart, 390px](illustrated-kart-390.png)
+- [Mondo spazio, desktop](illustrated-space-desktop.png)
+- [Babbo Natale nel guardaroba, 390px](illustrated-santa-390.png)
+- [Personaggio e corona posseduti durante una missione, 390px](illustrated-owned-mission-390.png)
+- [Villaggio natalizio, 390px](illustrated-christmas-390.png)
+
+[Verifiche e limiti del candidato](../CHARACTER_FIDELITY_VERIFICATION.json). I ritratti sono pedine illustrate animate; la vista classica conserva modelli, arredi e accessori fisici. Le prove precedenti qui sotto sono storiche e non certificano lo stato live attuale.
+
+---
+
 # Anteprima mobile — dati fittizi
 
 Le immagini sono schermate ospite, senza account o dati di alunni reali. Sono conservate nel repository per essere consultabili attraverso GitHub, senza dipendere dai percorsi della sessione cloud.

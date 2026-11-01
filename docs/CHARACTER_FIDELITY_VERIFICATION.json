@@ -1,0 +1,491 @@
+{
+  "baseline_pr8_commit": "704b577ef969648a01fa1fc41fd3548bd1ddddfb",
+  "full_matrix_application_commit": "fbd22bd79ea97417c569a22c34c4202695d58b5d",
+  "full_matrix": {
+    "records": [
+      {
+        "phase": "verify",
+        "command": "for f in dist/*.js dist/*.mjs; do node --check \"$f\"; done",
+        "exit": 0,
+        "seconds": 1.45
+      },
+      {
+        "phase": "verify",
+        "command": "for f in scripts/*.sh; do bash -n \"$f\"; done",
+        "exit": 0,
+        "seconds": 0.03
+      },
+      {
+        "phase": "verify",
+        "command": "node scripts/test-lessons.mjs",
+        "exit": 0,
+        "seconds": 0.14
+      },
+      {
+        "phase": "verify",
+        "command": "node scripts/test-pwa.mjs",
+        "exit": 0,
+        "seconds": 0.12
+      },
+      {
+        "phase": "verify",
+        "command": "node scripts/test-learning.mjs",
+        "exit": 0,
+        "seconds": 0.04
+      },
+      {
+        "phase": "verify",
+        "command": "node scripts/test-rewards.mjs",
+        "exit": 0,
+        "seconds": 0.08
+      },
+      {
+        "phase": "verify",
+        "command": "for f in dist/*.php; do php -l \"$f\"; done",
+        "exit": 0,
+        "seconds": 0.1
+      },
+      {
+        "phase": "verify",
+        "command": "python3 scripts/test-api.py",
+        "exit": 0,
+        "seconds": 3.45
+      },
+      {
+        "phase": "verify",
+        "command": "python3 scripts/test-access.py",
+        "exit": 0,
+        "seconds": 4.11
+      },
+      {
+        "phase": "verify",
+        "command": "python3 scripts/test-email-recovery.py",
+        "exit": 0,
+        "seconds": 3.23
+      },
+      {
+        "phase": "verify",
+        "command": "python3 scripts/test-classroom.py",
+        "exit": 0,
+        "seconds": 9.68
+      },
+      {
+        "phase": "verify",
+        "command": "python3 scripts/test-adventures.py",
+        "exit": 0,
+        "seconds": 2.66
+      },
+      {
+        "phase": "verify",
+        "command": "python3 scripts/test-holidays.py",
+        "exit": 0,
+        "seconds": 3.63
+      },
+      {
+        "phase": "verify",
+        "command": "python3 scripts/test-journey.py",
+        "exit": 0,
+        "seconds": 2.19
+      },
+      {
+        "phase": "verify",
+        "command": "python3 scripts/test-elf.py",
+        "exit": 0,
+        "seconds": 0.97
+      },
+      {
+        "phase": "verify",
+        "command": "php -l scripts/bootstrap-admin.php",
+        "exit": 0,
+        "seconds": 0.02
+      },
+      {
+        "phase": "verify",
+        "command": "php -l scripts/owner-recovery-status.php",
+        "exit": 0,
+        "seconds": 0.02
+      },
+      {
+        "phase": "verify",
+        "command": "php -l scripts/prepare-owner-recovery.php",
+        "exit": 0,
+        "seconds": 0.02
+      },
+      {
+        "phase": "verify",
+        "command": "php -l scripts/read-only-readiness.php",
+        "exit": 0,
+        "seconds": 0.02
+      },
+      {
+        "phase": "verify",
+        "command": "python3 scripts/test-read-only-readiness.py",
+        "exit": 0,
+        "seconds": 8.3
+      },
+      {
+        "phase": "verify",
+        "command": "python3 scripts/test-owner-recovery.py",
+        "exit": 0,
+        "seconds": 0.22
+      },
+      {
+        "phase": "verify",
+        "command": "php -l scripts/siteground-cache.php",
+        "exit": 0,
+        "seconds": 0.01
+      },
+      {
+        "phase": "verify",
+        "command": "python3 scripts/test-cache-purge.py",
+        "exit": 0,
+        "seconds": 0.18
+      },
+      {
+        "phase": "verify",
+        "command": "python3 scripts/test-community.py",
+        "exit": 0,
+        "seconds": 3.16
+      },
+      {
+        "phase": "verify",
+        "command": "python3 scripts/test-presence.py",
+        "exit": 0,
+        "seconds": 2.83
+      },
+      {
+        "phase": "verify",
+        "command": "python3 scripts/test-resume.py",
+        "exit": 0,
+        "seconds": 1.49
+      },
+      {
+        "phase": "verify",
+        "command": "python3 scripts/test-autonomy.py",
+        "exit": 0,
+        "seconds": 1.41
+      },
+      {
+        "phase": "verify",
+        "command": "python3 scripts/test-review.py",
+        "exit": 0,
+        "seconds": 0.91
+      },
+      {
+        "phase": "verify",
+        "command": "python3 scripts/test-choice-fairness.py",
+        "exit": 0,
+        "seconds": 0.82
+      },
+      {
+        "phase": "verify",
+        "command": "python3 scripts/test-parent-summary.py",
+        "exit": 0,
+        "seconds": 1.07
+      },
+      {
+        "phase": "verify",
+        "command": "python3 scripts/test-training.py",
+        "exit": 0,
+        "seconds": 7.96
+      },
+      {
+        "phase": "verify",
+        "command": "python3 scripts/test-phonics.py",
+        "exit": 0,
+        "seconds": 1.79
+      },
+      {
+        "phase": "verify",
+        "command": "python3 scripts/test-letter-progression.py",
+        "exit": 0,
+        "seconds": 1.6
+      },
+      {
+        "phase": "verify",
+        "command": "node scripts/verify-bundle.mjs",
+        "exit": 0,
+        "seconds": 0.09
+      },
+      {
+        "phase": "verify",
+        "command": "bash scripts/test-deploy.sh",
+        "exit": 0,
+        "seconds": 32.51
+      },
+      {
+        "phase": "browser",
+        "command": "bash scripts/test-browser.sh illustrated",
+        "exit": 0,
+        "seconds": 37.15
+      },
+      {
+        "phase": "browser",
+        "command": "bash scripts/test-browser.sh world-play",
+        "exit": 0,
+        "seconds": 32.02
+      },
+      {
+        "phase": "browser",
+        "command": "bash scripts/test-browser.sh christmas-cast",
+        "exit": 0,
+        "seconds": 58.8
+      },
+      {
+        "phase": "browser",
+        "command": "bash scripts/test-browser.sh elf",
+        "exit": 0,
+        "seconds": 32.37
+      },
+      {
+        "phase": "browser",
+        "command": "bash scripts/test-browser.sh journey",
+        "exit": 0,
+        "seconds": 32.37
+      },
+      {
+        "phase": "browser",
+        "command": "bash scripts/test-browser.sh holidays",
+        "exit": 0,
+        "seconds": 54.05
+      },
+      {
+        "phase": "browser",
+        "command": "bash scripts/test-browser.sh pdf-scan",
+        "exit": 0,
+        "seconds": 15.77
+      },
+      {
+        "phase": "browser",
+        "command": "bash scripts/test-browser.sh ocr",
+        "exit": 0,
+        "seconds": 11.93
+      },
+      {
+        "phase": "browser",
+        "command": "bash scripts/test-browser.sh materials",
+        "exit": 0,
+        "seconds": 16.79
+      },
+      {
+        "phase": "browser",
+        "command": "bash scripts/test-browser.sh duel-resilience",
+        "exit": 0,
+        "seconds": 17.04
+      },
+      {
+        "phase": "browser",
+        "command": "bash scripts/test-browser.sh compatibility",
+        "exit": 0,
+        "seconds": 20.12
+      },
+      {
+        "phase": "browser",
+        "command": "bash scripts/test-browser.sh ux",
+        "exit": 0,
+        "seconds": 6.82
+      },
+      {
+        "phase": "browser",
+        "command": "bash scripts/test-browser.sh learning",
+        "exit": 0,
+        "seconds": 7.2
+      },
+      {
+        "phase": "browser",
+        "command": "bash scripts/test-browser.sh resume",
+        "exit": 0,
+        "seconds": 31.92
+      },
+      {
+        "phase": "browser",
+        "command": "bash scripts/test-browser.sh presence",
+        "exit": 0,
+        "seconds": 28.47
+      },
+      {
+        "phase": "browser",
+        "command": "bash scripts/test-browser.sh community",
+        "exit": 0,
+        "seconds": 14.62
+      },
+      {
+        "phase": "browser",
+        "command": "bash scripts/test-browser.sh pwa",
+        "exit": 0,
+        "seconds": 16.67
+      },
+      {
+        "phase": "browser",
+        "command": "bash scripts/test-browser.sh rewards",
+        "exit": 0,
+        "seconds": 28.97
+      },
+      {
+        "phase": "browser",
+        "command": "bash scripts/test-browser.sh motion",
+        "exit": 0,
+        "seconds": 20.76
+      },
+      {
+        "phase": "browser",
+        "command": "bash scripts/test-browser.sh access",
+        "exit": 0,
+        "seconds": 27.04
+      },
+      {
+        "phase": "browser",
+        "command": "bash scripts/test-browser.sh email",
+        "exit": 0,
+        "seconds": 8.27
+      },
+      {
+        "phase": "browser",
+        "command": "bash scripts/test-browser.sh performance",
+        "exit": 0,
+        "seconds": 10.2
+      },
+      {
+        "phase": "browser",
+        "command": "bash scripts/test-browser.sh navigation",
+        "exit": 0,
+        "seconds": 40.71
+      },
+      {
+        "phase": "browser",
+        "command": "bash scripts/test-browser.sh autonomy",
+        "exit": 0,
+        "seconds": 9.71
+      },
+      {
+        "phase": "browser",
+        "command": "bash scripts/test-browser.sh review",
+        "exit": 0,
+        "seconds": 7.41
+      },
+      {
+        "phase": "browser",
+        "command": "bash scripts/test-browser.sh wardrobe",
+        "exit": 0,
+        "seconds": 29.43
+      },
+      {
+        "phase": "browser",
+        "command": "bash scripts/test-browser.sh parent-summary",
+        "exit": 0,
+        "seconds": 22.0
+      },
+      {
+        "phase": "browser",
+        "command": "bash scripts/test-browser.sh tiles",
+        "exit": 0,
+        "seconds": 34.19
+      },
+      {
+        "phase": "browser",
+        "command": "bash scripts/test-browser.sh wallet",
+        "exit": 0,
+        "seconds": 12.42
+      },
+      {
+        "phase": "browser",
+        "command": "bash scripts/test-browser.sh training",
+        "exit": 0,
+        "seconds": 13.32
+      },
+      {
+        "phase": "browser",
+        "command": "bash scripts/test-browser.sh spelling",
+        "exit": 0,
+        "seconds": 8.14
+      },
+      {
+        "phase": "browser",
+        "command": "bash scripts/test-browser.sh letter-progression",
+        "exit": 0,
+        "seconds": 11.61
+      },
+      {
+        "phase": "browser",
+        "command": "bash scripts/test-browser.sh foundations",
+        "exit": 0,
+        "seconds": 38.35
+      },
+      {
+        "phase": "browser",
+        "command": "bash scripts/test-browser.sh offline-training",
+        "exit": 0,
+        "seconds": 9.34
+      },
+      {
+        "phase": "browser",
+        "command": "bash scripts/test-browser.sh offline-letters",
+        "exit": 0,
+        "seconds": 12.61
+      },
+      {
+        "phase": "browser",
+        "command": "bash scripts/test-browser.sh phonics",
+        "exit": 0,
+        "seconds": 19.04
+      }
+    ],
+    "elapsed_seconds": 894.02,
+    "planned": 71,
+    "browser_suites": 36
+  },
+  "final_application_commit": "28437755f3b050ce5f600d874cf721c88dd3dd02",
+  "subsequent_application_delta": "Only CSS to prevent controls/found targets covering portraits and regenerated asset hashes. No game JavaScript/API/backend change. Strengthened illustrated assertions.",
+  "focused_checks_initial": {
+    "commit": "28437755f3b050ce5f600d874cf721c88dd3dd02",
+    "planned": 5,
+    "records": [
+      {
+        "command": "node --check dist/island.js",
+        "exit": 0,
+        "seconds": 0.06
+      },
+      {
+        "command": "node scripts/verify-bundle.mjs",
+        "exit": 0,
+        "seconds": 0.11
+      },
+      {
+        "command": "node scripts/test-pwa.mjs",
+        "exit": 0,
+        "seconds": 0.09
+      },
+      {
+        "command": "bash scripts/test-browser.sh illustrated",
+        "exit": 0,
+        "seconds": 58.26
+      },
+      {
+        "command": "bash scripts/test-browser.sh characters",
+        "exit": 1,
+        "seconds": 55.17
+      }
+    ]
+  },
+  "character_followup": {
+    "initial_failure": "Existing test clicked a home shortcut hidden on the community page; result depended on route initialization timing.",
+    "correction": "Use the visible Torna al gioco link before the home character shortcut. No forced clicks, retry, deadline increase or application navigation change.",
+    "result": "PASS after explicit navigation correction; all six classic characters/accessories, three games, two synthetic profiles, second device, mobile, logout, no double charge and fallback. Initial restricted invocation could not bind localhost; authorized local execution completed successfully."
+  },
+  "publication": false,
+  "production_requests": 0,
+  "pr": "https://github.com/socialluca89-byte/word/pull/8",
+  "prior_pr_ci": {
+    "commit": "704b577ef969648a01fa1fc41fd3548bd1ddddfb",
+    "url": "https://github.com/socialluca89-byte/word/actions/runs/41330118824",
+    "status": "success; does not cover new graphics"
+  },
+  "limits": [
+    "Local Chromium, not real tablet or screen reader validation.",
+    "Illustrated avatars are animated portraits with accessory badges; physical accessories and furniture remain in selectable classic 3D.",
+    "New public image assets about 6MB total; no cold offline guarantee.",
+    "No real users/accounts/class memberships modified.",
+    "Synthetic browser audio is not real pronunciation validation."
+  ],
+  "final_validation_summary": "71/71 full matrix on fbd22bd; final CSS/application hash delta on 2843775: syntax, bundle, PWA and illustrated suite PASS; characters suite PASS after correcting its navigation precondition. No automatic retry, test disabled or deadline raised."
+}
