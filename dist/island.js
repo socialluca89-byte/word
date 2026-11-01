@@ -24,7 +24,7 @@ function feedback(host,type='success',kind='pets'){
  host.append(node);reactions.set(host,{node,timer:setTimeout(()=>clearFeedback(host),2000)});
 }
 window.wordylandMotion={feedback,allowed:motionAllowed};
-const actions={treehouse:{label:'Accendi le luci',message:'La tua casa si illumina! 🏡'},pets:{label:'Fallo saltare',message:'Un salto per te! 💗'},creative:{label:'Mescola i colori',message:'Una nuova combinazione! 🎨'},kart:{label:'TURBO! Tieni forte',message:'TURBO! 🏁'},football:{label:'Tira in porta!',message:'GOOOL! ⚽'},space:{label:'Lancia il razzo!',message:'3, 2, 1… VIA! 🚀'},ocean:{label:'Apri il tesoro',message:'Ecco il tesoro! 🪙'},dino:{label:'Chiama il dinosauro',message:'Eccomi! 🦕'}};
+const actions={treehouse:{label:'Accendi le luci',message:'La tua casa si illumina! 🏡'},pets:{label:'Fallo saltare',message:'Un salto per te! 💗'},creative:{label:'Mescola i colori',message:'Una nuova combinazione! 🎨'},kart:{label:'TURBO! Tieni forte',message:'TURBO! 🏁'},football:{label:'Tira in porta!',message:'GOOOL! ⚽'},space:{label:'Lancia il razzo!',message:'3, 2, 1… VIA! 🚀'},ocean:{label:'Esplora il tesoro',message:'Trova conchiglia, pesce e perla per aprire il tesoro! 🐚'},dino:{label:'Chiama il dinosauro',message:'Eccomi! 🦕'}};
 function showAction(host,kind){
  feedback(host,'success',kind);const node=reactions.get(host)?.node;if(node)node.textContent=actions[kind]?.message||'Si parte!';
 }
