@@ -10,17 +10,18 @@ assert len(content['blocks'])==13 and len({b['id'] for b in content['blocks']})=
 assert sorted(letter for block in content['blocks'] for letter in block['letters'])==list('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
 assert all(len(block['letters'])==2 and len(set(block['letters']))==2 for block in content['blocks'])
 assert {l['id']:(l['it'],l['en']) for l in content['letters'] if l['id'] in 'ABCEI'}=={'A':('a','ay'),'B':('bi','bee'),'C':('ci','see'),'E':('e','ee'),'I':('i','eye')}
-assert len(content['words'])==35 and {w['id'] for w in content['words'][:6]}=={'cat','pen','dog','sun','book','red'} and len(content['stickers'])==3
+assert len(content['words'])==43 and {w['id'] for w in content['words'][:6]}=={'cat','pen','dog','sun','book','red'} and len(content['stickers'])==3
+assert content['wordPacks'][-1]['words']==['pencil','pen','book','eraser','scissors','glue stick','crayons','notebook','sharpener','marker','bookbag','desk']
 for word in content['words']:assert word['gap'].replace('___',word['id'])==word['phrase']
-assert len(content['wordPacks'])==6 and len({p['id'] for p in content['wordPacks']})==6
+assert len(content['wordPacks'])==7 and len({p['id'] for p in content['wordPacks']})==7
 words={w['id']:w for w in content['words']}
 assert set(words)==set(id for p in content['wordPacks'] for id in p['words'])
 assert content['wordPacks'][0]['words']==['cat','pen','dog','sun','book','red']
 for pack in content['wordPacks']:
- assert 3<=len(pack['words'])<=10 and len(set(pack['words']))==len(pack['words'])
+ assert 3<=len(pack['words'])<=12 and len(set(pack['words']))==len(pack['words'])
 for word in content['words']:
- assert word['id'].isalpha() and word['id'].isascii() and word['id'].islower()
- assert len(word['id'])<=8 and word['gap'].count('___')==1 and word['meaning'] and word['phraseMeaning']
+ assert word['id'].replace(' ','').isalpha() and word['id'].isascii() and word['id'].islower()
+ assert len(word['id'])<=10 and word['gap'].count('___')==1 and word['meaning'] and word['phraseMeaning']
 with tempfile.TemporaryDirectory(prefix='wordyland-training-') as tmp:
  with socket.socket() as sock:sock.bind(('127.0.0.1',0));port=sock.getsockname()[1]
  log=open(tmp+'/server.log','w+');server=subprocess.Popen(shlex.split(os.environ.get('PHP_COMMAND','php'))+['-d','session.save_path='+tmp,'-S',f'127.0.0.1:{port}','-t','dist'],env=dict(os.environ,WORDYLAND_TEST='1',WORDYLAND_DATA_DIR=tmp+'/data'),stdout=log,stderr=log)
@@ -89,6 +90,8 @@ with tempfile.TemporaryDirectory(prefix='wordyland-training-') as tmp:
   # Every curated theme is reachable and rotates through its complete finite set.
   for bad in ['unknown',{},['body'],1]:req(a,'training-start',{'profile':pid,'track':'words','pack':bad},ta,400)
   for pack in content['wordPacks'][1:]:
+   # Catalog rotation is a synthetic bulk test, separate from the hourly user limit.
+   db.execute('DELETE FROM rate_limits WHERE bucket=?',('training-start:'+str(pid),));db.commit()
    seen_words=set()
    for round in range(len(pack['words'])):
     body={'profile':pid,'track':'words','pack':pack['id']};s=req(a,'training-start',body,ta)['session']
@@ -116,7 +119,7 @@ with tempfile.TemporaryDirectory(prefix='wordyland-training-') as tmp:
    active.append(req(b,'training-start',{'profile':other,'track':'letters','block':block['id']},tb)['session']['token'])
   for pack in content['wordPacks']:
    active.append(req(b,'training-start',{'profile':other,'track':'words','pack':pack['id']},tb)['session']['token'])
-  assert len(active)==19 and set(active)=={s['token'] for s in req(b,f'training-state&profile={other}')['sessions']}
+  assert len(active)==20 and set(active)=={s['token'] for s in req(b,f'training-state&profile={other}')['sessions']}
   assert snapshot()==old
   seen=set()
   for block in content['blocks']:
@@ -139,5 +142,5 @@ with tempfile.TemporaryDirectory(prefix='wordyland-training-') as tmp:
   req(a,'delete-profile',{'profile':pid,'password':password,'confirm':'ELIMINA'},ta)
   for table in ['training_sessions','training_daily','training_items','training_totals','training_stickers','training_choice_steps']:assert db.execute('SELECT COUNT(*) FROM '+table+' WHERE profile_id=?',(pid,)).fetchone()[0]==0,'Profile deletion must clean training data'
   assert req(b,f'training-state&profile={other}&token='+retained['token'])['session']['token']==retained['token']
-  print('Training API passed: 26 guided letters in 13 blocks, curated content, owned privacy/roles/CSRF, no game economy/ranking mutations, finite idempotent stickers, wrong/hint/reply replay, second-device help, spaced-days fading, reading versus audio skill separation, 35 words in six packs, complete rotation, 19 paused paths, same-pack distractors, private report, expiry unchanged game rewards and owned-profile deletion cleanup.')
+  print('Training API passed: 26 guided letters in 13 blocks, curated content, owned privacy/roles/CSRF, no game economy/ranking mutations, finite idempotent stickers, wrong/hint/reply replay, second-device help, spaced-days fading, reading versus audio skill separation, 43 words in seven packs, complete rotation, 20 paused paths, same-pack distractors, private report, expiry unchanged game rewards and owned-profile deletion cleanup.')
  finally:server.terminate();server.wait(timeout=5);log.close()

@@ -98,6 +98,55 @@ function shopCatalog(): array { return [
     ['id'=>'ball-ocean','name'=>'Pallone dell’oceano','icon'=>'🔵','slot'=>'ball','price'=>15],
     ['id'=>'rocket-mint','name'=>'Razzo menta','icon'=>'💚','slot'=>'rocket','price'=>25],
     ['id'=>'rocket-galaxy','name'=>'Razzo galassia','icon'=>'🟣','slot'=>'rocket','price'=>30],
+    ['id'=>'hat-santa','name'=>'Cappello di Babbo Natale','icon'=>'🎅','slot'=>'hat','price'=>0,'season'=>'christmas','event'=>'christmas','eventExercises'=>1],
+    ['id'=>'hat-elf','name'=>'Cappello da elfo','icon'=>'🧝','slot'=>'hat','price'=>0,'season'=>'christmas','event'=>'christmas','eventExercises'=>3],
+    ['id'=>'hat-reindeer','name'=>'Corna da renna','icon'=>'🦌','slot'=>'hat','price'=>0,'season'=>'christmas','event'=>'christmas','eventExercises'=>6],
+    ['id'=>'neck-scarf','name'=>'Sciarpa natalizia','icon'=>'🧣','slot'=>'neck','price'=>0,'season'=>'christmas','event'=>'christmas','eventExercises'=>2],
+    ['id'=>'neck-none','name'=>'Senza sciarpa','icon'=>'○','slot'=>'neck','price'=>0,'season'=>'christmas'],
+    ['id'=>'effect-snow','name'=>'Fiocchi di neve','icon'=>'❄️','slot'=>'effect','price'=>0,'season'=>'christmas','event'=>'christmas','eventExercises'=>5],
+    ['id'=>'kart-christmas','name'=>'Kart delle feste','icon'=>'🎁','slot'=>'kart','price'=>0,'season'=>'christmas','event'=>'christmas','eventExercises'=>9],
+    ['id'=>'trophy-tree','name'=>'Alberello di Natale','icon'=>'🎄','slot'=>'trophy','price'=>0,'season'=>'christmas','event'=>'christmas','eventExercises'=>4],
+    ['id'=>'souvenir-christmas-1','season'=>'christmas','name'=>'Stella del villaggio','icon'=>'⭐','slot'=>'badge','price'=>0,'event'=>'christmas','eventDays'=>1],
+    ['id'=>'souvenir-christmas-2','season'=>'christmas','name'=>'Campanella delle feste','icon'=>'🔔','slot'=>'badge','price'=>0,'event'=>'christmas','eventDays'=>3],
+    ['id'=>'souvenir-christmas-3','season'=>'christmas','name'=>'Cristallo di Natale','icon'=>'❄️','slot'=>'badge','price'=>0,'event'=>'christmas','eventDays'=>5],
+    ['id'=>'souvenir-carnival-1','name'=>'Maschera dei colori','icon'=>'🎭','slot'=>'badge','price'=>0,'event'=>'carnival','eventDays'=>1],
+    ['id'=>'souvenir-carnival-2','name'=>'Coriandolo brillante','icon'=>'🎊','slot'=>'badge','price'=>0,'event'=>'carnival','eventDays'=>3],
+    ['id'=>'souvenir-carnival-3','name'=>'Stella di Carnevale','icon'=>'🌟','slot'=>'badge','price'=>0,'event'=>'carnival','eventDays'=>5],
+    ['id'=>'souvenir-easter-1','name'=>'Uovo dipinto','icon'=>'🥚','slot'=>'badge','price'=>0,'event'=>'easter','eventDays'=>1],
+    ['id'=>'souvenir-easter-2','name'=>'Fiore di primavera','icon'=>'🌷','slot'=>'badge','price'=>0,'event'=>'easter','eventDays'=>3],
+    ['id'=>'souvenir-easter-3','name'=>'Pulcino delle scoperte','icon'=>'🐣','slot'=>'badge','price'=>0,'event'=>'easter','eventDays'=>5],
+    ['id'=>'souvenir-halloween-1','name'=>'Zucchetta sorridente','icon'=>'🎃','slot'=>'badge','price'=>0,'event'=>'halloween','eventDays'=>1],
+    ['id'=>'souvenir-halloween-2','name'=>'Luna delle storie','icon'=>'🌙','slot'=>'badge','price'=>0,'event'=>'halloween','eventDays'=>3],
+    ['id'=>'souvenir-halloween-3','name'=>'Fantasmino gentile','icon'=>'👻','slot'=>'badge','price'=>0,'event'=>'halloween','eventDays'=>5],
+    ['id'=>'hat-snowman','name'=>'Cappello del pupazzo','icon'=>'☃️','slot'=>'hat','price'=>0,'season'=>'christmas','event'=>'christmas','eventExercises'=>7],
+    ['id'=>'hat-cookie','name'=>'Cappello biscotto','icon'=>'🍪','slot'=>'hat','price'=>0,'season'=>'christmas','event'=>'christmas','eventExercises'=>10],
+    ['id'=>'hat-gift','name'=>'Cappello pacchetto','icon'=>'🎁','slot'=>'hat','price'=>0,'season'=>'christmas','event'=>'christmas','eventExercises'=>13],
+    ['id'=>'effect-stars','name'=>'Stelline delle feste','icon'=>'🌟','slot'=>'effect','price'=>0,'season'=>'christmas','event'=>'christmas','eventExercises'=>11],
+    ['id'=>'rocket-christmas','name'=>'Razzo pan di zenzero','icon'=>'🚀','slot'=>'rocket','price'=>0,'season'=>'christmas','event'=>'christmas','eventExercises'=>15],
+    ['id'=>'reindeer','name'=>'Rudy la renna','icon'=>'🦌','slot'=>'avatar','price'=>0,'season'=>'christmas','event'=>'christmas','eventExercises'=>6],
+    ['id'=>'penguin','name'=>'Pip il pinguino','icon'=>'🐧','slot'=>'avatar','price'=>0,'season'=>'christmas','event'=>'christmas','eventExercises'=>12],
+    ['id'=>'snowpal','name'=>'Fiocco il pupazzo','icon'=>'☃️','slot'=>'avatar','price'=>0,'season'=>'christmas','event'=>'christmas','eventExercises'=>18],
+    ['id'=>'hat-leaf','name'=>'Cappello foglia','icon'=>'🍃','slot'=>'hat','price'=>0,'event'=>'journey','eventExercises'=>3,'collection'=>'bosco'],
+    ['id'=>'neck-ocean','name'=>'Sciarpa dell’oceano','icon'=>'🧣','slot'=>'neck','price'=>0,'event'=>'journey','eventExercises'=>6,'collection'=>'bosco'],
+    ['id'=>'effect-fireflies','name'=>'Lucciole amiche','icon'=>'✨','slot'=>'effect','price'=>0,'event'=>'journey','eventExercises'=>9,'collection'=>'bosco'],
+    ['id'=>'trophy-book','name'=>'Libro delle scoperte','icon'=>'📚','slot'=>'trophy','price'=>0,'event'=>'journey','eventExercises'=>12,'collection'=>'bosco'],
+    ['id'=>'bunny','name'=>'Lillo il coniglietto','icon'=>'🐰','slot'=>'avatar','price'=>0,'event'=>'journey','eventExercises'=>18,'collection'=>'viaggio'],
+    ['id'=>'kart-leaf','name'=>'Kart della foresta','icon'=>'🌳','slot'=>'kart','price'=>0,'event'=>'journey','eventExercises'=>24,'collection'=>'viaggio'],
+    ['id'=>'hat-explorer','name'=>'Cappello da esploratore','icon'=>'🧭','slot'=>'hat','price'=>0,'event'=>'journey','eventExercises'=>30,'collection'=>'viaggio'],
+    ['id'=>'rocket-ocean','name'=>'Razzo dell’oceano','icon'=>'🌊','slot'=>'rocket','price'=>0,'event'=>'journey','eventExercises'=>36,'collection'=>'viaggio'],
+    ['id'=>'trophy-moon','name'=>'Luna da collezione','icon'=>'🌙','slot'=>'trophy','price'=>0,'event'=>'journey','eventExercises'=>45,'collection'=>'sogni'],
+    ['id'=>'koala','name'=>'Kiki il koala','icon'=>'🐨','slot'=>'avatar','price'=>0,'event'=>'journey','eventExercises'=>60,'collection'=>'sogni'],
+    ['id'=>'effect-comets','name'=>'Comete gentili','icon'=>'💫','slot'=>'effect','price'=>0,'event'=>'journey','eventExercises'=>75,'collection'=>'sogni'],
+    ['id'=>'trophy-garden','name'=>'Giardino delle parole','icon'=>'🌷','slot'=>'trophy','price'=>0,'event'=>'journey','eventExercises'=>90,'collection'=>'sogni'],
+    ['id'=>'elf-boy','name'=>'Elio l’elfo','icon'=>'🧝‍♂️','slot'=>'avatar','price'=>0,'season'=>'christmas','event'=>'christmas','eventExercises'=>3],
+    ['id'=>'elf-girl','name'=>'Stella l’elfa','icon'=>'🧝‍♀️','slot'=>'avatar','price'=>0,'season'=>'christmas','event'=>'christmas','eventExercises'=>3],
+    ['id'=>'polar-bear','name'=>'Nubi l’orso polare','icon'=>'🐻‍❄️','slot'=>'avatar','price'=>0,'season'=>'christmas','event'=>'christmas','eventExercises'=>9],
+    ['id'=>'gingerbread','name'=>'Biscottino pan di zenzero','icon'=>'🍪','slot'=>'avatar','price'=>0,'season'=>'christmas','event'=>'christmas','eventExercises'=>12],
+    ['id'=>'silver-reindeer','name'=>'Fiaba la renna argentata','icon'=>'🦌','slot'=>'avatar','price'=>0,'season'=>'christmas','event'=>'christmas','eventExercises'=>15],
+    ['id'=>'mrs-claus','name'=>'Nonna Natale','icon'=>'🤶','slot'=>'avatar','price'=>0,'season'=>'christmas','event'=>'christmas','eventExercises'=>21],
+    ['id'=>'santa','name'=>'Babbo Natale','icon'=>'🎅','slot'=>'avatar','price'=>0,'season'=>'christmas','event'=>'christmas','eventExercises'=>24],
+    ['id'=>'nutcracker','name'=>'Nico lo schiaccianoci','icon'=>'🥁','slot'=>'avatar','price'=>0,'season'=>'christmas','event'=>'christmas','eventExercises'=>27],
+    ['id'=>'yeti','name'=>'Milo lo yeti gentile','icon'=>'☁️','slot'=>'avatar','price'=>0,'season'=>'christmas','event'=>'christmas','eventExercises'=>30],
     ['id'=>'badge-first','name'=>'Prima avventura','icon'=>'🏅','slot'=>'badge','price'=>0,'unlock'=>['missions'=>1]],
     ['id'=>'badge-explorer','name'=>'Tre mondi esplorati','icon'=>'🧭','slot'=>'badge','price'=>0,'unlock'=>['activities'=>3]],
     ['id'=>'badge-persistence','name'=>'Dieci avventure','icon'=>'🎖️','slot'=>'badge','price'=>0,'unlock'=>['missions'=>10]]
@@ -178,6 +227,125 @@ function questSnapshot(array $quest): array {
     $questions=json_decode($quest['questions'],true);$step=(int)$quest['step'];
     if($quest['source']===''){static $curriculum=null;$curriculum??=json_decode(file_get_contents(__DIR__.'/curriculum.json'),true);foreach(['catpositions','penpositions','mousepositions'] as $category){if(!array_diff(array_column($questions,'word'),array_column($curriculum[$category],0))){$quest['source']=$category;break;}}}
     return ['token'=>$quest['token'],'total'=>count($questions),'step'=>$step,'activity'=>$quest['activity'],'source'=>$quest['source'],'xp'=>(int)$quest['xp'],'expiresAt'=>(int)$quest['created_at']+questLifetime()];
+}
+
+// Seasonal challenges: server clock, owned profiles, additive private history.
+function holidayNow(): DateTimeImmutable {
+    $tz=new DateTimeZone('Europe/Rome');
+    // Test clock comes only from the disposable server environment, never HTTP input.
+    if(getenv('WORDYLAND_TEST')==='1' && ($file=getenv('WORDYLAND_TEST_CLOCK_FILE')) && is_file($file))return (new DateTimeImmutable(trim(file_get_contents($file,false,null,0,80)),$tz))->setTimezone($tz);
+    return new DateTimeImmutable('now',$tz);
+}
+function holidayEaster(int $y): string {
+    $a=$y%19;$b=intdiv($y,100);$c=$y%100;$d=intdiv($b,4);$e=$b%4;$f=intdiv($b+8,25);$g=intdiv($b-$f+1,3);$h=(19*$a+$b-$d-$g+15)%30;$i=intdiv($c,4);$k=$c%4;$l=(32+2*$e+2*$i-$h-$k)%7;$m=intdiv($a+11*$h+22*$l,451);$n=$h+$l-7*$m+114;
+    return sprintf('%04d-%02d-%02d',$y,intdiv($n,31),$n%31+1);
+}
+function holidayEvents(DateTimeImmutable $now): array {
+    $tz=new DateTimeZone('Europe/Rome');$y=(int)$now->format('Y');$events=[];
+    foreach(['christmas'=>['Villaggio di Natale','🎄'],'carnival'=>['Villaggio di Carnevale','🎭'],'easter'=>['Giardino di Pasqua','🐣'],'halloween'=>['Villaggio delle zucche','🎃']] as $id=>[$name,$icon]){
+        $candidates=[];
+        foreach([$y-1,$y,$y+1] as $year){
+            $easter=new DateTimeImmutable(holidayEaster($year),$tz);
+            [$start,$end]=match($id){
+                'christmas'=>[new DateTimeImmutable("$year-11-01",$tz),new DateTimeImmutable(($year+1).'-01-08',$tz)],
+                'carnival'=>[$easter->modify('-61 days'),$easter->modify('-46 days')],
+                'easter'=>[$easter->modify('-14 days'),$easter->modify('+8 days')],
+                default=>[new DateTimeImmutable("$year-10-15",$tz),new DateTimeImmutable("$year-11-02",$tz)]};
+            if($end>$now)$candidates[]=['id'=>$id,'name'=>$name,'icon'=>$icon,'season'=>$id.':'.$year,'opens'=>$start->format(DateTimeInterface::ATOM),'closes'=>$end->format(DateTimeInterface::ATOM),'lastDay'=>$end->modify('-1 day')->format('d/m/Y'),'active'=>$now>=$start&&$now<$end];
+        }
+        usort($candidates,fn($a,$b)=>strcmp($a['opens'],$b['opens']));$events[]=$candidates[0];
+    }
+    return $events;
+}
+function holidayElf(array $event,DateTimeImmutable $now): ?array {
+    if($event['id']!=='christmas'||!$event['active'])return null;
+    $year=(int)explode(':',$event['season'])[1];$opens=new DateTimeImmutable($year.'-12-08',new DateTimeZone('Europe/Rome'));
+    $active=$now>=$opens&&$now<new DateTimeImmutable($event['closes']);$prank=null;
+    if($active){
+        $pranks=[
+            ['id'=>'packages','title'=>'I pacchi mescolati','story'=>'Birillo ha mescolato le lettere sui pacchi. Rimettiamo insieme CAT, gatto!','mode'=>'build','model'=>'CAT','tiles'=>['T','C','A']],
+            ['id'=>'letter','title'=>'La lettera nascosta','story'=>'Birillo ha nascosto una lettera! Completiamo _EN per scrivere PEN, penna.','mode'=>'letter','model'=>'PEN','options'=>['B','P','C'],'answer'=>'P'],
+            ['id'=>'sign','title'=>'Il cartello al contrario','story'=>'Quel cartello dice KOOB! Birillo ha girato le lettere di BOOK, libro.','mode'=>'toggle','button'=>'Raddrizza il cartello','model'=>'BOOK'],
+            ['id'=>'moustache','title'=>'I baffi del pupazzo','story'=>'Birillo ha disegnato due baffoni sul pupazzo di neve! Un tocco e tornano nella sua scatola.','mode'=>'toggle','button'=>'Sistema i baffi','model'=>'SNOWMAN · pupazzo di neve'],
+            ['id'=>'colors','title'=>'La neve colorata','story'=>'Birillo ha sparso colori pastello tra i fiocchi. Rimettiamo la neve bianca!','mode'=>'toggle','button'=>'Rimetti la neve bianca','model'=>'SNOW · neve']
+        ];$prank=$pranks[(int)$opens->diff($now)->format('%a')%count($pranks)];
+    }
+    return ['name'=>'Birillo','active'=>$active,'opens'=>$opens->format(DateTimeInterface::ATOM),'closes'=>$event['closes'],'day'=>$now->format('Y-m-d'),'prank'=>$prank];
+}
+function journeyEvent(): array {return ['id'=>'journey','name'=>'Passaporto delle scoperte','icon'=>'🧭','season'=>'journey:v1','opens'=>null,'closes'=>null,'lastDay'=>null,'active'=>true,'evergreen'=>true];}
+function holidayEvent(string $id,DateTimeImmutable $now): array {if($id==='journey')return journeyEvent();foreach(holidayEvents($now) as $e)if($e['id']===$id)return $e;fail('Festività non trovata.',404);}
+function holidayQuestion(array $s): ?array {
+    $plan=json_decode($s['plan'],true,32,JSON_THROW_ON_ERROR);$q=$plan[(int)$s['step']]??null;if(!$q)return null;
+    $mode=$q['mode'];$titles=['meaning'=>'🎁 Il regalo misterioso','word'=>'📮 La posta degli elfi','gap'=>'🔎 Caccia alla lettera','build'=>'🍪 Biscotti da riordinare','write'=>'✍️ La bottega delle parole'];
+    if($s['season']==='journey:v1')$titles=['meaning'=>'🎁 Il pacco misterioso','word'=>'📬 La posta delle parole','gap'=>'🔎 Caccia alla lettera','build'=>'🧩 Puzzle di lettere','write'=>'✍️ La bottega delle parole'];
+    $prompt=match($mode){'meaning'=>'Che cosa significa '.$q['word'].'?','gap'=>'Trova la lettera mancante: '.$q['mask'].' · '.$q['meaning'],'build'=>'Ricomponi la parola: '.$q['meaning'],'word'=>'Quale parola significa '.$q['meaning'].'?',default=>'Scrivi in inglese: '.$q['meaning']};
+    $public=['mode'=>$mode,'title'=>$titles[$mode]??$titles['write'],'prompt'=>$prompt,'options'=>in_array($mode,['meaning','word','gap'],true)?$q['options']:[]];
+    if(!empty($q['review']))$public['review']=true;if($mode==='build')$public['tiles']=$q['tiles'];if((int)$s['hint']>0)$public['hint']=$q['answer'];return $public;
+}
+function holidaySnapshot(array $s): array {return ['token'=>$s['token'],'day'=>$s['day'],'step'=>(int)$s['step'],'total'=>3,'done'=>(int)$s['step']===3,'question'=>holidayQuestion($s)];}
+function holidayExercises(PDO $db,int $pid,string $season): int {return (int)one($db,'SELECT COALESCE(SUM(step),0) AS n FROM holiday_days WHERE profile_id=? AND season=?',[$pid,$season])['n'];}
+function holidayEarn(PDO $db,int $pid,array $event): array {
+    $days=(int)one($db,'SELECT COUNT(*) AS n FROM holiday_days WHERE profile_id=? AND season=? AND step=3',[$pid,$event['season']])['n'];$exercises=holidayExercises($db,$pid,$event['season']);$earned=[];
+    foreach(shopCatalog() as $it)if(($it['event']??null)===$event['id']&&(isset($it['eventExercises'])?$exercises>=$it['eventExercises']:$days>=$it['eventDays'])){
+        if(!one($db,'SELECT item FROM inventory WHERE profile_id=? AND item=?',[$pid,$it['id']]))$earned[]=$it['id'];runSql($db,'INSERT OR IGNORE INTO inventory(profile_id,item) VALUES(?,?)',[$pid,$it['id']]);
+    }return $earned;
+}
+function holidayRewards(PDO $db,int $pid,array $event): array {
+    $n=(int)one($db,'SELECT COUNT(*) AS n FROM holiday_days WHERE profile_id=? AND season=? AND step=3',[$pid,$event['season']])['n'];
+    $inventory=array_column(rows($db,'SELECT item FROM inventory WHERE profile_id=?',[$pid]),'item');$out=[];$exercises=holidayExercises($db,$pid,$event['season']);
+    foreach(shopCatalog() as $it)if(($it['event']??null)===$event['id'])$out[]=['id'=>$it['id'],'name'=>$it['name'],'icon'=>$it['icon'],'days'=>$it['eventDays']??null,'exercises'=>$it['eventExercises']??null,'slot'=>$it['slot'],'collection'=>$it['collection']??null,'owned'=>in_array($it['id'],$inventory,true),'progress'=>min(isset($it['eventExercises'])?$exercises:$n,$it['eventExercises']??$it['eventDays'])];return $out;
+}
+function challengeSession(PDO $db,int $pid,array $event,string $today): array|false {
+    if($event['id']==='journey'){
+        $pending=one($db,'SELECT * FROM holiday_days WHERE profile_id=? AND season=? AND step<3 ORDER BY day LIMIT 1',[$pid,$event['season']]);if($pending)return $pending;
+    }
+    return one($db,'SELECT * FROM holiday_days WHERE profile_id=? AND season=? AND day=?',[$pid,$event['season'],$today]);
+}
+if(str_starts_with($action,'holiday-')||str_starts_with($action,'journey-')){
+    $isJourney=str_starts_with($action,'journey-');$op=$isJourney?'holiday-'.substr($action,8):$action;
+    $allowed=['holiday-state'=>'GET','holiday-start'=>'POST','holiday-answer'=>'POST','holiday-hint'=>'POST'];
+    if(!isset($allowed[$op]))fail('Operazione non trovata.',404);if($method!==$allowed[$op])fail('Metodo non consentito.',405);
+    $p=ownedProfile($db,$id,$method==='GET'?($_GET['profile']??0):($body['profile']??0));$pid=(int)$p['id'];
+    $db->exec('CREATE TABLE IF NOT EXISTS holiday_days(profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,season TEXT NOT NULL,day TEXT NOT NULL,token TEXT UNIQUE NOT NULL,plan TEXT NOT NULL,step INTEGER NOT NULL DEFAULT 0,hint INTEGER NOT NULL DEFAULT 0,errors INTEGER NOT NULL DEFAULT 0,last_attempt TEXT,PRIMARY KEY(profile_id,season,day));');
+    $now=holidayNow();$today=$now->format('Y-m-d');
+    if($op==='holiday-state'){
+        $events=$isJourney?[journeyEvent()]:holidayEvents($now);foreach($events as &$e){$e['elf']=holidayElf($e,$now);$e['rewards']=holidayRewards($db,$pid,$e);$s=challengeSession($db,$pid,$e,$today);$e['session']=$s?holidaySnapshot($s):null;}unset($e);respond(['day'=>$today,'timezone'=>'Europe/Rome','events'=>$events,'wallet'=>wallet($db,$pid)]);
+    }
+    if($op==='holiday-start'){
+        if($isJourney){if(isset($body['event'])&&$body['event']!=='journey')fail('Scegli il percorso delle scoperte.');$body['event']='journey';}if(!is_string($body['event']??null)||(!$isJourney&&$body['event']==='journey'))fail('Scegli un percorso disponibile.');$e=holidayEvent($body['event'],$now);if(!$e['active'])fail('Le sfide di questa festività sono chiuse.',410);
+        limitAttempts($db,'holiday-start:'.$pid,100);
+        $db->exec('BEGIN IMMEDIATE');$s=challengeSession($db,$pid,$e,$today);
+        if(!$s){$words=json_decode(file_get_contents(__DIR__.'/training.json'),true,32,JSON_THROW_ON_ERROR)['foundationWords'];$offset=(int)(hexdec(substr(hash('sha256',$e['season'].$today),0,6))%count($words));$plan=[];
+            if($isJourney){
+                // Review only the selected profile's existing curated word signals.
+                if(holidayExercises($db,$pid,$e['season'])<6)$words=array_slice($words,0,6);
+                $review=array_column(practiceReviewRows($db,$pid),'word');$priority=array_values(array_filter($words,fn($w)=>in_array($w['id'],$review,true)));
+                $offset=$offset%count($words);$rotated=array_merge(array_slice($words,$offset),array_slice($words,0,$offset));$words=array_values(array_column(array_merge(array_slice($priority,0,2),$rotated),null,'id'));$offset=0;
+            }
+            for($j=0;$j<3;$j++){
+                $w=$words[($offset+$j)%count($words)];$mode=$j===0?'meaning':($j===2?'write':['write','gap','build','word'][((int)$now->format('j')-1)%4]);
+                $options=[$w['meaning'],$words[($offset+$j+1)%count($words)]['meaning'],$words[($offset+$j+2)%count($words)]['meaning']];$answer=$mode==='meaning'?$w['meaning']:$w['id'];$q=['word'=>$w['id'],'meaning'=>$w['meaning'],'mode'=>$mode,'answer'=>$answer,'review'=>$isJourney&&in_array($w['id'],$review??[],true)];
+                if($mode==='word')$options=[$w['id'],$words[($offset+$j+1)%count($words)]['id'],$words[($offset+$j+2)%count($words)]['id']];
+                if($mode==='gap'){$answer=$w['id'][0];$q['answer']=$answer;$q['mask']='_'.substr($w['id'],1);$options=[$answer];foreach(range('a','z') as $letter)if(count($options)<3&&!in_array($letter,$options,true))$options[]=$letter;}
+                if($mode==='build'){$q['tiles']=str_split($w['id']);shuffle($q['tiles']);}
+                shuffle($options);$q['options']=$options;$plan[]=$q;
+            }
+            $token=bin2hex(random_bytes(24));runSql($db,'INSERT INTO holiday_days(profile_id,season,day,token,plan) VALUES(?,?,?,?,?)',[$pid,$e['season'],$today,$token,json_encode($plan,JSON_UNESCAPED_UNICODE)]);$s=one($db,'SELECT * FROM holiday_days WHERE token=?',[$token]);}
+        $db->exec('COMMIT');respond(['session'=>holidaySnapshot($s)]);
+    }
+    if(!is_string($body['token']??null)||!preg_match('/^[a-f0-9]{48}$/',$body['token'])||!is_int($body['step']??null))fail('Riprendi la sfida confermata.');
+    $db->exec('BEGIN IMMEDIATE');$s=one($db,'SELECT * FROM holiday_days WHERE token=? AND profile_id=?',[$body['token'],$pid]);
+    if(!$s||(($s['season']==='journey:v1')!==$isJourney)){$db->exec('ROLLBACK');fail('Sfida non trovata.',404);}$e=holidayEvent(explode(':',$s['season'])[0],$now);
+    if(!$e['active']||$e['season']!==$s['season']||(!$isJourney&&$s['day']!==$today)){$db->exec('ROLLBACK');fail('La giornata o la festività è terminata. I premi ottenuti restano tuoi.',410);}
+    if($s['step']!==$body['step']||$s['step']===3){$db->exec('COMMIT');respond(['replayed'=>true,'session'=>holidaySnapshot($s)]);}
+    if($op==='holiday-hint'){runSql($db,'UPDATE holiday_days SET hint=1 WHERE token=?',[$s['token']]);$s['hint']=1;$db->exec('COMMIT');respond(['session'=>holidaySnapshot($s)]);}
+    if(!is_string($body['answer']??null)||strlen($body['answer'])>100||!is_string($body['attempt']??null)||!preg_match('/^[a-f0-9]{32}$/',$body['attempt'])){$db->exec('ROLLBACK');fail('Risposta non valida.');}
+    if($s['last_attempt']===$body['attempt']){$db->exec('COMMIT');respond(['replayed'=>true,'session'=>holidaySnapshot($s)]);}
+    $q=json_decode($s['plan'],true,32,JSON_THROW_ON_ERROR)[$s['step']];$correct=normalWord($body['answer'])===normalWord($q['answer']);
+    if($correct){$s['step']++;$s['hint']=0;}else{$s['errors']=min(1000,$s['errors']+1);$s['hint']=1;}
+    runSql($db,'UPDATE holiday_days SET step=?,hint=?,errors=?,last_attempt=? WHERE token=?',[$s['step'],$s['hint'],$s['errors'],$body['attempt'],$s['token']]);$earned=[];
+    if($correct)$earned=holidayEarn($db,$pid,$e);
+    $db->exec('COMMIT');respond(['correct'=>$correct,'session'=>holidaySnapshot($s),'earned'=>$earned,'rewards'=>holidayRewards($db,$pid,$e),'wallet'=>wallet($db,$pid)]);
 }
 
 require __DIR__ . '/arena.php';
@@ -275,6 +443,7 @@ if ($method === 'POST' && in_array($action,['buy','equip'],true)) {
     $item=null; foreach(shopCatalog() as $entry) if($entry['id']===($body['item']??''))$item=$entry;
     if (!$item) fail('Oggetto non trovato.',404);
     $db->exec('BEGIN IMMEDIATE'); $w=wallet($db,$pid);
+    if(isset($item['event'])&&!in_array($item['id'],$w['inventory'],true)){$db->exec('ROLLBACK');fail('Questo premio si conquista completando gli esercizi del suo percorso.',403);}
     if(isset($item['unlock'])&&!in_array($item['id'],$w['inventory'],true)){$db->exec('ROLLBACK');fail('Questo distintivo si ottiene completando le avventure indicate.',403);}
     if ($action==='buy' && !in_array($item['id'],$w['inventory'],true)) {
         if ($w['coins']<$item['price']) {$db->exec('ROLLBACK');fail('Ti mancano ancora '.($item['price']-$w['coins']).' monete. Continua la tua avventura!',409);}

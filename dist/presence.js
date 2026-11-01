@@ -2,7 +2,7 @@
 (()=>{
  const account=window.wordylandAccount,tab=Array.from(crypto.getRandomValues(new Uint8Array(16)),b=>b.toString(16).padStart(2,'0')).join('');
  const labels={offline:'Non online',online:'Online',ready:'Pronto a giocare',busy:'In partita',unknown:'Stato non aggiornato'};
- const icons={fox:'🦊',panda:'🐼',robot:'🤖',dragon:'🐉',octopus:'🐙',lion:'🦁'};
+ const icons={fox:'🦊',panda:'🐼',robot:'🤖',dragon:'🐉',octopus:'🐙',lion:'🦁',reindeer:'🦌',penguin:'🐧',snowpal:'☃️',bunny:'🐰',koala:'🐨','elf-boy':'🧝‍♂️','elf-girl':'🧝‍♀️','polar-bear':'🐻‍❄️','gingerbread':'🍪','silver-reindeer':'🦌','mrs-claus':'🤶','santa':'🎅','nutcracker':'🥁','yeti':'☁️'};
  const text=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  let profile=null,username=null,ready=false,timer=null,inflight=false,lastState=null,lastAt=0,verified=false,debounce=null;
  const foreground=()=>document.visibilityState==='visible'&&navigator.onLine;

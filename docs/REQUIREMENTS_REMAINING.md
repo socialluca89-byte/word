@@ -41,3 +41,16 @@ Il precedente b3ca230 è storico: il lavoro applicativo accumulato fino2d4f2e1 p
 Estensioni R7 escluse: sync privata, adattività offline e fonetica autonoma offline. Non sono condizioni per usare il percorso ospite finito già sviluppato e non vanno dichiarate presenti. Risposte parziali restano nel browser condiviso, senza isolamento fra utilizzatori: [OFFLINE_FOUNDATIONS.md](OFFLINE_FOUNDATIONS.md).
 
 La pubblicazione è conclusa. La vecchia richiesta a SiteGround non è stata inviata e non è necessaria per dichiarare questo rilascio verificato; se un challenge ricompare occorre fermarsi e diagnosticare, senza autorizzazione implicita a contattare il supporto. Caffè Oro fuori dal task; vecchio tablet rinviato. Nessun invio a SiteGround, email, reset, nuova credenziale, lettura alunni reali o modifica alla sicurezza hosting.
+
+
+## Pending user additions · 1 November 2026 · not live
+
+- Classroom dictated vocabulary: 12 exact worksheet terms; guided recognition/composition/recall in a seventh pack. See CLASSROOM_DICTATION.md.
+- Christmas collection (latest user correction): 18 earned items, including three new playable characters; scarf removal remains free. See CHRISTMAS_COLLECTION.md.
+- Holiday villages: server-owned daily calendars, 3-question saved missions, five activity variants, permanent exercise/day-gated rewards; four annual festival configurations. See HOLIDAY_VILLAGES.md for tested scope and limits. Local checks do not establish publication.
+
+- Year-round Passaporto delle scoperte: three daily tasks, pending-mission continuity across skipped dates, three collections/twelve permanent rewards, two additional playable characters, and an extensible stable progress namespace. See CONTINUOUS_JOURNEY.md. New collection releases remain curated work; no promise of infinitely auto-generated rewards. Not live.
+
+- Birillo the Christmas village NPC: server-gated 8 December–7 January, five optional reversible daily prank variants, no toy-based reward/economy changes. Developed/tested locally only; see ELF_PRANKS.md.
+
+- Christmas cast expansion: twelve playable festive characters total (nine additions), all earned through confirmed exercises, with a dedicated reachable filter. Current combined pending catalog: 97 entries. Not live; see CHRISTMAS_CHARACTERS.md.

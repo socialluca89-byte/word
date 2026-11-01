@@ -1,0 +1,48 @@
+{
+  "status": "developed-local-not-published",
+  "only_synthetic_fixture_accounts": true,
+  "production_mutations": false,
+  "new_cast_ids": [
+    "elf-boy",
+    "elf-girl",
+    "polar-bear",
+    "gingerbread",
+    "silver-reindeer",
+    "mrs-claus",
+    "santa",
+    "nutcracker",
+    "yeti"
+  ],
+  "christmas_playable_characters_total": 12,
+  "christmas_rewards_total": 27,
+  "pending_catalog_total": 97,
+  "exercise_thresholds": {
+    "elf-boy": 3,
+    "elf-girl": 3,
+    "polar-bear": 9,
+    "gingerbread": 12,
+    "silver-reindeer": 15,
+    "mrs-claus": 21,
+    "santa": 24,
+    "nutcracker": 27,
+    "yeti": 30
+  },
+  "passed": [
+    "catalog PHP/JS identity and unique IDs",
+    "holiday API: all 27 permanent rewards over 30 real fixture answers, ownership/CSRF/date/replay gates",
+    "cast browser: nine temporary previews, genuinely earned characters in 27 game scenes, saved identity, custom/native hat compatibility, four widths, post-closure use",
+    "existing holiday browser",
+    "wardrobe browser",
+    "Birillo calendar/reward isolation API",
+    "ordinary adventure API",
+    "motion browser",
+    "PWA/public bundle and syntax/whitespace"
+  ],
+  "not_run": [
+    "full cumulative release CI",
+    "real-device validation",
+    "deployment",
+    "live release checks"
+  ],
+  "preview": "docs/review/christmas-cast.png"
+}

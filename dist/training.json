@@ -405,6 +405,25 @@
         "yes",
         "no"
       ]
+    },
+    {
+      "id": "classroom",
+      "title": "Classroom · Dettato",
+      "icon": "✏️",
+      "words": [
+        "pencil",
+        "pen",
+        "book",
+        "eraser",
+        "scissors",
+        "glue stick",
+        "crayons",
+        "notebook",
+        "sharpener",
+        "marker",
+        "bookbag",
+        "desk"
+      ]
     }
   ],
   "foundationWords": [
@@ -722,6 +741,78 @@
       "phrase": "I say no.",
       "phraseMeaning": "Dico no.",
       "gap": "I say ___."
+    },
+    {
+      "id": "eraser",
+      "meaning": "gomma",
+      "emoji": "▱",
+      "topic": "classroom · dettato",
+      "phrase": "I have an eraser.",
+      "phraseMeaning": "Ho una gomma.",
+      "gap": "I have an ___."
+    },
+    {
+      "id": "scissors",
+      "meaning": "forbici",
+      "emoji": "✂️",
+      "topic": "classroom · dettato",
+      "phrase": "I have scissors.",
+      "phraseMeaning": "Ho le forbici.",
+      "gap": "I have ___."
+    },
+    {
+      "id": "glue stick",
+      "meaning": "colla stick",
+      "emoji": "🧴",
+      "topic": "classroom · dettato",
+      "phrase": "I have a glue stick.",
+      "phraseMeaning": "Ho una colla stick.",
+      "gap": "I have a ___."
+    },
+    {
+      "id": "crayons",
+      "meaning": "pastelli a cera",
+      "emoji": "🖍️",
+      "topic": "classroom · dettato",
+      "phrase": "I have crayons.",
+      "phraseMeaning": "Ho dei pastelli a cera.",
+      "gap": "I have ___."
+    },
+    {
+      "id": "sharpener",
+      "meaning": "temperino",
+      "emoji": "▣",
+      "topic": "classroom · dettato",
+      "phrase": "I have a sharpener.",
+      "phraseMeaning": "Ho un temperino.",
+      "gap": "I have a ___."
+    },
+    {
+      "id": "marker",
+      "meaning": "pennarello",
+      "emoji": "🖊️",
+      "topic": "classroom · dettato",
+      "phrase": "I have a marker.",
+      "phraseMeaning": "Ho un pennarello.",
+      "gap": "I have a ___."
+    },
+    {
+      "id": "bookbag",
+      "meaning": "zaino",
+      "emoji": "🎒",
+      "topic": "classroom · dettato",
+      "phrase": "I have a bookbag.",
+      "phraseMeaning": "Ho uno zaino.",
+      "gap": "I have a ___."
+    },
+    {
+      "id": "desk",
+      "meaning": "banco",
+      "emoji": "▤",
+      "topic": "classroom · dettato",
+      "phrase": "I have a desk.",
+      "phraseMeaning": "Ho un banco.",
+      "gap": "I have a ___."
     }
   ],
   "phonics": {

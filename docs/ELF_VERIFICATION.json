@@ -1,0 +1,38 @@
+{
+  "status": "developed-local-not-published",
+  "only_synthetic_fixture_accounts": true,
+  "production_mutations": false,
+  "elf_name": "Birillo",
+  "first_active_window": {
+    "opens": "2026-12-08T00:00:00+01:00",
+    "closes_exclusive": "2027-01-08T00:00:00+01:00"
+  },
+  "timezone": "Europe/Rome",
+  "unique_prank_variants": [
+    "packages",
+    "letter",
+    "sign",
+    "moustache",
+    "colors"
+  ],
+  "prank_date_count": 31,
+  "prank_clicks_grant_or_remove_rewards": false,
+  "npc_is_playable_reward": false,
+  "passed": [
+    "elf API calendar and reward isolation",
+    "elf browser five variants, keyboard, model correction, reset, actual NPC and scene restoration",
+    "WebGL fallback",
+    "four viewport widths and large touch targets",
+    "holiday API/browser regression",
+    "journey API regression",
+    "motion browser regression",
+    "catalog parity and PWA/public asset hashes",
+    "PHP/JS/shell syntax and whitespace"
+  ],
+  "not_run": [
+    "full cumulative release CI",
+    "real-device validation",
+    "deployment",
+    "live release checks"
+  ]
+}

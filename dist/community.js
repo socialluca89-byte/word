@@ -14,6 +14,8 @@
   if(['#continua','#sfide','#personaggi','#allenati','#preposizioni','#classe-crea','#segnalazioni','#admin','#iscritti'].includes(hash)||hash.startsWith('#admin-attiva='))window.wordylandUI?.play();
   if(!info().username)newRecovery=null;
   const match=hash.match(/^#admin-attiva=([a-f0-9]{64})$/);if(match){activationCode=match[1];history.replaceState(null,'','#admin');}
+  if(hash==='#scoperte'){window.wordylandUI?.play();root.hidden=true;document.querySelector('.questHub').hidden=false;window.dispatchEvent(new Event('wordyland-journey'));if(scroll)document.querySelector('.questHub').scrollIntoView({block:'start'});return;}
+  if(hash==='#natale'||hash==='#festivita'){window.wordylandUI?.play();root.hidden=true;document.querySelector('.questHub').hidden=false;window.dispatchEvent(new Event('wordyland-holiday'));if(scroll)document.querySelector('.questHub').scrollIntoView({block:'start'});return;}
   if(hash==='#allenamento'){window.wordylandUI?.play();root.hidden=true;document.querySelector('.questHub').hidden=true;window.dispatchEvent(new Event('wordyland-training-open'));return;}
   if(hash==='#continua'){root.hidden=true;document.querySelector('.questHub').hidden=false;window.dispatchEvent(new CustomEvent('wordyland-continue'));return;}
   if(hash==='#sfide'||hash==='#personaggi'||hash==='#allenati'||hash==='#preposizioni'){

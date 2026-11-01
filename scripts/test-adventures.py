@@ -154,7 +154,18 @@ with tempfile.TemporaryDirectory(prefix='wordyland-island-test-') as temporary:
         # Fund only this disposable fixture to test every additional priced cosmetic.
         with sqlite3.connect(temporary+'/data/wordyland.sqlite') as db:
             db.execute('UPDATE wallets SET coins=2000 WHERE profile_id=?',(pid,))
-        extras=[x for x in request(a,f'hub&profile={pid}')['catalog'] if x['id'].startswith(('hat-','effect-','pet-t','pet-p','room-l','room-su','kart-g','kart-pu','paint-f','paint-c','trophy-','ball-','rocket-'))]
+        extras=[x for x in request(a,f'hub&profile={pid}')['catalog'] if not x.get('season') and not x.get('event') and x['id'].startswith(('hat-','effect-','pet-t','pet-p','room-l','room-su','kart-g','kart-pu','paint-f','paint-c','trophy-','ball-','rocket-'))]
+        # Christmas rewards require verified exercises; only removing a scarf is free.
+        festive=[x for x in request(a,f'hub&profile={pid}')['catalog'] if x.get('season')=='christmas']
+        assert len(festive)==28
+        balance=request(a,f'hub&profile={pid}')['wallet']['coins']
+        for gift in festive:
+            if gift.get('event'):
+                request(a,'buy',{'profile':pid,'item':gift['id']},token,403)
+                request(a,'equip',{'profile':pid,'item':gift['id']},token,403)
+            else:
+                first=request(a,'buy',{'profile':pid,'item':gift['id']},token)['wallet']
+                assert first['coins']==balance and gift['id']=='neck-none'
         assert len(extras)==19
         for extra in extras:
             before=request(a,f'hub&profile={pid}')['wallet']['coins']

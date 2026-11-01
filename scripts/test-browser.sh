@@ -3,7 +3,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 check=${1:-presence}
-case "$check" in motion) script="scripts/test-motion.cjs";; pdf-scan|ocr|materials|phonics|offline-letters|offline-training|foundations|letter-progression|duel-resilience|compatibility|training|spelling|wallet|tiles|parent-summary|wardrobe|review|autonomy|navigation|performance|email|access|rewards|ux|learning|resume|presence|pwa|community|characters|school) script="scripts/test-${check}-browser.cjs";; *) echo 'Choose pdf-scan, ocr, materials, phonics, offline-letters, offline-training, foundations, letter-progression, duel-resilience, compatibility, motion, training, spelling, wallet, tiles, parent-summary, wardrobe, review, autonomy, navigation, performance, email, access, rewards, ux, learning, resume, presence, pwa, community, characters or school' >&2; exit 2;; esac
+case "$check" in motion) script="scripts/test-motion.cjs";; christmas-cast|elf|journey|holidays|pdf-scan|ocr|materials|phonics|offline-letters|offline-training|foundations|letter-progression|duel-resilience|compatibility|training|spelling|wallet|tiles|parent-summary|wardrobe|review|autonomy|navigation|performance|email|access|rewards|ux|learning|resume|presence|pwa|community|characters|school) script="scripts/test-${check}-browser.cjs";; *) echo 'Choose christmas-cast, elf, journey, holidays, pdf-scan, ocr, materials, phonics, offline-letters, offline-training, foundations, letter-progression, duel-resilience, compatibility, motion, training, spelling, wallet, tiles, parent-summary, wardrobe, review, autonomy, navigation, performance, email, access, rewards, ux, learning, resume, presence, pwa, community, characters or school' >&2; exit 2;; esac
 fixture=$(mktemp -d /tmp/wordyland-browser.XXXXXX)
 mkdir -p "$fixture/data" "$fixture/sessions" "$fixture/public"
 cp dist/* "$fixture/public/"
@@ -12,6 +12,10 @@ import socket
 with socket.socket() as s:s.bind(('127.0.0.1',0));print(s.getsockname()[1])
 PY
 )
+if [[ "$check" == holidays || "$check" == journey || "$check" == elf || "$check" == christmas-cast ]]; then
+  export WORDYLAND_TEST_CLOCK_FILE="$fixture/holiday-clock"
+  if [[ "$check" == journey ]]; then printf '2027-07-01 12:00:00'; elif [[ "$check" == elf ]]; then printf '2026-12-07 12:00:00'; else printf '2026-11-01 12:00:00'; fi > "$WORDYLAND_TEST_CLOCK_FILE"
+fi
 test_mail=0
 if [[ "$check" == email ]]; then test_mail=1; fi
 WORDYLAND_TEST_MAIL="$test_mail" WORDYLAND_TEST=1 WORDYLAND_DATA_DIR="$fixture/data" php -d session.save_path="$fixture/sessions" -S "127.0.0.1:$port" -t "$fixture/public" > "$fixture/server.log" 2>&1 &
