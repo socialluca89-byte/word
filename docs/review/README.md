@@ -57,3 +57,8 @@ Contenuti, progressi privati, premi separati, test e limiti in [TRAINING_SPELLIN
 - [Scherzo facoltativo dell’elfo,390px](elf-20261101-390.png): lettere grandi e comandi separati dalla missione.
 
 Le schermate sono locali; il link “Vai al contenuto” è visibile perché il test naviga anche da tastiera. Date, voci e storici delle fixture non dimostrano pronuncia o collaudo su un dispositivo reale. [Skill e piano visivo](../VISUAL_DESIGN_2026_11_01.md); [stato del rilascio e blocco](../RELEASE_READINESS_2026_11_01.md).
+
+
+## Otto mondi giocabili — ramo feature, non online
+
+[Un giro tra i segnali,390px](world-play-390.png): kart realmente sul segnale scelto, oggetto raccolto segnato e prossimo obiettivo. Progressi solo locali/sintetici; nessun bambino reale. Gli otto mondi offrono tre scoperte3D con comandi equivalenti grandi; non si tratta di un simulatore con guida analogica o avversari già implementati. [Attività, limiti e test](../PLAYABLE_WORLDS.md). Il ramo include gli eventi c1a13b9; non è stato pubblicato da questo lotto.
