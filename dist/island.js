@@ -365,7 +365,7 @@ const holidayCells={christmas:[0,0],carnival:[1,0],easter:[0,1],halloween:[1,1]}
 const actorIds=['fox','panda','robot','dragon','octopus','lion','reindeer','penguin','snowpal','bunny','koala','elf-boy','elf-girl','polar-bear','gingerbread','silver-reindeer','mrs-claus','santa','nutcracker','yeti'];
 let sceneStyle='illustrated';try{if(localStorage.getItem('wordylandSceneStyle')==='3d')sceneStyle='3d';}catch{}
 function illustratedView(host,options={}){
- const art=options.artwork,circuit=art?.source==='race-circuits.webp?v=34b59b21f510'&&art.columns===3&&art.rows===2&&Array.isArray(art.cell)&&art.cell.length===2&&art.cell.every(Number.isInteger)&&art.cell[0]>=0&&art.cell[0]<3&&art.cell[1]>=0&&art.cell[1]<2;
+ const art=options.artwork,circuit=art?.source==='race-circuits.webp'&&art.columns===3&&art.rows===2&&Array.isArray(art.cell)&&art.cell.length===2&&art.cell.every(Number.isInteger)&&art.cell[0]>=0&&art.cell[0]<3&&art.cell[1]>=0&&art.cell[1]<2;
  const kind=options.kind||'pets',event=options.holiday||'christmas',isHoliday=kind==='holiday',cell=circuit?art.cell:isHoliday?(holidayCells[event]||holidayCells.christmas):(worldCells[kind]||worldCells.pets),columns=circuit?3:isHoliday?2:4,rows=2,cellHeight=isHoliday&&!circuit?50:100;
  const layer=document.createElement('div');layer.className='illustratedLayer';layer.dataset.illustratedWorld=isHoliday?event:kind;layer.setAttribute('aria-label',isHoliday?'Villaggio illustrato':places[kind]?.name||'Mondo illustrato');
  layer.classList.toggle('illustratedPaused',Boolean(options.paused));host.prepend(layer);host.classList.add('illustratedScene');if(options.playground)host.classList.add('illustratedPlayable');host.dataset.render='illustrated';host.dataset.artReady='loading';

@@ -237,7 +237,7 @@
   "focused_browser": [
     {
       "suite": "classic-illustrated",
-      "result": "PASS",
+      "result": "Initial pre-generation PASS; CI then exposed build integration failure, superseded by post-generation PASS described below.",
       "evidence": "Real summary/card entry, six original atlas cells/modes, actual mobile start visible and focus on game, error/correct/progress, close/reopen, owned avatar/crown vs temporary preview, wallet preserved."
     },
     {
@@ -257,5 +257,18 @@
     "Local Chromium; not proof of original tablet compatibility or real audio pronunciation.",
     "Illustrated portraits remain animated pawns; existing physical accessories/furniture remain reachable through classic3D.",
     "No claim that tests cover every possible user interaction."
-  ]
+  ],
+  "build_integration_followup": {
+    "failed_commit": "21f8a3fb87322cfe110ffed63961791f9bb436c5",
+    "run": "https://github.com/socialluca89-byte/word/actions/runs/41344293814",
+    "verify": "PASS",
+    "browser": "FAIL in first classic-illustrated suite; deploy SKIPPED",
+    "cause": "Global asset URL replacement also versioned a bare renderer identifier, so the classic atlas selector no longer matched the caller.",
+    "fix": "Version only URLs in the illustratedArt registry; keep renderer identifiers stable.",
+    "post_generation_classic_suite": "PASS: six atlas cells/modes, mobile start, errors/correct/progress, identity, wallet and desktop/mobile.",
+    "generation_twice": "PASS: all dist files byte-identical after second generation.",
+    "syntax_bundle": "PASS",
+    "independent_review": "PASS: registry URLs correct; bytes outside registry untouched by versioning; bare ID matches caller.",
+    "final_remote_CI": "Required on follow-up commit; not inferred from local pass."
+  }
 }

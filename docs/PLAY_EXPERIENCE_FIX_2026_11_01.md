@@ -20,3 +20,7 @@ Due nuove suite usano il default illustrato reale, senza la preferenza3D usata d
 Revisione statica indipendente su lifecycle, equipaggiamento, punteggi, privacy e input. Fixture esclusivamente sintetiche. Nessuna modifica a account, classi, API, permessi, dati reali, cataloghi o impostazioni hosting. Nessuna nuova dipendenza o immagine; si riusano le illustrazioni già pubblicate.
 
 La verifica completa e la pubblicazione vanno riferite al relativo commit/run, non dedotte dal solo pass di queste suite. Audio reale e tablet originale restano verifiche distinte.
+
+## Integrazione del build verificata
+
+Il primo workflow main21f8a3f ha passato verify, ma la suite nuova classic-illustrated ha fermato il deploy: il generatore URL modificava anche un identificatore privo di versione. Il sito precedente è rimasto attivo. Il generatore ora cambia esclusivamente il registro degli URL; gli identificatori restano stabili. Due generazioni consecutive producono file identici e la suite classica passa dopo la generazione effettiva. La CI completa del commit corretto resta il criterio per la pubblicazione, senza saltare o indebolire il test che ha trovato il problema.
