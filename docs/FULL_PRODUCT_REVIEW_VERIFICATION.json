@@ -1,5 +1,5 @@
 {
-  "application_digest_sha256": "9787f1a5e3721f74a53e51b2d40eedd1a354a343fd6f0f3a4cf5f76d13ca3165",
+  "application_digest_sha256": "1894e41fcef38cd9e80e62c4d0d1fbb51cabafa5b94e32671fa52c6963764c36",
   "application_files": 49,
   "baseline_main": "5d4c6b2837c9291ae57ac04b7fa799b4984afa39",
   "last_verified_live": "901fd989cf79d84e651164af5ccc8f6774e53bf1",
@@ -25,7 +25,7 @@
     },
     {
       "suite": "journey-navigation",
-      "result": "PASS guest/owned, back/forward, hero, same-hash, real zoom, pending purchase route intent and no duplicate costs"
+      "result": "PASS guest/owned, back/forward, hero, same-hash, real zoom, pending purchase route intent and no duplicate costs; PASS immediate private DOM clearance on logout before releasing a committed purchase response, with guest unchanged after the late reply"
     },
     {
       "suite": "appearance-consistency",
@@ -44,7 +44,8 @@
     "original_pointer_failure": "PASS: guest41 preserved before/after failed switch and retry/logout",
     "unknown_session": "PASS: private13 hidden/inert/no writes; guest41 restored after verified anonymous response",
     "atomic_binding": "PASS: classic mirror remains guest41 under failure while canonical owned13/17 and revision remain correct after reload/flush",
-    "source": "read-only independent reproduction on disposable fixtures"
+    "source": "read-only independent reproduction on disposable fixtures",
+    "pending_purchase_logout": "PASS static targeted review: old private DOM cleared before await; current-profile hub/render guard and late purchase owner guard preserved; pending-buy/logout browser regression PASS before reply release"
   },
   "negative_controls": [
     "New offline audio test fails for the actual old defect on offline.js identical between live901 and main5d.",
@@ -57,5 +58,12 @@
     "Cross-tab stamps reject observable stale writes; no claim of process-wide CAS.",
     "No automatic merge of profile counters; recovery uses verified identity and exact copy/revision or explicit selection.",
     "No SiteGround/security/credential changes or support messages."
-  ]
+  ],
+  "intermediate_cumulative_result": {
+    "commit": "d98db8dec35efc95700daf9a6c17628bac781b7c",
+    "run": "https://github.com/socialluca89-byte/word/actions/runs/41353137047",
+    "verify": "PASS 35 checks",
+    "browser": "Stopped on holidays: global latest-scene probe did not bind the scene to its rendered target canvas; replaced with actual frame/canvas binding, no assertion removed",
+    "deployment": "SKIPPED (review branch)"
+  }
 }

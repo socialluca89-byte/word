@@ -21,6 +21,7 @@ Il workflow ora può verificare il ramo di revisione senza pubblicare: solo veri
 | Cronologia | Indietro lasciava la home nascosta dal precedente focus di gioco | Indietro/Avanti ripristinano superfici e sessioni riprendibili |
 | Nome | Editor ospite non raggiungibile, oppure nome locale confuso con online | Editor nel Box; con profilo attivo si apre il vero modulo account senza rinomina implicita |
 | Operazioni in corso | Durante acquisto, un collegamento cambiava hash senza aprire la pagina | L'ultima destinazione richiesta si apre dopo la conferma; esito visibile, nessun doppio addebito |
+| Uscita con acquisto pendente | Dopo logout restavano nome e saldo del precedente profilo fino alla risposta rallentata | Il DOM privato scompare immediatamente; il nuovo contesto si carica con i propri dati e ignora la risposta tardiva |
 | Sfide | Compariva la volpe anche con altro personaggio equipaggiato | Aspetto del proprio profilo dal server, aggiornato dopo pausa/reload/secondo dispositivo; lettura senza premi o altre scritture |
 | Sfide su telefono | Personaggio tagliato, ingresso a metà pagina e risposte tutte sotto il viewport | Scena e accessori interi; ingresso all'inizio, prima risposta visibile; spiegazioni complete nell'aiuto |
 | Guardaroba | Distintivi/tavolozze invisibili, azioni ignoravano alcune skin | Tutti97oggetti rappresentati; skin effettivamente equipaggiate e nomi comprensibili |
@@ -55,3 +56,9 @@ Nessun utente reale, dato degli alunni, messaggio o invio email usato. Nessun se
 [Copertura e verifiche](FULL_PRODUCT_REVIEW_VERIFICATION.json) e [schermate reali](review/README.md). La revisione indipendente ha fermato una prima variante non sicura del recupero, in cui identità e dati provenivano da due chiavi diverse: il candidato finale li lega in un unico valore canonico, con migrazione controllata del vecchio formato. Il mirror classico non può più diventare automaticamente dati di un altro profilo. La copia locale sospesa è una sola, limitata e verificata sul proprietario; non esiste uno storico automatico di profili. Nessuna fusione automatica dei contatori.
 
 I file sono stati rigenerati due volte con esito byte-identico prima del candidato. La matrice cumulativa contiene35controlli verify e44suite browser; il risultato finale va verificato sul commit esatto in Actions. Il ramo di revisione non può pubblicare.
+
+## Esiti intermedi conservati
+
+Il primo candidato `d98db8d` ha passato35controlli verify. Il run [41353137047](https://github.com/socialluca89-byte/word/actions/runs/41353137047) e la matrice locale si sono fermati allo stesso controllo del villaggio: la sonda selezionava l’ultima scena creata nella pagina, non quella effettivamente disegnata nel canvas del villaggio. La regressione ora collega ogni frame al suo canvas e verifica sia `#holidayWorld` sia il personaggio nel vero `#missionWorld`; nessuna asserzione è stata eliminata. La suite festività corretta è passata localmente. Il risultato cumulativo finale deve essere letto sul nuovo commit esatto.
+
+La nuova prova di uscita durante un acquisto rallentato controlla nome e saldo **prima** di liberare la risposta già confermata dal server. Dopo la risposta, l’ospite resta separato e il saldo non viene sovrascritto. La ripetizione dei due percorsi di navigazione durante acquisto continua a verificare l’assenza di doppi addebiti.

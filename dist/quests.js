@@ -107,11 +107,11 @@
   window.addEventListener('wordyland-continue',()=>refreshPending().then(()=>{if(!resumeHost.hidden)resumeHost.scrollIntoView({block:'start'});}));
 
   function mascot(w=wallet()) {const e=w?.equipped||{},pilot=['fox','panda','robot','dragon','octopus','lion','reindeer','penguin','snowpal','bunny','koala','elf-boy','elf-girl','polar-bear','gingerbread','silver-reindeer','mrs-claus','santa','nutcracker','yeti'].includes(e.avatar)?e.avatar:'fox';return '<span class="avatarHat">'+(item(e.hat)?.icon||'')+'</span><span class="questMascot racerModel '+(e.effect==='flight'?'canFly':'')+'" data-racer="'+pilot+'" role="img" aria-label="'+item(pilot).name+'"></span><span class="avatarEffect">'+(item(e.effect)?.icon||'')+'</span>';}
-  async function refresh() {
+  async function refresh(forceRender=false) {
     const expected=profile.id;
     if(expected){let result=await api('hub&profile='+expected+(club?'&club='+club:''));if(profile.id!==expected)return;if(!club&&result.clubs?.length){club=Number(result.clubs[0].id);result=await api('hub&profile='+expected+'&club='+club);if(profile.id!==expected)return;}hub=result;}
     else hub=null;
-    if(!busy&&!mission&&!resumeDuel&&!root.querySelector('#duelStage:not([hidden])'))render();drawContinuations();adultTools();
+    if((!busy||forceRender===true)&&!mission&&!resumeDuel&&!root.querySelector('#duelStage:not([hidden])'))render();drawContinuations();adultTools();
   }
   function render() {
     if(location.hash!=='#allenamento')window.wordylandUI.play();
@@ -557,8 +557,8 @@
     profile=e.detail;
     // Session readiness does not change an existing guest world; keep its scene alive.
     if(unchangedGuest){drawContinuations();adultTools();return;}
-    if(changed){studyImport?.dispose();studyImport=null;document.querySelector('#studyTools')?.replaceChildren();pendingEpoch++;pending={quests:[],duels:[]};drawContinuations();mission=null;question=null;club=0;hub=null;activity='treehouse';lessonSource=null;clearScene();}
-    refreshPending();try{await refresh();}catch(e){render();say(e.message);}
+    if(changed){studyImport?.dispose();studyImport=null;document.querySelector('#studyTools')?.replaceChildren();pendingEpoch++;pending={quests:[],duels:[]};drawContinuations();mission=null;question=null;club=0;hub=null;activity='treehouse';lessonSource=null;clearScene();root.innerHTML='<p role="status">Carico il tuo personaggio…</p>';}
+    refreshPending();try{await refresh(changed);}catch(e){render();say(e.message);}
   });
   profile=window.wordylandAccount?.info()||profile;drawContinuations();refreshPending();render();if(profile.id)refresh().catch(e=>say(e.message));
 })();
