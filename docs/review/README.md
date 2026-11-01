@@ -48,3 +48,12 @@ Contenuti, progressi privati, premi separati, test e limiti in [TRAINING_SPELLIN
 - `ocr-390.png`: OCR reale locale di stampato JPEG originale sintetico, nel modulo adulto; bozza fallibile da rivedere, non fotografia di un bambino né versione live.
 
 - `pdf-scan-390.png`: modulo adulto con OCR reale di pagina2su2 di un PDF originale composto soltanto da immagini sintetiche; non live, nessun documento di alunni.
+
+
+## Revisione grafica del 1 novembre — solo work, non online
+
+- [Personaggi 3D natalizi](christmas-cast-20261101.png): nove nuovi modelli, in aggiunta al trio precedente. Abbigliamento combinato da fixture per verificare la compatibilità; non rappresenta oggetti già guadagnati da un bambino.
+- [Passaporto, schermo da390px](journey-20261101-390.png): missione raggiungibile prima della raccolta, progresso personale sintetico e pannello espandibile.
+- [Scherzo facoltativo dell’elfo,390px](elf-20261101-390.png): lettere grandi e comandi separati dalla missione.
+
+Le schermate sono locali; il link “Vai al contenuto” è visibile perché il test naviga anche da tastiera. Date, voci e storici delle fixture non dimostrano pronuncia o collaudo su un dispositivo reale. [Skill e piano visivo](../VISUAL_DESIGN_2026_11_01.md); [stato del rilascio e blocco](../RELEASE_READINESS_2026_11_01.md).

@@ -77,7 +77,7 @@ jobs:
     runs-on: ubuntu-latest
     # Slow Ubuntu mirrors previously consumed12minutes before the suites began.
     # Keep test execution separately bounded; do not spend its budget on setup.
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
         with:
@@ -95,7 +95,10 @@ jobs:
         timeout-minutes: 3
         run: /tmp/wordyland-browser-deps/node_modules/.bin/playwright install chromium
       - name: Verify child journeys in isolated browsers
-        timeout-minutes: 8
+        # The expanded 34-suite matrix exceeded eight minutes locally before
+        # its final ten suites. Keep every suite and each assertion's timeout;
+        # give the complete, sequential browser matrix its own bounded budget.
+        timeout-minutes: 15
         env:
           WORDYLAND_PLAYWRIGHT_MODULE: /tmp/wordyland-browser-deps/node_modules/playwright
         run: |

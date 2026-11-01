@@ -1,6 +1,6 @@
 # Requisiti e passi residui — chiusura del 27 ottobre 2026
 
-> Documento storico del 27 ottobre. Versioni, impedimenti e stati «solo work» qui riportati si riferiscono a quella verifica. Per il quadro aggiornato vedere [30 ottobre 2026](CURRENT_STATUS_2026_10_30.md).
+> Documento storico del 27 ottobre. Versioni, impedimenti e stati «solo work» qui riportati si riferiscono a quella verifica. Quadro precedente: [30 ottobre 2026](CURRENT_STATUS_2026_10_30.md). Stato corrente e blocco di pubblicazione: [1 novembre 2026](RELEASE_READINESS_2026_11_01.md).
 
 Lotto R4 ora pubblicato: [PDF_SCANNED_IMPORT.md](PDF_SCANNED_IMPORT.md), pagina PDF selezionata renderizzata e letta localmente, pubblicato in3c661f5; verifica cumulativa64verify+29browser e controlli livePASS. [Rapporto cumulativo](CUMULATIVE_REVIEW_2026_10_27.md).
 
@@ -48,7 +48,7 @@ La pubblicazione è conclusa. La vecchia richiesta a SiteGround non è stata inv
 ## Pending user additions · 1 November 2026 · not live
 
 - Classroom dictated vocabulary: 12 exact worksheet terms; guided recognition/composition/recall in a seventh pack. See CLASSROOM_DICTATION.md.
-- Christmas collection (latest user correction): 18 earned items, including three new playable characters; scarf removal remains free. See CHRISTMAS_COLLECTION.md.
+- Christmas collection: 27 earned items, including twelve playable festive characters after the cast expansion; scarf removal remains free. See CHRISTMAS_COLLECTION.md and CHRISTMAS_CHARACTERS.md.
 - Holiday villages: server-owned daily calendars, 3-question saved missions, five activity variants, permanent exercise/day-gated rewards; four annual festival configurations. See HOLIDAY_VILLAGES.md for tested scope and limits. Local checks do not establish publication.
 
 - Year-round Passaporto delle scoperte: three daily tasks, pending-mission continuity across skipped dates, three collections/twelve permanent rewards, two additional playable characters, and an extensible stable progress namespace. See CONTINUOUS_JOURNEY.md. New collection releases remain curated work; no promise of infinitely auto-generated rewards. Not live.

@@ -1,0 +1,454 @@
+{
+  "date_utc": "2026-11-01",
+  "application_commit": "c56b45abe45332a9099a6554856a5fcddaf7c4cb",
+  "application_dist_tree": "212b9ebc0160e4e0f4d4fcc6e7cf65575cf8ff08",
+  "final_test_fixture_commit": "71f7fa44288d164e16a89f5ec7b0b76d299aa0e6",
+  "scope": "Local cumulative coverage of the workflow matrix, not a green GitHub CI run or live deployment. Successful checks retained when only the failing test fixture changed; dist tree stayed identical.",
+  "environment": {
+    "browser": "local Chromium 154",
+    "data": "synthetic isolated PHP/SQLite fixtures",
+    "production_requests": "ordinary read-only preflight only; no deployment"
+  },
+  "result": {
+    "verify_passed": 35,
+    "browser_suites_passed": 34,
+    "browser_suite_seconds": 663.44,
+    "failures_remaining": 0
+  },
+  "corrected_test_failures": [
+    {
+      "suite": "rewards",
+      "observed": "Historical !unlock selector attempted to buy disabled exercise-earned hat-santa.",
+      "fix": "Select exactly nineteen priced, non-earned extras. Earned-gift gates remain covered separately.",
+      "rerun": "passed after test change"
+    },
+    {
+      "suite": "phonics",
+      "observed": "Historical pack-count assertion expected six; actual seven after Classroom dictation addition.",
+      "fix": "Expect seven and assert the Classroom pack is reachable after returning from phonics.",
+      "rerun": "passed after test change"
+    }
+  ],
+  "workflow_change": "Complete browser-matrix budget 8 to 15 minutes; job 30 to 40. Observed passing cumulative suite time exceeded the old budget. All 34 suites and individual assertion deadlines retained.",
+  "additional_checks": [
+    "Workflow YAML parsed; 34 unique unchanged suite names; main-only deploy condition retained.",
+    "Installed skill and license match pinned upstream SHA256 metadata.",
+    "git diff --check passed."
+  ],
+  "checks": [
+    {
+      "phase": "verify",
+      "command": "for f in dist/*.js dist/*.mjs; do node --check \"$f\"; done",
+      "exit": 0,
+      "seconds": 2.1
+    },
+    {
+      "phase": "verify",
+      "command": "for f in scripts/*.sh; do bash -n \"$f\"; done",
+      "exit": 0,
+      "seconds": 0.02
+    },
+    {
+      "phase": "verify",
+      "command": "node scripts/test-lessons.mjs",
+      "exit": 0,
+      "seconds": 0.05
+    },
+    {
+      "phase": "verify",
+      "command": "node scripts/test-pwa.mjs",
+      "exit": 0,
+      "seconds": 0.11
+    },
+    {
+      "phase": "verify",
+      "command": "node scripts/test-learning.mjs",
+      "exit": 0,
+      "seconds": 0.06
+    },
+    {
+      "phase": "verify",
+      "command": "node scripts/test-rewards.mjs",
+      "exit": 0,
+      "seconds": 0.11
+    },
+    {
+      "phase": "verify",
+      "command": "for f in dist/*.php; do php -l \"$f\"; done",
+      "exit": 0,
+      "seconds": 0.18
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-api.py",
+      "exit": 0,
+      "seconds": 5.22
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-access.py",
+      "exit": 0,
+      "seconds": 6.51
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-email-recovery.py",
+      "exit": 0,
+      "seconds": 3.53
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-classroom.py",
+      "exit": 0,
+      "seconds": 7.76
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-adventures.py",
+      "exit": 0,
+      "seconds": 2.81
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-holidays.py",
+      "exit": 0,
+      "seconds": 2.57
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-journey.py",
+      "exit": 0,
+      "seconds": 2.36
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-elf.py",
+      "exit": 0,
+      "seconds": 1.01
+    },
+    {
+      "phase": "verify",
+      "command": "php -l scripts/bootstrap-admin.php",
+      "exit": 0,
+      "seconds": 0.02
+    },
+    {
+      "phase": "verify",
+      "command": "php -l scripts/owner-recovery-status.php",
+      "exit": 0,
+      "seconds": 0.02
+    },
+    {
+      "phase": "verify",
+      "command": "php -l scripts/prepare-owner-recovery.php",
+      "exit": 0,
+      "seconds": 0.01
+    },
+    {
+      "phase": "verify",
+      "command": "php -l scripts/read-only-readiness.php",
+      "exit": 0,
+      "seconds": 0.02
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-read-only-readiness.py",
+      "exit": 0,
+      "seconds": 8.81
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-owner-recovery.py",
+      "exit": 0,
+      "seconds": 0.56
+    },
+    {
+      "phase": "verify",
+      "command": "php -l scripts/siteground-cache.php",
+      "exit": 0,
+      "seconds": 0.02
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-cache-purge.py",
+      "exit": 0,
+      "seconds": 0.2
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-community.py",
+      "exit": 0,
+      "seconds": 2.91
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-presence.py",
+      "exit": 0,
+      "seconds": 2.74
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-resume.py",
+      "exit": 0,
+      "seconds": 1.47
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-autonomy.py",
+      "exit": 0,
+      "seconds": 1.43
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-review.py",
+      "exit": 0,
+      "seconds": 0.89
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-choice-fairness.py",
+      "exit": 0,
+      "seconds": 0.86
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-parent-summary.py",
+      "exit": 0,
+      "seconds": 1.16
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-training.py",
+      "exit": 0,
+      "seconds": 6.62
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-phonics.py",
+      "exit": 0,
+      "seconds": 2.25
+    },
+    {
+      "phase": "verify",
+      "command": "python3 scripts/test-letter-progression.py",
+      "exit": 0,
+      "seconds": 1.86
+    },
+    {
+      "phase": "verify",
+      "command": "node scripts/verify-bundle.mjs",
+      "exit": 0,
+      "seconds": 0.14
+    },
+    {
+      "phase": "verify",
+      "command": "bash scripts/test-deploy.sh",
+      "exit": 0,
+      "seconds": 34.83
+    },
+    {
+      "phase": "browser",
+      "command": "bash scripts/test-browser.sh christmas-cast",
+      "exit": 0,
+      "seconds": 53.31
+    },
+    {
+      "phase": "browser",
+      "command": "bash scripts/test-browser.sh elf",
+      "exit": 0,
+      "seconds": 18.07
+    },
+    {
+      "phase": "browser",
+      "command": "bash scripts/test-browser.sh journey",
+      "exit": 0,
+      "seconds": 26.16
+    },
+    {
+      "phase": "browser",
+      "command": "bash scripts/test-browser.sh holidays",
+      "exit": 0,
+      "seconds": 40.75
+    },
+    {
+      "phase": "browser",
+      "command": "bash scripts/test-browser.sh pdf-scan",
+      "exit": 0,
+      "seconds": 13.36
+    },
+    {
+      "phase": "browser",
+      "command": "bash scripts/test-browser.sh ocr",
+      "exit": 0,
+      "seconds": 10.61
+    },
+    {
+      "phase": "browser",
+      "command": "bash scripts/test-browser.sh materials",
+      "exit": 0,
+      "seconds": 14.44
+    },
+    {
+      "phase": "browser",
+      "command": "bash scripts/test-browser.sh duel-resilience",
+      "exit": 0,
+      "seconds": 10.5
+    },
+    {
+      "phase": "browser",
+      "command": "bash scripts/test-browser.sh compatibility",
+      "exit": 0,
+      "seconds": 16.87
+    },
+    {
+      "phase": "browser",
+      "command": "bash scripts/test-browser.sh ux",
+      "exit": 0,
+      "seconds": 6.7
+    },
+    {
+      "phase": "browser",
+      "command": "bash scripts/test-browser.sh learning",
+      "exit": 0,
+      "seconds": 10.21
+    },
+    {
+      "phase": "browser",
+      "command": "bash scripts/test-browser.sh resume",
+      "exit": 0,
+      "seconds": 29.56
+    },
+    {
+      "phase": "browser",
+      "command": "bash scripts/test-browser.sh presence",
+      "exit": 0,
+      "seconds": 17.57
+    },
+    {
+      "phase": "browser",
+      "command": "bash scripts/test-browser.sh community",
+      "exit": 0,
+      "seconds": 27.19
+    },
+    {
+      "phase": "browser",
+      "command": "bash scripts/test-browser.sh pwa",
+      "exit": 0,
+      "seconds": 22.92
+    },
+    {
+      "phase": "browser",
+      "command": "bash scripts/test-browser.sh rewards",
+      "exit": 0,
+      "seconds": 24.73
+    },
+    {
+      "phase": "browser",
+      "command": "bash scripts/test-browser.sh motion",
+      "exit": 0,
+      "seconds": 18.83
+    },
+    {
+      "phase": "browser",
+      "command": "bash scripts/test-browser.sh access",
+      "exit": 0,
+      "seconds": 25.45
+    },
+    {
+      "phase": "browser",
+      "command": "bash scripts/test-browser.sh email",
+      "exit": 0,
+      "seconds": 8.17
+    },
+    {
+      "phase": "browser",
+      "command": "bash scripts/test-browser.sh performance",
+      "exit": 0,
+      "seconds": 9.16
+    },
+    {
+      "phase": "browser",
+      "command": "bash scripts/test-browser.sh navigation",
+      "exit": 0,
+      "seconds": 33.01
+    },
+    {
+      "phase": "browser",
+      "command": "bash scripts/test-browser.sh autonomy",
+      "exit": 0,
+      "seconds": 10.07
+    },
+    {
+      "phase": "browser",
+      "command": "bash scripts/test-browser.sh review",
+      "exit": 0,
+      "seconds": 7.5
+    },
+    {
+      "phase": "browser",
+      "command": "bash scripts/test-browser.sh wardrobe",
+      "exit": 0,
+      "seconds": 36.05
+    },
+    {
+      "phase": "browser",
+      "command": "bash scripts/test-browser.sh parent-summary",
+      "exit": 0,
+      "seconds": 23.57
+    },
+    {
+      "phase": "browser",
+      "command": "bash scripts/test-browser.sh tiles",
+      "exit": 0,
+      "seconds": 34.29
+    },
+    {
+      "phase": "browser",
+      "command": "bash scripts/test-browser.sh wallet",
+      "exit": 0,
+      "seconds": 12.51
+    },
+    {
+      "phase": "browser",
+      "command": "bash scripts/test-browser.sh training",
+      "exit": 0,
+      "seconds": 15.18
+    },
+    {
+      "phase": "browser",
+      "command": "bash scripts/test-browser.sh spelling",
+      "exit": 0,
+      "seconds": 7.75
+    },
+    {
+      "phase": "browser",
+      "command": "bash scripts/test-browser.sh letter-progression",
+      "exit": 0,
+      "seconds": 11.43
+    },
+    {
+      "phase": "browser",
+      "command": "bash scripts/test-browser.sh foundations",
+      "exit": 0,
+      "seconds": 30.16
+    },
+    {
+      "phase": "browser",
+      "command": "bash scripts/test-browser.sh offline-training",
+      "exit": 0,
+      "seconds": 8.59
+    },
+    {
+      "phase": "browser",
+      "command": "bash scripts/test-browser.sh offline-letters",
+      "exit": 0,
+      "seconds": 11.33
+    },
+    {
+      "phase": "browser",
+      "command": "bash scripts/test-browser.sh phonics",
+      "exit": 0,
+      "seconds": 17.44
+    }
+  ]
+}
