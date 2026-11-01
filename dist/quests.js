@@ -111,7 +111,7 @@
     const expected=profile.id;
     if(expected){let result=await api('hub&profile='+expected+(club?'&club='+club:''));if(profile.id!==expected)return;if(!club&&result.clubs?.length){club=Number(result.clubs[0].id);result=await api('hub&profile='+expected+'&club='+club);if(profile.id!==expected)return;}hub=result;}
     else hub=null;
-    if((!busy||forceRender===true)&&!mission&&!resumeDuel&&!root.querySelector('#duelStage:not([hidden])'))render();drawContinuations();adultTools();
+    if((!busy||forceRender===true)&&!mission&&!resumeDuel&&!root.querySelector('#duelStage:not([hidden])')){render();if(forceRender===true)window.dispatchEvent(new Event('wordyland-route-ready'));}drawContinuations();adultTools();
   }
   function render() {
     if(location.hash!=='#allenamento')window.wordylandUI.play();

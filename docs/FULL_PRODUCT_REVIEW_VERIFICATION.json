@@ -1,5 +1,5 @@
 {
-  "application_digest_sha256": "1894e41fcef38cd9e80e62c4d0d1fbb51cabafa5b94e32671fa52c6963764c36",
+  "application_digest_sha256": "57ad15e89f540b67a6022859a4f8e6d41b1b3581a93ea1a6b1a15fb80fa3785c",
   "application_files": 49,
   "baseline_main": "5d4c6b2837c9291ae57ac04b7fa799b4984afa39",
   "last_verified_live": "901fd989cf79d84e651164af5ccc8f6774e53bf1",
@@ -25,7 +25,7 @@
     },
     {
       "suite": "journey-navigation",
-      "result": "PASS guest/owned, back/forward, hero, same-hash, real zoom, pending purchase route intent and no duplicate costs; PASS immediate private DOM clearance on logout before releasing a committed purchase response, with guest unchanged after the late reply"
+      "result": "PASS guest/owned, back/forward, hero, same-hash, real zoom, pending purchase route intent and no duplicate costs; PASS immediate private DOM clearance on logout before releasing a committed purchase response, with guest unchanged after the late reply; PASS owned direct exercise link/reload routing after identity loading"
     },
     {
       "suite": "appearance-consistency",
@@ -33,7 +33,7 @@
     },
     {
       "suite": "duel-identity",
-      "result": "PASS three activities/two avatars, accessories, first answer visible on phone, resume/reload/second device, readonly appearance and ownership denials"
+      "result": "PASS three activities/two avatars, accessories, first answer visible on phone, resume/reload/second device, readonly appearance and ownership denials; PASS unchanged full duel suite after identity-ready route replay"
     },
     {
       "suite": "offline-audio",
@@ -59,11 +59,20 @@
     "No automatic merge of profile counters; recovery uses verified identity and exact copy/revision or explicit selection.",
     "No SiteGround/security/credential changes or support messages."
   ],
-  "intermediate_cumulative_result": {
-    "commit": "d98db8dec35efc95700daf9a6c17628bac781b7c",
-    "run": "https://github.com/socialluca89-byte/word/actions/runs/41353137047",
-    "verify": "PASS 35 checks",
-    "browser": "Stopped on holidays: global latest-scene probe did not bind the scene to its rendered target canvas; replaced with actual frame/canvas binding, no assertion removed",
-    "deployment": "SKIPPED (review branch)"
-  }
+  "intermediate_cumulative_results": [
+    {
+      "commit": "d98db8dec35efc95700daf9a6c17628bac781b7c",
+      "run": "https://github.com/socialluca89-byte/word/actions/runs/41353137047",
+      "verify": "PASS 35 checks",
+      "browser": "Stopped on holidays: global latest-scene probe did not bind the scene to its rendered target canvas; replaced with actual frame/canvas binding, no assertion removed",
+      "deployment": "SKIPPED (review branch)"
+    },
+    {
+      "commit": "d687594976a7d500be9f9ef25708e6913e4fd356",
+      "run": "https://github.com/socialluca89-byte/word/actions/runs/41354984446",
+      "verify": "PASS 35 checks",
+      "browser": "FAIL duel-identity reload; immediate identity DOM clearance raced routing before tab controls existed. Fixed by replaying current route after identity rendering; original exact-next-question assertions retained.",
+      "deployment": "SKIPPED (review branch)"
+    }
+  ]
 }
