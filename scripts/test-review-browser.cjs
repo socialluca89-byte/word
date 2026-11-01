@@ -14,6 +14,14 @@ const base=process.env.WORDYLAND_TEST_URL;assert(['localhost','127.0.0.1'].inclu
   $q=$db->prepare('INSERT INTO practice_outcomes(profile_id,word,independent,observed) VALUES (?,"head",3,3)');$q->execute([$pid]);
   $q=$db->prepare('SELECT state FROM profiles WHERE id=?');$q->execute([$pid]);$state=json_decode($q->fetchColumn(),true);$state['stats']['head']=['good'=>3,'attempts'=>3,'review'=>false];$q=$db->prepare('UPDATE profiles SET state=?,revision=revision+1 WHERE id=?');$q->execute([json_encode($state),$pid]);`,String(fixture.id)],{env:process.env,encoding:'utf8'});assert.equal(seeded.status,0,seeded.stderr);
   await p.reload();await p.evaluate(()=>wordylandAccount.ready);
+  // The deliberate out-of-band server revision above conflicts with this device's
+  // owned cache. Exercise the real adult choice instead of bypassing its privacy gate.
+  await p.locator('#pendingLocalCopy [data-local-copy=online]').waitFor();
+  const cached=await p.evaluate(()=>JSON.parse(localStorage.getItem('wordylandActiveProfile')));assert.equal(cached.id,fixture.id);assert.equal(cached.username,'review_browser');
+  await p.locator('#pendingLocalCopy [data-local-copy=online]').click();await p.waitForFunction(id=>wordylandAccount.info().id===id&&document.documentElement.dataset.accountVerification!=='pending',fixture.id);
+  assert.equal(await p.evaluate(()=>stats.head.good),3,'The adult-selected online revision preserves the seeded successes');
+  const preserved=await p.evaluate(()=>JSON.parse(localStorage.getItem('wordylandPendingProfile')));assert.equal(preserved.owner,'review_browser');assert.equal(preserved.profile,fixture.id);assert.deepEqual(preserved.state,cached.state,'Choosing online preserves the exact older owned copy for explicit recovery');
+  const selected=await p.evaluate(async id=>wordylandAccount.request('profile&id='+id),fixture.id);assert.equal(selected.state.stats.head.good,3,'Selecting online never overwrites the cloud fixture with the stale cache');
   async function launch(study){
    await p.locator('[data-tab=missions]').click();await p.locator('#questSource option[value="study:'+study+'"]').waitFor({state:'attached'});await p.locator('#questSource').selectOption('study:'+study);await p.locator('#beginQuest').click();await p.locator('#readyChallenge').waitFor();
   }
@@ -23,6 +31,6 @@ const base=process.env.WORDYLAND_TEST_URL;assert(['localhost','127.0.0.1'].inclu
   await launch(fixture.single);await p.locator('#readyChallenge').click();await p.locator('#questAnswer').fill('head');await p.locator('#questAnswerForm button').click();await p.locator('#completedWorld').waitFor();assert.equal(await p.evaluate(()=>stats.head.good),4,'A fresh independent answer earns the next success');
   const next=await p.evaluate(async({id,study})=>await wordylandAccount.request('quest-start',{profile:id,study,activity:'pets'}),{id:fixture.id,study:fixture.trio});assert.notEqual(next.question.word,'head','New missions move on after an independent success; existing paused missions keep their order');
   assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));assert.deepEqual(errors,[]);
-  console.log('Review browser passed: personal study selector stays reachable, recent mistakes lead the next mission, correction preserves earned successes, independent success clears review priority and mobile layout stays usable.');
+  console.log('Review browser passed: explicit adult online selection preserves the older owned copy and newer cloud successes; personal study selector stays reachable, recent mistakes lead the next mission, correction preserves earned successes, independent success clears review priority and mobile layout stays usable.');
  }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exit(1)});

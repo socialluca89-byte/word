@@ -38,6 +38,10 @@
     {
       "suite": "offline-audio",
       "result": "PASS lifecycle and late callbacks, actual current failure, two-tab offline progress and recovery; synthetic speech contract, not pronunciation"
+    },
+    {
+      "suite": "review",
+      "result": "PASS explicit adult selection after deliberately divergent cloud fixture, exact older owned copy preserved, newer cloud successes unchanged, all original personal-mission review and earned-success assertions retained"
     }
   ],
   "independent_review": {
@@ -73,6 +77,76 @@
       "verify": "PASS 35 checks",
       "browser": "FAIL duel-identity reload; immediate identity DOM clearance raced routing before tab controls existed. Fixed by replaying current route after identity rendering; original exact-next-question assertions retained.",
       "deployment": "SKIPPED (review branch)"
+    },
+    {
+      "commit": "d6d52288ea01dd919cec6e6a6f66fb84411c26ef",
+      "run": "https://github.com/socialluca89-byte/word/actions/runs/41355730203",
+      "verify": "PASS 35 checks",
+      "browser": "Stopped in review: fixture deliberately created a divergent cloud revision but did not make the required adult recovery choice. Two independent reviews confirmed correct data protection. Test now selects online explicitly and additionally verifies exact old-copy preservation and intact newer cloud successes; original mission/review assertions retained.",
+      "application_change_for_this_result": false,
+      "deployment": "SKIPPED (review branch)"
     }
-  ]
+  ],
+  "fixture_protocol_updates": {
+    "review": "Explicit adult online choice required after deliberate out-of-band cloud revision; exact stale owned copy and newer cloud seed both verified intact.",
+    "tiles": "First seed retains legacy migration; subsequent explicit fixture replacement updates an existing canonical missionDraft while preserving all other wallet fields. Full original keyboard/duplicate/lost-response assertions PASS.",
+    "application_unchanged_since": "d6d52288ea01dd919cec6e6a6f66fb84411c26ef"
+  },
+  "local_cumulative_verification": {
+    "application_digest_sha256": "57ad15e89f540b67a6022859a4f8e6d41b1b3581a93ea1a6b1a15fb80fa3785c",
+    "application_identical_to_commit": "d6d52288ea01dd919cec6e6a6f66fb84411c26ef",
+    "verify_checks_passed": 35,
+    "mandatory_browser_suites_passed": 44,
+    "mandatory_browser_suites": [
+      "account-resilience",
+      "game-resilience",
+      "journey-navigation",
+      "appearance-consistency",
+      "duel-identity",
+      "offline-audio",
+      "classic-illustrated",
+      "illustrated-actions",
+      "illustrated",
+      "world-play",
+      "christmas-cast",
+      "elf",
+      "journey",
+      "holidays",
+      "pdf-scan",
+      "ocr",
+      "materials",
+      "duel-resilience",
+      "compatibility",
+      "ux",
+      "learning",
+      "resume",
+      "presence",
+      "community",
+      "pwa",
+      "rewards",
+      "motion",
+      "access",
+      "email",
+      "performance",
+      "navigation",
+      "autonomy",
+      "review",
+      "wardrobe",
+      "parent-summary",
+      "tiles",
+      "wallet",
+      "training",
+      "spelling",
+      "letter-progression",
+      "foundations",
+      "offline-training",
+      "offline-letters",
+      "phonics"
+    ],
+    "additional_browser_suites_passed": [
+      "characters",
+      "school"
+    ],
+    "execution": "Staged local matrix: earlier passing checks retained on identical application bytes; review and tiles rerun after explicit fixture-protocol corrections; remaining suites completed. Final full CI result must be read on the exact containing commit."
+  }
 }

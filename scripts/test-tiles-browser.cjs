@@ -4,7 +4,18 @@ const base=process.env.WORDYLAND_TEST_URL;assert(['localhost','127.0.0.1'].inclu
 (async()=>{const browser=await chromium.launch({executablePath:process.env.WORDYLAND_CHROMIUM||'/usr/bin/chromium',args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']}),errors=[];
 try{
  const p=await browser.newPage({viewport:{width:390,height:844},reducedMotion:'reduce'});p.on('pageerror',e=>errors.push(e.message));
- async function seed(source,words){await p.goto(base);await p.evaluate(()=>wordylandAccount.ready);await p.evaluate(({source,words})=>{localStorage.setItem('wordylandGuestMission',JSON.stringify({id:'1234567890abcdef1234567890abcdef',source,words,step:1,xp:10,activity:'pets',expiresAt:Date.now()+600000,assisted:false,hadErrors:false}));},{source,words});await p.reload();await p.locator('[data-resume-quest=guest]').click();await p.locator('#readyChallenge').click();await p.locator('#questTiles').waitFor();}
+ async function seed(source,words){
+  await p.goto(base);await p.evaluate(()=>wordylandAccount.ready);
+  await p.evaluate(({source,words})=>{
+   const draft={id:'1234567890abcdef1234567890abcdef',source,words,step:1,xp:10,activity:'pets',expiresAt:Date.now()+600000,assisted:false,hadErrors:false};
+   const wallet=JSON.parse(localStorage.getItem('wordylandGuestWallet')||'null');
+   // First seed exercises legacy migration. A later explicit fixture replacement
+   // must update the canonical draft too, preserving every other wallet field.
+   if(wallet&&Object.hasOwn(wallet,'missionDraft')){wallet.missionDraft=draft;localStorage.setItem('wordylandGuestWallet',JSON.stringify(wallet));}
+   localStorage.setItem('wordylandGuestMission',JSON.stringify(draft));
+  },{source,words});
+  await p.reload();await p.locator('[data-resume-quest=guest]').click();await p.locator('#readyChallenge').click();await p.locator('#questTiles').waitFor();
+ }
  await seed('body',['head','eye','hand']);
  assert(await p.evaluate(()=>document.activeElement.matches('#questTiles button:not(:disabled)')),'Challenge starts on an available tile');
  const first=p.locator('[data-tile]:not(:disabled)').first();await first.focus();await p.keyboard.press('Enter');
