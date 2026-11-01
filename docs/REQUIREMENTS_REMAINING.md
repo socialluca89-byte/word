@@ -1,5 +1,7 @@
 # Requisiti e passi residui — chiusura del 27 ottobre 2026
 
+> Documento storico del 27 ottobre. Versioni, impedimenti e stati «solo work» qui riportati si riferiscono a quella verifica. Per il quadro aggiornato vedere [30 ottobre 2026](CURRENT_STATUS_2026_10_30.md).
+
 Lotto R4 ora pubblicato: [PDF_SCANNED_IMPORT.md](PDF_SCANNED_IMPORT.md), pagina PDF selezionata renderizzata e letta localmente, pubblicato in3c661f5; verifica cumulativa64verify+29browser e controlli livePASS. [Rapporto cumulativo](CUMULATIVE_REVIEW_2026_10_27.md).
 
 Aggiornamento R4 successivo alla chiusura: OCR locale immagini in [OCR_IMPORT.md](OCR_IMPORT.md), ora pubblicati, più il precedente lotto PDF in [MATERIAL_IMPORT.md](MATERIAL_IMPORT.md), ora pubblicato; i limiti documentati restano distinti dalle prove reali di accuratezza.

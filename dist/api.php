@@ -229,7 +229,14 @@ if ($method === 'POST' && $action === 'change-password') {
     clearPresenceSession($db);session_regenerate_id(true);$_SESSION['version']=(int)$account['session_version']+1;$_SESSION['csrf']=bin2hex(random_bytes(32));
     respond(['ok'=>true,'csrf'=>$_SESSION['csrf']]);
 }
-if ($method === 'POST' && $action === 'logout') { clearPresenceSession($db); $_SESSION = []; session_destroy(); respond(['ok' => true]); }
+if ($method === 'POST' && $action === 'logout') {
+    clearPresenceSession($db);
+    // Rotate to a valid anonymous session before replying. Concurrent invite/session
+    // reads must share this CSRF instead of creating competing sessions from a dead cookie.
+    session_regenerate_id(true);
+    $_SESSION = ['csrf'=>bin2hex(random_bytes(32)), 'last_seen'=>time()];
+    respond(['ok'=>true, 'csrf'=>$_SESSION['csrf']]);
+}
 if ($method === 'POST' && $action === 'create-profile') {
     $nickname = is_string($body['nickname'] ?? null) ? trim($body['nickname']) : '';
     if ($nickname === '' || strlen($nickname) > 80) fail('Scegli un soprannome breve.');

@@ -34,7 +34,19 @@ if ($action==='class-link') {
     $db->exec('COMMIT');respond($link);
 }
 $class=invitationClass($db,$method==='GET'?($_GET['code']??null):($body['code']??null));
-if ($action==='class-invite') respond(['name'=>$class['name'],'full'=>(int)classroomOne($db,'SELECT COUNT(*) AS n FROM club_profiles WHERE club_id=?',[$class['id']])['n']>=100,'joined'=>isset($_SESSION['account_id'])&&(bool)classroomOne($db,'SELECT 1 FROM club_profiles cp JOIN profiles p ON p.id=cp.profile_id WHERE cp.club_id=? AND p.account_id=?',[$class['id'],$_SESSION['account_id']])]);
+if ($action==='class-invite') {
+    $metadata=['name'=>$class['name'],'full'=>(int)classroomOne($db,'SELECT COUNT(*) AS n FROM club_profiles WHERE club_id=?',[$class['id']])['n']>=100,'joined'=>false];
+    if (isset($_SESSION['account_id'])) {
+        // Only the signed-in account's profiles are disclosed. Possessing an
+        // invitation never exposes the class roster or another family's data.
+        $q=$db->prepare('SELECT p.id,p.nickname,EXISTS(SELECT 1 FROM club_profiles cp WHERE cp.club_id=? AND cp.profile_id=p.id) AS joined FROM profiles p WHERE p.account_id=? ORDER BY p.id');
+        $q->execute([$class['id'],$_SESSION['account_id']]);
+        $metadata['profiles']=$q->fetchAll();
+        foreach($metadata['profiles'] as &$profile){$profile['id']=(int)$profile['id'];$profile['joined']=(bool)$profile['joined'];if($profile['joined'])$metadata['joined']=true;}unset($profile);
+        $metadata['canManage']=(int)$class['owner_id']===(int)$_SESSION['account_id'];
+    }
+    respond($metadata);
+}
 if (isset($_SESSION['account_id'])) fail('Esci dal profilo attuale prima di accedere con un altro.',409);
 $nickname=trim(is_string($body['nickname']??null)?$body['nickname']:'');
 $key=strtolower($nickname);$password=$body['password']??null;
@@ -61,7 +73,13 @@ if ($action==='class-register') {
 } else {
     limitAttempts($db,'class-auth-ip:'.$ip,100);
     limitAttempts($db,'class-auth:'.$class['id'].':'.hash('sha256',$key),15);
-    $account=classroomOne($db,'SELECT a.* FROM class_enrollments e JOIN profiles p ON p.id=e.profile_id JOIN accounts a ON a.id=p.account_id WHERE e.club_id=? AND e.login_key=? AND a.role="learner"',[$class['id'],$key]);
+    // Membership is the authorization boundary. An existing learner can be
+    // enrolled in another class without receiving another password/account.
+    // Historical signup records must not grant access after membership removal.
+    $q=$db->prepare('SELECT a.* FROM club_profiles cp JOIN profiles p ON p.id=cp.profile_id JOIN accounts a ON a.id=p.account_id WHERE cp.club_id=? AND LOWER(p.nickname)=? AND a.role="learner" LIMIT 2');
+    $q->execute([$class['id'],$key]);$matches=$q->fetchAll();
+    // Fail closed if legacy data contains an ambiguous nickname in this class.
+    $account=count($matches)===1?$matches[0]:false;
     if ($action==='class-recover') {
         $code=is_string($body['recovery']??null)?preg_replace('/[^a-f0-9]/','',strtolower($body['recovery'])):'';
         if (!$account||!$account['recovery_hash']||!hash_equals($account['recovery_hash'],hash('sha256',$code))) fail('Soprannome o codice di recupero non corretto.',401);

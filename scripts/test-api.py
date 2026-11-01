@@ -59,7 +59,20 @@ with tempfile.TemporaryDirectory(prefix="wordyland-test-") as temporary:
         tb = request(b, "register", dict(username="test_" + secrets.token_hex(5), password=password, adult=True), tb)["csrf"]
         request(b, "profile&id=" + str(profile["id"]), expected=404)
         request(b, "save", payload, tb, 404)
-        request(a, "logout", {}, token)
+        import copy
+        jar=next(handler.cookiejar for handler in a.handlers if isinstance(handler,urllib.request.HTTPCookieProcessor))
+        old_cookie=copy.copy(next(cookie for cookie in jar if cookie.name=='wordyland_session'))
+        signed_out=request(a, "logout", {}, token)
+        new_cookie=next(cookie for cookie in jar if cookie.name=='wordyland_session')
+        assert old_cookie.value!=new_cookie.value and signed_out['csrf']!=token
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=2) as pool:
+            reads=list(pool.map(lambda _:request(a,'session'),range(2)))
+        assert all(result['csrf']==signed_out['csrf'] and result['username'] is None and result['profiles']==[] for result in reads)
+        old_jar=http.cookiejar.CookieJar();old_jar.set_cookie(old_cookie)
+        old_client=urllib.request.build_opener(urllib.request.ProxyHandler({}),urllib.request.HTTPCookieProcessor(old_jar))
+        request(old_client,'profile&id='+str(profile['id']),expected=401)
+        request(a,'logout',{},token,403)
         request(a, "profile&id=" + str(profile["id"]), expected=401)
         token = request(a, "session")["csrf"]
         token = request(a, "login", dict(username=username, password=password), token)["csrf"]
@@ -123,6 +136,21 @@ with tempfile.TemporaryDirectory(prefix="wordyland-test-") as temporary:
         pb=request(b,'create-profile',{'nickname':'Ospite del gruppo'},tb)['id']
         request(b,f'hub&profile={pb}&club={club_id}',expected=403)
         request(b,'club-join',{'profile':pb,'code':club_info['code'],'consent':True},tb)
+        # Every entry path preserves class nickname uniqueness, including adult profiles.
+        duplicate = request(b,'create-profile',{'nickname':'ESPLORATORE'},tb)['id']
+        request(b,'club-join',{'profile':duplicate,'code':club_info['code'],'consent':True},tb,409)
+        request(b,'rename-profile',{'profile':pb,'nickname':'esploratore'},tb,409)
+        assert request(b,'profile&id='+str(pb))['nickname']=='Ospite del gruppo'
+        assert request(b,'rename-profile',{'profile':duplicate,'nickname':'ESPLORATORE'},tb)['nickname']=='ESPLORATORE'
+        second_member=request(b,'create-profile',{'nickname':'SecondaStella'},tb)['id']
+        second_class=request(b,'club-create',{'profile':second_member,'name':'Seconda classe','consent':True},tb)
+        request(a,'club-join',{'profile':pid,'code':second_class['code'],'consent':True},token)
+        request(a,'rename-profile',{'profile':pid,'nickname':'SECONDastella'},token,409)
+        assert request(a,'profile&id='+str(pid))['nickname']=='Esploratore'
+        request(a,'club-leave',{'profile':pid,'club':second_class['id']},token)
+        # A nickname used only in another class does not block an unrelated profile.
+        assert request(a,'rename-profile',{'profile':pid,'nickname':'SecondaStella'},token)['nickname']=='SecondaStella'
+        request(a,'rename-profile',{'profile':pid,'nickname':'Esploratore'},token)
         board=request(b,f'hub&profile={pb}&club={club_id}')['board']
         assert len(board)==2 and all('username' not in entry and 'id' not in entry for entry in board)
         assert sum(entry['points'] for entry in board)==60
@@ -214,6 +242,29 @@ with tempfile.TemporaryDirectory(prefix="wordyland-test-") as temporary:
         renamed=request(a,'rename-profile',{'profile':pid,'nickname':'Nuovo esploratore'},token)
         assert renamed['nickname']=='Nuovo esploratore'
         request(b,'rename-profile',{'profile':pid,'nickname':'altro'},tb,404)
+        # A full class still accepts a repeated enrollment of an existing member.
+        with sqlite3.connect(temporary+'/data/wordyland.sqlite') as database:
+            account_before=database.execute('SELECT * FROM accounts ORDER BY id').fetchall()
+            profile_before=database.execute('SELECT * FROM profiles ORDER BY id').fetchall()
+            membership_before=database.execute('SELECT * FROM club_accounts ORDER BY club_id,account_id').fetchall()
+            owner=database.execute('SELECT account_id FROM profiles WHERE id=?',(pid,)).fetchone()[0]
+            count=database.execute('SELECT COUNT(*) FROM club_profiles WHERE club_id=?',(club_id,)).fetchone()[0]
+            fillers=[]
+            for index in range(100-count):
+                cursor=database.execute('INSERT INTO profiles(account_id,nickname,state) VALUES (?,?,?)',(owner,'Capacity'+str(index),'{}'))
+                fillers.append(cursor.lastrowid)
+                database.execute('INSERT INTO club_profiles VALUES (?,?)',(club_id,cursor.lastrowid))
+        assert request(a,'club-join',{'profile':pid,'code':club_info['code'],'consent':True},token)['id']==club_id
+        request(a,'club-join',{'profile':pid,'code':club_info['code'],'consent':False},token,400)
+        request(outsider,'club-join',{'profile':pc,'code':club_info['code'],'consent':True},tc,400)
+        with sqlite3.connect(temporary+'/data/wordyland.sqlite') as database:
+            assert database.execute('SELECT COUNT(*) FROM club_profiles WHERE club_id=?',(club_id,)).fetchone()[0]==100
+            assert database.execute('SELECT * FROM club_accounts ORDER BY club_id,account_id').fetchall()==membership_before
+            for filler in fillers:
+                database.execute('DELETE FROM club_profiles WHERE profile_id=?',(filler,))
+                database.execute('DELETE FROM profiles WHERE id=?',(filler,))
+            assert database.execute('SELECT * FROM accounts ORDER BY id').fetchall()==account_before
+            assert database.execute('SELECT * FROM profiles ORDER BY id').fetchall()==profile_before
         request(b,'club-leave',{'profile':pb,'club':club_id},tb)
         request(b,f'hub&profile={pb}&club={club_id}',expected=403)
         reset=request(a,'recover',{'username':username,'code':recovery,'password':'New-test-password-456'},token)

@@ -63,6 +63,35 @@ with tempfile.TemporaryDirectory(prefix='wordyland-classroom-') as temporary:
         guest,csrf=anonymous()
         metadata=request(guest,'class-invite&code='+code)
         assert metadata=={'name':'La nostra seconda','full':False,'joined':False}
+        # Existing adult-owned profiles can follow a class link without becoming
+        # learner accounts. The invite returns only this account's own choices.
+        owner_metadata=request(teacher,'class-invite&code='+code)
+        assert owner_metadata['profiles']==[{'id':profile,'nickname':'Maestra','joined':True}]
+        assert owner_metadata['canManage'] is True
+        family,ft=anonymous()
+        family_account=request(family,'register',{'username':'family_'+secrets.token_hex(5),'password':'Family-password-123','adult':True},ft)
+        ft=family_account['csrf']
+        family_profile=request(family,'create-profile',{'nickname':'ArmadilloFixture'},ft)['id']
+        spare_profile=request(family,'create-profile',{'nickname':'SpareFixture'},ft)['id']
+        before_join=request(family,'class-invite&code='+code)
+        assert before_join['joined'] is False and before_join['canManage'] is False
+        assert before_join['profiles']==[{'id':family_profile,'nickname':'ArmadilloFixture','joined':False},{'id':spare_profile,'nickname':'SpareFixture','joined':False}]
+        with sqlite3.connect(temporary+'/data/wordyland.sqlite') as db:
+            account_before=db.execute('SELECT role,password_hash,recovery_hash,session_version FROM accounts WHERE username=?',(family_account['username'],)).fetchone()
+        request(family,'club-join',{'profile':family_profile,'code':code,'consent':False},ft,400)
+        request(family,'club-join',{'profile':profile,'code':code,'consent':True},ft,404)
+        request(family,'club-join',{'profile':family_profile,'code':code,'consent':True},ft)
+        joined_metadata=request(family,'class-invite&code='+code)
+        assert joined_metadata['joined'] is True and joined_metadata['profiles'][0]['joined'] is True
+        assert joined_metadata['profiles'][1]['joined'] is False
+        assert set(joined_metadata['profiles'][0])=={'id','nickname','joined'}
+        assert {p['id'] for p in joined_metadata['profiles']}=={family_profile,spare_profile}
+        assert request(teacher,'class-invite&code='+code)['profiles']==owner_metadata['profiles']
+        with sqlite3.connect(temporary+'/data/wordyland.sqlite') as db:
+            assert db.execute('SELECT role,password_hash,recovery_hash,session_version FROM accounts WHERE username=?',(family_account['username'],)).fetchone()==account_before
+            assert db.execute('SELECT COUNT(*) FROM class_enrollments WHERE profile_id=?',(family_profile,)).fetchone()[0]==0
+        # Remove just the synthetic membership before the existing roster checks.
+        request(family,'club-leave',{'profile':family_profile,'club':classroom['id']},ft)
         request(guest,'class-invite&code=bad',expected=404)
         request(guest,'class-link',{'club':classroom['id']},csrf,401)
         payload={'code':code,'nickname':'Luna7','password':'My-class-password-123','consent':True}
@@ -99,6 +128,42 @@ with tempfile.TemporaryDirectory(prefix='wordyland-classroom-') as temporary:
         other,so=learner(second['code'],'Luna7','Other-class-password-456')
         po=so['profiles'][0]['id']
         assert po not in [p['id'] for p in request(a,f'arena&profile={pa}')['opponents']]
+        # A super admin may add an existing learner to a second class without a
+        # second enrollment record, password, account or change of permissions.
+        destination=request(teacher,'club-create',{'profile':profile,'name':'Classe aggiuntiva','consent':True},token)
+        with sqlite3.connect(temporary+'/data/wordyland.sqlite') as db:
+            learner_before=db.execute('SELECT role,password_hash,recovery_hash,session_version FROM accounts WHERE username=?',(sa['username'],)).fetchone()
+            db.execute('UPDATE accounts SET role="admin" WHERE username=?',(adult['username'],))
+        request(teacher,'admin-class-add',{'club':destination['id'],'member':pa,'consent':True},token)
+        moved,tm=anonymous()
+        signed_existing=request(moved,'class-login',{**payload,'code':destination['code']},tm)
+        assert signed_existing['role']=='learner' and signed_existing['profiles'][0]['id']==pa
+        assert signed_existing['className']=='Classe aggiuntiva'
+        with sqlite3.connect(temporary+'/data/wordyland.sqlite') as db:
+            assert db.execute('SELECT role,password_hash,recovery_hash,session_version FROM accounts WHERE username=?',(sa['username'],)).fetchone()==learner_before
+            assert db.execute('SELECT COUNT(*) FROM class_enrollments WHERE profile_id=?',(pa,)).fetchone()[0]==1
+        denied,td=anonymous()
+        # The equally named learner in another class is not a valid identity here.
+        request(denied,'class-login',{**payload,'code':destination['code'],'password':'Other-class-password-456'},td,401)
+        request(denied,'class-recover',{**payload,'code':destination['code'],'recovery':so['recovery']},td,401)
+        # Even inconsistent legacy memberships must not pick the first account.
+        with sqlite3.connect(temporary+'/data/wordyland.sqlite') as db:
+            db.execute('INSERT INTO club_profiles(club_id,profile_id) VALUES (?,?)',(destination['id'],po))
+        request(denied,'class-login',{**payload,'code':destination['code']},td,401)
+        request(denied,'class-recover',{**payload,'code':destination['code'],'recovery':sa['recovery']},td,401)
+        with sqlite3.connect(temporary+'/data/wordyland.sqlite') as db:
+            db.execute('DELETE FROM club_profiles WHERE club_id=? AND profile_id=?',(destination['id'],po))
+            db.execute('DELETE FROM club_profiles WHERE club_id=? AND profile_id=?',(classroom['id'],pa))
+        # The old signup/enrollment record and account-to-class record remain,
+        # but neither may authorize login or recovery without profile membership.
+        request(denied,'class-login',payload,td,401)
+        request(denied,'class-recover',{**payload,'recovery':sa['recovery']},td,401)
+        request(teacher,'admin-class-add',{'club':classroom['id'],'member':pa,'consent':True},token)
+        with sqlite3.connect(temporary+'/data/wordyland.sqlite') as db:
+            db.execute('DELETE FROM club_profiles WHERE club_id=? AND profile_id=?',(destination['id'],pa))
+            db.execute('UPDATE accounts SET role="adult" WHERE username=?',(adult['username'],))
+        request(denied,'class-login',{**payload,'code':destination['code']},td,401)
+        assert request(moved,'class-invite&code='+destination['code'])['joined'] is False
         # A pre-existing class without a saved link acquires one without invalidating its old invitation.
         with sqlite3.connect(temporary+'/data/wordyland.sqlite') as legacy:
             legacy.execute('DELETE FROM class_links WHERE club_id=?',(second['id'],))
@@ -106,6 +171,9 @@ with tempfile.TemporaryDirectory(prefix='wordyland-classroom-') as temporary:
         assert new_link==request(teacher,'class-link',{'club':second['id']},token)['code']
         assert request(guest,'class-invite&code='+new_link)['name']=='Altra classe'
         assert request(guest,'class-invite&code='+second['code'])['name']=='Altra classe'
+        request(family,'club-join',{'profile':family_profile,'code':new_link,'consent':True},ft)
+        assert request(family,'class-invite&code='+new_link)['profiles'][0]['joined'] is True
+        request(family,'club-leave',{'profile':family_profile,'club':second['id']},ft)
         wrong,tc=anonymous()
         request(wrong,'class-login',{**payload,'code':second['code']},tc,401)
         request(other,'class-link',{'club':classroom['id']},so['csrf'],403)

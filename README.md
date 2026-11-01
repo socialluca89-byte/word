@@ -2,12 +2,14 @@
 
 English learning adventures for children around seven, based on their own school programme.
 
+Current delivery scope and remaining dependencies: [status reviewed on 30 October 2026](docs/CURRENT_STATUS_2026_10_30.md). Older roadmap and readiness documents retain historical evidence and are marked accordingly.
+
 The current pilot is one private classroom. An adult creates the class once, then shares its stable signup link (`#classe=…`). Pupils opening that link see the class already selected and register with a nickname and password; a personal learner profile is created and enrolled automatically. No email or separate adult account is needed for each pupil. Returning pupils use the same link and credentials. Nicknames are unique within the class, case-insensitively. The class supports up to 100 participating profiles; pupils have individual accounts and are not subject to the eight-profiles-per-adult limit.
 
 ## One class, one signup link
 
 1. Sign in to the adult area, choose an adult-managed profile, and create the class once.
-2. In the class section, select **Mostra link della classe**. The same link is returned on subsequent visits and only the class owner may retrieve it. Existing classes acquire a stable link without invalidating their earlier invitation code.
+2. In the class section, select **Mostra link della classe**. The same link is returned on subsequent visits; the class owner or administrator may retrieve it. Existing classes acquire a stable link without invalidating their earlier invitation code.
 3. Share that link with the class. Pupils choose a nickname (3–20 letters/digits, `_` or `-`) and password (12–72 characters), acknowledge participation, and enter their class automatically. Only nicknames, avatars and scores are shown to classmates.
 4. Save each pupil's one-time recovery code with an adult. The same link provides password recovery and rotates used recovery codes. Signing out clears the on-screen code; no passwords are stored in browser storage.
 
@@ -32,11 +34,11 @@ New words earn 10 XP each, up to 15 words per UTC day. The first three completed
 
 ## School materials
 
-Paste `English = Italian` per line, or existing vocabulary words. The adult reviews the proposed programme before saving. Photos and PDFs (4 MB each, 40 MB total per adult account) are optional reference attachments outside the public directory. **Automatic OCR / AI interpretation of photos and PDFs is not implemented.** No material is sent to an external AI service.
+Paste `English = Italian` per line, or existing vocabulary words. The adult reviews the proposed programme before saving. Text PDFs can be read locally; printed photos and a selected scanned PDF page can use local OCR. Recognition is a proposal that the adult must review, not a guarantee for real photographs or handwriting. Photos and PDFs (4 MB each, 40 MB total per adult account) are optional reference attachments outside the public directory. No material is sent to an external AI service. See [materials](docs/MATERIAL_IMPORT.md), [image OCR](docs/OCR_IMPORT.md) and [scanned PDFs](docs/PDF_SCANNED_IMPORT.md).
 
 ## Hosting
 
-PHP 8.1+ with PDO SQLite. Deploy the thirty-six allowlisted files in `dist/` to `public_html`, including `classroom.php`, `classroom.js`, `arena.php` and `arena.js`. Install the new modules before replacing API/platform files and publish `index.html` last. SQLite and reference attachments live in `.wordyland-data` in the directory above `public_html`; preserve that directory across releases. Schema changes are additive; deleting a learner account removes its enrollments and duels. Existing accounts retain the adult role and their profiles. Password reset rotates the recovery code and invalidates older sessions.
+PHP 8.1+ with PDO SQLite. The GitHub Actions pipeline deploys only the application files explicitly allowlisted in `scripts/deploy-siteground.sh` (47 application files and 41 public static checks in the reviewed baseline). It installs new modules before replacing API/platform files and publishes `index.html` last. SQLite and reference attachments live in `.wordyland-data` in the directory above `public_html`; preserve that directory across releases. Schema changes are additive; deleting a learner account removes its enrollments and duels. Existing accounts retain the adult role and their profiles. Password reset rotates the recovery code and invalidates older sessions.
 
 Passwords are hashed, sessions use Secure/HttpOnly/SameSite Strict cookies, writes require CSRF tokens, SQL uses prepared statements, and every profile/material/group operation checks ownership or membership. Recovery is via the adult's recovery code, not email. Handwriting is checked with an adult, not automatically graded.
 

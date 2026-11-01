@@ -32,3 +32,31 @@ Vincolo esplicito dell’utente: «home più chiara solo riorganizzata senza tog
 I menu dell’area assistenza possono essere raccolti in un pannello, ma devono restare apribili. Una destinazione protetta può richiedere l’accesso o il ruolo appropriato: la riorganizzazione non concede nuovi privilegi e non deve cancellare l’ingresso alla funzione. Il recupero email resta configurabile ma non attivato; non presentarlo come servizio funzionante senza verifica reale del trasporto.
 
 Le anteprime della home sono in [review](review/README.md), con dati ospite fittizi. L’inventario descrive il prodotto esistente e non è una richiesta di ricreare tutte le funzioni o introdurre nuove migrazioni/servizi.
+
+## Revisione UX/UI del 30 ottobre 2026
+
+- Le sette destinazioni del menu di servizio restano presenti con gli stessi URL: sono raggruppate in **Impara e gioca**, **La classe**, **Gestione e assistenza**. Il raggruppamento non cambia accessi o autorizzazioni.
+- Le pagine amministrazione, gestione classe, iscritti e segnalazioni mostrano direttamente il loro pannello, senza anteporre le scelte della home e l'intera isola. **Torna al gioco** ripristina la home e la mappa; il menu di servizio e l'accesso account restano raggiungibili. Il percorso d'invito privilegia analogamente la classe e l'accesso richiesto.
+- Le tre scelte iniziali restano davanti alle proposte. **Oggi cosa facciamo?** è il titolo principale della pagina; la presentazione dell'isola è un titolo di secondo livello.
+- **Vai al contenuto** consente di saltare la barra account e il menu usando la tastiera. Il salto porta al landmark principale senza cambiare il frammento URL: un esercizio o il percorso Allenamento già aperto resta aperto.
+- Menu di servizio, scene e barra della mappa hanno bersagli tattili di almeno 44 px; le istruzioni della mappa e i messaggi dei moduli sono leggibili anche su telefono. I controlli delle scene e tutte le destinazioni precedenti restano presenti.
+- I moduli di iscrizione amministrativa e i messaggi locali utilizzano una disposizione che si adatta agli schermi stretti; le tabelle restano scorribili orizzontalmente senza allargare la pagina.
+- La regressione `navigation` controlla i gruppi e tutte le destinazioni, visibilità delle pagine di servizio e ritorno alla home, salto da tastiera senza cambio rotta, gerarchia del titolo, dimensioni dei controlli e assenza di overflow a 320, 390, 768 e 1360 px. Le verifiche di ruolo, registrazione e dati restano nelle rispettive suite API/browser.
+
+## Seconda revisione del 30 ottobre 2026
+
+- L'area **account e progressi** mantiene la sua posizione e tutte le funzioni; il suo ingresso ha testo da 16 px e bersaglio da almeno 52 px, superando la precedente regola CSS da 12 px.
+- Il ripasso classico conserva i sei modi e le stesse impostazioni. Le etichette diventano **Scegli le parole** e **Quante parole vuoi provare?**, con testo da 15 px; le descrizioni dei modi passano da 10–11 a 14 px e i selettori usano testo da almeno 16 px. La modifica rende leggibile la scelta senza cambiare domande, premi o progressi.
+- Il focus da tastiera utilizza un contorno verde scuro con bordo bianco interno, visibile anche sulle schede colorate. Il percorso **Vai al contenuto** e tutti gli URL restano invariati.
+- Gli otto punti della mappa 3D hanno ora un bersaglio da almeno 44 × 44 px; al focus da tastiera i nomi dei luoghi compaiono anche su telefono con testo da 12 px. La loro posizione rispetta le dimensioni reali del pulsante e del suo contorno, evitando il taglio ai bordi durante rotazione e zoom. La didascalia iniziale conserva la disposizione compatta per non coprire gli altri luoghi. Le dimensioni vengono rilevate soltanto quando cambiano, senza letture del layout a ogni fotogramma.
+- Gli avvisi di connessione e aggiornamento sono riuniti in un contenitore globale prima del contenuto principale, così le pagine dedicate non possono nasconderli dentro la home. La gestione dell'aggiornamento resta esplicita e non interrompe automaticamente una partita.
+- La ricerca nel pannello amministrativo usa un modulo che si dispone in colonna sui telefoni, con testo e pulsanti leggibili; l'accesso ai dati rimane vincolato al ruolo amministratore.
+- `navigation` verifica anche dimensioni dell'ingresso account, tipografia del ripasso, contrasto del focus e posizione globale degli avvisi alle quattro larghezze già coperte. Tutti gli otto punti della mappa vengono raggiunti da tastiera e controllati entro i suoi bordi, anche dopo rotazione e zoom.
+
+
+## Nuove destinazioni del lotto in preparazione del 1 novembre
+
+- Passaporto annuale: portale La missione di oggi, scheda Missione di oggi e #scoperte; album delle tre collezioni espandibile da tastiera.
+- Villaggi delle festività: portale delle feste, scheda dedicata, #festivita e #natale; missione prima dell'album premi, nessun premio rimosso.
+- Personaggi Natale: nuovo filtro nel guardaroba con dodici avatar; le azioni kart/calcio/spazio rimangono anche nei filtri delle collezioni.
+- Birillo: scherzo facoltativo nel villaggio 8 dicembre–7 gennaio, con comando per passare agli esercizi.
