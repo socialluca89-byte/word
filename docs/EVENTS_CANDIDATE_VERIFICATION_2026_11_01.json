@@ -1,0 +1,65 @@
+{
+  "commit": "7fb74d940971246247659dcd5ca46680f86d62b9",
+  "planned": 11,
+  "records": [
+    {
+      "command": "node scripts/verify-bundle.mjs",
+      "exit": 0,
+      "seconds": 0.14
+    },
+    {
+      "command": "node scripts/test-rewards.mjs",
+      "exit": 0,
+      "seconds": 0.08
+    },
+    {
+      "command": "python3 scripts/test-holidays.py",
+      "exit": 0,
+      "seconds": 2.5
+    },
+    {
+      "command": "python3 scripts/test-journey.py",
+      "exit": 0,
+      "seconds": 2.28
+    },
+    {
+      "command": "python3 scripts/test-elf.py",
+      "exit": 0,
+      "seconds": 0.93
+    },
+    {
+      "command": "python3 scripts/test-training.py",
+      "exit": 0,
+      "seconds": 5.94
+    },
+    {
+      "command": "bash scripts/test-browser.sh holidays",
+      "exit": 0,
+      "seconds": 42.39
+    },
+    {
+      "command": "bash scripts/test-browser.sh journey",
+      "exit": 0,
+      "seconds": 21.24
+    },
+    {
+      "command": "bash scripts/test-browser.sh elf",
+      "exit": 0,
+      "seconds": 14.51
+    },
+    {
+      "command": "bash scripts/test-browser.sh christmas-cast",
+      "exit": 0,
+      "seconds": 47.82
+    },
+    {
+      "command": "bash scripts/test-browser.sh foundations",
+      "exit": 0,
+      "seconds": 28.48
+    }
+  ],
+  "scope": "Local synthetic candidate refresh only. Five browser suites; no production requests, CI dispatch, merge or deploy. Documentation-only handoff follows this source commit.",
+  "application_dist_tree": "212b9ebc0160e4e0f4d4fcc6e7cf65575cf8ff08",
+  "published_base": "f1c537a778ac29ead8a262867f4254ec7b561bde",
+  "published_base_run": "41324947130"
+}

@@ -1,5 +1,7 @@
 # Pacchetto pronto e limite di pubblicazione — 1 novembre 2026
 
+> Aggiornamento successivo, 1 novembre alle 16:23 UTC: main `f1c537a778ac29ead8a262867f4254ec7b561bde` è stato pubblicato dal [run 41324947130](https://github.com/socialluca89-byte/word/actions/runs/41324947130), con verify/browser/deploy riusciti. Il coordinamento conferma la versione online e la soluzione autorizzata da SiteGround. Il 403 e la richiesta tecnica descritti sotto sono cronologia, non un impedimento ancora dimostrato. Gli eventi su work non sono compresi in quel rilascio: [candidato e mappa](EVENTS_RELEASE_CANDIDATE_2026_11_01.md). Nessuna nuova richiesta a produzione è stata effettuata per questo aggiornamento.
+
 ## Versioni e stato
 
 - Codice applicativo integrato e sottoposto alla verifica cumulativa locale: `c56b45abe45332a9099a6554856a5fcddaf7c4cb`, ramo work. Comprende le correzioni account/classe/UX di main `f1c537a778ac29ead8a262867f4254ec7b561bde`, senza sovrascriverle.
