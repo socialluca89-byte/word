@@ -1,9 +1,11 @@
-/* Anonymous revision: no accounts, local storage, score queue or private API requests. */
+/* Public revision: no account API or sync queue. Foundation progress below stays in this browser. */
 (()=>{
  const topic=document.querySelector('#offlineTopic'),work=document.querySelector('#offlineWork'),feedback=document.querySelector('#offlineFeedback'),next=document.querySelector('#offlineNext');
- let bank=null,word=null,previous=null;
+ let bank=null,word=null,previous=null,audioVersion=0;
+ function stopRevisionAudio(){audioVersion++;if('speechSynthesis'in window)speechSynthesis.cancel();}
  const escape=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  function draw(){
+  stopRevisionAudio();
   const pool=bank[topic.value];const choices=pool.filter(w=>w[0]!==previous);word=(choices.length?choices:pool)[Math.floor(Math.random()*(choices.length||pool.length))];previous=word[0];
   const options=[word,...pool.filter(w=>w[0]!==word[0]).sort(()=>Math.random()-.5).slice(0,3)].sort(()=>Math.random()-.5);
   feedback.textContent='';next.hidden=true;
@@ -14,10 +16,12 @@
   });
   work.querySelector('#offlineAudio').onclick=()=>{
    if(!('speechSynthesis'in window)){feedback.textContent='La voce non è disponibile. Puoi leggere le parole e continuare.';return;}
-   speechSynthesis.cancel();const utterance=new SpeechSynthesisUtterance(word[0]);utterance.lang='en-GB';utterance.rate=.8;utterance.onerror=()=>{feedback.textContent='La voce non è disponibile offline. Puoi continuare leggendo.';};speechSynthesis.speak(utterance);
+   stopRevisionAudio();const version=audioVersion,utterance=new SpeechSynthesisUtterance(word[0]);utterance.lang='en-GB';utterance.rate=.8;utterance.onerror=event=>{if(version!==audioVersion||['canceled','interrupted'].includes(event.error))return;feedback.textContent='La voce non è disponibile offline. Puoi continuare leggendo.';};speechSynthesis.speak(utterance);
   };
  }
- topic.onchange=()=>{if(bank){if('speechSynthesis'in window)speechSynthesis.cancel();draw();}};next.onclick=draw;
+ topic.onchange=()=>{if(bank)draw();};next.onclick=draw;
+ window.addEventListener('pagehide',stopRevisionAudio);
+ document.querySelector('#offlineFoundationOpen').addEventListener('click',stopRevisionAudio);
  fetch('curriculum.json').then(r=>{if(!r.ok)throw Error();return r.json();}).then(data=>{bank=data;draw();}).catch(()=>{work.textContent='Il ripasso non è ancora scaricato. Apri WordyLand con Internet almeno una volta, poi riprova.';topic.disabled=true;});
 })();
 
@@ -25,7 +29,7 @@
 (()=>{
  const panel=document.querySelector('#offlineFoundation'),host=document.querySelector('#offlineFoundationWork'),status=document.querySelector('#offlineFoundationStatus'),revision=document.querySelector('#offlineRevision'),open=document.querySelector('#offlineFoundationOpen'),back=document.querySelector('#offlineRevisionOpen');
  const key='wordylandOfflineTrainingV1',esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
- let content=null,state=null,current=null,letterBlock=null,locked=false,loading=false,speechGeneration=0,letterReading=true,letterAudioUsed=false;const auditioned=new Set();
+ let content=null,state=null,current=null,letterBlock=null,locked=false,loading=false,speechGeneration=0,letterReading=true,letterAudioUsed=false,storageStamp=null;const auditioned=new Set();
  const fresh=()=>({version:1,counts:{},sessions:{},completed:0,letterSessions:{},letterCompleted:0,voiceChecks:{}});
  const clone=()=>JSON.parse(JSON.stringify(state));
  const selectedVoice=(lang='en-GB')=>{const voices='speechSynthesis'in window?speechSynthesis.getVoices().filter(v=>v.localService===true):[];return voices.find(v=>v.lang.toLowerCase()===lang.toLowerCase())||voices.find(v=>v.lang.toLowerCase().startsWith(lang.slice(0,2).toLowerCase()))||null;};
@@ -34,7 +38,7 @@
  function stop(){speechGeneration++;if('speechSynthesis'in window)speechSynthesis.cancel();}
  function shuffle(rows){const a=[...rows];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
  function valid(s,pack){return s&&Array.isArray(s.words)&&s.words.length===2&&new Set(s.words).size===2&&s.words.every(id=>pack.words.includes(id))&&Number.isInteger(s.step)&&s.step>=0&&s.step<=9&&Array.isArray(s.choices)&&s.choices.length===3&&s.choices.every((ids,i)=>Array.isArray(ids)&&ids.length===3&&new Set(ids).size===3&&ids.includes(s.words[i===1?1:0])&&ids.every(id=>pack.words.includes(id)));}
- function read(){let raw;try{raw=JSON.parse(localStorage.getItem(key)||'null');}catch{}const next=fresh();if(raw?.version!==1)return next;
+ function read(){let raw;try{storageStamp=localStorage.getItem(key);raw=JSON.parse(storageStamp||'null');}catch{}const next=fresh();if(raw?.version!==1)return next;
   for(const word of content.words)if(Number.isInteger(raw.counts?.[word.id])&&raw.counts[word.id]>=0)next.counts[word.id]=Math.min(1000000,raw.counts[word.id]);
   next.completed=Number.isInteger(raw.completed)?Math.max(0,Math.min(10000,raw.completed)):0;
   for(const pack of content.packs){const s=raw.sessions?.[pack.id];if(!valid(s,pack))continue;const word=content.words.find(w=>w.id===s.words[s.step===8?0:Math.min(1,Math.floor(s.step/4))]);next.sessions[pack.id]={words:[...s.words],choices:s.choices.map(ids=>[...ids]),step:s.step,hint:Number.isInteger(s.hint)?Math.max(0,Math.min(2,s.hint)):0,errors:Number.isInteger(s.errors)?Math.max(0,Math.min(1000,s.errors)):0,picks:Array.isArray(s.picks)&&s.picks.length<=word.id.length&&new Set(s.picks).size===s.picks.length&&s.picks.every(i=>Number.isInteger(i)&&i>=0&&i<word.id.length)?[...s.picks]:[],draft:typeof s.draft==='string'&&/^[a-zA-Z ]{0,30}$/.test(s.draft)?s.draft:''};}
@@ -43,7 +47,7 @@
   if(raw.voiceChecks&&typeof raw.voiceChecks==='object'&&!Array.isArray(raw.voiceChecks))for(const [voice,ids] of Object.entries(raw.voiceChecks).slice(0,16))if(voice.length>0&&voice.length<=200&&!['__proto__','constructor','prototype'].includes(voice)&&Array.isArray(ids))next.voiceChecks[voice]=[...new Set(ids.filter(id=>content.letters.some(l=>l.id===id)))].slice(0,26);
   return next;
  }
- function save(next){try{localStorage.setItem(key,JSON.stringify(next));state=next;return true;}catch{status.textContent='Il browser non ha confermato il salvataggio. L’attività non avanza: libera spazio e riprova. Il ripasso illustrato resta disponibile.';return false;}}
+ function save(next){try{if(localStorage.getItem(key)!==storageStamp){status.textContent='Il ripasso è cambiato in un’altra scheda. Carica gli ultimi progressi prima di continuare.';const reload=document.createElement('button');reload.type='button';reload.textContent='Carica gli ultimi progressi';reload.onclick=enter;status.append(reload);return false;}const serialized=JSON.stringify(next);localStorage.setItem(key,serialized);storageStamp=serialized;state=next;return true;}catch{status.textContent='Il browser non ha confermato il salvataggio. L’attività non avanza: libera spazio e riprova. Il ripasso illustrato resta disponibile.';return false;}}
  async function enter(){stop();revision.hidden=true;panel.hidden=false;open.setAttribute('aria-pressed','true');back.setAttribute('aria-pressed','false');panel.querySelector('h2').focus();if(loading)return;loading=true;status.textContent='Preparo le parole scaricate…';
   try{if(!content){const r=await fetch('training.json',{credentials:'omit'});if(!r.ok)throw Error();const d=await r.json();content={letters:d.letters||[],blocks:d.blocks||[],words:d.foundationWords||d.words,packs:d.wordPacks||[{id:'first',title:'Prime parole',icon:'🌱',words:d.words.map(w=>w.id)}]};}state=read();if(!panel.hidden)intro();}
   catch{status.textContent='Parole e spelling non sono ancora scaricati. Apri WordyLand con Internet almeno una volta e attendi che il ripasso sia pronto.';host.innerHTML='<button type="button" id="offlineFoundationRetry">Riprova</button>';host.querySelector('button').onclick=enter;}

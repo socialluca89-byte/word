@@ -14,6 +14,11 @@ ensureActivityColumn($db,'duels','kart');
 function duelClassmates(PDO $db, int $a, int $b): bool {
     return (bool)one($db, 'SELECT 1 FROM club_profiles a JOIN club_profiles b ON a.club_id=b.club_id WHERE a.profile_id=? AND b.profile_id=? LIMIT 1', [$a,$b]);
 }
+function duelEquipped(PDO $db, int $profile): array {
+    $row=one($db,'SELECT equipped FROM wallets WHERE profile_id=?',[$profile]);
+    $equipped=json_decode($row['equipped']??'{}',true);
+    return array_merge(['avatar'=>'fox'],is_array($equipped)?$equipped:[]);
+}
 function duelQuestion(array $duel, int $step): ?array {
     $questions=json_decode($duel['questions'],true);
     if ($duel['state']!=='active' || $step>=count($questions)) return null;
@@ -87,14 +92,14 @@ if (!$d) { $db->exec('ROLLBACK');fail('Sfida non trovata.',404); }
 $other=(int)$d['challenger']===$pid?(int)$d['opponent']:(int)$d['challenger'];
 if (!duelClassmates($db,$pid,$other)) { $db->exec('ROLLBACK');fail('Non fate più parte della stessa classe.',403); }
 $player=one($db,'SELECT * FROM duel_players WHERE duel=? AND profile=?',[$token,$pid]);
-if ($action==='duel') { $db->exec('COMMIT');respond(['duel'=>duelView($db,$d,$pid),'question'=>duelQuestion($d,(int)$player['step'])]); }
+if ($action==='duel') { $db->exec('COMMIT');respond(['duel'=>duelView($db,$d,$pid),'question'=>duelQuestion($d,(int)$player['step']),'equipped'=>duelEquipped($db,$pid)]); }
 if (in_array($action,['duel-accept','duel-decline','duel-cancel'],true)) {
     $authorized=$action==='duel-cancel'?(int)$d['challenger']===$pid:(int)$d['opponent']===$pid;
     if (!$authorized) { $db->exec('ROLLBACK');fail('Solo chi riceve l’invito può accettarlo o rifiutarlo.',403); }
     if ($d['state']!=='pending') { $db->exec('ROLLBACK');fail('Questo invito non è più in attesa.',409); }
     $d['state']=['duel-accept'=>'active','duel-decline'=>'declined','duel-cancel'=>'cancelled'][$action];
     runSql($db,'UPDATE duels SET state=? WHERE id=?',[$d['state'],$token]);$db->exec('COMMIT');
-    respond(['duel'=>duelView($db,$d,$pid),'question'=>duelQuestion($d,0)]);
+    respond(['duel'=>duelView($db,$d,$pid),'question'=>duelQuestion($d,0),'equipped'=>duelEquipped($db,$pid)]);
 }
 $questions=json_decode($d['questions'],true);$step=(int)$player['step'];
 if ($d['state']!=='active'||$step>=count($questions)) { $db->exec('ROLLBACK');fail('Questa sfida non è giocabile adesso.',409); }
@@ -106,4 +111,4 @@ runSql($db,'UPDATE duel_players SET step=step+1,score=score+? WHERE duel=? AND p
 $remaining=one($db,'SELECT COUNT(*) AS n FROM duel_players WHERE duel=? AND step<?',[$token,count($questions)]);
 if (!(int)$remaining['n']) { $d['state']='completed';runSql($db,'UPDATE duels SET state="completed" WHERE id=?',[$token]); }
 $db->exec('COMMIT');
-respond(['correct'=>$correct,'correctAnswer'=>$q['answer'],'duel'=>duelView($db,$d,$pid),'question'=>duelQuestion($d,$step+1)]);
+respond(['correct'=>$correct,'correctAnswer'=>$q['answer'],'duel'=>duelView($db,$d,$pid),'question'=>duelQuestion($d,$step+1),'equipped'=>duelEquipped($db,$pid)]);

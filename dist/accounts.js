@@ -6,7 +6,7 @@
   document.querySelector('main').prepend(area);
   const panel = area.querySelector('#accountContent'), status = area.querySelector('#accountStatus');
   let session = null, active = null, revision = 0, pending = false, timer, busy = null, applying = false, locked = false;
-  let initializing=true, resetToken=null, profileChanging=false, profileChoice=0, profileOperation=0, profileLockSession=null, pendingWrites=0, authOperation=null, logoutFlight=null, accessExpired=false, uncertainProfile=null;
+  let initializing=true, resetToken=null, profileChanging=false, profileChoice=0, profileOperation=0, profileLockSession=null, pendingWrites=0, authOperation=null, logoutFlight=null, accessExpired=false, uncertainProfile=null, guestBackupMemory=null;
   function captureResetLink(){
     const match=location.hash.match(/^#password-reset=([a-f0-9]{64})$/);
     if(match){resetToken=match[1];history.replaceState(null,'','#recupera-password');return true;}
@@ -32,10 +32,20 @@
     area.scrollIntoView({block:'start'});panel.querySelector('input').focus({preventScroll:true});
   }
   const tools=document.createElement('nav');tools.className='accountToolbar';tools.setAttribute('aria-label','Accesso, uscita e password');document.querySelector('header').after(tools);
-  const guestKey = 'wordylandGuestBackup', activeKey = 'wordylandActiveProfile';
+  const guestKey = 'wordylandGuestBackup', activeKey = 'wordylandActiveProfile', pendingKey='wordylandPendingProfile';
+  let privateCache=null,recoveryChoice=null,ownershipPaused=document.documentElement.dataset.accountVerification==='pending';
+  const inertSurfaces=new Map();
+  function ownershipPause(paused){
+    const changed=ownershipPaused!==paused;
+    ownershipPaused=paused;
+    if(paused){document.documentElement.dataset.accountVerification='pending';for(const node of document.querySelector('main').children)if(!node.matches('.accountArea,.classGate')){if(!inertSurfaces.has(node))inertSurfaces.set(node,node.hasAttribute('inert'));node.setAttribute('inert','');}}
+    else{delete document.documentElement.dataset.accountVerification;for(const [node,wasInert] of inertSurfaces)if(!wasInert)node.removeAttribute('inert');inertSurfaces.clear();}
+    if(changed)updateAccessTools();
+  }
+  new MutationObserver(()=>{if(ownershipPaused)ownershipPause(true);}).observe(document.querySelector('main'),{childList:true});
   function updateAccessTools(){
     const authenticated=Boolean(session?.username);tools.dataset.mode=authenticated?'connected':'guest';
-    tools.innerHTML='<span class="accountSessionLabel">'+esc(authenticated?(session.role==='learner'?'Profilo di classe: '+(active?.nickname||session.profiles[0]?.nickname||'Alunno'):'Accesso: '+session.username):session?'Modalità ospite':initializing?'Verifica accesso…':'Accesso da verificare')+'</span>'+(authenticated?'<button type="button" class="audio" id="headerPassword">Cambia password</button><button type="button" class="primary" id="headerLogout">Esci / Logout</button>':'<button type="button" class="primary" id="headerLogin">Accedi</button><button type="button" class="audio" id="headerRecovery">Password dimenticata?</button>')+'<span id="accessStatus" role="status"></span>';
+    tools.innerHTML='<span class="accountSessionLabel">'+esc(ownershipPaused?'Verifica accesso…':authenticated?(session.role==='learner'?'Profilo di classe: '+(active?.nickname||session.profiles[0]?.nickname||'Alunno'):'Accesso: '+session.username):session?'Modalità ospite':initializing?'Verifica accesso…':'Accesso da verificare')+'</span>'+(authenticated?'<button type="button" class="audio" id="headerPassword">Cambia password</button><button type="button" class="primary" id="headerLogout">Esci / Logout</button>':'<button type="button" class="primary" id="headerLogin">Accedi</button><button type="button" class="audio" id="headerRecovery">Password dimenticata?</button>')+'<span id="accessStatus" role="status"></span>';
     tools.querySelector('#headerLogin')?.addEventListener('click',()=>openAccess('login'));
     tools.querySelector('#headerRecovery')?.addEventListener('click',()=>openAccess('recover'));
     tools.querySelector('#headerPassword')?.addEventListener('click',()=>openAccess('password'));
@@ -45,7 +55,7 @@
   async function openAccess(view='login'){
     try{
       await window.wordylandAccount.ready;
-      if(!session?.csrf){session=await request('session');show();}
+      if(!session?.csrf)await restoreInitialSession();
       if(!session.username&&window.wordylandClassroom?.openAccess(view))return;
       window.wordylandUI?.play();
       if(document.body.classList.contains('classEntry'))location.hash=view==='recover'?'#recupera-password':'#account';
@@ -54,7 +64,7 @@
       if(section?.matches('details'))section.open=true;
       if(view==='recover'&&session.username){say('Per cambiare la password usa la password attuale nel modulo qui sotto.');panel.querySelector('#passwordSettings').open=true;}
       requestAnimationFrame(()=>{area.scrollIntoView({block:'start'});(section?.querySelector('input')||panel.querySelector('input'))?.focus({preventScroll:true});});
-    }catch(error){tools.querySelector('#accessStatus').textContent=error.message;}
+    }catch(error){if(ownershipPaused)initialAccessError(error);tools.querySelector('#accessStatus').textContent=error.message;}
   }
   function passwordSettings(){return '<details id="passwordSettings" class="accountSecurity"><summary>Cambia password</summary><form id="changePasswordForm"><label>Password attuale<input name="password" type="password" autocomplete="current-password" required></label><label>Nuova password · almeno 12 caratteri<input name="newPassword" type="password" autocomplete="new-password" minlength="12" maxlength="72" required></label><label>Ripeti la nuova password<input name="confirmPassword" type="password" autocomplete="new-password" minlength="12" maxlength="72" required></label><button class="primary">Salva la nuova password</button><p>Resterai collegato qui. Gli altri dispositivi dovranno accedere di nuovo.</p><p id="passwordChangeStatus" role="status" aria-live="polite"></p></form></details>';}
   function bindPasswordSettings(){
@@ -99,9 +109,78 @@
   const read = key => { try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch { return null; } };
   const write = (key, value) => { try { localStorage.setItem(key, JSON.stringify(value)); } catch {} };
   const snapshot = () => ({stats, custom, stars, world: worldId, avatar});
+  function preserveGuestBeforeProfile(){
+    const backup=JSON.parse(JSON.stringify({...snapshot(),name:playerName})),serialized=JSON.stringify(backup);
+    guestBackupMemory=backup;
+    let durable=false;
+    try{if(localStorage.getItem(guestKey)!==serialized)localStorage.setItem(guestKey,serialized);durable=localStorage.getItem(guestKey)===serialized;}catch{}
+    const hasProgress=Object.keys(backup.stats||{}).length>0||(backup.custom||[]).length>0||Number(backup.stars)>0;
+    if(!durable&&hasProgress)throw new Error('Il browser non riesce a conservare la copia dei progressi ospite. I tuoi dati non sono cambiati: libera spazio e scegli di nuovo lo stesso profilo dall’elenco.');
+  }
+  function restoreGuestState(){
+    const backup=guestBackupMemory||read(guestKey),guest=backup&&typeof backup==='object'&&!Array.isArray(backup)?backup:{stats:{},custom:[],stars:0,world:'space',avatar:'🦊',name:''};
+    apply(guest,guest.name);
+  }
+  function stageGuestState(){
+    const backup=guestBackupMemory||read(guestKey),guest=backup&&typeof backup==='object'&&!Array.isArray(backup)?backup:{stats:{},custom:[],stars:0,world:'space',avatar:'🦊',name:''};
+    const values={'chloeGardenV2':JSON.stringify({stats:guest.stats||{},custom:guest.custom||[],stars:Number(guest.stars)||0,voice:voiceName}),'wordQuestPlayer':JSON.stringify({world:worlds[guest.world]?guest.world:'space',name:guest.name||'',avatar:guest.avatar||'🦊'})};
+    for(const [key,value] of Object.entries(values)){let stored=false;try{if(localStorage.getItem(key)!==value)localStorage.setItem(key,value);stored=localStorage.getItem(key)===value;}catch{}if(!stored)throw new Error('Il browser non ha conservato lo spazio ospite. La copia del profilo resta protetta: libera spazio e riprova.');}
+  }
+  function preserveProfileIdentity(profile){
+    const serialized=JSON.stringify({id:profile.id,username:session.username,revision:profile.revision,state:clone(profile.state)});let durable=false;
+    try{if(localStorage.getItem(activeKey)!==serialized)localStorage.setItem(activeKey,serialized);durable=localStorage.getItem(activeKey)===serialized;}catch{}
+    if(!durable)throw new Error('Il browser non riesce a conservare l’identità del profilo. I dati attuali non sono cambiati: libera spazio e scegli di nuovo lo stesso profilo dall’elenco.');
+  }
+  const clone=value=>JSON.parse(JSON.stringify(value));
+  function stateFingerprint(state){const sort=value=>Array.isArray(value)?value.map(sort):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(key=>[key,sort(value[key])])):value;return JSON.stringify(sort({stats:state?.stats&&typeof state.stats==='object'&&!Array.isArray(state.stats)?state.stats:{},custom:Array.isArray(state?.custom)?state.custom:[],stars:Number(state?.stars)||0,world:state?.world||'space',avatar:state?.avatar||'🦊'}));}
+  const sameCopy=(a,b)=>a?.owner===b?.owner&&Number(a?.profile)===Number(b?.profile)&&stateFingerprint(a?.state)===stateFingerprint(b?.state);
+  function pendingCopy(){try{const raw=localStorage.getItem(pendingKey);if(!raw)return null;const copy=JSON.parse(raw);return copy?.version===1&&typeof copy.owner==='string'&&Number.isInteger(copy.profile)&&copy.profile>0&&copy.state&&typeof copy.state==='object'?copy:{invalid:true};}catch{return {invalid:true};}}
+  function quarantine(copy){
+    if(!copy?.owner||!Number.isInteger(copy.profile)||copy.profile<1)throw new Error('La copia di questo dispositivo non ha un’identità verificabile. I dati restano protetti: riconferma l’accesso prima di continuare.');
+    const existing=pendingCopy();if(existing){if(!existing.invalid&&sameCopy(existing,copy))return existing;throw new Error('C’è già una copia locale da verificare su questo dispositivo. I dati attuali sono conservati: completa prima il recupero della copia con il suo account.');}
+    const envelope={version:1,owner:copy.owner,profile:copy.profile,revision:copy.revision??null,state:clone(copy.state)},serialized=JSON.stringify(envelope);let durable=false;
+    try{localStorage.setItem(pendingKey,serialized);durable=localStorage.getItem(pendingKey)===serialized;}catch{}
+    if(!durable)throw new Error('Non riusciamo a conservare la copia locale prima del cambio di accesso. I dati restano protetti: libera spazio e riprova la connessione.');
+    return envelope;
+  }
+  function consumeCopy(copy){const current=pendingCopy();if(!current||current.invalid||!sameCopy(current,copy))return;try{localStorage.removeItem(pendingKey);}catch{}if(localStorage.getItem(pendingKey)!==null)throw new Error('La copia è salva online, ma il browser non ha liberato la copia locale. Riprova senza cancellare i dati del gioco.');}
+  function clearIdentity(){try{localStorage.removeItem(activeKey);}catch{}if(localStorage.getItem(activeKey)!==null)throw new Error('Il browser non ha confermato il cambio di profilo. I dati restano protetti: libera spazio e riprova.');}
+  function discardDeletedCopy(owner,profile=null){const copy=pendingCopy();if(!copy?.invalid&&copy?.owner===owner&&(profile===null||copy.profile===profile))consumeCopy(copy);if(privateCache?.owner===owner&&(profile===null||privateCache.profile===profile))privateCache=null;}
+  function loadVerifiedProfile(profile){
+    if(privateCache&&!(privateCache.owner===session.username&&privateCache.profile===profile.id&&stateFingerprint(privateCache.state)===stateFingerprint(profile.state)))quarantine(privateCache);
+    if(!active&&!privateCache&&!read(activeKey))preserveGuestBeforeProfile();
+    preserveProfileIdentity(profile);active=profile;revision=profile.revision;pending=false;locked=false;privateCache=null;recoveryChoice=null;
+    apply(profile.state,profile.nickname);const notice=document.querySelector('#classicStorageNotice');if(notice)notice.hidden=true;ownershipPause(false);show();say('✓ Profilo di '+profile.nickname+' caricato.');
+  }
+  function offerCopy(profile,copy,source){recoveryChoice={ownerSession:session,profile,copy,source};show();area.open=true;area.dataset.exposed='true';const error=new Error('C’è una copia locale di questo profilo da controllare. Scegli se riprenderla o usare la versione online.');error.code=409;throw error;}
+  function appendPendingRecovery(){
+    if(!session?.username)return;
+    const stored=pendingCopy();let choice=recoveryChoice;
+    if(!choice||choice.ownerSession!==session){choice=null;if(active&&!stored?.invalid&&stored?.owner===session.username&&stored.profile===active.id)choice={ownerSession:session,profile:active,copy:stored,source:'envelope'};}
+    if(!choice||choice.copy.owner!==session.username)return;
+    const box=document.createElement('section');box.id='pendingLocalCopy';box.className='pendingLocalCopy';box.innerHTML='<h3>Copia locale da controllare</h3><p>È disponibile una copia dell’allenamento classico di <b>'+esc(choice.profile.nickname)+'</b>. Riprenderla sostituisce soltanto i dati di questo allenamento online. Premi, accessori e sfide restano invariati. Chiedi aiuto a un adulto per scegliere.</p><button type="button" class="primary" data-local-copy="restore">Riprendi la copia locale</button><button type="button" class="audio" data-local-copy="online">Usa la versione online</button><p role="status"></p>';
+    if(active?.id===choice.profile.id&&!ownershipPaused&&choice.source==='envelope')box.insertAdjacentHTML('beforeend','<button type="button" class="audio" data-local-copy="discard">Elimina solo questa copia locale</button>');
+    panel.append(box);
+    box.querySelectorAll('[data-local-copy]').forEach(button=>button.onclick=async()=>{
+      if(profileChanging)return;const action=button.dataset.localCopy,owner=session,selected=active,selection=profileChoice,operation=setProfileBusy(true),notice=box.querySelector('[role=status]');
+      const valid=()=>session===owner&&active===selected&&profileChoice===selection&&operation===profileOperation;
+      notice.textContent='Verifichiamo il profilo prima di continuare.';
+      try{
+        await flush();if(!valid())return;
+        if(action==='discard'){if(!window.confirm('Eliminare soltanto questa copia locale? I dati online non cambiano.'))return;consumeCopy(choice.copy);recoveryChoice=null;show();say('Copia locale eliminata. La versione online è invariata.');return;}
+        let profile=await request('profile&id='+choice.profile.id);if(!valid())return;
+        if(action==='restore'){
+          await request('save',{id:profile.id,revision:profile.revision,state:choice.copy.state});if(!valid())return;
+          profile=await request('profile&id='+profile.id);if(!valid())return;consumeCopy(choice.copy);
+        }else if(choice.source==='cache')quarantine(choice.copy);
+        loadVerifiedProfile(profile);say(action==='restore'?'Copia locale salvata e ripresa.':'Versione online caricata. La copia locale resta disponibile finché la elimini o la riprendi.');
+      }catch(error){if(valid()&&box.isConnected){notice.textContent=error.message;notice.tabIndex=-1;notice.focus({preventScroll:true});}}
+      finally{setProfileBusy(false,operation);}
+    });
+  }
   const oldSave = save, oldRemember = rememberPlayer;
-  save = function () { oldSave(); schedule(); };
-  rememberPlayer = function () { oldRemember(); schedule(); };
+  save = function () { if(ownershipPaused){say('Verifica prima il tuo accesso: la copia locale resta protetta.');return false;}let local;if(active){try{preserveProfileIdentity({...active,revision,state:clone(snapshot())});local=true;oldSave();}catch{local=false;}const notice=document.querySelector('#classicStorageNotice');if(notice)notice.hidden=local;}else local=oldSave();schedule(local);return local; };
+  rememberPlayer = function () { if(ownershipPaused)return false;if(active&&!applying){let local=false;try{preserveProfileIdentity({...active,revision,state:clone(snapshot())});local=true;oldRemember();}catch{}schedule(local);return local;}oldRemember();schedule(); };
   function say(text) { status.textContent = text; }
   // Form results stay next to the action even when autosave updates accountStatus.
   function formSay(form,text,field=null,focus=true){
@@ -115,7 +194,7 @@
   panel.addEventListener('change',event=>event.target.removeAttribute('aria-invalid'));
   function reflectProfileBusy(){
     panel.querySelector('.profileList')?.setAttribute('aria-busy',String(profileChanging));
-    panel.querySelectorAll('[data-profile],#newProfile button,#renameProfile button,#removeProfile button,#securityAccount button,#learnerRecoveryForm button').forEach(button=>button.disabled=profileChanging);
+    panel.querySelectorAll('[data-profile],#retryLearnerProfile,#pendingLocalCopy button,#newProfile button,#renameProfile button,#removeProfile button,#securityAccount button,#learnerRecoveryForm button').forEach(button=>button.disabled=profileChanging);
     if(uncertainProfile?.ownerSession===session)panel.querySelectorAll('#newProfile button:not([data-profile-verify])').forEach(button=>button.disabled=true);
   }
   function showProfileVerification(form){
@@ -171,11 +250,11 @@
       throw error;
     }finally{clearTimeout(timeout);if(body!==undefined)pendingWrites--;if(authOwner&&authOperation===authOwner)authOperation=null;}
   }
-  function schedule() {
+  function schedule(local=true) {
     if (!active || applying || locked) return;
     pending = true; clearTimeout(timer);
     if(accessExpired){say('Progressi conservati su questo dispositivo. Conferma il tuo accesso per sincronizzarli.');return;}
-    say('Progressi salvati sul dispositivo. Sincronizzazione in corso…');
+    say(local===false?'Copia locale non confermata. Sincronizzazione online in corso…':'Progressi salvati sul dispositivo. Sincronizzazione in corso…');
     timer = setTimeout(() => flush().catch(() => {}), 900);
   }
   async function flush() {
@@ -184,10 +263,15 @@
     if (busy) { await busy; if (pending) return flush(); return; }
     if (!pending || !active || locked) return;
     pending = false;
-    const payload = {id:active.id, revision, state:snapshot()};
+    const saveOwner=session,payload = {id:active.id, revision, state:clone(snapshot())};
     busy = request('save', payload).then(result => {
+      if(session!==saveOwner||active?.id!==payload.id)return;
       revision = result.revision;
+      let markerSaved=true;
+      try{preserveProfileIdentity({...active,revision,state:pending?clone(snapshot()):payload.state});}catch{markerSaved=false;}
+      const copy=pendingCopy();if(markerSaved&&!copy?.invalid&&copy?.owner===session.username&&copy.profile===active.id&&stateFingerprint(copy.state)===stateFingerprint(payload.state)){try{consumeCopy(copy);}catch{markerSaved=false;}}
       say('✓ Progressi sincronizzati per ' + active.nickname + '.');
+      if(!markerSaved)say('Progressi sincronizzati. Il browser non ha aggiornato tutte le copie locali: i dati conservati restano disponibili.');
     }).catch(e => {
       pending = true;
       if(e.code===401||e.code===403){accessExpired=true;showReauthentication();}
@@ -249,10 +333,13 @@
     if(session!==ownerSession||!session?.username||choice!==profileChoice)return;
     const profile = await request('profile&id=' + Number(id));
     if(session!==ownerSession||!session?.username||choice!==profileChoice)return;
-    if (!active && !read(activeKey)) write(guestKey, {...snapshot(), name:playerName});
-    active = profile; revision = profile.revision; pending = false; locked = false;
-    write(activeKey, {id:profile.id, username:session.username});
-    apply(profile.state, profile.nickname); show(); say('✓ Profilo di ' + profile.nickname + ' caricato.');
+    if(privateCache&&privateCache.owner===session.username&&privateCache.profile===profile.id&&stateFingerprint(privateCache.state)!==stateFingerprint(profile.state)){
+      if(Number.isInteger(privateCache.revision)&&privateCache.revision===profile.revision){const local=clone(privateCache.state);loadVerifiedProfile({...profile,state:local});pending=true;await flush();return;}
+      offerCopy(profile,privateCache,'cache');
+    }
+    const copy=pendingCopy();
+    if(!copy?.invalid&&copy?.owner===session.username&&copy.profile===profile.id){if(stateFingerprint(copy.state)!==stateFingerprint(profile.state))offerCopy(profile,copy,'envelope');else consumeCopy(copy);}
+    try{loadVerifiedProfile(profile);}catch(error){const held=pendingCopy();if(!held?.invalid&&held?.owner===session.username&&held.profile===profile.id)offerCopy(profile,held,'envelope');throw error;}
   }
   function show() {
     const notice=area.querySelector('#recoveryNotice');if(notice&&session?.username&&notice.dataset.owner!==session.username.trim().toLowerCase())notice.remove();
@@ -260,11 +347,19 @@
     updateAccessTools();
     area.querySelector('summary').textContent=session?.role==='learner'?'Il mio profilo di classe':'Area adulti · account e progressi';
     if (session?.role==='learner') {
-      panel.innerHTML='<h3>Ciao, '+esc(session.profiles[0]?.nickname||'esploratore')+'!</h3><p>Il tuo profilo è iscritto alla classe. I progressi si salvano mentre giochi.</p><button class="audio" id="learnerLogout">Esci / Logout</button>'+passwordSettings()+''+(locked?'<p>Il profilo è stato aggiornato su un altro dispositivo. La copia locale resta disponibile.</p><button class="audio" id="learnerReload">Carica la versione online</button>':'');
+      panel.innerHTML=(active?'<h3>Ciao, '+esc(active.nickname)+'!</h3><p>Il tuo profilo è iscritto alla classe. I progressi si salvano mentre giochi.</p>':'<h3>Il tuo accesso è confermato</h3><p>I progressi non sono ancora caricati. Riprova ad aprire il tuo profilo senza registrarti di nuovo.</p><button class="primary" id="retryLearnerProfile">Carica il mio profilo</button>')+'<button class="audio" id="learnerLogout">Esci / Logout</button>'+passwordSettings()+''+(locked?'<p>Il profilo è stato aggiornato su un altro dispositivo. La copia locale resta disponibile.</p><button class="audio" id="learnerReload">Carica la versione online</button>':'');
       panel.insertAdjacentHTML('beforeend',learnerRecoverySettings());bindPasswordSettings();bindLearnerRecovery();reflectProfileBusy();
       panel.querySelector('#learnerLogout').onclick=()=>logout().catch(e=>say(e.message));
+      panel.querySelector('#retryLearnerProfile')?.addEventListener('click',async()=>{
+        if(profileChanging)return;
+        const ownerSession=session,id=session.profiles[0]?.id,operation=setProfileBusy(true);
+        say('Caricamento del tuo profilo in corso.');
+        try{if(!id)throw new Error('Non troviamo il profilo di questo accesso. Riapri il link della classe.');await choose(id);}
+        catch(error){if(session===ownerSession)say('Profilo non ancora caricato. '+error.message);}
+        finally{setProfileBusy(false,operation);}
+      });
       panel.querySelector('#learnerReload')?.addEventListener('click',()=>{write('wordylandConflictBackup',{profile:active.id,state:snapshot()});choose(active.id,true).catch(e=>say(e.message));});
-      signalProfile();return;
+      appendPendingRecovery();reflectProfileBusy();signalProfile();return;
     }
     if (!session?.username) {
       panel.innerHTML = '<h3>Un account per i grandi, un’avventura per ciascuno</h3><p>Accedi da un altro dispositivo per ritrovare i progressi. Crea fino a otto profili con un soprannome. Puoi anche giocare come ospite.</p><form id="accountForm"><label for="accountUser">Email o nome utente dell’adulto</label><input id="accountUser" autocomplete="username" minlength="3" maxlength="254" required><label for="accountPassword">Password · almeno 12 caratteri</label><input id="accountPassword" type="password" autocomplete="current-password" minlength="12" maxlength="72" required><label class="adultCheck"><input id="adultConfirm" type="checkbox"> Sono un adulto e gestirò i profili dei bambini</label><p class="hint">Alla registrazione riceverai un codice per recuperare l’account. Conservalo con cura.</p><button class="primary" name="action" value="login">Accedi</button><button class="audio" name="action" value="register">Crea account adulto</button></form><details id="accountRecovery"><summary>Password dimenticata? Recupera l’accesso</summary><p>Usa il codice di recupero ricevuto alla registrazione. Per gli alunni: riapri il link della classe e scegli Password dimenticata. Se non hai il codice, controlla qui sotto la disponibilità del recupero email.</p><form id="recoverAccount"><label>Email o nome utente<input name="username" autocomplete="username" required></label><label>Codice di recupero<input name="code" autocomplete="off" required></label><label>Nuova password<input name="password" type="password" autocomplete="new-password" minlength="12" maxlength="72" required></label><button class="primary">Reimposta password</button></form></details>';
@@ -342,7 +437,7 @@
         setProfileBusy(false,operation);panel.querySelector('[data-profile="'+p.id+'"]')?.focus({preventScroll:true});
       } catch (e) {
         if(session===ownerSession&&operation===profileOperation){
-          if(created){show();formSay(panel.querySelector('#newProfile'),'Profilo creato, ma caricamento non confermato. Sceglilo dall’elenco dei tuoi profili.');}
+          if(created){show();formSay(panel.querySelector('#newProfile'),'Profilo creato, ma caricamento non confermato. '+e.message+' Sceglilo dall’elenco dei tuoi profili.');}
           else if(sent&&(!e.code||e.code>=500)){uncertainProfile={ownerSession,nickname};showProfileVerification(form);}
           else formSay(form,e.message);
         }
@@ -353,7 +448,7 @@
     if (active) {
       panel.querySelector('#syncNow').onclick = () => { if (!locked) { schedule(); flush().catch(() => {}); } };
       panel.querySelector('#copyGuest').onclick = () => {
-        const guest = read(guestKey);
+        const guest = guestBackupMemory||read(guestKey);
         if (!guest || locked) { say('Nessun progresso ospite da copiare.'); return; }
         // Merge progress only; keep the selected profile's world and avatar.
         for (const [word, s] of Object.entries(guest.stats || {})) {
@@ -381,8 +476,8 @@
         const result=await request(action,data);if(session!==ownerSession||operation!==profileOperation)return;
         if(result.recovery){form.reset();formSay(form,'Nuovo codice generato. Il precedente non è più valido.',null,false);recoveryNotice(result.recovery);}
         else {
-          active=null;pending=false;clearTimeout(timer);try{localStorage.removeItem(activeKey);}catch{}
-          area.querySelector('#recoveryNotice')?.remove();const guest=read(guestKey);if(guest)apply(guest,guest.name);
+          const hadProfile=!!active||!!read(activeKey);discardDeletedCopy(ownerSession.username);if(hadProfile)stageGuestState();clearIdentity();active=null;pending=false;clearTimeout(timer);
+          area.querySelector('#recoveryNotice')?.remove();if(hadProfile)restoreGuestState();ownershipPause(false);
           session={csrf:'',username:null,role:null,profiles:[]};show();formSay(panel.querySelector('#accountForm'),'Account eliminato. Puoi continuare come ospite.');
           const deletedSession=session;
           try{const fresh=await request('session');if(session===deletedSession){session=fresh;updateAccessTools();}}catch{}
@@ -416,26 +511,47 @@
         try{
           await flush();if(session!==ownerSession||active!==target||operation!==profileOperation)return;
           const r=await request('delete-profile',{...data,profile:target.id});if(session!==ownerSession||active!==target||operation!==profileOperation)return;
-          active=null;pending=false;clearTimeout(timer);try{localStorage.removeItem(activeKey);}catch{}
-          const guest=read(guestKey);if(guest)apply(guest,guest.name);session.profiles=r.profiles;show();formSay(panel.querySelector('#newProfile'),'Profilo '+target.nickname+' eliminato. Gli altri profili restano disponibili.');
+          discardDeletedCopy(ownerSession.username,target.id);stageGuestState();clearIdentity();active=null;pending=false;clearTimeout(timer);
+          restoreGuestState();ownershipPause(false);session.profiles=r.profiles;show();formSay(panel.querySelector('#newProfile'),'Profilo '+target.nickname+' eliminato. Gli altri profili restano disponibili.');
         }catch(error){if(session===ownerSession&&active===target&&operation===profileOperation)formSay(form,error.message);}
         finally{setProfileBusy(false,operation);if(form.isConnected)form.setAttribute('aria-busy','false');}
       };
     }
-    reflectProfileBusy();signalProfile();
+    appendPendingRecovery();reflectProfileBusy();signalProfile();
   }
   function logout() {
     if(logoutFlight)return logoutFlight;
     logoutFlight=(async()=>{
+      const ownerSession=session,target=active,choice=profileChoice;
       if(locked)throw new Error('Carica la versione online prima di uscire. La copia locale è conservata.');
-      await flush();const result=await request('logout',{});setProfileBusy(false);active=null;pending=false;uncertainProfile=null;clearTimeout(timer);
-      try{localStorage.removeItem(activeKey);}catch{}
-      const guest=read(guestKey);if(guest)apply(guest,guest.name);
+      await flush();
+      if(session!==ownerSession||active!==target||profileChoice!==choice)throw new Error('L’accesso o il profilo è cambiato. Verifica il profilo prima di uscire.');
+      const savedRevision=revision,hadProfile=!!active||!!read(activeKey);let result;
+      try{result=await request('logout',{});}
+      catch(error){
+        // The server may have already ended the session while its reply was lost.
+        // Verify with a read only; never repeat an authentication POST automatically.
+        if((!error.code||[401,403].includes(error.code))&&session===ownerSession&&active===target&&profileChoice===choice){
+          try{const verified=await request('session');if(!verified.username)result=verified;}catch{}
+        }
+        if(!result)throw error;
+      }
+      if(session!==ownerSession)throw new Error('L’accesso è cambiato durante l’uscita. Il nuovo account resta aperto.');
+      if(active!==target||profileChoice!==choice||revision!==savedRevision||pending||busy){
+        accessExpired=true;showReauthentication();
+        throw new Error('L’accesso online è stato chiuso, ma la partita è cambiata durante l’uscita. La copia locale è conservata: conferma l’accesso per salvarla prima di uscire.');
+      }
+      try{if(privateCache)quarantine(privateCache);if(hadProfile)stageGuestState();clearIdentity();}
+      catch(error){if(!privateCache&&target)privateCache={owner:ownerSession.username,profile:target.id,revision:savedRevision,state:clone(snapshot())};setProfileBusy(false);active=null;pending=false;accessExpired=false;session={csrf:result.csrf||'',username:null,role:null,profiles:[]};ownershipPause(true);initialAccessError(error);throw error;}
+      setProfileBusy(false);active=null;pending=false;uncertainProfile=null;accessExpired=false;area.querySelector('#sessionReconnect')?.remove();clearTimeout(timer);privateCache=null;
+      if(hadProfile)restoreGuestState();
+      ownershipPause(false);
       area.querySelector('#recoveryNotice')?.remove();
       // New servers return the freshly rotated anonymous CSRF immediately.
       // Older servers need one read before any guest forms become interactive.
       let fresh={csrf:'',username:null,role:null,profiles:[]},ready=false;
       try{fresh=result.csrf?{...fresh,csrf:result.csrf}:await request('session');ready=true;}catch{}
+      if(session!==ownerSession||active)throw new Error('L’accesso è cambiato durante l’uscita. Il nuovo account resta aperto.');
       session=fresh;show();say(ready?'Sei uscito. Ora giochi come ospite.':'Sei uscito dall’account. La connessione non è pronta: usa Accedi per riprovare.');
     })().finally(()=>{logoutFlight=null;if(resetToken)queueMicrotask(openEmailReset);});
     return logoutFlight;
@@ -455,14 +571,20 @@
       const p=await request('create-profile',{nickname});if(session!==ownerSession)return null;
       session.profiles.push(p);await choose(p.id);return p;
     },
-    info:()=>({id:active?.id||null,nickname:active?.nickname||'',username:session?.username||null,role:session?.role||null,saving:!!busy,pending:!!pending,locked:!!locked,authExpired:!!accessExpired,working:pendingWrites>0||profileChanging||!!logoutFlight||uncertainProfile?.ownerSession===session,recoveryPending:!!document.querySelector('#recoveryNotice,#classRecoveryNotice[data-recovery-pending="true"]')})
+    info:()=>({id:active?.id||null,nickname:active?.nickname||'',username:session?.username||null,role:session?.role||null,saving:!!busy,pending:!!pending,locked:!!locked,authExpired:!!accessExpired,working:ownershipPaused||pendingWrites>0||profileChanging||!!logoutFlight||uncertainProfile?.ownerSession===session,recoveryPending:!!document.querySelector('#recoveryNotice,#classRecoveryNotice[data-recovery-pending="true"]')})
   };
   window.addEventListener('online', () => flush().catch(() => {}));
   window.addEventListener('beforeunload', e => { if (pending || busy) { e.preventDefault(); e.returnValue = ''; } });
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flush().catch(() => {}); });
+  const bootIdentity=read(activeKey);
+  if(bootIdentity?.id&&typeof bootIdentity.username==='string'){const canonical=bootIdentity.state&&typeof bootIdentity.state==='object'&&!Array.isArray(bootIdentity.state);privateCache={owner:bootIdentity.username,profile:Number(bootIdentity.id),revision:canonical&&Number.isInteger(bootIdentity.revision)?bootIdentity.revision:null,state:clone(canonical?bootIdentity.state:snapshot())};}
+  ownershipPause(ownershipPaused||!!privateCache);
+  if(ownershipPaused){area.open=true;area.dataset.exposed='true';say('Verifichiamo il tuo accesso prima di mostrare i progressi. La copia di questo dispositivo resta protetta.');}
   updateAccessTools();
   window.addEventListener('hashchange',()=>{if(captureResetLink()){openEmailReset();return;}if(location.hash==='#recupera-password')openAccess('recover');else if(location.hash==='#account')openAccess('login');});
-  window.wordylandAccount.ready = request('session').then(async result => {
+  async function restoreInitialSession(){
+    const ownerSession=session,result=await request('session');
+    if(session!==ownerSession)return;
     session = result; show();
     if(session.role==='learner'&&session.profiles.length===1){await choose(session.profiles[0].id);return;}
     const cached = read(activeKey);
@@ -470,8 +592,26 @@
       // Explicitly reopen the same server profile; no silent guest-to-account merge.
       await choose(cached.id);
     } else {
-      if (cached) { const guest = read(guestKey); if (guest) apply(guest, guest.name); try { localStorage.removeItem(activeKey); } catch {} }
+      if (cached) {if(privateCache)quarantine(privateCache);stageGuestState();clearIdentity();privateCache=null;restoreGuestState();ownershipPause(false);}
+      else if(!privateCache)ownershipPause(false);
       say(session.username ? 'Scegli il profilo con cui giocare.' : 'Modalità ospite: i progressi restano su questo dispositivo.');
     }
-  }).catch(e => { panel.innerHTML = '<p>Puoi giocare come ospite.</p>'; say(e.message); }).finally(()=>{initializing=false;updateAccessTools();if(resetToken){queueMicrotask(openEmailReset);return;}if(location.hash==='#recupera-password')openAccess('recover');else if(location.hash==='#account')openAccess('login');});
+  }
+  function initialAccessError(error){
+    updateAccessTools();
+    area.open=true;area.dataset.exposed='true';
+    if(session?.username){
+      show();panel.insertAdjacentHTML('beforeend','<a class="accountOfflineLink" href="offline.html">Apri il ripasso offline pubblico</a>');say((active?'La copia locale è disponibile. ':'Accesso confermato, ma i progressi non sono ancora caricati. ')+(session.role==='learner'?'Usa “Carica il mio profilo”.':'Scegli il tuo profilo dall’elenco per riprovare.')+' '+error.message);
+      return;
+    }
+    panel.innerHTML='<h3>Verifichiamo il tuo accesso</h3><p>La connessione non ci ha permesso di verificare l’account. Puoi riprovare senza creare un altro account o profilo. La copia di questo dispositivo resta protetta.</p><button type="button" class="primary" id="retryInitialSession">Riprova la connessione</button><a class="accountOfflineLink" href="offline.html">Apri il ripasso offline pubblico</a>';
+    panel.querySelector('#retryInitialSession').onclick=async event=>{
+      if(initializing)return;const button=event.currentTarget;button.disabled=true;initializing=true;updateAccessTools();
+      try{await restoreInitialSession();}
+      catch(retryError){initialAccessError(retryError);}
+      finally{initializing=false;updateAccessTools();reflectProfileBusy();}
+    };
+    say('Accesso non ancora verificato. '+error.message);
+  }
+  window.wordylandAccount.ready = restoreInitialSession().catch(initialAccessError).finally(()=>{initializing=false;updateAccessTools();reflectProfileBusy();if(resetToken){queueMicrotask(openEmailReset);return;}if(location.hash==='#recupera-password')openAccess('recover');else if(location.hash==='#account')openAccess('login');});
 })();

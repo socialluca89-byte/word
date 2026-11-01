@@ -1,3 +1,15 @@
+# Revisione completa dei percorsi — candidato non pubblicato
+
+Schermate reali della pagina locale completa con profili sintetici. [Revisione, problemi e matrice](../FULL_PRODUCT_REVIEW_2026_11_01.md). Lo stato live resta separato: il blocco SiteGround non è risolto da queste immagini.
+
+- [Guardaroba390px: intero personaggio, cappello e distintivo; controlli esterni](full-review-wardrobe-390.png)
+- [Guardaroba320px](full-review-wardrobe-320.png)
+- [Sfida390px: personaggio scelto intero e risposta visibile](full-review-duel-390.png)
+
+Le sezioni seguenti sono cronologia dei lotti precedenti.
+
+---
+
 # Correzione dei percorsi di gioco — 1 novembre 2026
 
 Schermate della pagina locale completa, con soli dati sintetici. [Difetti riprodotti e test](../PLAY_EXPERIENCE_FIX_2026_11_01.md). Stato di pubblicazione da verificare nel relativo run: queste schermate da sole non dimostrano il deploy.

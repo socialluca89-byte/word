@@ -1,0 +1,61 @@
+{
+  "application_digest_sha256": "9787f1a5e3721f74a53e51b2d40eedd1a354a343fd6f0f3a4cf5f76d13ca3165",
+  "application_files": 49,
+  "baseline_main": "5d4c6b2837c9291ae57ac04b7fa799b4984afa39",
+  "last_verified_live": "901fd989cf79d84e651164af5ccc8f6774e53bf1",
+  "publication": "held; no main push, deployment or production probes in this review",
+  "mandatory_verify_checks": 35,
+  "complete_browser_suites": 44,
+  "new_production_default_suites": [
+    "account-resilience",
+    "game-resilience",
+    "journey-navigation",
+    "appearance-consistency",
+    "duel-identity",
+    "offline-audio"
+  ],
+  "focused_local_checks": [
+    {
+      "suite": "account-resilience",
+      "result": "PASS on final canonical account source; initialized-profile failure, backup quota, uncertain logout, pointer-only and legacy-mirror-only storage failures, unknown cached account mask, owner recovery and safe copy lifecycle"
+    },
+    {
+      "suite": "game-resilience",
+      "result": "PASS atomic guest commit/legacy migration, keyboard chain, quota and two-tab conflicts; classic write warning and honest custom save confirmation"
+    },
+    {
+      "suite": "journey-navigation",
+      "result": "PASS guest/owned, back/forward, hero, same-hash, real zoom, pending purchase route intent and no duplicate costs"
+    },
+    {
+      "suite": "appearance-consistency",
+      "result": "PASS all97items, exact portraits, badge/palette representation, owned action skins, temporary previews, unchanged wallets, detached controls and geometry"
+    },
+    {
+      "suite": "duel-identity",
+      "result": "PASS three activities/two avatars, accessories, first answer visible on phone, resume/reload/second device, readonly appearance and ownership denials"
+    },
+    {
+      "suite": "offline-audio",
+      "result": "PASS lifecycle and late callbacks, actual current failure, two-tab offline progress and recovery; synthetic speech contract, not pronunciation"
+    }
+  ],
+  "independent_review": {
+    "original_pointer_failure": "PASS: guest41 preserved before/after failed switch and retry/logout",
+    "unknown_session": "PASS: private13 hidden/inert/no writes; guest41 restored after verified anonymous response",
+    "atomic_binding": "PASS: classic mirror remains guest41 under failure while canonical owned13/17 and revision remain correct after reload/flush",
+    "source": "read-only independent reproduction on disposable fixtures"
+  },
+  "negative_controls": [
+    "New offline audio test fails for the actual old defect on offline.js identical between live901 and main5d.",
+    "Reviewer caught and blocked an intermediate unsafe two-key identity/state binding; final state is bound atomically in one verified value."
+  ],
+  "final_verification_source": "Read Actions for the exact commit containing this report. Work-branch push runs verify/browser only; deployment/probes/rollback remain main-gated. Local cumulative logs are kept in the task execution workspace.",
+  "limitations": [
+    "No live user/account/child data read or modified.",
+    "No real email delivery, owner password recovery, original tablet or real speech pronunciation validation.",
+    "Cross-tab stamps reject observable stale writes; no claim of process-wide CAS.",
+    "No automatic merge of profile counters; recovery uses verified identity and exact copy/revision or explicit selection.",
+    "No SiteGround/security/credential changes or support messages."
+  ]
+}

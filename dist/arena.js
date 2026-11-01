@@ -6,7 +6,7 @@
   const avatars={fox:'🦊',panda:'🐼',robot:'🤖',dragon:'🐉',octopus:'🐙',lion:'🦁',reindeer:'🦌',penguin:'🐧',snowpal:'☃️',bunny:'🐰',koala:'🐨','elf-boy':'🧝‍♂️','elf-girl':'🧝‍♀️','polar-bear':'🐻‍❄️','gingerbread':'🍪','silver-reindeer':'🦌','mrs-claus':'🤶','santa':'🎅','nutcracker':'🥁','yeti':'☁️'};
   const text=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   window.wordylandArena={mount(host,profile,openAdults,resumeId=null){
-    let data={opponents:[],duels:[],classes:[]},busy=false,playing=false,sceneView=null,renderedDuels='',renderedOpponents='',loading=null,questionSpeech=null;
+    let data={opponents:[],duels:[],classes:[]},busy=false,playing=false,sceneView=null,sceneAppearance='',renderedDuels='',renderedOpponents='',loading=null,questionSpeech=null;
     const valid=()=>host.isConnected&&window.wordylandAccount.info().id===profile.id;
     const request=(action,body)=>window.wordylandAccount.request(action,body===undefined?undefined:{...body,profile:profile.id});
     const stopQuestionAudio=()=>{const owned=questionSpeech;questionSpeech=null;if(owned&&'speechSynthesis'in window)speechSynthesis.cancel();};
@@ -88,7 +88,7 @@
       if(busy||!valid())return;busy=true;
       try{const result=await request('duel&profile='+profile.id+'&duel='+encodeURIComponent(id));if(!valid())return;
         if(!result.question){busy=false;await load('Questa partita è già terminata oppure non è ancora iniziata.');return;}
-        playing=true;showQuestion(result);host.querySelector('#duelStage').scrollIntoView({behavior:'smooth',block:'center'});
+        playing=true;showQuestion(result);host.querySelector('#duelStage').scrollIntoView({behavior:window.wordylandMotion?.allowed()?'smooth':'instant',block:'start'});
       }catch(e){status(e.message);}finally{busy=false;}
     }
     function showQuestion(result,feedback=''){
@@ -97,9 +97,14 @@
       const previousWorld=stage.querySelector('#duelWorld');if(!previousWorld){sceneView?.dispose();sceneView=null;}
       stage.hidden=false;
       host.querySelector('.arenaLayout').hidden=true;
-      stage.innerHTML='<div class="duelStageTop"><span class="duelBadge">TU vs '+text(d.nickname)+'</span><button class="audio" id="duelBack">⏸ Pausa</button></div><div class="duelWorld" id="duelWorld"><span class="sceneFallback">'+({football:'⚽',space:'🚀'}[d.activity]||'🏎️')+'</span><span class="worldProgressLabel">'+text(modes[d.activity]||modes.kart)+'</span></div><p class="duelSaveNote">Ogni risposta confermata è salvata automaticamente. Puoi chiudere e riprendere con lo stesso profilo.</p><p class="duelScoreNote">Il tuo mondo avanza con le risposte corrette. Il punteggio del compagno si scopre quando avete finito entrambi.</p><div class="duelProgress"><span>Domanda '+q.number+' di '+d.total+'</span><b>'+d.score+' punti</b></div><div class="questTrack"><i style="width:'+(d.step/d.total*100)+'%"></i></div><span class="duelEmoji" aria-hidden="true">'+text(q.emoji)+'</span><h3>Come si dice «'+text(q.translation)+'»?</h3><p>Scegli la parola in inglese.</p><div class="duelOptions">'+q.options.map((answer,i)=>'<button data-duel-answer="'+i+'"><span>'+String.fromCharCode(65+i)+'</span>'+text(answer)+'</button>').join('')+'</div><div id="duelFeedback" role="status" aria-live="polite">'+text(feedback)+'</div>';
+      stage.innerHTML='<div class="duelStageTop"><span class="duelBadge">TU vs '+text(d.nickname)+'</span><button class="audio" id="duelBack">⏸ Pausa</button></div><div class="duelWorld" id="duelWorld"><span class="sceneFallback">'+({football:'⚽',space:'🚀'}[d.activity]||'🏎️')+'</span><span class="worldProgressLabel">'+text(modes[d.activity]||modes.kart)+'</span></div><p class="duelSaveNote">Risposte salvate. Puoi fare una pausa.</p><div class="duelProgress"><span>Domanda '+q.number+' di '+d.total+'</span><b>'+d.score+' punti</b></div><div class="questTrack"><i style="width:'+(d.step/d.total*100)+'%"></i></div><span class="duelEmoji" aria-hidden="true">'+text(q.emoji)+'</span><h3>Come si dice «'+text(q.translation)+'»?</h3><p>Scegli la parola in inglese.</p><div class="duelOptions">'+q.options.map((answer,i)=>'<button data-duel-answer="'+i+'"><span>'+String.fromCharCode(65+i)+'</span>'+text(answer)+'</button>').join('')+'</div><div id="duelFeedback" role="status" aria-live="polite">'+text(feedback)+'</div><details class="duelHelp" id="duelHelp"><summary>Come funziona la sfida</summary><p class="duelSaveNote">Ogni risposta confermata è salvata automaticamente. Puoi chiudere e riprendere con lo stesso profilo.</p><p class="duelScoreNote">Il tuo mondo avanza con le risposte corrette. Il punteggio del compagno si scopre quando avete finito entrambi.</p></details>';
       if(previousWorld)stage.querySelector('#duelWorld').replaceWith(previousWorld);
-      else sceneView=window.wordylandIsland.mount(stage.querySelector('#duelWorld'),{kind:d.activity||'kart',progress:d.score/(d.total*10)});
+      const updateWorld=(duel,equipped)=>{
+        const appearance=JSON.stringify(equipped||{avatar:'fox'}),progress=duel.score/(duel.total*10);
+        if(!sceneView||sceneAppearance!==appearance){sceneView?.dispose();sceneView=window.wordylandIsland.mount(stage.querySelector('#duelWorld'),{kind:duel.activity||'kart',progress,equipped:equipped||{avatar:'fox'}});sceneAppearance=appearance;}
+        else sceneView.update({progress});
+      };
+      updateWorld(d,result.equipped);
       stage.querySelector('#duelBack').onclick=()=>{if(busy)return;stopQuestionAudio();window.wordylandUI?.play();playing=false;load('Le risposte confermate sono salvate. Puoi riprendere la sfida quando vuoi.');};
       const listen=document.createElement('button');listen.type='button';listen.className='audio';listen.id='duelListen';listen.textContent='🔊 Ascolta la domanda';listen.onclick=()=>{if(!('speechSynthesis'in window)){stage.querySelector('#duelFeedback').textContent='La voce non è disponibile. Puoi leggere la domanda.';return;}speechSynthesis.cancel();const voice=new SpeechSynthesisUtterance('Come si dice '+q.translation+' in inglese?');voice.lang='it-IT';voice.rate=.85;questionSpeech=voice;voice.onend=()=>{if(questionSpeech===voice)questionSpeech=null;};voice.onerror=()=>{if(questionSpeech!==voice)return;questionSpeech=null;if(valid()&&listen.isConnected)stage.querySelector('#duelFeedback').textContent='La voce non è disponibile. Puoi leggere la domanda.';};speechSynthesis.speak(voice);};stage.querySelector('.duelOptions').before(listen);
       stage.querySelectorAll('[data-duel-answer]').forEach(b=>b.onclick=async()=>{
@@ -108,7 +113,7 @@
           const next=await request('duel-answer',{duel:d.id,step:d.step,answer:Number(b.dataset.duelAnswer)});
           if(!valid())return;window.dispatchEvent(new Event('wordyland-progress-saved'));
           window.wordylandLearning.show(stage.querySelector('#duelFeedback'),next.correct,{expected:next.correctAnswer,answer:q.options[Number(b.dataset.duelAnswer)],word:next.correctAnswer,translation:q.translation,kind:'choice',retry:false,button:b,message:'Hai trovato la parola! +10 punti per te.'});
-          sceneView?.update({progress:next.duel.score/(d.total*10)});
+          updateWorld(next.duel,next.equipped);
           sceneView?.react(next.correct?(!next.question?'complete':'success'):'retry');
 
           if(!next.question)window.dispatchEvent(new CustomEvent('wordyland-celebrate'));
@@ -125,7 +130,10 @@
   }};
   document.addEventListener('click',e=>{
     const action=e.target.closest('[data-jump]')?.dataset.jump;if(!action)return;
+    if(location.hash==='#allenamento')window.wordylandTraining?.leaveForGame();
+    window.wordylandUI?.play();
+    window.dispatchEvent(new Event('wordyland-play-view'));
     document.querySelector('[data-tab="'+action+'"]')?.click();
-    document.querySelector('.questHub')?.scrollIntoView({behavior:'smooth',block:'start'});
+    document.querySelector('.questHub')?.scrollIntoView({behavior:window.wordylandMotion?.allowed()?'smooth':'instant',block:'start'});
   });
 })();

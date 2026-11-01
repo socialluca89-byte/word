@@ -132,3 +132,15 @@ body[data-play]:not([data-play=""]) header .tag{display:none}.questHub #duelStag
 .offlineLetterChoices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:20px 0}.offlineLetterChoices button{font-size:56px;min-height:112px}.offlineLetterChoices small{font-size:40px;display:block}.offlineBigLetter{font-size:90px;text-align:center;font-weight:800;margin:20px 0}.offlineBigLetter small{font-size:68px}.offlineBigLetter[hidden]{display:none}.offlineLetterAudio{display:flex;gap:10px;flex-wrap:wrap}.offlineLetterIntro summary{font-size:20px;min-height:48px;padding:12px 0}
 
 .phonicsEntry{padding:18px;border:2px solid #d5cfe9;border-radius:18px;margin:22px 0;background:#f6f0ff}.phonicsContrast{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,250px),1fr));gap:16px}.phonicsContrast>p{padding:18px;border:2px solid #d7e6d1;border-radius:16px}.phonicsContrast b{font-size:68px}.phonicsInitial{background:#ffe69a;color:#3c513e;border-radius:7px;padding:0 4px}.phonicsChoices{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr));gap:12px;margin:20px 0}.phonicsChoices button{min-height:92px;margin:0!important;font-size:26px!important}.phonicsChoices button>span{display:block;font-size:54px}.phonicsChoices small{display:block;font-size:20px}.phonicsFeedbackIcon{font-size:32px}.phonicsMode{font-size:18px!important}
+
+/* Illustrated faces and earned accessories remain whole in compact questions. */
+.questHub #duelStage .duelWorld[data-render="illustrated"],.questHub #missionStage .missionWorld[data-render="illustrated"],.questHub #missionStage[data-phase="challenge"] .missionWorld[data-render="illustrated"]{height:160px;min-height:160px}
+
+/* Optional duel explanations follow the answers; primary choices stay in view. */
+.questHub #duelStage .duelHelp{margin:16px 0 0}.questHub #duelStage .duelHelp>summary{min-height:48px;padding:12px 10px;font-size:17px;line-height:1.4;cursor:pointer}.questHub #duelStage .duelHelp>summary:focus-visible{outline:3px solid #6356d7;outline-offset:3px}
+
+/* A cached account is private until session/profile ownership is verified. */
+html[data-account-verification="pending"] #total,html[data-account-verification="pending"] main>:not(.accountArea):not(.classGate){display:none!important}
+.pendingLocalCopy{margin:16px 0;padding:16px;border:2px solid #d1af67;border-radius:14px;background:#fff8e4}.pendingLocalCopy p{font-size:17px}.pendingLocalCopy button{min-height:48px}.accountOfflineLink{display:block;margin:14px 0;font-size:17px}
+
+.classicStorageNotice{padding:12px 16px;border:2px solid #d99c58;border-radius:14px;background:#fff4dc;color:#654122;font-size:18px;line-height:1.5}

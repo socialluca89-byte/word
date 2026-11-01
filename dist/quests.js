@@ -3,9 +3,9 @@
   const root=document.createElement('section');root.id='questHub';root.className='questHub';
   root.setAttribute('aria-label','Il tuo passaporto delle avventure');
   document.querySelector('.raceHero').after(root);
-  let profile={id:null},hub=null,tab='adventures',mission=null,question=null,busy=false,tiles=[],picked=[],club=0, questionFailed=false;
+  let profile={id:null},hub=null,tab='adventures',mission=null,question=null,busy=false,tiles=[],picked=[],club=0, questionFailed=false,purchasePending=false,deferredNavigation=false;
   // One focused play surface; returning to a section always restores navigation.
-  window.wordylandUI={play(kind=''){
+  window.wordylandUI={deferNavigation(){if(!purchasePending)return false;deferredNavigation=true;const status=document.querySelector('#appStatus');if(status)status.textContent='Confermo la scelta in corso, poi apro la sezione richiesta.';return true;},play(kind=''){
     if(kind&&kind!=='training'&&location.hash==='#allenamento')window.wordylandTraining?.leaveForGame();
     document.body.dataset.play=kind;
     if(kind){document.querySelectorAll('.adultNavigation,.accountArea').forEach(node=>node.open=false);}
@@ -14,7 +14,7 @@
   let lessonSource=null,lessonGroup='all';
   let activity='treehouse',shopGroup='avatar',sceneView=null;
   const clearScene=()=>{sceneView?.dispose();sceneView=null;};
-  let guest;try{guest=JSON.parse(localStorage.getItem('wordylandGuestWallet')||'null');}catch{}
+  let guest,guestWalletStamp=null,guestWriteConflict=false;try{guestWalletStamp=localStorage.getItem('wordylandGuestWallet');guest=JSON.parse(guestWalletStamp||'null');}catch{}
   guest=guest&&Number.isFinite(guest.coins)?guest:{coins:0,xp:0,level:1,equipped:{avatar:'fox'},inventory:['fox'],credits:{},paid:{}};
   const catalog=[['fox','Volpe esploratrice','🦊','avatar',0],['panda','Panda delle stelle','🐼','avatar',30],['robot','Robot inventore','🤖','avatar',45],['dragon','Drago delle parole','🐉','avatar',60],['octopus','Polpo creativo','🐙','avatar',45],['lion','Leone coraggioso','🦁','avatar',60],['cap','Cappello da avventura','🧢','hat',20],['crown','Corona delle scoperte','👑','hat',40],['sparkles','Scia luminosa','✨','effect',25],['flight','Volo delle parole','🪽','effect',50],['confetti','Festa di coriandoli','🎉','effect',35]].map(([id,name,icon,slot,price])=>({id,name,icon,slot,price}));
   guest.adventures=guest.adventures&&typeof guest.adventures==='object'&&!Array.isArray(guest.adventures)?guest.adventures:{};
@@ -32,7 +32,7 @@
   const api=(action,data)=>window.wordylandAccount.request(action,data===undefined?undefined:{...data,profile:profile.id});
   function grantGuestBadges(state=guest){const counts={missions:Object.values(state.adventures).reduce((n,v)=>n+(Number(v)||0),0),activities:Object.values(state.adventures).filter(v=>Number(v)>0).length};for(const reward of catalog)if(reward.unlock&&Object.entries(reward.unlock).every(([metric,needed])=>counts[metric]>=needed)&&!state.inventory.includes(reward.id))state.inventory.push(reward.id);}
   grantGuestBadges();
-  const storeGuest=(state=guest)=>{grantGuestBadges(state);state.level=1+Math.floor(state.xp/100);try{localStorage.setItem('wordylandGuestWallet',JSON.stringify(state));return true;}catch{return false;}};
+  const storeGuest=(state=guest)=>{grantGuestBadges(state);state.level=1+Math.floor(state.xp/100);guestWriteConflict=false;try{if(localStorage.getItem('wordylandGuestWallet')!==guestWalletStamp){guestWriteConflict=true;return false;}const serialized=JSON.stringify(state);localStorage.setItem('wordylandGuestWallet',serialized);guestWalletStamp=serialized;return true;}catch{return false;}};
   const resumeHost=document.createElement('section');resumeHost.id='resumeHub';resumeHost.className='resumeHub';resumeHost.hidden=true;resumeHost.setAttribute('aria-label','Missioni e sfide da continuare');document.querySelector('.startChoices').before(resumeHost);
   let pending={quests:[],duels:[]},pendingEpoch=0,resumeDuel=null;
   const guestMissionKey='wordylandGuestMission';
@@ -40,11 +40,23 @@
   for(const [id,time] of Object.entries(guest.finished))if(!/^[a-f0-9]{32}$/.test(id)||!Number.isFinite(time)||time<Date.now()-604800000)delete guest.finished[id];
   function guestPool(source){return source==='personal'?allWords().filter(w=>!w[0].includes(' ')):lists[source]||lists.body;}
   function guestDraft(){
-    try{const draft=JSON.parse(localStorage.getItem(guestMissionKey)||'null');if(!draft||typeof draft.source!=='string'||draft.source!=='personal'&&!Object.hasOwn(lists,draft.source)||!Array.isArray(draft.words)||!draft.words.length||draft.words.length>8||!Number.isInteger(draft.step)||draft.step<0||draft.step>=draft.words.length||!places[draft.activity]||!/^[a-f0-9]{32}$/.test(draft.id)||!Number.isFinite(draft.expiresAt)||draft.expiresAt<Date.now()||guest.finished[draft.id])return null;const pool=guestPool(draft.source);if(!draft.words.every(word=>pool.some(row=>row[0]===word)))return null;return draft;}catch{return null;}
+    try{const draft=Object.hasOwn(guest,'missionDraft')?guest.missionDraft:JSON.parse(localStorage.getItem(guestMissionKey)||'null');if(!draft||typeof draft.source!=='string'||draft.source!=='personal'&&!Object.hasOwn(lists,draft.source)||!Array.isArray(draft.words)||!draft.words.length||draft.words.length>8||!Number.isInteger(draft.step)||draft.step<0||draft.step>=draft.words.length||!places[draft.activity]||!/^[a-f0-9]{32}$/.test(draft.id)||!Number.isFinite(draft.expiresAt)||draft.expiresAt<Date.now()||guest.finished[draft.id])return null;const pool=guestPool(draft.source);if(!draft.words.every(word=>pool.some(row=>row[0]===word)))return null;return draft;}catch{return null;}
   }
+  function guestMissionSnapshot(step=mission.step||0,xp=mission.xp,flags=mission.questions[step]){return {id:mission.id,words:mission.questions.map(q=>q.word),step,xp,source:mission.source,activity:mission.activity,expiresAt:mission.expiresAt,hadErrors:Boolean(flags?.hadErrors),assisted:Boolean(flags?.assisted)};}
+  function commitGuestMission(next,draft){
+    // The wallet and its current mission share one atomic localStorage write.
+    // The old mission key is only a compatibility mirror; a stale mirror cannot
+    // revive a completed mission or replace a newer confirmed answer.
+    next.missionDraft=draft;
+    if(!storeGuest(next))return false;
+    guest=next;
+    try{if(draft===null)localStorage.removeItem(guestMissionKey);else localStorage.setItem(guestMissionKey,JSON.stringify(draft));}catch{}
+    return true;
+  }
+  function guestSaveFailure(){return Object.assign(Error(guestWriteConflict?'I progressi sono cambiati in un’altra scheda. Ricarica questa pagina e riprendi dall’ultima risposta salvata: non sovrascriviamo le scoperte o gli oggetti già confermati.':'Il browser non ha salvato la risposta. Libera spazio e riprova: la domanda e i premi non avanzano.'),{guestStorageFailure:true,guestConflict:guestWriteConflict});}
   function persistGuestMission(){
     if(profile.id||!mission||mission.token!=='guest')return true;
-    try{localStorage.setItem(guestMissionKey,JSON.stringify({id:mission.id,words:mission.questions.map(q=>q.word),step:mission.step||0,xp:mission.xp,source:mission.source,activity:mission.activity,expiresAt:mission.expiresAt,hadErrors:Boolean(mission.questions[mission.step||0]?.hadErrors),assisted:Boolean(mission.questions[mission.step||0]?.assisted)}));return true;}catch{return false;}
+    return commitGuestMission(JSON.parse(JSON.stringify(guest)),guestMissionSnapshot());
   }
   function missionTitle(source,kind){return lessonTopics[source]?.name||(source==='catpositions'?'Preposizioni · Il gatto e la scatola':source==='focus'?'Il corpo · ripasso mirato':source?.startsWith('study:')?'La tua scheda di scuola':places[kind]?.name||'La tua missione');}
   const recommended=[['catpositions','Preposizioni con il gatto','🐈','pets'],['focus','Le parole del corpo','👀','pets'],['counting','Contiamo insieme','🔢','creative'],['mousepositions','Dov’è il topolino?','🐭','pets'],['conversation','Facciamo amicizia','👋','creative']];
@@ -261,15 +273,22 @@
       if(profile.id){result=await api('quest-answer',{token:mission.token,step:question.number-1,answer,assisted:question.assisted===true});}
       else{
         const correct=normalize(answer)===normalize(question.answer||question.word);
-        if(!correct)result={correct:false,message:'Riascolta e riprova con calma. Gli aiuti sono sempre disponibili.'};
+        const next=JSON.parse(JSON.stringify(guest));
+        if(next.finished[mission.id])throw Error('Questa missione è già completata. Aprine una nuova.');
+        if(!correct){
+          if(!commitGuestMission(next,guestMissionSnapshot(mission.step||0,mission.xp,{...question,hadErrors:true})))throw guestSaveFailure();
+          result={correct:false,message:'Riascolta e riprova con calma. Gli aiuti sono sempre disponibili.'};
+        }
         else {
           const day=new Date().toISOString().slice(0,10),key=day+':'+normalize(question.word);
-          if(!guest.credits[key]&&Object.keys(guest.credits).filter(x=>x.startsWith(day)).length<15){guest.credits[key]=true;guest.xp+=10;mission.xp+=10;}
+          let xp=mission.xp;
+          if(!next.credits[key]&&Object.keys(next.credits).filter(x=>x.startsWith(day)).length<15){next.credits[key]=true;next.xp+=10;xp+=10;}
           const done=question.number===mission.total;
-          if(guest.finished[mission.id])throw Error('Questa missione è già completata. Aprine una nuova.');
-          let coins=0;if(done&&mission.xp>0&&(guest.paid[day]||0)<3){coins=15;guest.coins+=coins;guest.paid[day]=(guest.paid[day]||0)+1;}
-          if(done){guest.adventures[mission.activity]=(Number(guest.adventures[mission.activity])||0)+1;guest.finished[mission.id]=Date.now();}
-          storeGuest();result={correct:true,independent:!question.assisted&&!question.hadErrors&&!questionFailed,done,xp:mission.xp,coins,wallet:guest,question:mission.questions[question.number]};
+          let coins=0;if(done&&xp>0&&(next.paid[day]||0)<3){coins=15;next.coins+=coins;next.paid[day]=(next.paid[day]||0)+1;}
+          if(done){next.adventures[mission.activity]=(Number(next.adventures[mission.activity])||0)+1;next.finished[mission.id]=Date.now();}
+          if(!commitGuestMission(next,done?null:guestMissionSnapshot(question.number,xp)))throw guestSaveFailure();
+          mission.xp=xp;mission.step=question.number;
+          result={correct:true,independent:!question.assisted&&!question.hadErrors&&!questionFailed,done,xp,coins,wallet:guest,question:mission.questions[question.number]};
         }
       }
       if(owner!==profile.id||token!==mission?.token)return;
@@ -278,9 +297,9 @@
       const word=question.word;stats[word]??={good:0,attempts:0,review:false};stats[word].attempts++;if(result.correct&&result.independent===true){stats[word].good++;stats[word].review=false;}else{stats[word].review=true;if(!result.correct)questionFailed=true;}save();updateStats();
       const learning={expected:window.wordylandLearning.expected(question),answer,word:question.word,translation:question.translation,kind:question.kind,prompt:question.prompt,chosenTranslation:question.options?.find(option=>option[0]===answer)?.[1],button:chosenButton,input:root.querySelector('#questAnswer')};
       saveNote.textContent=result.correct?(profile.id?'✓ Risposta salvata nel profilo':'✓ Risposta salvata qui'):'Puoi riprovare con calma.';
-      if(!result.correct){question.hadErrors=true;if(!profile.id)persistGuestMission();window.wordylandLearning.show(feedback,false,learning);sceneView?.react('retry');return;}
+      if(!result.correct){question.hadErrors=true;window.wordylandLearning.show(feedback,false,learning);sceneView?.react('retry');return;}
       if(hub&&result.wallet)hub.wallet=result.wallet;
-      if(!result.done){mission.step=question.number;persistGuestMission();}else if(!profile.id){try{localStorage.removeItem(guestMissionKey);}catch{}}
+      if(!result.done)mission.step=question.number;
       refreshPending();
       root.querySelectorAll('#questWork button,#questWork input').forEach(b=>b.disabled=true);
       window.wordylandLearning.show(feedback,true,learning);
@@ -309,7 +328,7 @@
         root.querySelector('#questActions').innerHTML='<button class="primary" id="questNext">Continua →</button>';
         const next=root.querySelector('#questNext');next.onclick=()=>{question=result.question;drawQuestion();};next.focus({preventScroll:true});mission.nextQuestion=result.question;
       }
-    }catch(e){saveNote.textContent='Risposta da verificare · usa Riprendi dal salvataggio';feedback.textContent=e.message;if(owner===profile.id&&mission?.token===token&&profile.id){const retry=document.createElement('button');retry.className='audio';retry.textContent='Riprendi dal salvataggio';retry.onclick=()=>resumeQuest(token);root.querySelector('#questActions')?.append(retry);}}finally{busy=false;const pause=root.querySelector('#pauseQuest');if(pause)pause.disabled=false;}
+    }catch(e){saveNote.textContent=e.guestConflict?'Progressi cambiati · ricarica e riprendi':e.guestStorageFailure?'Risposta non salvata · rimani qui e riprova':'Risposta da verificare · usa Riprendi dal salvataggio';feedback.textContent=e.message;if(owner===profile.id&&mission?.token===token&&!e.guestConflict&&(profile.id||e.guestStorageFailure)){const retry=document.createElement('button');retry.className='audio';retry.textContent=e.guestStorageFailure?'Riprova il salvataggio':'Riprendi dal salvataggio';retry.onclick=e.guestStorageFailure?()=>submitAnswer(answer,chosenButton):()=>resumeQuest(token);root.querySelector('#questActions')?.append(retry);}}finally{busy=false;const pause=root.querySelector('#pauseQuest');if(pause)pause.disabled=false;}
   }
   function renderShop(){
     clearScene();
@@ -317,7 +336,7 @@
     const previewKind={christmasCharacters:'pets',journey:'pets',christmas:'pets',avatar:'pets',home:'treehouse',pet:'pets',kart:'kart',palette:'creative',trophy:'treehouse',ball:'football',rocket:'space',badge:'pets'}[shopGroup];
     const shown=catalog.filter(it=>shopGroup==='christmasCharacters'?it.season==='christmas'&&it.slot==='avatar':shopGroup==='journey'?it.event==='journey':shopGroup==='christmas'?it.season==='christmas':shopGroup==='avatar'?['avatar','hat','effect','neck'].includes(it.slot):shopGroup==='home'?['room','plant','rug','lamp'].includes(it.slot):it.slot===shopGroup);
     const controlName=(it,owned,equipped)=>equipped?it.name+' in uso':(it.unlock||it.event)&&!owned?'Da conquistare: '+it.name:owned?(it.slot==='avatar'?'Usa personaggio ':'Scegli ')+it.name:it.price===0?'Scegli '+it.name+' gratis':'Sblocca '+it.name+' con '+it.price+' monete di gioco';
-    root.querySelector('#questContent').innerHTML='<div class="shopHeading"><div><span class="questEyebrow">IL TUO MONDO, COME PIACE A TE</span><h3>Scegli il tuo personaggio e il tuo stile.</h3><p>Scegli personaggi, accessori, trofei, palloni e razzi con le monete delle missioni. I distintivi si conquistano completando le avventure.</p><p class="hint">Nessun acquisto con denaro reale. Tutte le attività sono già aperte. Nella vista illustrata ritratto e accessori sono pedine e distintivi; scegli 3D classico per ruotare il modello e vedere anche gli arredi. La collezione Natale si conquista con gli esercizi del villaggio e resta tua anche dopo le feste.</p></div></div><a class="lessonShortcut" href="#festivita">🎄 Conquista i premi negli esercizi del villaggio →</a><a class="lessonShortcut" href="#scoperte">🧭 Collezioni e missioni per tutto l’anno →</a><nav class="styleTabs" aria-label="Cosa vuoi personalizzare?">'+Object.entries(groups).map(([id,name])=>'<button class="audio" data-style="'+id+'" aria-pressed="'+(shopGroup===id)+'">'+name+'</button>').join('')+'</nav><div class="stylePreview" id="stylePreview" role="region" tabindex="-1" aria-label="Anteprima della tua scelta"><span class="sceneFallback">'+places[previewKind].icon+'</span><span class="previewBadge">'+groups[shopGroup]+' · la tua scelta</span></div><p id="shopPreviewStatus" class="shopPreviewStatus" role="status" aria-live="polite">Le anteprime sono gratis e non cambiano la tua scelta.</p><button type="button" class="audio" id="returnToReward" hidden>Torna all’oggetto</button>'+(['avatar','journey','christmas','christmasCharacters'].includes(shopGroup)?'<div class="characterPlay"><p><b>Stai usando: '+esc(item(w?.equipped?.avatar||'fox').name)+'.</b> Il personaggio ti accompagna nelle avventure. Il compagno del rifugio si sceglie a parte.</p><span>Provalo subito:</span><div><button class="audio" data-character-play="kart">🏎️ Guida il kart</button><button class="audio" data-character-play="football">⚽ Gioca a calcio</button><button class="audio" data-character-play="space">🚀 Parti per lo spazio</button></div></div>':'')+'<div class="shopGrid">'+shown.map(it=>{const owned=w?.inventory.includes(it.id),equipped=w?.equipped[it.slot]===it.id;return '<article class="shopItem '+(equipped?'equipped':'')+'" data-reward-card="'+it.id+'" aria-labelledby="reward-title-'+it.id+'"><span '+(it.slot==='avatar'?'class="racerModel" data-racer="'+it.id+'"':'')+' aria-hidden="true">'+(it.slot==='avatar'?'':it.icon)+'</span><h4 id="reward-title-'+it.id+'" tabindex="-1">'+esc(it.name)+'</h4><small>'+(it.event?(it.event==='journey'?'Passaporto · ':'Villaggio della festa · ')+(it.eventExercises?it.eventExercises+' esercizi':it.eventDays+' giornate'):it.unlock?(it.unlock.activities?'Esplora '+it.unlock.activities+' mondi diversi':'Completa '+it.unlock.missions+' mission'+(it.unlock.missions===1?'e':'i')):it.price===0?'Sempre disponibile':it.slot==='effect'?'Effetto scenico':'Per il tuo mondo')+'</small><button type="button" class="audio" data-preview-item="'+it.id+'" aria-label="Anteprima di '+esc(it.name)+'">👀 Anteprima</button><button class="'+(owned?'audio':'primary')+'" data-item="'+it.id+'" aria-label="'+esc(controlName(it,owned,equipped))+'" '+(equipped||(it.unlock||it.event)&&!owned?'disabled':'')+'>'+(equipped?'In uso ✓':owned?(it.slot==='avatar'?'Usa personaggio':'Scegli'):(it.unlock||it.event)?'Da conquistare':it.price===0?'Scegli · gratis':'🪙 '+it.price+' · Sblocca')+'</button></article>';}).join('')+'</div><p class="hint">Gli oggetti cambiano l’aspetto del tuo mondo. Gli aiuti negli esercizi restano gratis per tutti.</p>';
+    root.querySelector('#questContent').innerHTML='<div class="shopHeading"><div><span class="questEyebrow">IL TUO MONDO, COME PIACE A TE</span><h3>Scegli il tuo personaggio e il tuo stile.</h3><p>Scegli personaggi, accessori, trofei, palloni e razzi con le monete delle missioni. I distintivi si conquistano completando le avventure.</p><p class="hint">Nessun acquisto con denaro reale. Tutte le attività sono già aperte. Nella vista illustrata ritratto e accessori sono pedine e distintivi; scegli 3D classico per ruotare il modello e vedere anche gli arredi. La collezione Natale si conquista con gli esercizi del villaggio e resta tua anche dopo le feste.</p></div></div><a class="lessonShortcut" href="#festivita">🎄 Conquista i premi negli esercizi del villaggio →</a><a class="lessonShortcut" href="#scoperte">🧭 Collezioni e missioni per tutto l’anno →</a><nav class="styleTabs" aria-label="Cosa vuoi personalizzare?">'+Object.entries(groups).map(([id,name])=>'<button class="audio" data-style="'+id+'" aria-pressed="'+(shopGroup===id)+'">'+name+'</button>').join('')+'</nav><div class="shopPreviewFrame" role="group" aria-labelledby="shopPreviewLabel"><p class="previewBadge" id="shopPreviewLabel">'+groups[shopGroup]+' · la tua scelta</p><div class="stylePreview" id="stylePreview" role="region" tabindex="-1" aria-label="Anteprima della tua scelta"><span class="sceneFallback">'+places[previewKind].icon+'</span></div><div class="shopPreviewControls" id="shopPreviewControls"></div></div><p id="shopPreviewStatus" class="shopPreviewStatus" role="status" aria-live="polite">Le anteprime sono gratis e non cambiano la tua scelta.</p><button type="button" class="audio" id="returnToReward" hidden>Torna all’oggetto</button>'+(['avatar','journey','christmas','christmasCharacters'].includes(shopGroup)?'<div class="characterPlay"><p><b>Stai usando: '+esc(item(w?.equipped?.avatar||'fox').name)+'.</b> Il personaggio ti accompagna nelle avventure. Il compagno del rifugio si sceglie a parte.</p><span>Provalo subito:</span><div><button class="audio" data-character-play="kart">🏎️ Guida il kart</button><button class="audio" data-character-play="football">⚽ Gioca a calcio</button><button class="audio" data-character-play="space">🚀 Parti per lo spazio</button></div></div>':'')+'<div class="shopGrid">'+shown.map(it=>{const owned=w?.inventory.includes(it.id),equipped=w?.equipped[it.slot]===it.id;return '<article class="shopItem '+(equipped?'equipped':'')+'" data-reward-card="'+it.id+'" aria-labelledby="reward-title-'+it.id+'"><span '+(it.slot==='avatar'?'class="racerModel" data-racer="'+it.id+'"':'')+' aria-hidden="true">'+(it.slot==='avatar'?'':it.icon)+'</span><h4 id="reward-title-'+it.id+'" tabindex="-1">'+esc(it.name)+'</h4><small>'+(it.event?(it.event==='journey'?'Passaporto · ':'Villaggio della festa · ')+(it.eventExercises?it.eventExercises+' esercizi':it.eventDays+' giornate'):it.unlock?(it.unlock.activities?'Esplora '+it.unlock.activities+' mondi diversi':'Completa '+it.unlock.missions+' mission'+(it.unlock.missions===1?'e':'i')):it.price===0?'Sempre disponibile':it.slot==='effect'?'Effetto scenico':'Per il tuo mondo')+'</small><button type="button" class="audio" data-preview-item="'+it.id+'" aria-label="Anteprima di '+esc(it.name)+'">👀 Anteprima</button><button class="'+(owned?'audio':'primary')+'" data-item="'+it.id+'" aria-label="'+esc(controlName(it,owned,equipped))+'" '+(equipped||(it.unlock||it.event)&&!owned?'disabled':'')+'>'+(equipped?'In uso ✓':owned?(it.slot==='avatar'?'Usa personaggio':'Scegli'):(it.unlock||it.event)?'Da conquistare':it.price===0?'Scegli · gratis':'🪙 '+it.price+' · Sblocca')+'</button></article>';}).join('')+'</div><p class="hint">Gli oggetti cambiano l’aspetto del tuo mondo. Gli aiuti negli esercizi restano gratis per tutti.</p>';
     const previewHost=root.querySelector('#stylePreview');
     function previewReward(candidate=null){
       if(!candidate||previewHost.dataset.previewChoice!==candidate.id){
@@ -326,11 +345,11 @@
         const kind=['christmas','journey','christmasCharacters'].includes(shopGroup)?({kart:'kart',trophy:'treehouse',rocket:'space'}[candidate?.slot]||'pets'):previewKind;
         if(shopGroup==='avatar'||shopGroup==='badge'||['christmas','journey','christmasCharacters'].includes(shopGroup))eq.pet=eq.avatar||'fox';
         previewHost.querySelector('.sceneFallback').textContent=candidate?.icon||places[previewKind].icon;
-        sceneView=window.wordylandIsland.mount(previewHost,{kind,equipped:eq,preview:true});
+        sceneView=window.wordylandIsland.mount(previewHost,{kind,equipped:eq,preview:true,controlsDock:root.querySelector('#shopPreviewControls')});
       }
       if(candidate){
         previewHost.dataset.previewChoice=candidate.id;previewHost.setAttribute('aria-label','Anteprima di '+candidate.name);
-        previewHost.querySelector('.previewBadge').textContent='Solo anteprima · '+candidate.name;
+        root.querySelector('#shopPreviewLabel').textContent='Solo anteprima · '+candidate.name;
         root.querySelector('#shopPreviewStatus').textContent='Solo anteprima di '+candidate.name+'. Non spendi monete. '+(candidate.slot==='avatar'?'Nei giochi usi ancora '+item(w?.equipped?.avatar||'fox').name+'.':'La tua scelta resta invariata.');
         const back=root.querySelector('#returnToReward');back.hidden=false;back.textContent='Torna a '+candidate.name;
         root.querySelectorAll('[data-reward-card]').forEach(card=>card.classList.toggle('previewing',card.dataset.rewardCard===candidate.id));
@@ -343,18 +362,18 @@
     root.querySelectorAll('[data-character-play]').forEach(b=>b.onclick=()=>chooseActivity(b.dataset.characterPlay,true));
     root.querySelectorAll('[data-style]').forEach(b=>b.onclick=()=>{if(busy)return;shopGroup=b.dataset.style;renderShop();root.querySelector('[data-style="'+shopGroup+'"]')?.focus({preventScroll:true});});
     root.querySelectorAll('[data-item]').forEach(b=>b.onclick=async()=>{
-      if(busy)return;busy=true;const owner=profile.id,it=item(b.dataset.item),owned=w.inventory.includes(it.id);b.closest('article')?.querySelector('.shopPurchaseMessage')?.remove();b.removeAttribute('aria-describedby');b.disabled=true;
+      if(busy)return;busy=true;purchasePending=true;let outcome='';const owner=profile.id,it=item(b.dataset.item),owned=w.inventory.includes(it.id);b.closest('article')?.querySelector('.shopPurchaseMessage')?.remove();b.removeAttribute('aria-describedby');b.disabled=true;
       try{
         if(it.event&&!owned)throw Error(it.event==='journey'?'Questo premio si conquista nel Passaporto delle scoperte.':'Questo ricordo si conquista nel villaggio della sua festività.');
         if(profile.id){const result=await api(owned?'equip':'buy',{item:it.id});if(owner!==profile.id)return;hub.wallet=result.wallet;}
-        else{const next={...guest,inventory:[...guest.inventory],equipped:{...guest.equipped}};if(!owned){if(next.coins<it.price)throw new Error('Ti mancano '+(it.price-next.coins)+' monete. Puoi scegliere un oggetto gratis o continuare a giocare.');next.coins-=it.price;next.inventory.push(it.id);}next.equipped[it.slot]=it.id;if(!storeGuest(next))throw new Error('Il browser non ha salvato la scelta. Saldo e oggetti restano come prima. Libera spazio o riprova.');guest=next;}
-        render();const heading=root.querySelector('[data-reward-card="'+it.id+'"] h4');heading?.focus({preventScroll:true});heading?.scrollIntoView({block:'nearest',behavior:'auto'});say(it.name+' è pronto per l’avventura!');
+        else{const next={...guest,inventory:[...guest.inventory],equipped:{...guest.equipped}};if(!owned){if(next.coins<it.price)throw new Error('Ti mancano '+(it.price-next.coins)+' monete. Puoi scegliere un oggetto gratis o continuare a giocare.');next.coins-=it.price;next.inventory.push(it.id);}next.equipped[it.slot]=it.id;if(!storeGuest(next))throw new Error(guestWriteConflict?'Gli oggetti sono cambiati in un’altra scheda. Ricarica per vedere l’ultima scelta: non sovrascriviamo gli oggetti già salvati.':'Il browser non ha salvato la scelta. Saldo e oggetti restano come prima. Libera spazio o riprova.');guest=next;}
+        render();const heading=root.querySelector('[data-reward-card="'+it.id+'"] h4');heading?.focus({preventScroll:true});heading?.scrollIntoView({block:'nearest',behavior:'auto'});outcome=it.name+' è pronto per l’avventura!';say(outcome);
       }catch(e){
         if(owner!==profile.id)return;
         const message=owner&&(!e.code||e.code>=500)?'La scelta non è confermata. Ricarica la pagina per verificare saldo e oggetti prima di riprovare.':e.message;
-        say(message);
+        outcome=message;say(message);
         if(b.isConnected){b.disabled=false;const note=document.createElement('p');note.className='shopPurchaseMessage';note.id='purchase-message-'+it.id;note.textContent=message;b.after(note);b.setAttribute('aria-describedby',note.id);b.focus({preventScroll:true});note.scrollIntoView({block:'nearest',behavior:'auto'});}
-      }finally{busy=false;}
+      }finally{busy=false;purchasePending=false;if(deferredNavigation){deferredNavigation=false;const status=document.querySelector('#appStatus');if(status&&outcome)status.textContent=outcome;window.dispatchEvent(new Event('wordyland-route-ready'));}}
     });
   }
   let holidaySelection='christmas',holidayGeneration=0;

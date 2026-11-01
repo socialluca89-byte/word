@@ -70,3 +70,7 @@ La mia isola e gli otto luoghi mantengono gli stessi ingressi. Ogni anteprima of
 ## Fedeltà delle illustrazioni — revisione successiva
 
 Le stesse destinazioni aprono ora per default scene illustrate con i disegni delle schede. Illustrazioni e 3D classico sono entrambi raggiungibili nei comandi della scena, con preferenza locale e conservazione delle missioni salvate. I venti ritratti sono condivisi fra guardaroba, passaporto e scene illustrate. Minigiochi/eventi, account, premi e strumenti adulto restano presenti. La nuova suite illustrated copre il default; le precedenti continuano a coprire esplicitamente la vista3D.
+
+## Revisione dei percorsi,1novembre2026
+
+Il Box di allenamento contiene ora il suo editor ospite locale; con profilo online il medesimo ingresso apre il modulo account reale. Le entrate Isola/Classe dalla pagina Allenamento e i ritorni della cronologia ripristinano la superficie visibile. Durante una scelta di guardaroba in corso, la destinazione richiesta viene conservata fino all’esito. Il guardaroba colloca titolo e controlli fuori dall’immagine. Le sfide aprono all’inizio e conservano le spiegazioni nell’aiuto dopo le risposte. Nessuna destinazione eliminata. Copertura nuova: journey-navigation, appearance-consistency, duel-identity; quadro completo in FULL_PRODUCT_REVIEW_2026_11_01.md.
