@@ -29,8 +29,40 @@ function showAction(host,kind){
  feedback(host,'success',kind);const node=reactions.get(host)?.node;if(node)node.textContent=actions[kind]?.message||'Si parte!';
 }
 const palette={sun:[0xffcb55,0xff806d,0x70cfc0],ocean:[0x58bfee,0x8c83eb,0x57d6bd],berry:[0xef87b7,0xac83ed,0xffce79],forest:[0x4fa978,0xb2d86c,0xdfa463],candy:[0xf29fc5,0x9e8ce8,0x8bdad0]};
+// Small, finite games in the world itself. These never write learning/wallet state.
+const toyColors=[['🔴','red','rosso',0xda6279,'orb'],['🔵','blue','blu',0x629dcd,'orb'],['🟡','yellow','giallo',0xffd36e,'orb']];
+const toyGames={
+ treehouse:{title:'Una casa piena di luci',verb:'Accendi la luce',items:toyColors},
+ pets:{title:'Prenditi cura del tuo amico',verb:'Trova per il tuo amico',items:[['💧','water','acqua',0x629dcd,'drop'],['🥕','food','cibo',0xec9a53,'food'],['💗','friend','amico',0xda6279,'heart']]},
+ creative:{title:'Dipingi il tuo piccolo mondo',verb:'Scegli il colore',items:toyColors},
+ kart:{title:'Un giro tra i segnali',verb:'Guida fino al segnale',items:toyColors},
+ football:{title:'Tre tiri in porta',verb:'Mira al bersaglio',items:toyColors},
+ space:{title:'Un viaggio tra le stelle',verb:'Raggiungi',items:[['⭐','star','stella',0xffd36e,'star'],['🌙','moon','luna',0xd3d9e4,'moon'],['🪐','planet','pianeta',0xab9cd8,'planet']]},
+ ocean:{title:'Cerca il tesoro della baia',verb:'Raccogli',items:[['🐚','shell','conchiglia',0xeba5b9,'shell'],['🐟','fish','pesce',0x629dcd,'fish'],['⚪','pearl','perla',0xfff4df,'orb']]},
+ dino:{title:'Le sorprese dei dinosauri',verb:'Scopri',items:[['🥚','egg','uovo',0xf6d9a4,'egg'],['🍃','leaf','foglia',0x78b994,'leaf'],['🐾','footprint','impronta',0xb78b69,'foot']]}
+};
+function mountToy(panel,kind,handlers={}){
+ const game=toyGames[kind];if(!panel||!game)return null;
+ let disposed=false,step=0,order=[],found=new Set();
+ const wrap=document.createElement('section');wrap.className='worldToy';wrap.dataset.toyKind=kind;wrap.setAttribute('aria-label',game.title);
+ wrap.innerHTML='<h4>'+game.title+'</h4><p class="toyObjective"></p><div class="toyChoices">'+game.items.map(([icon,en,it,color],i)=>'<button type="button" data-toy-choice="'+i+'" style="--toy-color:#'+color.toString(16).padStart(6,'0')+'"><span aria-hidden="true">'+icon+'</span><b lang="en">'+en+'</b><small>'+it+'</small></button>').join('')+'</div><p class="toyStatus" role="status" aria-live="polite" aria-atomic="true"></p><p class="toyHelp"></p><button class="audio toyReplay" type="button" hidden>Rigioca nel mondo</button><button class="primary toyLearn" type="button" hidden>Continua con gli esercizi</button><small class="toyNote">Gioco libero · nessuna moneta spesa. I premi si conquistano negli esercizi. Uscendo da questa scena ricominci.</small>';
+ panel.append(wrap);const buttons=[...wrap.querySelectorAll('[data-toy-choice]')],objective=wrap.querySelector('.toyObjective'),status=wrap.querySelector('.toyStatus'),replay=wrap.querySelector('.toyReplay');
+ function describe(){wrap.dataset.toyStep=String(step);wrap.dataset.toyTarget=step<3?String(order[step]):'';objective.innerHTML=step===3?'✨ Hai completato la scoperta!':game.verb+' <strong lang="en">'+game.items[order[step]][1]+'</strong><small>'+game.items[order[step]][0]+' '+game.items[order[step]][2]+'</small>';buttons.forEach((b,i)=>{b.disabled=found.has(i);b.classList.toggle('toyFound',found.has(i));b.setAttribute('aria-label',(found.has(i)?'Trovato: ':'Scegli ')+game.items[i][1]+' · '+game.items[i][2]);});replay.hidden=step!==3;wrap.querySelector('.toyLearn').hidden=step!==3;}
+ function reset(){if(disposed)return;step=0;found=new Set();order=[0,1,2];for(let i=2;i>0;i--){const j=Math.floor(Math.random()*(i+1));[order[i],order[j]]=[order[j],order[i]];}describe();status.textContent='0 / 3 scoperte. Puoi giocare con calma.';handlers.reset?.();}
+ function choose(index){
+  if(disposed||!Number.isInteger(index)||index<0||index>2||found.has(index)||step===3)return false;
+  const correct=index===order[step],hadFocus=wrap.contains(document.activeElement);
+  if(!correct){status.textContent='Hai scelto '+game.items[index][1]+' ('+game.items[index][2]+'). Cerca '+game.items[order[step]][1]+' ('+game.items[order[step]][2]+'): puoi riprovare.';handlers.choose?.(index,false,step);return false;}
+  found.add(index);step++;describe();status.textContent=step===3?'3 / 3 · Scoperta completata! Puoi rigiocare o aprire la missione in inglese.':step+' / 3 · Trovato! Ora cerca il prossimo oggetto.';handlers.choose?.(index,true,step);
+  if(hadFocus)(step===3?replay:buttons.find(b=>!b.disabled))?.focus({preventScroll:true});return true;
+ }
+ wrap.querySelector('.toyLearn').onclick=()=>{if(!disposed)window.dispatchEvent(new CustomEvent('wordyland-play-place',{detail:kind}));};buttons.forEach((b,i)=>b.onclick=()=>choose(i));replay.onclick=()=>{reset();buttons[0].focus({preventScroll:true});};
+ function scene(available){wrap.querySelector('.toyHelp').textContent=available?'Tocca gli oggetti nella scena oppure usa i pulsanti.':'Scena 3D non disponibile: puoi giocare con i pulsanti.';}
+ reset();scene(Boolean(handlers.scene));return {choose,scene,dispose(){disposed=true;wrap.remove();}};
+}
 function mount(host,options={}){
  if(!host)return {dispose(){},update(){},rotate(){}};
+ let toy=null;
  function fallback(){
   host.dataset.render='fallback';
   let choices=null;
@@ -38,7 +70,8 @@ function mount(host,options={}){
    choices=document.createElement('nav');choices.className='islandFallbackChoices';choices.setAttribute('aria-label','Scegli un luogo nella mappa semplificata');
    Object.entries(places).forEach(([id,place])=>{const b=document.createElement('button');b.type='button';b.dataset.place=id;b.textContent=place.icon+' '+place.name;b.setAttribute('aria-pressed',String(id===options.selected));b.onclick=()=>options.onSelect(id);choices.append(b);});host.append(choices);
   }
-  return {dispose(){clearFeedback(host);choices?.remove();},action(){if(options.preview)showAction(host,options.kind);},react(type){feedback(host,type,options.kind);},update(next={}){if(next.selected)choices?.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.place===next.selected)));},rotate(){}};
+  toy=mountToy(options.playground,options.kind,{choose:(_i,correct)=>feedback(host,correct?'success':'retry',options.kind)});
+  return {dispose(){toy?.dispose();clearFeedback(host);choices?.remove();},action(){if(options.preview)showAction(host,options.kind);},react(type){feedback(host,type,options.kind);},update(next={}){if(next.selected)choices?.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.place===next.selected)));},rotate(){}};
  }
  const T=window.THREE;
  // Missing scene-only APIs must not prevent the games or the lightweight map.
@@ -53,7 +86,8 @@ function mount(host,options={}){
  const sun=new T.DirectionalLight(0xfff2df,2.2);sun.position.set(-8,18,12);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);Object.assign(sun.shadow.camera,{left:-17,right:17,top:17,bottom:-17,near:1,far:60});sun.shadow.bias=-.001;scene.add(sun);
  const materials=new Map(),geometries=new Set();let disposed=false,visible=true,frame=0,last=0,angle=-.32,zoom=.88,phase=0,startX=0,startY=0,dragging=false,moved=false,selected=options.selected||'treehouse';
  const motion=matchMedia('(prefers-reduced-motion: reduce)');
- const pins=[],animations=[],colliders=[],progressObjects=[],effects=[];
+ const pins=[],animations=[],colliders=[],progressObjects=[],effects=[],toyTargets=[];
+ let toyAim=0,toyStep=0,contextLost=false;
  let reactionAge=10,reactionKind='success',intro=0,interactedAt=0,actionAge=10,kartDistance=0,paintIndex=0,lightsOn=false;
  let paused=Boolean(options.paused)||document.documentElement.dataset.animations==='paused';
  const material=color=>{if(!materials.has(color))materials.set(color,new T.MeshStandardMaterial({color,roughness:.78,metalness:.03}));return materials.get(color);};
@@ -229,6 +263,20 @@ const pin=document.createElement('button');pin.type='button';pin.className='isla
   });
  }
  if(kind!=='island'&&kind!=='kart'&&!(kind==='pets'&&options.preview)){const player=animal(root,options.equipped?.avatar||'fox',2.25,0,1.2,.8);animations.push(t=>{player.rotation.y=Math.sin(t*.8)*.18;player.position.y=Math.max(0,Math.sin(t*1.8))*.12;});}
+ if(options.playground&&toyGames[kind])toyGames[kind].items.forEach((entry,i)=>{
+  const [, , ,color,shape]=entry,angle=(i-1)*1.35;
+  const target=group(root,kind==='football'?(i-1)*.8:kind==='kart'?Math.sin(angle)*2.5:(i-1)*2.1,kind==='football'?.72:.8,kind==='football'?-2.48:kind==='kart'?Math.cos(angle)*2.5:2.1);
+  target.userData.toyIndex=i;target.userData.toyKind=kind;toyTargets.push(target);
+  const base=cylinder(.46,.46,.1,0xfff4df,target,0,-.36,0,20);base.userData.toyBase=true;
+  if(shape==='heart'){sphere(.2,color,target,-.12,.09,0);sphere(.2,color,target,.12,.09,0);box(.29,.29,.22,color,target,0,-.06,0).rotation.z=Math.PI/4;}
+  else if(shape==='food'){cylinder(0,.18,.65,color,target,0,0,0,10).rotation.z=Math.PI;box(.08,.2,.08,0x78b994,target,0,.37,0);}
+  else if(shape==='star'){const outline=new T.Shape();for(let j=0;j<10;j++){const a=j*Math.PI/5+Math.PI/2,r=j%2?.18:.38;if(j===0)outline.moveTo(Math.cos(a)*r,Math.sin(a)*r);else outline.lineTo(Math.cos(a)*r,Math.sin(a)*r);}outline.closePath();mesh(new T.ExtrudeGeometry(outline,{depth:.12,bevelEnabled:false}),color,target);}
+  else if(shape==='planet'){sphere(.3,color,target);const ring=mesh(new T.TorusGeometry(.42,.045,6,20),0xffd36e,target);ring.rotation.x=1.15;}
+  else if(shape==='fish'){sphere(.3,color,target,0,0,0,1.35,.7,.6);cylinder(0,.22,.3,color,target,-.4,0,0,3).rotation.z=Math.PI/2;sphere(.035,0x193e55,target,.2,.07,.16);}
+  else if(shape==='leaf'){sphere(.35,color,target,0,0,0,.6,1,.2).rotation.z=-.5;box(.025,.4,.025,0xfff4df,target,0,-.05,.08).rotation.z=-.5;}
+  else if(shape==='foot'){sphere(.26,color,target,0,-.07,0,.8,1,.35);for(let j=0;j<3;j++)sphere(.085,color,target,-.18+j*.18,.22,0,1,1,.6);}
+  else sphere(.3,color,target,0,0,0,shape==='shell'?1.25:1,shape==='egg'||shape==='drop'?1.4:1,shape==='shell'?.45:1);
+ });
  // Reuse a small effect pool instead of allocating geometry on every answer.
  for(let i=0;i<12;i++){const particle=sphere(.065,[0xffcf75,0xf6aaca,0x91d9cd][i%3],root);particle.visible=false;particle.castShadow=false;effects.push(particle);}
  const initialCamera=camera.position.clone();
@@ -246,14 +294,15 @@ const pin=document.createElement('button');pin.type='button';pin.className='isla
   root.rotation.y=angle+(kind==='island'&&moving&&now-interactedAt>3500?Math.sin(phase*.3)*.24:0);
   root.position.y=kind==='island'&&moving?Math.sin(phase*.7)*.16:0;
   if(moving)animations.forEach(fn=>fn(phase));
-  if(options.preview&&moving)kartDistance+=dt*(actionAge<2.3?5.5:.65);
+  if(options.preview&&moving&&!toy)kartDistance+=dt*(actionAge<2.3?5.5:.65);
   if(kind==='kart'&&model){const a=options.preview?kartDistance:-currentProgress*Math.PI*1.7;model.position.set(Math.sin(a)*2.5,.13+(moving?Math.sin(phase*18)*.015:0),Math.cos(a)*2.5);model.rotation.y=a+Math.PI/2;model.rotation.z=moving?Math.sin(phase*2)*.035:0;}
-  if(kind==='football'&&ball){const u=kick;ball.position.z=1.7-u*4.1;ball.rotation.x=-u*9;ball.position.y=.28+Math.sin(u*Math.PI)*.65;}
+  if(kind==='football'&&ball){const u=kick;ball.position.x=toy?toyAim*u:0;ball.position.z=1.7-u*4.1;ball.rotation.x=-u*9;ball.position.y=.28+Math.sin(u*Math.PI)*.65;}
+  if(kind==='space'&&model&&toy)model.position.x=toyAim;
   if(kind==='space'&&model){model.position.y=(options.preview&&actionAge<3.2?(moving?Math.min(7,Math.max(0,actionAge-.35)**2*3):4):currentProgress*2.8)+(moving?Math.sin(phase*1.7)*.13:0)+pulse*.5;model.rotation.z=moving?Math.sin(phase*1.2)*.025:0;}
   if(kind==='pets'&&model&&pulse>0){model.position.y=Math.abs(Math.sin(reactionAge*9))*pulse*.65;model.rotation.z=Math.sin(reactionAge*11)*pulse*.1;}
   if(kind==='dino'&&model){model.rotation.z=pulse*Math.sin(reactionAge*7)*.08;if(pulse>0)model.position.y=Math.abs(Math.sin(reactionAge*7))*pulse*.55;}
   if(kind==='creative'&&model&&actionAge<1.2&&moving)model.rotation.y=Math.sin(actionAge*6)*.15;
-  if(kind==='ocean'&&model?.userData.lid)model.userData.lid.rotation.x=options.preview&&paintIndex>0?-(moving?Math.min(1,actionAge*2):1)*1.2:0;
+  if(kind==='ocean'&&model?.userData.lid)model.userData.lid.rotation.x=options.preview&&(toy?toyStep===3:paintIndex>0)?-(moving?Math.min(1,actionAge*2):1)*1.2:0;
   if(kind==='treehouse'&&model)model.rotation.y=moving?Math.sin(phase*.5)*.04:0;
   effects.forEach((o,i)=>{o.visible=pulse>0;if(o.visible){const a=i*Math.PI/6;o.position.set(Math.cos(a)*(1-pulse)*3,1.1+(1-pulse)*2.3+Math.sin(a)*.3,Math.sin(a)*(1-pulse)*3);o.scale.setScalar(pulse*1.8);}});
   if(flame)flame.scale.y=moving?1.3+Math.sin(phase*8)*.35+pulse:1;
@@ -264,7 +313,7 @@ const pin=document.createElement('button');pin.type='button';pin.className='isla
   if(moving&&visible&&!document.hidden)frame=requestAnimationFrame(tick);
  }
  function tick(now){frame=0;if(disposed||!visible||document.hidden)return;if(now-last>=32)render(now);else frame=requestAnimationFrame(tick);}
- function requestDraw(){if(!frame&&!disposed)frame=requestAnimationFrame(render);}
+ function requestDraw(){if(!frame&&!disposed&&!contextLost)frame=requestAnimationFrame(render);}
  function resize(){const w=host.clientWidth,h=host.clientHeight;if(!w||!h)return;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();requestDraw();}
  // Pin labels grow on selection/focus. Measure only when their size changes,
  // keeping their full touch target and focus ring inside the clipped map.
@@ -276,9 +325,9 @@ const pin=document.createElement('button');pin.type='button';pin.className='isla
  const onDown=e=>{interactedAt=performance.now();startX=e.clientX;startY=e.clientY;dragging=true;moved=false;};
  const onMove=e=>{if(!dragging)return;const dx=e.clientX-startX,dy=e.clientY-startY;if(Math.abs(dx)>5&&Math.abs(dx)>Math.abs(dy)){angle+=dx*.006;startX=e.clientX;startY=e.clientY;moved=true;requestDraw();}};
  const ray=new T.Raycaster();
- const onUp=e=>{if(!dragging)return;dragging=false;if(moved)return;if(kind!=='island'){if(options.preview)control.action();return;}const r=canvas.getBoundingClientRect();ray.setFromCamera(new T.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),camera);const hit=ray.intersectObjects(colliders,true)[0];if(hit){let o=hit.object;while(o&&!o.userData.place)o=o.parent;if(o)options.onSelect?.(o.userData.place);}};
+ const onUp=e=>{if(!dragging)return;dragging=false;if(moved)return;const r=canvas.getBoundingClientRect();ray.setFromCamera(new T.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),camera);if(toy){const hit=ray.intersectObjects(toyTargets.filter(t=>t.visible),true)[0];if(hit){let o=hit.object;while(o&&o.userData.toyIndex===undefined)o=o.parent;if(o)toy.choose(o.userData.toyIndex);}return;}if(kind!=='island'){if(options.preview)control.action();return;}const hit=ray.intersectObjects(colliders,true)[0];if(hit){let o=hit.object;while(o&&!o.userData.place)o=o.parent;if(o)options.onSelect?.(o.userData.place);}};
  canvas.addEventListener('pointerdown',onDown);canvas.addEventListener('pointermove',onMove);canvas.addEventListener('pointerup',onUp);canvas.addEventListener('pointercancel',()=>dragging=false);canvas.addEventListener('pointerleave',()=>dragging=false);
- const onLost=e=>{e.preventDefault();host.dataset.render='fallback';cancelAnimationFrame(frame);frame=0;};canvas.addEventListener('webglcontextlost',onLost);
+ const onLost=e=>{e.preventDefault();contextLost=true;host.dataset.render='fallback';toy?.scene(false);cancelAnimationFrame(frame);frame=0;};canvas.addEventListener('webglcontextlost',onLost);
  resize();
  const control={action(){
  if(!options.preview)return;
@@ -288,7 +337,24 @@ const pin=document.createElement('button');pin.type='button';pin.className='isla
  if(kind==='treehouse'&&model?.userData.window){lightsOn=!lightsOn;model.userData.window.material=material(lightsOn?0xffdc78:0x63a8ce);}
  if(kind==='creative')progressObjects.forEach((o,i)=>o.material=material(palette[['sun','ocean','berry'][paintIndex%3]][i%3]));
  requestDraw();
- },react(type='success'){reactionAge=0;reactionKind=type;feedback(host,type,kind);requestDraw();},update(next={}){if(Number.isFinite(next.progress)){if(next.progress>progress&&kind==='football'){kick=0;kickTarget=1;}progress=Math.max(0,Math.min(1,next.progress));}if(next.selected)selected=next.selected;if(typeof next.paused==='boolean')paused=next.paused;requestDraw();},rotate(delta){interactedAt=performance.now();angle+=delta;requestDraw();},zoom(delta){zoom=Math.max(.75,Math.min(1.4,zoom+delta));requestDraw();},dispose(){if(disposed)return;disposed=true;clearFeedback(host);cancelAnimationFrame(frame);ro.disconnect();io.disconnect();removed.disconnect();document.removeEventListener('visibilitychange',onVisibility);motion.removeEventListener('change',onMotion);window.removeEventListener('wordyland-motion',onPause);for(const g of geometries)g.dispose();for(const m of materials.values())m.dispose();canvas.removeEventListener('webglcontextlost',onLost);renderer.dispose();renderer.forceContextLoss();canvas.remove();pins.forEach(x=>x.pin.remove());}};
+ },react(type='success'){reactionAge=0;reactionKind=type;feedback(host,type,kind);requestDraw();},update(next={}){if(Number.isFinite(next.progress)){if(next.progress>progress&&kind==='football'){kick=0;kickTarget=1;}progress=Math.max(0,Math.min(1,next.progress));}if(next.selected)selected=next.selected;if(typeof next.paused==='boolean')paused=next.paused;requestDraw();},rotate(delta){interactedAt=performance.now();angle+=delta;requestDraw();},zoom(delta){zoom=Math.max(.75,Math.min(1.4,zoom+delta));requestDraw();},dispose(){if(disposed)return;disposed=true;toy?.dispose();clearFeedback(host);cancelAnimationFrame(frame);ro.disconnect();io.disconnect();removed.disconnect();document.removeEventListener('visibilitychange',onVisibility);motion.removeEventListener('change',onMotion);window.removeEventListener('wordyland-motion',onPause);for(const g of geometries)g.dispose();for(const m of materials.values())m.dispose();canvas.removeEventListener('webglcontextlost',onLost);renderer.dispose();renderer.forceContextLoss();canvas.remove();pins.forEach(x=>x.pin.remove());}};
+ if(options.playground&&ball)ball.userData.toyBall=true;
+toy=mountToy(options.playground,kind,{scene:true,reset(){
+  toyStep=0;toyAim=0;kartDistance=0;kick=0;kickTarget=0;paintIndex=0;progress=0;actionAge=10;reactionAge=10;
+  toyTargets.forEach(t=>{t.visible=true;t.userData.found=false;});
+  if(model){model.userData.toyStep=0;if(['pets','dino'].includes(kind)){model.position.y=0;model.rotation.z=0;}if(kind==='treehouse'&&model.userData.window)model.userData.window.material=material(0x63a8ce);}
+  requestDraw();
+ },choose(index,correct,step){
+  if(!correct){control.react('retry');return;}
+  control.action();toyStep=step;progress=step/3;toyTargets[index].visible=false;toyTargets[index].userData.found=true;
+  if(model)model.userData.toyStep=step;
+  if(kind==='kart')kartDistance=(index-1)*1.35;
+  if(kind==='football')toyAim=(index-1)*.8;
+  if(kind==='space')toyAim=(index-1)*2.1;
+  if(kind==='treehouse'&&model?.userData.window)model.userData.window.material=material(toyGames[kind].items[index][3]);
+  if(kind==='creative')progressObjects.forEach(o=>o.material=material(toyGames[kind].items[index][3]));
+  requestDraw();
+ }});
  const removed=new MutationObserver(()=>{if(!host.isConnected)control.dispose();});removed.observe(document.body,{childList:true,subtree:true});
  return control;
 }
@@ -301,7 +367,7 @@ if(mapHost){
   view?.dispose();mapHost.querySelectorAll('.sceneFallback').forEach(e=>e.remove());
   mapHost.dataset.kind=liveKind;
   if(liveKind!=='island'){const icon=document.createElement('span');icon.className='sceneFallback';icon.textContent=places[liveKind].icon;mapHost.append(icon);}
-  view=mount(mapHost,{kind:liveKind,equipped,adventures,selected,paused,preview:liveKind!=='island',onSelect:id=>showLive(id)});
+  view=mount(mapHost,{kind:liveKind,equipped,adventures,selected,paused,preview:liveKind!=='island',playground:liveKind!=='island'?document.querySelector('#heroPlayground'):null,onSelect:id=>showLive(id)});
   if(close)view.zoom?.(-.22);
   hud.hidden=liveKind==='island';
   document.querySelectorAll('[data-live-place]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.livePlace===liveKind)));

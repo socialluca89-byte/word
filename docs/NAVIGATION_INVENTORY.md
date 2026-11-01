@@ -60,3 +60,8 @@ Le anteprime della home sono in [review](review/README.md), con dati ospite fitt
 - Villaggi delle festività: portale delle feste, scheda dedicata, #festivita e #natale; missione prima dell'album premi, nessun premio rimosso.
 - Personaggi Natale: nuovo filtro nel guardaroba con dodici avatar; le azioni kart/calcio/spazio rimangono anche nei filtri delle collezioni.
 - Birillo: scherzo facoltativo nel villaggio 8 dicembre–7 gennaio, con comando per passare agli esercizi.
+
+
+## Mondi giocabili — nuovo lotto separato
+
+La mia isola e gli otto luoghi mantengono gli stessi ingressi. Ogni anteprima offre ora tre oggetti3D selezionabili e comandi equivalenti da tastiera/senza WebGL, con traguardo e Rigioca. Kart/calcio/spazio della home condividono questi obiettivi. Al termine, Continua con gli esercizi usa il percorso missione esistente; non cambia i premi. I portali delle festività/Passaporto riaprono anche la rotta già corrente dopo un cambio scheda. Regressioni: world-play, motion, navigation, performance e suite preesistenti.
