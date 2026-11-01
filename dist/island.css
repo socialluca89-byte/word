@@ -63,3 +63,6 @@ html[data-page-hidden=true] *,html[data-page-hidden=true] *:before,html[data-pag
 
 /* Prank clues stay above the visitor portraits rather than covering names/faces. */
 .illustratedPackages{left:50%;top:27%;transform:translateX(-50%);padding:6px;font-size:18px;white-space:nowrap}.illustratedSign{left:50%;top:27%;transform:translateX(-50%)}
+
+/* Keep the chosen face visible while learning and after a discovery. */
+.missionStage .sceneViewOverlay,.duelWorld .sceneViewOverlay{display:none}.illustratedTarget.found{visibility:hidden;pointer-events:none}
