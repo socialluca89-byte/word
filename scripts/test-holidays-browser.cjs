@@ -44,7 +44,7 @@ try{
  // New pilots really appear in the passport, preview, kart, football and space.
  for(const avatar of ['reindeer','penguin','snowpal']){
   await p.goto(base+'/#personaggi');await p.locator('[data-item="'+avatar+'"]').click();await p.locator('[data-item="'+avatar+'"]').getByText('In uso ✓').waitFor();assert.equal(await p.locator('.passport [data-racer]').getAttribute('data-racer'),avatar);
-  assert.equal(await p.locator('.passport [data-racer]').evaluate(n=>getComputedStyle(n).backgroundImage),'none');
+  assert.match(await p.locator('.passport [data-racer]').evaluate(n=>getComputedStyle(n).backgroundImage),/character-portraits\.png/);
   for(const kind of ['kart','football','space']){
    await p.locator('[data-character-play="'+kind+'"]').click();await p.locator('#readyChallenge').waitFor();assert(await p.evaluate(avatar=>{let found=false;holidayScenes.slice(-1).forEach(s=>s.traverse(n=>{if(n.userData.character===avatar)found=true;}));return found;},avatar),'Actual earned pilot '+avatar+' in '+kind);await p.locator('#pauseQuest').click();await p.locator('.startChoices a[href="#personaggi"]').click();await p.locator('[data-item="'+avatar+'"]').waitFor();
   }

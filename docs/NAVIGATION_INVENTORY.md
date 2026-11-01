@@ -65,3 +65,8 @@ Le anteprime della home sono in [review](review/README.md), con dati ospite fitt
 ## Mondi giocabili — nuovo lotto separato
 
 La mia isola e gli otto luoghi mantengono gli stessi ingressi. Ogni anteprima offre ora tre oggetti3D selezionabili e comandi equivalenti da tastiera/senza WebGL, con traguardo e Rigioca. Kart/calcio/spazio della home condividono questi obiettivi. Al termine, Continua con gli esercizi usa il percorso missione esistente; non cambia i premi. I portali delle festività/Passaporto riaprono anche la rotta già corrente dopo un cambio scheda. Regressioni: world-play, motion, navigation, performance e suite preesistenti.
+
+
+## Fedeltà delle illustrazioni — revisione successiva
+
+Le stesse destinazioni aprono ora per default scene illustrate con i disegni delle schede. Illustrazioni e 3D classico sono entrambi raggiungibili nei comandi della scena, con preferenza locale e conservazione delle missioni salvate. I venti ritratti sono condivisi fra guardaroba, passaporto e scene illustrate. Minigiochi/eventi, account, premi e strumenti adulto restano presenti. La nuova suite illustrated copre il default; le precedenti continuano a coprire esplicitamente la vista3D.

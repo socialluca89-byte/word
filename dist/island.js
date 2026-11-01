@@ -60,7 +60,7 @@ function mountToy(panel,kind,handlers={}){
  function scene(available){wrap.querySelector('.toyHelp').textContent=available?'Tocca gli oggetti nella scena oppure usa i pulsanti.':'Scena 3D non disponibile: puoi giocare con i pulsanti.';}
  reset();scene(Boolean(handlers.scene));return {choose,scene,dispose(){disposed=true;wrap.remove();}};
 }
-function mount(host,options={}){
+function mount3D(host,options={}){
  if(!host)return {dispose(){},update(){},rotate(){}};
  let toy=null;
  function fallback(){
@@ -358,6 +358,58 @@ toy=mountToy(options.playground,kind,{scene:true,reset(){
  const removed=new MutationObserver(()=>{if(!host.isConnected)control.dispose();});removed.observe(document.body,{childList:true,subtree:true});
  return control;
 }
+// Default scenes reuse the exact public illustrations shown in the cards.
+const illustratedArt={worlds:'island-places.webp?v=caee87979db0',holidays:'holiday-worlds.png?v=286124dff4a8'};
+const worldCells={treehouse:[0,0],pets:[1,0],creative:[2,0],kart:[3,0],football:[0,1],space:[1,1],ocean:[2,1],dino:[3,1]};
+const holidayCells={christmas:[0,0],carnival:[1,0],easter:[0,1],halloween:[1,1]};
+const actorIds=['fox','panda','robot','dragon','octopus','lion','reindeer','penguin','snowpal','bunny','koala','elf-boy','elf-girl','polar-bear','gingerbread','silver-reindeer','mrs-claus','santa','nutcracker','yeti'];
+let sceneStyle='illustrated';try{if(localStorage.getItem('wordylandSceneStyle')==='3d')sceneStyle='3d';}catch{}
+function illustratedView(host,options={}){
+ const kind=options.kind||'pets',event=options.holiday||'christmas',isHoliday=kind==='holiday',cell=isHoliday?(holidayCells[event]||holidayCells.christmas):(worldCells[kind]||worldCells.pets),columns=isHoliday?2:4,rows=2,cellHeight=isHoliday?50:100;
+ const layer=document.createElement('div');layer.className='illustratedLayer';layer.dataset.illustratedWorld=isHoliday?event:kind;layer.setAttribute('aria-label',isHoliday?'Villaggio illustrato':places[kind]?.name||'Mondo illustrato');
+ layer.classList.toggle('illustratedPaused',Boolean(options.paused));host.prepend(layer);host.classList.add('illustratedScene');if(options.playground)host.classList.add('illustratedPlayable');host.dataset.render='illustrated';host.dataset.artReady='loading';
+ const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg'),image=document.createElementNS(ns,'image');svg.classList.add('illustratedArt');svg.setAttribute('viewBox',cell[0]*100+' '+cell[1]*cellHeight+' 100 '+cellHeight);svg.setAttribute('preserveAspectRatio','xMidYMid slice');svg.setAttribute('aria-hidden','true');image.setAttribute('width',columns*100);image.setAttribute('height',rows*cellHeight);image.setAttribute('preserveAspectRatio','none');const artURL=isHoliday?illustratedArt.holidays:illustratedArt.worlds;image.setAttribute('href',artURL);layer.dataset.artSource=artURL;svg.append(image);layer.append(svg);
+ const loading=document.createElement('p');loading.className='illustratedLoading';loading.setAttribute('role','status');loading.textContent='Apriamo l’illustrazione…';layer.append(loading);let disposed=false;
+ image.addEventListener('load',()=>{if(!disposed){host.dataset.artReady='ready';loading.remove();}});image.addEventListener('error',()=>{if(!disposed){host.dataset.artReady='error';loading.textContent='Illustrazione non caricata. Puoi continuare con i comandi.';}});
+ let progress=Number(options.progress)||0,pan=0,zoom=1,toy=null;
+ const eq=options.equipped||{},rawActor=kind==='pets'&&options.preview?(eq.pet||eq.avatar||'fox'):(eq.avatar||'fox'),actorId=actorIds.includes(rawActor)?rawActor:rawActor==='pet-bunny'?'bunny':rawActor==='pet-penguin'?'penguin':rawActor==='pet-fox'?'fox':null;
+ const actor=document.createElement('div');actor.className='illustratedActor';actor.dataset.character=rawActor;actor.setAttribute('role','img');actor.setAttribute('aria-label',({fox:'Volpe esploratrice',panda:'Panda delle stelle',robot:'Robot inventore',dragon:'Drago delle parole',octopus:'Polpo creativo',lion:'Leone coraggioso'})[rawActor]||window.wordylandRewardExtras?.find(i=>i.id===rawActor)?.name||'Il tuo compagno');
+ if(actorId){const portrait=document.createElement('span');portrait.className='racerModel';portrait.dataset.racer=actorId;portrait.setAttribute('aria-hidden','true');actor.append(portrait);}else{actor.classList.add('illustratedCompanion');actor.textContent=rawActor==='pet-cat'?'🐱':rawActor==='pet-turtle'?'🐢':'🐾';}
+ layer.append(actor);
+ const accessories=document.createElement('div');accessories.className='illustratedAccessories';
+ for(const slot of ['hat','neck','effect']){const id=eq[slot];if(!id||id==='neck-none')continue;const item=window.wordylandRewardExtras?.find(i=>i.id===id),icon=item?.icon||({cap:'🧢',crown:'👑',sparkles:'✨',flight:'🪽',confetti:'🎉'})[id];if(icon){const badge=document.createElement('span');badge.dataset.reward=id;badge.setAttribute('role','img');badge.setAttribute('aria-label',item?.name||id);badge.title=item?.name||id;badge.textContent=icon;accessories.append(badge);}}
+ actor.append(accessories);
+ const roomItems=['room','plant','rug','lamp','trophy','kart','palette','ball','rocket'].map(slot=>eq[slot]).filter(Boolean);
+ if(roomItems.length){const strip=document.createElement('div');strip.className='illustratedDecor';strip.setAttribute('aria-label','Le tue personalizzazioni');roomItems.forEach(id=>{const item=window.wordylandRewardExtras?.find(i=>i.id===id),icon=item?.icon||({plant:'🪴',rug:'🟪',lamp:'💡','room-sky':'🩵','room-mint':'🟩','room-peach':'🟠','kart-blue':'🏎️','kart-pink':'🏎️','kart-mint':'🏎️'})[id];if(icon){const b=document.createElement('span');b.dataset.reward=id;b.title=item?.name||id;b.textContent=icon;strip.append(b);}});layer.append(strip);}
+ const targets=[],points=kind==='ocean'?[[23,83],[60,75],[20,49]]:kind==='football'?[[28,39],[50,36],[72,39]]:kind==='space'?[[24,24],[70,32],[75,66]]:[[23,61],[50,47],[76,66]];
+ if(options.playground&&toyGames[kind])toyGames[kind].items.forEach(([icon,en,it],i)=>{const b=document.createElement('button');b.type='button';b.className='illustratedTarget';b.dataset.illustratedTarget=i;b.style.left=points[i][0]+'%';b.style.top=points[i][1]+'%';b.setAttribute('aria-label','Scegli '+en+' · '+it);b.innerHTML='<span aria-hidden="true">'+icon+'</span><b lang="en">'+en+'</b>';layer.append(b);targets.push(b);b.onclick=()=>toy?.choose(i);b.addEventListener('pointerup',e=>{if(e.pointerType==='touch'){e.preventDefault();toy?.choose(i);}});});
+ if(isHoliday&&event==='christmas'){
+  const snowman=document.createElement('div');snowman.className='illustratedSnowman';snowman.innerHTML='<span class="racerModel" data-racer="snowpal" aria-label="Pupazzo del villaggio" role="img"></span>';layer.append(snowman);
+  const elf=options.elf?.active?options.elf:null,prank=elf&&!options.elfResolved?elf.prank?.id:null;
+  if(elf){const visitor=document.createElement('div');visitor.className='illustratedVisitor';visitor.dataset.visitor='elf-prankster';visitor.innerHTML='<span class="racerModel" data-racer="elf-boy" aria-hidden="true"></span><b>Birillo</b>';visitor.setAttribute('aria-label','Birillo, l’elfo birichino');layer.append(visitor);}
+  if(prank==='moustache'){const moustache=document.createElement('span');moustache.className='illustratedMoustache';moustache.dataset.elfPrank='moustache';snowman.append(moustache);}
+  if(prank==='sign'){const sign=document.createElement('span');sign.className='illustratedSign';sign.dataset.elfPrank='sign';sign.textContent='KOOB';layer.append(sign);}else if(elf?.prank?.id==='sign'){const sign=document.createElement('span');sign.className='illustratedSign';sign.textContent='BOOK';layer.append(sign);}
+  if(prank==='packages'){const packages=document.createElement('span');packages.className='illustratedPackages';packages.dataset.elfPrank='packages';packages.textContent='🎁 T · 🎁 C · 🎁 A';layer.append(packages);}
+  if(prank==='colors'){const snow=document.createElement('span');snow.className='illustratedPastelSnow';snow.dataset.elfPrank='colors';snow.setAttribute('aria-label','La neve colorata da Birillo');layer.append(snow);}
+ }
+ function position(p){progress=Math.max(0,Math.min(1,p));host.dataset.sceneProgress=String(progress);actor.style.left=(isHoliday?50:kind==='space'?70-progress*40:kind==='kart'?18+progress*62:80-progress*60)+'%';actor.style.top=(isHoliday?82:kind==='space'?77-progress*45:kind==='kart'?72-Math.sin(progress*Math.PI)*22:77)+'%';}
+ position(progress);if(kind==='pets'&&options.preview&&!options.playground){actor.classList.add('illustratedPortrait');actor.style.left='50%';actor.style.top='44%';}
+ function action(){if(disposed)return;showAction(host,kind);layer.classList.remove('illustratedReact');void layer.offsetWidth;layer.classList.add('illustratedReact');}
+ toy=mountToy(options.playground,kind,{scene:true,reset(){targets.forEach(b=>{b.disabled=false;b.classList.remove('found');});position(0);},choose(index,correct,step){if(!correct){feedback(host,'retry',kind);return;}targets[index].disabled=true;targets[index].classList.add('found');actor.style.left=points[index][0]+'%';actor.style.top=points[index][1]+'%';host.dataset.sceneProgress=String(step/3);action();}});
+ return {action,react(type='success'){feedback(host,type,kind);},update(next={}){if(Number.isFinite(next.progress))position(next.progress);if(typeof next.paused==='boolean')layer.classList.toggle('illustratedPaused',next.paused);},rotate(delta){pan=Math.max(-5,Math.min(5,pan+delta*5));svg.style.transform='translateX('+pan+'%) scale('+zoom+')';},zoom(delta){zoom=Math.max(1,Math.min(1.3,zoom+delta));svg.style.transform='translateX('+pan+'%) scale('+zoom+')';},dispose(){if(disposed)return;disposed=true;toy?.dispose();clearFeedback(host);layer.remove();host.classList.remove('illustratedScene','illustratedPlayable');}};
+}
+function mount(host,options={}){
+ const kind=options.kind||'island';if(!host||kind==='island')return mount3D(host,options);
+ let settings={...options},view=null,disposed=false;const modes=document.createElement('nav');modes.className='sceneViewModes';modes.setAttribute('aria-label','Aspetto della scena');modes.innerHTML='<button type="button" data-scene-style="illustrated">Illustrazioni</button><button type="button" data-scene-style="3d">3D classico</button>';
+ if(options.playground)options.playground.append(modes);else if(kind==='holiday')host.after(modes);else{host.append(modes);modes.classList.add('sceneViewOverlay');}
+ const demonstration=options.playground?host.querySelector('.scenePlayButton'):null,dock=document.createElement('div');dock.className='sceneDemoActions';if(demonstration)options.playground.append(dock);
+ function draw(){if(disposed)return;view?.dispose();if(demonstration)(sceneStyle==='illustrated'?dock:host).append(demonstration);view=sceneStyle==='3d'?mount3D(host,settings):illustratedView(host,settings);modes.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.sceneStyle===sceneStyle)));}
+ function changed(){draw();}window.addEventListener('wordyland-scene-style',changed);
+ modes.querySelectorAll('button').forEach(b=>b.onclick=()=>{if(disposed||sceneStyle===b.dataset.sceneStyle)return;sceneStyle=b.dataset.sceneStyle;try{localStorage.setItem('wordylandSceneStyle',sceneStyle);}catch{}window.dispatchEvent(new Event('wordyland-scene-style'));b.focus({preventScroll:true});});
+ const removed=new MutationObserver(()=>{if(!host.isConnected)proxy.dispose();});removed.observe(document.body,{childList:true,subtree:true});
+ const proxy={action(){return view?.action?.();},react(type){view?.react?.(type);},update(next={}){settings={...settings,...next};view?.update?.(next);},rotate(delta){view?.rotate?.(delta);},zoom(delta){view?.zoom?.(delta);},dispose(){if(disposed)return;disposed=true;removed.disconnect();window.removeEventListener('wordyland-scene-style',changed);view?.dispose();if(demonstration)host.append(demonstration);dock.remove();modes.remove();}};draw();return proxy;
+}
+
 window.wordylandIsland={places,actions,mount};
 const mapHost=document.querySelector('#islandMap');
 if(mapHost){

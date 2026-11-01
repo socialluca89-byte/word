@@ -21,7 +21,7 @@ try{
  const earned=await p.evaluate(async id=>(await wordylandAccount.request('hub&profile='+id)).wallet,profile.id);assert(cast.every(id=>earned.inventory.includes(id)));assert.equal(earned.coins,0);assert.equal(earned.xp,0);assert(cast.every(id=>earned.inventory.filter(x=>x===id).length===1));
  await p.reload();await p.locator('[data-style=christmasCharacters]').click();
  for(const id of cast){
-  await p.locator('[data-item="'+id+'"]').click();await p.locator('[data-item="'+id+'"]').getByText('In uso ✓').waitFor();assert.equal(await p.locator('.passport [data-racer]').getAttribute('data-racer'),id);assert.equal(await p.locator('.passport [data-racer]').evaluate(n=>getComputedStyle(n).backgroundImage),'none');
+  await p.locator('[data-item="'+id+'"]').click();await p.locator('[data-item="'+id+'"]').getByText('In uso ✓').waitFor();assert.equal(await p.locator('.passport [data-racer]').getAttribute('data-racer'),id);assert.match(await p.locator('.passport [data-racer]').evaluate(n=>getComputedStyle(n).backgroundImage),/character-portraits\.png/);
   for(const kind of ['kart','football','space']){await p.locator('[data-character-play="'+kind+'"]').click();await p.locator('#readyChallenge').waitFor();assert(await p.evaluate(id=>{let found=false;castScenes.slice(-1).forEach(s=>s.traverse(n=>{if(n.userData.character===id)found=true;}));return found;},id),'Actual owned cast in '+kind+': '+id);await p.locator('#pauseQuest').click();await p.locator('.startChoices a[href="#personaggi"]').click();await p.locator('[data-style=christmasCharacters]').click();}
  }
  // Existing hats still fit new actors and native hats are hidden when a chosen hat is worn.

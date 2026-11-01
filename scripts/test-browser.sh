@@ -3,16 +3,25 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 check=${1:-presence}
-case "$check" in motion) script="scripts/test-motion.cjs";; world-play|christmas-cast|elf|journey|holidays|pdf-scan|ocr|materials|phonics|offline-letters|offline-training|foundations|letter-progression|duel-resilience|compatibility|training|spelling|wallet|tiles|parent-summary|wardrobe|review|autonomy|navigation|performance|email|access|rewards|ux|learning|resume|presence|pwa|community|characters|school) script="scripts/test-${check}-browser.cjs";; *) echo 'Choose world-play, christmas-cast, elf, journey, holidays, pdf-scan, ocr, materials, phonics, offline-letters, offline-training, foundations, letter-progression, duel-resilience, compatibility, motion, training, spelling, wallet, tiles, parent-summary, wardrobe, review, autonomy, navigation, performance, email, access, rewards, ux, learning, resume, presence, pwa, community, characters or school' >&2; exit 2;; esac
+case "$check" in motion) script="scripts/test-motion.cjs";; illustrated|world-play|christmas-cast|elf|journey|holidays|pdf-scan|ocr|materials|phonics|offline-letters|offline-training|foundations|letter-progression|duel-resilience|compatibility|training|spelling|wallet|tiles|parent-summary|wardrobe|review|autonomy|navigation|performance|email|access|rewards|ux|learning|resume|presence|pwa|community|characters|school) script="scripts/test-${check}-browser.cjs";; *) echo 'Choose illustrated, world-play, christmas-cast, elf, journey, holidays, pdf-scan, ocr, materials, phonics, offline-letters, offline-training, foundations, letter-progression, duel-resilience, compatibility, motion, training, spelling, wallet, tiles, parent-summary, wardrobe, review, autonomy, navigation, performance, email, access, rewards, ux, learning, resume, presence, pwa, community, characters or school' >&2; exit 2;; esac
 fixture=$(mktemp -d /tmp/wordyland-browser.XXXXXX)
 mkdir -p "$fixture/data" "$fixture/sessions" "$fixture/public"
 cp dist/* "$fixture/public/"
+# Existing renderer regressions explicitly select the retained classic mode.
+# The illustrated suite exercises the new production default and both choices.
+if [[ "$check" != illustrated ]]; then
+  python3 - "$fixture/public/index.html" <<'PYMODE'
+from pathlib import Path
+import sys
+p=Path(sys.argv[1]);s=p.read_text();s=s.replace('<head>','<head><script>try{localStorage.setItem("wordylandSceneStyle","3d")}catch{}</script>',1);p.write_text(s)
+PYMODE
+fi
 port=$(python3 - <<'PY'
 import socket
 with socket.socket() as s:s.bind(('127.0.0.1',0));print(s.getsockname()[1])
 PY
 )
-if [[ "$check" == holidays || "$check" == journey || "$check" == elf || "$check" == christmas-cast ]]; then
+if [[ "$check" == holidays || "$check" == journey || "$check" == elf || "$check" == christmas-cast || "$check" == illustrated ]]; then
   export WORDYLAND_TEST_CLOCK_FILE="$fixture/holiday-clock"
   if [[ "$check" == journey ]]; then printf '2027-07-01 12:00:00'; elif [[ "$check" == elf ]]; then printf '2026-12-07 12:00:00'; else printf '2026-11-01 12:00:00'; fi > "$WORDYLAND_TEST_CLOCK_FILE"
 fi
