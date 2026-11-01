@@ -1,5 +1,5 @@
 {
-  "application_digest_sha256": "57ad15e89f540b67a6022859a4f8e6d41b1b3581a93ea1a6b1a15fb80fa3785c",
+  "application_digest_sha256": "2e3aeb05be04c8afdb9bc92a65e5e4230d0bc5f59a918aa7e9ee11c2be856e67",
   "application_files": 49,
   "baseline_main": "5d4c6b2837c9291ae57ac04b7fa799b4984afa39",
   "last_verified_live": "901fd989cf79d84e651164af5ccc8f6774e53bf1",
@@ -53,7 +53,8 @@
   },
   "negative_controls": [
     "New offline audio test fails for the actual old defect on offline.js identical between live901 and main5d.",
-    "Reviewer caught and blocked an intermediate unsafe two-key identity/state binding; final state is bound atomically in one verified value."
+    "Reviewer caught and blocked an intermediate unsafe two-key identity/state binding; final state is bound atomically in one verified value.",
+    "Held pre-login auth-capabilities with its original synthetic cookie after register/logout: old endpoint sends Set-Cookie, changes browser cookie, actual email recovery POST returns403. No email or token sent to real recipients."
   ],
   "final_verification_source": "Read Actions for the exact commit containing this report. Work-branch push runs verify/browser only; deployment/probes/rollback remain main-gated. Local cumulative logs are kept in the task execution workspace.",
   "limitations": [
@@ -84,6 +85,13 @@
       "verify": "PASS 35 checks",
       "browser": "Stopped in review: fixture deliberately created a divergent cloud revision but did not make the required adult recovery choice. Two independent reviews confirmed correct data protection. Test now selects online explicitly and additionally verifies exact old-copy preservation and intact newer cloud successes; original mission/review assertions retained.",
       "application_change_for_this_result": false,
+      "deployment": "SKIPPED (review branch)"
+    },
+    {
+      "commit": "db25e48cc97cd3e7d05fc57cf4f0b12a8f753317",
+      "run": "https://github.com/socialluca89-byte/word/actions/runs/41357683684",
+      "verify": "PASS 35 checks",
+      "browser": "FAIL email request status. Deterministic held-old-cookie capability GET reproduced a late Set-Cookie replacing the post-logout session; actual recovery POST failed 403. Product fix makes the public capability read sessionless before DB/session initialization.",
       "deployment": "SKIPPED (review branch)"
     }
   ],
@@ -148,5 +156,14 @@
       "school"
     ],
     "execution": "Staged local matrix: earlier passing checks retained on identical application bytes; review and tiles rerun after explicit fixture-protocol corrections; remaining suites completed. Final full CI result must be read on the exact containing commit."
+  },
+  "focused_after_sessionless_capabilities_fix": {
+    "verify_checks_passed": 35,
+    "email_api": "PASS fresh/stale-cookie capability reads create no Set-Cookie, directory, DB or sessions; original reset/CSRF/token/limit assertions retained",
+    "email_browser": "PASS deterministic held pre-login cookie across register/logout; late capability reply leaves cookie unchanged; one POST200 and one synthetic outbox message; all original reset/login/token/viewport assertions retained",
+    "independent_review": "PASS minimal API diff: same public boolean, no secret exposure or CSRF change, disabled configuration retained; no other product route altered",
+    "client_assets": "Byte-identical to d6d5228; only api.php changed after the full local browser matrix",
+    "full_ci": "Use the exact commit containing this final report; no publication is implied",
+    "account_resilience": "PASS full account-resilience browser suite on the final API: adult/direct learner, unknown session, quota, canonical cache, logout reconciliation, ownership and revision guards"
   }
 }

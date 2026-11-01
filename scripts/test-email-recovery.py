@@ -13,11 +13,23 @@ def suite(enabled):
             try:response=c.open(request,timeout=10)
             except urllib.error.HTTPError as error:response=error
             data=json.loads(response.read());assert response.status==expected,(action,response.status,data);return data
+        def stateless_capabilities(cookie=''):
+            request=urllib.request.Request(f'http://127.0.0.1:{port}/api.php?action=auth-capabilities',headers={'Cookie':cookie} if cookie else {})
+            opener=urllib.request.build_opener(urllib.request.ProxyHandler({}))
+            with opener.open(request,timeout=10) as response:
+                assert response.status==200
+                assert not response.headers.get('Set-Cookie'),'Public capabilities must not create or replace a session cookie'
+                assert json.loads(response.read())=={'emailRecoveryEnabled':enabled}
         try:
             a,b,guest=client(),client(),client()
             for _ in range(60):
-                try:req(a,'session');break
+                try:stateless_capabilities();break
                 except urllib.error.URLError:time.sleep(.05)
+            assert not os.path.exists(tmp+'/data'),'Capabilities must not initialize the database directory'
+            assert not glob.glob(tmp+'/sess_*'),'Fresh capability reads must not initialize a PHP session'
+            stateless_capabilities('wordyland_session=retiredsynthetic1234567890')
+            assert not os.path.exists(tmp+'/data')
+            assert not glob.glob(tmp+'/sess_*'),'Stale-cookie capability reads must not initialize a PHP session'
             csrf=req(guest,'session')['csrf'];email='recovery@example.test';old='Email-old-password-123';new='Email-new-password-123'
             assert req(guest,'auth-capabilities')['emailRecoveryEnabled']==enabled
             if not enabled:
@@ -78,4 +90,4 @@ def suite(enabled):
         finally:process.terminate();process.wait(timeout=5);log.close()
 suite(False)
 suite(True)
-print('Email recovery passed: disabled by default, CSRF, uniform responses, hashed tokens, expiry, password-change invalidation, single use, session revocation, preserved profiles/recovery codes and limits. Synthetic outbox only; real delivery not tested.')
+print('Email recovery passed: stateless fresh/stale-cookie capabilities without DB/session creation, disabled by default, CSRF, uniform responses, hashed tokens, expiry, password-change invalidation, single use, session revocation, preserved profiles/recovery codes and limits. Synthetic outbox only; real delivery not tested.')

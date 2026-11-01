@@ -22,6 +22,11 @@ if (!extension_loaded('pdo_sqlite')) fail('Database non ancora disponibile sul s
 $testMode = getenv('WORDYLAND_TEST') === '1';
 $dataDir = $testMode ? (string)getenv('WORDYLAND_DATA_DIR') : dirname(__DIR__) . '/.wordyland-data';
 if (!$dataDir || is_link($dataDir)) throw new RuntimeException('Unsafe data directory');
+$action = $_GET['action'] ?? 'session';
+$method = $_SERVER['REQUEST_METHOD'];
+// Public configuration discovery must never create/rotate an anonymous session.
+// A delayed pre-login response could otherwise replace a newer session cookie.
+if ($method==='GET' && $action==='auth-capabilities') respond(['emailRecoveryEnabled'=>recoveryMailSettings($dataDir,$testMode)!==null]);
 if (!is_dir($dataDir) && !mkdir($dataDir, 0700, true)) throw new RuntimeException('Data directory unavailable');
 chmod($dataDir, 0700);
 umask(0077);
@@ -46,8 +51,6 @@ if (isset($_SESSION['account_id'])) {
     if (!$currentAccount || (int)$currentAccount['session_version'] !== (int)($_SESSION['version'] ?? 0)) $_SESSION = ['csrf' => bin2hex(random_bytes(32))];
     else $accountRole = $currentAccount['role'];
 }
-$action = $_GET['action'] ?? 'session';
-$method = $_SERVER['REQUEST_METHOD'];
 $body = [];
 if ($method === 'POST') {
     $bodyLimit = $action === 'study-save' ? 6000000 : 250000;
@@ -112,7 +115,6 @@ function recoveryMailSettings(string $directory, bool $test): ?array {
     return ['transport'=>'php-mail','from'=>$from];
 }
 $recoveryMail=recoveryMailSettings($dataDir,$testMode);
-if ($method==='GET' && $action==='auth-capabilities') respond(['emailRecoveryEnabled'=>$recoveryMail!==null]);
 if ($method==='POST' && in_array($action,['email-recovery-request','email-recovery-confirm'],true)) {
     limitAttempts($db,'email-recovery-ip:'.hash('sha256',$_SERVER['REMOTE_ADDR']??''),20);
     if ($recoveryMail===null) fail('Il recupero email non è ancora attivo. Usa il codice di recupero o contatta il proprietario.',503);
