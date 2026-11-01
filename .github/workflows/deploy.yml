@@ -6,9 +6,9 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: 'deploy = publish main again; probe = read-only SSH check; rollback = restore previous files'
+        description: 'deploy = publish main again; probe = read-only SSH check; rollback = restore previous files; health = one public HTTPS GET only'
         type: choice
-        options: [deploy, probe, rollback]
+        options: [deploy, probe, rollback, health]
         default: deploy
       backup:
         description: 'Backup name for rollback (or latest)'
@@ -182,3 +182,63 @@ jobs:
           persist-credentials: false
       - name: Restore previous application files (database untouched)
         run: bash scripts/deploy-siteground.sh rollback "$BACKUP_NAME"
+
+  health:
+    if: github.event_name == 'workflow_dispatch' && inputs.mode == 'health' && github.ref == 'refs/heads/health-public-readonly-2026-11-01' && github.run_attempt == '1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions: {}
+    steps:
+      - name: One public HTTPS health GET; no SSH or deployment
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib, subprocess, tempfile
+          
+          result = {"httpStatus": None, "contentType": "unknown", "jsonValid": False,
+                    "ready": False, "databaseSqlite": False, "transportOk": False}
+          
+          def reject_constant(value):
+              raise ValueError("Non-JSON constant")
+          
+          try:
+              with tempfile.TemporaryDirectory(prefix="wordyland-health-") as directory:
+                  body = pathlib.Path(directory) / "body"
+                  # Ordinary curl GET; one invocation, no redirect/retry/cookie/custom UA.
+                  url = "https://wordyland.eu/api.php?action=health&verify-" + os.environ["GITHUB_RUN_ID"]
+                  response = subprocess.run(
+                      ["curl", "-q", "-sS", "--max-time", "30", "--max-filesize", "65536",
+                       "-o", str(body), "-w", "%{http_code}\n%{content_type}\n", url],
+                      capture_output=True, text=True, timeout=40, check=False)
+                  metadata = response.stdout.splitlines()
+                  if len(response.stdout) <= 4096 and len(metadata) == 2:
+                      status, mime = metadata
+                      if len(status) == 3 and status.isascii() and status.isdigit() and 100 <= int(status) <= 599:
+                          result["httpStatus"] = int(status)
+                      mime = mime.split(";", 1)[0].strip().lower()
+                      result["contentType"] = mime if mime in ("application/json", "text/html") else "other" if mime else "missing"
+                  result["transportOk"] = response.returncode == 0
+                  if result["transportOk"]:
+                      payload = body.read_bytes()
+                      if len(payload) > 65536:
+                          result["transportOk"] = False
+                      else:
+                          try:
+                              data = json.loads(payload.decode("utf-8"), parse_constant=reject_constant)
+                              result["jsonValid"] = True
+                              if isinstance(data, dict):
+                                  result["ready"] = data.get("ready") is True
+                                  result["databaseSqlite"] = data.get("database") == "sqlite"
+                          except (ValueError, UnicodeError):
+                              pass
+          except (OSError, ValueError, subprocess.SubprocessError):
+              pass
+          
+          passed = (result["transportOk"] and result["httpStatus"] == 200 and
+                    result["contentType"] == "application/json" and result["jsonValid"] and
+                    result["ready"] and result["databaseSqlite"])
+          print("Public health result: " + json.dumps(result, sort_keys=True))
+          if not passed:
+              print("::error::Single public health verification failed; no retry or deployment attempted.")
+          raise SystemExit(0 if passed else 1)
+          PY
