@@ -60,3 +60,6 @@ html[data-page-hidden=true] *,html[data-page-hidden=true] *:before,html[data-pag
 .illustratedScene>.previewBadge{background:#fffdf1ec;color:#193e55;padding:5px 9px;border-radius:8px;font-size:12px;letter-spacing:0;max-width:calc(100% - 24px)}
 
 .sceneDemoActions{display:flex;justify-content:center;margin:8px 0}.sceneDemoActions:empty{display:none}.sceneDemoActions .scenePlayButton{position:static;transform:none;max-width:100%;white-space:normal;min-height:48px;font-size:16px}.sceneDemoActions .scenePlayButton:hover,.sceneDemoActions .scenePlayButton:active{transform:none}
+
+/* Prank clues stay above the visitor portraits rather than covering names/faces. */
+.illustratedPackages{left:50%;top:27%;transform:translateX(-50%);padding:6px;font-size:18px;white-space:nowrap}.illustratedSign{left:50%;top:27%;transform:translateX(-50%)}

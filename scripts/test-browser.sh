@@ -13,7 +13,7 @@ if [[ "$check" != illustrated ]]; then
   python3 - "$fixture/public/index.html" <<'PYMODE'
 from pathlib import Path
 import sys
-p=Path(sys.argv[1]);s=p.read_text();s=s.replace('<head>','<head><script>try{localStorage.setItem("wordylandSceneStyle","3d")}catch{}</script>',1);p.write_text(s)
+p=Path(sys.argv[1]);s=p.read_text();anchor='<script id="loadSupportGuard">';assert s.count(anchor)==1;s=s.replace(anchor,'<script>try{localStorage.setItem("wordylandSceneStyle","3d")}catch{}</script>'+anchor,1);p.write_text(s)
 PYMODE
 fi
 port=$(python3 - <<'PY'
