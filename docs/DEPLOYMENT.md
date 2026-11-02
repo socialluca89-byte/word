@@ -2,6 +2,8 @@
 
 > Evidence reviewed on 30 October 2026: baseline `e6f2a75e011de048aa458fe27d72dff4da5c87ee` was published and verified by [run 41092906001](https://github.com/socialluca89-byte/word/actions/runs/41092906001). Historical incident sections below retain the conditions of their dated checks; see the [current scope and remaining dependencies](CURRENT_STATUS_2026_10_30.md). Current health, file checks and rollback remain mandatory. If protection rejection reappears, stop and diagnose.
 
+> Candidate update, 2 November 2026: the approved new lot uses **52 application files** (including guarded `guardian.php`, installed before `api.php`) and **45 public static files**. The review branch runs39verification command groups and50browser suites in two required25-suite steps. Historical counts below describe earlier releases; scripts/verify-bundle.mjs and the exact workflow are authoritative. The ordinary preflight, host checks and rollback remain mandatory. See [new release scope](NEXT_GAME_RELEASE_2026_11_02.md).
+
 Production is the `main` branch. Development happens on `work` (or feature branches) and reaches production only by merging into `main`.
 
 ## How publication works

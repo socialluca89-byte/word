@@ -1,0 +1,432 @@
+{
+  "baseline_commit": "6819fe41583435938519592cb5f733bad0d0e35c",
+  "application_digest_sha256": "f71b070ca9dc057e7c3f501857a705510787ffab5667cf4cb515e1762ae25024",
+  "application_files": 52,
+  "candidate_commit": "The containing commit; verify its Actions checks and publication separately.",
+  "user_authorization": "ok procedi e poi pubblica",
+  "local_verification": {
+    "verify_unique_passed": 39,
+    "browser_suites_passed": 50,
+    "all_browser_suites_same_app_digest": true,
+    "verify_commands": {
+      "for f in dist/*.js dist/*.mjs; do node --check \"$f\"; done": {
+        "seconds": 0.88,
+        "phase": "verify"
+      },
+      "for f in scripts/*.sh; do bash -n \"$f\"; done": {
+        "seconds": 0.01,
+        "phase": "verify-release"
+      },
+      "node scripts/test-lessons.mjs": {
+        "seconds": 0.06,
+        "phase": "verify"
+      },
+      "node scripts/test-pwa.mjs": {
+        "seconds": 0.07,
+        "phase": "verify"
+      },
+      "node scripts/test-learning.mjs": {
+        "seconds": 0.07,
+        "phase": "verify"
+      },
+      "node scripts/test-rewards.mjs": {
+        "seconds": 0.07,
+        "phase": "verify"
+      },
+      "node scripts/test-training-guidance.mjs": {
+        "seconds": 0.08,
+        "phase": "verify"
+      },
+      "for f in dist/*.php; do php -l \"$f\"; done": {
+        "seconds": 0.11,
+        "phase": "verify"
+      },
+      "python3 scripts/test-api.py": {
+        "seconds": 3.13,
+        "phase": "verify"
+      },
+      "python3 scripts/test-access.py": {
+        "seconds": 3.72,
+        "phase": "verify"
+      },
+      "python3 scripts/test-email-recovery.py": {
+        "seconds": 3.01,
+        "phase": "verify"
+      },
+      "python3 scripts/test-classroom.py": {
+        "seconds": 8.18,
+        "phase": "verify"
+      },
+      "python3 scripts/test-adventures.py": {
+        "seconds": 4.22,
+        "phase": "verify"
+      },
+      "python3 scripts/test-holidays.py": {
+        "seconds": 4.08,
+        "phase": "verify"
+      },
+      "python3 scripts/test-journey.py": {
+        "seconds": 3.32,
+        "phase": "verify"
+      },
+      "python3 scripts/test-elf.py": {
+        "seconds": 1.4,
+        "phase": "verify"
+      },
+      "php -l scripts/bootstrap-admin.php": {
+        "seconds": 0.02,
+        "phase": "verify"
+      },
+      "php -l scripts/owner-recovery-status.php": {
+        "seconds": 0.02,
+        "phase": "verify"
+      },
+      "php -l scripts/prepare-owner-recovery.php": {
+        "seconds": 0.02,
+        "phase": "verify"
+      },
+      "php -l scripts/read-only-readiness.php": {
+        "seconds": 0.03,
+        "phase": "verify"
+      },
+      "python3 scripts/test-read-only-readiness.py": {
+        "seconds": 8.41,
+        "phase": "verify"
+      },
+      "python3 scripts/test-owner-recovery.py": {
+        "seconds": 0.62,
+        "phase": "verify"
+      },
+      "php -l scripts/siteground-cache.php": {
+        "seconds": 0.06,
+        "phase": "verify"
+      },
+      "python3 scripts/test-cache-purge.py": {
+        "seconds": 0.31,
+        "phase": "verify"
+      },
+      "python3 scripts/test-community.py": {
+        "seconds": 3.83,
+        "phase": "verify"
+      },
+      "python3 scripts/test-presence.py": {
+        "seconds": 4.05,
+        "phase": "verify"
+      },
+      "python3 scripts/test-resume.py": {
+        "seconds": 1.9,
+        "phase": "verify"
+      },
+      "python3 scripts/test-autonomy.py": {
+        "seconds": 1.42,
+        "phase": "verify"
+      },
+      "python3 scripts/test-review.py": {
+        "seconds": 0.82,
+        "phase": "verify"
+      },
+      "python3 scripts/test-choice-fairness.py": {
+        "seconds": 0.75,
+        "phase": "verify"
+      },
+      "python3 scripts/test-parent-summary.py": {
+        "seconds": 1.37,
+        "phase": "verify"
+      },
+      "python3 scripts/test-training.py": {
+        "seconds": 10.35,
+        "phase": "verify"
+      },
+      "python3 scripts/test-phonics.py": {
+        "seconds": 2.24,
+        "phase": "verify"
+      },
+      "python3 scripts/test-letter-progression.py": {
+        "seconds": 2.35,
+        "phase": "verify"
+      },
+      "python3 scripts/test-training-guidance.py": {
+        "seconds": 1.9,
+        "phase": "verify"
+      },
+      "python3 scripts/test-holiday-calendar.py": {
+        "seconds": 0.71,
+        "phase": "verify"
+      },
+      "python3 scripts/test-guardian.py": {
+        "seconds": 3.95,
+        "phase": "verify"
+      },
+      "node scripts/verify-bundle.mjs": {
+        "seconds": 0.1,
+        "phase": "verify"
+      },
+      "bash scripts/test-deploy.sh": {
+        "seconds": 29.72,
+        "phase": "verify-release"
+      }
+    },
+    "browser_suites": {
+      "world-driving": {
+        "seconds": 13.33,
+        "phase": "browser-a"
+      },
+      "holiday-calendar": {
+        "seconds": 7.51,
+        "phase": "browser-a"
+      },
+      "child-experience": {
+        "seconds": 18.83,
+        "phase": "browser-a"
+      },
+      "game-resilience": {
+        "seconds": 28.37,
+        "phase": "browser-a"
+      },
+      "journey-navigation": {
+        "seconds": 16.95,
+        "phase": "browser-a"
+      },
+      "appearance-consistency": {
+        "seconds": 24.83,
+        "phase": "browser-a"
+      },
+      "classic-illustrated": {
+        "seconds": 5.38,
+        "phase": "browser-a"
+      },
+      "illustrated-actions": {
+        "seconds": 17.35,
+        "phase": "browser-a"
+      },
+      "illustrated": {
+        "seconds": 37.23,
+        "phase": "browser-a"
+      },
+      "world-play": {
+        "seconds": 23.57,
+        "phase": "browser-a"
+      },
+      "christmas-cast": {
+        "seconds": 47.13,
+        "phase": "browser-a"
+      },
+      "elf": {
+        "seconds": 16.59,
+        "phase": "browser-a"
+      },
+      "journey": {
+        "seconds": 21.91,
+        "phase": "browser-a"
+      },
+      "holidays": {
+        "seconds": 26.14,
+        "phase": "browser-a"
+      },
+      "compatibility": {
+        "seconds": 16.39,
+        "phase": "browser-a"
+      },
+      "ux": {
+        "seconds": 5.79,
+        "phase": "browser-a"
+      },
+      "rewards": {
+        "seconds": 25.14,
+        "phase": "browser-a"
+      },
+      "motion": {
+        "seconds": 19.77,
+        "phase": "browser-a"
+      },
+      "navigation": {
+        "seconds": 37.8,
+        "phase": "browser-a"
+      },
+      "wardrobe": {
+        "seconds": 29.59,
+        "phase": "browser-a"
+      },
+      "pwa": {
+        "seconds": 12.08,
+        "phase": "browser-a"
+      },
+      "presence": {
+        "seconds": 10.22,
+        "phase": "browser-a"
+      },
+      "community": {
+        "seconds": 9.65,
+        "phase": "browser-a"
+      },
+      "duel-resilience": {
+        "seconds": 6.51,
+        "phase": "browser-a"
+      },
+      "training-guidance": {
+        "seconds": 8.17,
+        "phase": "browser-b"
+      },
+      "guardian": {
+        "seconds": 11.87,
+        "phase": "browser-b"
+      },
+      "learning-experience": {
+        "seconds": 9.55,
+        "phase": "browser-b"
+      },
+      "account-resilience": {
+        "seconds": 45.08,
+        "phase": "browser-b"
+      },
+      "duel-identity": {
+        "seconds": 64.6,
+        "phase": "browser-b"
+      },
+      "offline-audio": {
+        "seconds": 2.81,
+        "phase": "browser-b"
+      },
+      "pdf-scan": {
+        "seconds": 11.66,
+        "phase": "browser-b"
+      },
+      "ocr": {
+        "seconds": 10.35,
+        "phase": "browser-b"
+      },
+      "materials": {
+        "seconds": 13.83,
+        "phase": "browser-b"
+      },
+      "learning": {
+        "seconds": 5.91,
+        "phase": "browser-b"
+      },
+      "resume": {
+        "seconds": 18.94,
+        "phase": "browser-b"
+      },
+      "access": {
+        "seconds": 21.5,
+        "phase": "browser-b"
+      },
+      "email": {
+        "seconds": 6.07,
+        "phase": "browser-b"
+      },
+      "autonomy": {
+        "seconds": 8.82,
+        "phase": "browser-b"
+      },
+      "review": {
+        "seconds": 6.83,
+        "phase": "browser-b"
+      },
+      "parent-summary": {
+        "seconds": 16.13,
+        "phase": "browser-b"
+      },
+      "tiles": {
+        "seconds": 34.56,
+        "phase": "browser-b"
+      },
+      "wallet": {
+        "seconds": 11.96,
+        "phase": "browser-b"
+      },
+      "training": {
+        "seconds": 12.35,
+        "phase": "browser-b"
+      },
+      "spelling": {
+        "seconds": 8.33,
+        "phase": "browser-b"
+      },
+      "letter-progression": {
+        "seconds": 9.76,
+        "phase": "browser-b"
+      },
+      "foundations": {
+        "seconds": 33.89,
+        "phase": "browser-b"
+      },
+      "offline-training": {
+        "seconds": 11.15,
+        "phase": "browser-b"
+      },
+      "offline-letters": {
+        "seconds": 14.73,
+        "phase": "browser-b"
+      },
+      "phonics": {
+        "seconds": 15.91,
+        "phase": "browser-b"
+      },
+      "performance": {
+        "seconds": 7.26,
+        "phase": "performance"
+      }
+    },
+    "verify_phases": [
+      {
+        "phase": "verify",
+        "passed": 38,
+        "planned": 39,
+        "application_digest": "f71b070ca9dc057e7c3f501857a705510787ffab5667cf4cb515e1762ae25024"
+      },
+      {
+        "phase": "verify-release",
+        "passed": 2,
+        "planned": 2,
+        "application_digest": "f71b070ca9dc057e7c3f501857a705510787ffab5667cf4cb515e1762ae25024"
+      }
+    ],
+    "intermediate_failures": [
+      {
+        "phase": "verify",
+        "command": "bash scripts/test-deploy.sh",
+        "exit": 1,
+        "corrected": "Rollback now removes only allowlisted files absent from the backup; same-second backups are unique and immutable; final deployment test and shell syntax passed."
+      }
+    ],
+    "scope_note": "Application source remained identical throughout the cumulative matrix. Only deployment helpers/tests were corrected after the first verify run; shell syntax and complete mock deployment were then repeated on the corrected helpers."
+  },
+  "independent_reviews": {
+    "guardian": "Target-bound consent, CSRF/IDOR/TTL/races, monotonic revocation, snapshot role/metadata reads and scoped30/90day reports checked; no blocker left in reviewed backend. Synthetic UI and API tests passed.",
+    "release_helpers": "Missing-module rollback cleanup, immutable same-second snapshots, mtime ordering, old backup names and five-release retention tested without production."
+  },
+  "release_helper_hashes": {
+    "scripts/siteground-remote.sh": "c2ee0adba81c1409bf8a4a29c9b8a6e3cede8374bfdb52148c9db996d27866fc",
+    "scripts/deploy-siteground.sh": "920fb160733110ec8e3f0a944585f7c18c30b7cb3b43a27dc123f00a74d6bb49",
+    "scripts/test-deploy.sh": "37cccf956eb2aab64bfe0dc6cdb9dcfbce9a4a51f578f90660f14f4dfd67f617"
+  },
+  "required_ci": {
+    "verify": 39,
+    "browser": 50,
+    "browser_steps": [
+      25,
+      25
+    ],
+    "step_budget_minutes": 15,
+    "browser_job_budget_minutes": 40,
+    "production_gate": "main only, after both jobs pass; ordinary preflight retained"
+  },
+  "features": {
+    "world_driving": "Implemented and tested for kart/football/space; original8games and direct choices retained.",
+    "training_suggestion": "Implemented from observed progress with resume priority and honest missing-data/offline handling.",
+    "calendar": "Server calendar, four existing festivals and clear Birillo8December–7January schedule; all5pranks retained.",
+    "guardian_progress": "Explicit two-sided authorization, short-lived pairing code and account-bound invitation; read-only aggregates, never a playable/owned learner profile.",
+    "learning_coverage": "Finite inventory and next teaching steps documented; not a complete Cambridge curriculum.",
+    "audio_email_validation": "Existing voice-check mechanisms and recovery flows retained; mock success is not real voice quality or mail delivery."
+  },
+  "privacy": "Only synthetic accounts and documents. No real links, student-data reads, messages, email, password reset, new credentials or paid services.",
+  "screenshots": "review/README.md",
+  "publication_at_report_creation": "Not yet attempted for this candidate. Last known hosting rejection and main/live states are historical evidence, not a fresh availability test; ordinary release result must be checked.",
+  "limits": [
+    "Real-device voice/phoneme quality and licensed phoneme audio need adult/qualified review.",
+    "Real email delivery and owner-account recovery were not exercised.",
+    "Old physical tablet remains deferred.",
+    "Linked-parent reports exclude guest/offline data; phonics covers completed paths started within30days, not a historical total."
+  ]
+}

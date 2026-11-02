@@ -47,3 +47,23 @@ main{padding-top:10px}.accountArea{background:white;border:1px solid #e3dff0;bor
 
 /* The wardrobe caption and view controls sit around the image, never on the character. */
 .shopPreviewFrame{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:18px 0;min-width:0}.shopPreviewFrame>.previewBadge{position:static;display:block;margin:0;padding:0;background:none;color:#193e55;font:700 18px/1.4 Outfit,sans-serif;letter-spacing:0;text-transform:none;white-space:normal;overflow-wrap:anywhere}.shopPreviewControls{min-width:0}.shopPreviewControls .sceneViewModes{margin:0}.shopPreviewFrame>.stylePreview{margin:0}
+
+/* Dates come from the server; the next arrival stays discoverable without hiding today's mission. */
+.holidayPanel .holidayTabs button{font-size:18px;line-height:1.4;white-space:normal}
+.holidayPanel .holidayCalendar{padding:14px 16px;margin:18px 0;border:2px solid #bdd6d9;border-radius:18px;background:#fffdf6;font-size:18px;line-height:1.5}
+.holidayCalendar>summary{min-height:52px;cursor:pointer;color:#193e55;padding:3px 0;align-content:center}
+.holidayCalendar>summary>b{font-size:22px;line-height:1.3}.holidayCalendar>summary>span{display:block;font-size:18px;line-height:1.5;margin:5px 0 0}
+.holidayPanel .holidayCalendarToday,.holidayPanel .holidayCalendarKeeps{font-size:18px;line-height:1.5;margin:14px 0}
+.holidayCalendarGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,235px),1fr));gap:12px;margin:14px 0}
+.holidayCalendarGrid>article{display:flex;flex-direction:column;gap:12px;min-width:0;padding:16px;border:2px solid #d4e4e6;border-radius:16px;background:#f2f7fb}
+.holidayCalendarGrid>article[aria-current=true]{border-color:#2f7464}.holidayCalendarGrid>article[data-calendar-state=active]{background:#eaf5e7}
+.holidayCalendarState{font-size:18px;font-weight:800;line-height:1.4;color:#355f73}.holidayCalendarGrid>article[data-calendar-state=active] .holidayCalendarState{color:#22583d}
+.holidayPanel .holidayCalendarGrid h4{font-size:22px;line-height:1.3;margin:0}.holidayPanel .holidayCalendarGrid p{font-size:18px;line-height:1.5;margin:0;overflow-wrap:anywhere}
+.holidayCalendarGrid button{font-size:18px;line-height:1.4;min-height:50px;margin:auto 0 0;padding:12px;white-space:normal}
+.holidayPanel .holidaySelectedState{font-size:20px;font-weight:800;margin:8px 0;color:#22583d}.holidayPanel #holidayEventTitle{scroll-margin-top:12px}
+.holidayPanel .elfArrivalCard{display:grid;grid-template-columns:54px minmax(0,1fr);gap:14px;padding:18px;margin:20px 0;border:2px solid #d6b667;border-radius:20px;background:#fff6d9;color:#193e55}
+.elfArrivalIcon{font-size:44px;line-height:1.2}.holidayPanel .elfArrivalCard h4{font-size:26px;line-height:1.3;margin:5px 0 10px}
+.holidayPanel .elfArrivalCard p{font-size:18px;line-height:1.5;margin:9px 0}.holidayPanel .elfArrivalCard .elfArrivalState{font-size:20px;font-weight:800;margin:0;color:#255d4b}
+.holidayPanel .elfArrivalDates{font-weight:800}.holidayPanel .elfArrivalIdentity{color:#3e5a64}.elfArrivalCard #openElf{font-size:20px;min-height:52px;margin:12px 0 0;white-space:normal}
+.holidayPanel .elfArrivalCard[data-elf-arrival=active]{background:#edf7e5;border-color:#7eac83}
+@media(max-width:400px){.holidayPanel .holidayCalendar{padding:12px}.holidayPanel .elfArrivalCard{grid-template-columns:minmax(0,1fr);padding:15px;gap:4px}.elfArrivalIcon{font-size:38px}.holidayPanel .elfArrivalCard h4{font-size:25px}.elfArrivalCard #openElf{width:100%}}

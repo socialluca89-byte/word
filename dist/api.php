@@ -47,7 +47,7 @@ $_SESSION['csrf'] ??= bin2hex(random_bytes(32));
 $accountRole = null;
 if (isset($_SESSION['account_id'])) {
     $q = $db->prepare('SELECT session_version,role FROM accounts WHERE id=?'); $q->execute([$_SESSION['account_id']]);
-    $currentAccount = $q->fetch();
+    $currentAccount = $q->fetch(); $q->closeCursor();
     if (!$currentAccount || (int)$currentAccount['session_version'] !== (int)($_SESSION['version'] ?? 0)) $_SESSION = ['csrf' => bin2hex(random_bytes(32))];
     else $accountRole = $currentAccount['role'];
 }
@@ -102,6 +102,7 @@ function validState(mixed $state): array {
 }
 define('WORDYLAND_API', true);
 require __DIR__ . '/classroom.php';
+if (str_starts_with($action,'guardian-')) require __DIR__ . '/guardian.php';
 // Email recovery is opt-in. No credentials or mail configuration live in public_html.
 function recoveryMailSettings(string $directory, bool $test): ?array {
     if ($test && getenv('WORDYLAND_TEST_MAIL') === '1') return ['transport'=>'test'];

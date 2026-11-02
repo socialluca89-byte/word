@@ -1,3 +1,20 @@
+# Guida nei mondi, allenamento consigliato e genitori — 2 novembre 2026
+
+Schermate reali del candidato completo, con soli account/dati fittizi. Nessuna immagine promozionale sostituisce il gioco. Stato di pubblicazione distinto dalle immagini: vedere il commit e il run di rilascio. [Perimetro e verifiche richieste](../NEXT_GAME_RELEASE_2026_11_02.md).
+
+- [Kart: guida reale, telefono390px](next-20261102-kart-390.png)
+- [Calcio: mira e tiro, telefono390px](next-20261102-football-390.png)
+- [Spazio: spostamento e volo, telefono390px](next-20261102-space-390.png)
+- [Allenamento consigliato con tutti i percorsi conservati](next-20261102-guidance-390.png)
+- [Birillo annunciato a novembre](next-20261102-elf-arrival-390.png) · [scherzi attivi dall'8dicembre](next-20261102-elf-active-390.png) · [prossima edizione dopo il7gennaio](next-20261102-elf-next-season-390.png)
+- [Riepilogo riservato al genitore autorizzato](next-20261102-guardian-390.png)
+
+Le scene sono catture del viewport effettivo. Alcune immagini successive della cronologia sono catture di componenti estesi: possono includere elementi fissi fuori dal viewport che nel gioco normale restano nascosti. Nelle nuove scene è stata verificata anche l'assenza di coperture sul personaggio dopo una raccolta.
+
+Le sezioni successive sono cronologia dei lotti precedenti e non attestano lo stato corrente del sito.
+
+---
+
 # Gioco, grafica e feedback — 2 novembre 2026, non pubblicato
 
 Schermate reali del candidato locale, con soli dati sintetici. Nessuna immagine promozionale sostituisce la schermata del gioco. Il digest applicativo è registrato nel [rapporto di verifica](../GAME_UPGRADE_VERIFICATION_2026_11_02.json); [scelte e correzioni](../GAME_DESIGN_2026_11_02.md). Il blocco di pubblicazione SiteGround resta separato.

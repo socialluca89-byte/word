@@ -21,7 +21,8 @@ if($action==='training-state'){
     if($method!=='GET')fail('Metodo non consentito.',405);
     if(isset($_GET['token']))respond(['session'=>trainingSnapshot(trainingOwnedSession($db,$tp,(string)$_GET['token'])),'stickers'=>trainingStickers($db,$tp)]);
     $active=rows($db,'SELECT * FROM training_sessions WHERE profile_id=? AND completed_at IS NULL AND created_at>=? ORDER BY rowid DESC LIMIT 32',[$tp,time()-604800]);
-    respond(['sessions'=>array_map('trainingSnapshot',$active),'stickers'=>trainingStickers($db,$tp)]);
+    $snapshots=array_map('trainingSnapshot',$active);
+    respond(['sessions'=>$snapshots,'stickers'=>trainingStickers($db,$tp),'recommendation'=>trainingRecommendation(trainingContent(),trainingRecommendationEvidence($db,$tp),$snapshots)]);
 }
 if($method!=='POST')fail('Metodo non consentito.',405);
 if($action==='training-start'){
@@ -136,6 +137,28 @@ function trainingPlan(PDO $db,int $pid,string $track,string $block,array $conten
     }
     return $plan;
 }
+/** Existing activities only; a suggestion is neither a grade nor an exam-readiness score. */
+function trainingRecommendation(array $content,array $evidence=[],array $sessions=[]):?array{
+    $letters=$content['letters']??[];$words=$content['foundationWords']??$content['words']??[];$blocks=$content['blocks']??[];$packs=$content['wordPacks']??[['id'=>'first','words'=>array_column($words,'id')]];
+    $valid=array_fill_keys(array_merge(array_map(fn($r)=>'letter:'.$r['id'],$letters),array_map(fn($r)=>'word:'.$r['id'],$words)),true);$counts=is_array($evidence['counts']??null)?$evidence['counts']:[];$seen=[];
+    foreach(is_array($evidence['seen']??null)?$evidence['seen']:[] as $item)if(is_string($item)&&isset($valid[$item]))$seen[$item]=true;
+    foreach($counts as $item=>$count)if(isset($valid[$item])&&(is_int($count)||is_float($count))&&is_finite((float)$count)&&$count>0)$seen[$item]=true;
+    $target=function(mixed $track)use($blocks,$packs):?array{if(!is_string($track))return null;if(str_starts_with($track,'letters:')){foreach($blocks as $block)if($block['id']===substr($track,8))return ['kind'=>'letters','track'=>$track,'block'=>$block['id']];return null;}$pack=$track==='words'?'first':(str_starts_with($track,'words:')?substr($track,6):null);foreach($packs as $row)if($pack!==null&&$row['id']===$pack)return ['kind'=>'words','track'=>$pack==='first'?'words':'words:'.$pack,'pack'=>$pack];return null;};
+    foreach($sessions as $session){$choice=$target($session['track']??null);if($choice&&!($session['done']??false)&&is_string($session['token']??null)&&preg_match('/^[a-f0-9]{16,64}$/',$session['token'])&&is_int($session['step']??null)&&is_int($session['total']??null)&&$session['step']>=0&&$session['step']<$session['total']&&$session['total']<=12)return array_merge($choice,['kind'=>'resume','reason'=>'resume','token'=>$session['token'],'step'=>$session['step'],'total'=>$session['total']]);}
+    $review=[];foreach(is_array($evidence['practice']??null)?$evidence['practice']:[] as $row){$item=$row['item']??'';$skill=$row['skill']??'';$eligible=is_string($item)&&str_starts_with($item,'letter:')?in_array($skill,['letter-reading.letter','letter-name.letter'],true):$skill==='spelling.recall';if($eligible&&isset($valid[$item],$seen[$item])&&(is_int($row['errors']??null)||is_float($row['errors']??null))&&is_finite((float)$row['errors'])&&$row['errors']>=2&&(is_int($row['errorDays']??null)||is_float($row['errorDays']??null))&&is_finite((float)$row['errorDays'])&&$row['errorDays']>=2&&(is_int($row['independent']??null)||is_float($row['independent']??null))&&is_finite((float)$row['independent'])&&$row['independent']>=0&&$row['independent']<3)$review[$item]=true;}
+    $choices=[];foreach($blocks as $block)$choices[]=array_merge($target('letters:'.$block['id']),['items'=>array_map(fn($id)=>'letter:'.$id,$block['letters'])]);foreach($packs as $pack)$choices[]=array_merge($target($pack['id']==='first'?'words':'words:'.$pack['id']),['items'=>array_map(fn($id)=>'word:'.$id,$pack['words'])]);$choices=array_values(array_filter($choices,fn($choice)=>count($choice['items'])>0&&count(array_filter($choice['items'],fn($item)=>isset($valid[$item])))===count($choice['items'])));
+    $selected=null;$score=0;foreach($choices as $choice){$n=count(array_filter($choice['items'],fn($item)=>isset($review[$item])));if($n>$score){$selected=$choice;$score=$n;}}if($selected){unset($selected['items']);return $selected+['reason'=>'review'];}
+    $nextLetters=null;$nextWords=null;foreach($choices as $choice)if(array_filter($choice['items'],fn($item)=>!isset($seen[$item]))){if($choice['kind']==='letters'&&$nextLetters===null)$nextLetters=$choice;if($choice['kind']==='words'&&$nextWords===null)$nextWords=$choice;}
+    if($nextLetters||$nextWords){$lettersSeen=count(array_filter($letters,fn($letter)=>isset($seen['letter:'.$letter['id']])));$wordsSeen=count(array_filter($words,fn($word)=>isset($seen['word:'.$word['id']])));$selected=$nextWords===null||$nextLetters!==null&&$lettersSeen<=$wordsSeen?$nextLetters:$nextWords;unset($selected['items']);return $selected+['reason'=>'new'];}
+    $least=INF;foreach($choices as $choice){$n=array_sum(array_map(fn($item)=>isset($counts[$item])&&(is_int($counts[$item])||is_float($counts[$item]))&&is_finite((float)$counts[$item])?max(0,$counts[$item]):0,$choice['items']))/count($choice['items']);if($n<$least){$selected=$choice;$least=$n;}}if(!$selected)return null;unset($selected['items']);return $selected+['reason'=>'familiar'];
+}
+function trainingRecommendationEvidence(PDO $db,int $pid):array{
+    $counts=[];foreach(rows($db,'SELECT item,SUM(completed) AS n FROM training_items WHERE profile_id=? GROUP BY item',[$pid]) as $row)$counts[$row['item']]=(int)$row['n'];
+    $practice=rows($db,'SELECT item,skill,SUM(errors) AS errors,SUM(independent) AS independent,COUNT(DISTINCT CASE WHEN errors>0 THEN day END) AS errorDays FROM training_daily WHERE profile_id=? AND day>=? AND day<=? GROUP BY item,skill',[$pid,gmdate('Y-m-d',time()-7*86400),gmdate('Y-m-d')]);
+    foreach($practice as &$row)foreach(['errors','independent','errorDays'] as $field)$row[$field]=(int)$row[$field];unset($row);
+    return ['counts'=>$counts,'seen'=>array_keys(array_filter($counts,fn($n)=>$n>0)),'practice'=>$practice];
+}
+
 function trainingStickers(PDO $db,int $pid):array{return array_column(rows($db,'SELECT sticker FROM training_stickers WHERE profile_id=? ORDER BY earned_day,sticker',[$pid]),'sticker');}
 function trainingGrantStickers(PDO $db,int $pid):void{
     $totals=one($db,'SELECT * FROM training_totals WHERE profile_id=?',[$pid]);

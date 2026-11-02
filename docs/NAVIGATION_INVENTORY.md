@@ -80,3 +80,13 @@ Le stesse destinazioni aprono ora per default scene illustrate con i disegni del
 ## Revisione dei percorsi,1novembre2026
 
 Il Box di allenamento contiene ora il suo editor ospite locale; con profilo online il medesimo ingresso apre il modulo account reale. Le entrate Isola/Classe dalla pagina Allenamento e i ritorni della cronologia ripristinano la superficie visibile. Durante una scelta di guardaroba in corso, la destinazione richiesta viene conservata fino all’esito. Il guardaroba colloca titolo e controlli fuori dall’immagine. Le sfide aprono all’inizio e conservano le spiegazioni nell’aiuto dopo le risposte. Nessuna destinazione eliminata. Copertura nuova: journey-navigation, appearance-consistency, duel-identity; quadro completo in FULL_PRODUCT_REVIEW_2026_11_01.md.
+
+
+## Nuovo lotto approvato del 2 novembre: guida, proposta, calendario e genitori
+
+- Kart/Calcio/Spazio: Sinistra, azione Guida/Tira/Vola e Destra nel gioco già presente; restano tre scelte dirette, bersagli, otto mondi, Illustrazioni/3D e replay. Al completamento resta la continuazione esplicita agli esercizi.
+- Allenamento: proposta breve con una CTA e motivo leggibile, prima delle scelte manuali che restano raggiungibili. Una sessione sospesa ha priorità. Nessun timer o classifica.
+- Villaggi: calendario delle quattro festività in details, data del server e card dell'arrivo di Birillo anche fuori dal suo periodo. I portali e il vero scherzo non vengono sostituiti; il tasto per giocare compare solo quando attivo.
+- Account e progressi: sezione genitori aggiuntiva per gli adulti verificati. Generazione esplicita del codice di abbinamento, autorizzazione del gestore per un alunno della propria classe, accettazione del genitore e sola lettura dei riepiloghi. Non rende l'alunno un profilo giocabile del genitore e non concede altri dati/classe. Revoca e scadenza restano visibili senza modifiche ai profili posseduti.
+
+Regressioni nuove: world-driving, training-guidance, holiday-calendar e guardian, insieme a tutte le precedenti. Stato di pubblicazione da verificare in Actions; la presenza in questo inventario descrive il candidato, non prova il deploy.

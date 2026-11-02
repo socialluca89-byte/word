@@ -272,6 +272,14 @@ function holidayElf(array $event,DateTimeImmutable $now): ?array {
     }
     return ['name'=>'Birillo','active'=>$active,'opens'=>$opens->format(DateTimeInterface::ATOM),'closes'=>$event['closes'],'day'=>$now->format('Y-m-d'),'prank'=>$prank];
 }
+// Arrival metadata stays visible when the next Christmas edition is still closed.
+// It never creates a visitor, prank or activity outside the existing event window.
+function holidayElfSchedule(array $event,DateTimeImmutable $now): ?array {
+    if($event['id']!=='christmas')return null;
+    $year=(int)explode(':',$event['season'])[1];$opens=new DateTimeImmutable($year.'-12-08',new DateTimeZone('Europe/Rome'));
+    $active=$event['active']&&$now>=$opens&&$now<new DateTimeImmutable($event['closes']);
+    return ['name'=>'Birillo','active'=>$active,'phase'=>$active?'active':'upcoming','opens'=>$opens->format(DateTimeInterface::ATOM),'closes'=>$event['closes'],'lastDay'=>$event['lastDay']];
+}
 function journeyEvent(): array {return ['id'=>'journey','name'=>'Passaporto delle scoperte','icon'=>'🧭','season'=>'journey:v1','opens'=>null,'closes'=>null,'lastDay'=>null,'active'=>true,'evergreen'=>true];}
 function holidayEvent(string $id,DateTimeImmutable $now): array {if($id==='journey')return journeyEvent();foreach(holidayEvents($now) as $e)if($e['id']===$id)return $e;fail('Festività non trovata.',404);}
 function holidayQuestion(array $s): ?array {
@@ -309,7 +317,7 @@ if(str_starts_with($action,'holiday-')||str_starts_with($action,'journey-')){
     $db->exec('CREATE TABLE IF NOT EXISTS holiday_days(profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,season TEXT NOT NULL,day TEXT NOT NULL,token TEXT UNIQUE NOT NULL,plan TEXT NOT NULL,step INTEGER NOT NULL DEFAULT 0,hint INTEGER NOT NULL DEFAULT 0,errors INTEGER NOT NULL DEFAULT 0,last_attempt TEXT,PRIMARY KEY(profile_id,season,day));');
     $now=holidayNow();$today=$now->format('Y-m-d');
     if($op==='holiday-state'){
-        $events=$isJourney?[journeyEvent()]:holidayEvents($now);foreach($events as &$e){$e['elf']=holidayElf($e,$now);$e['rewards']=holidayRewards($db,$pid,$e);$s=challengeSession($db,$pid,$e,$today);$e['session']=$s?holidaySnapshot($s):null;}unset($e);respond(['day'=>$today,'timezone'=>'Europe/Rome','events'=>$events,'wallet'=>wallet($db,$pid)]);
+        $events=$isJourney?[journeyEvent()]:holidayEvents($now);foreach($events as &$e){$e['elf']=holidayElf($e,$now);if($e['id']==='christmas')$e['elfSchedule']=holidayElfSchedule($e,$now);$e['rewards']=holidayRewards($db,$pid,$e);$s=challengeSession($db,$pid,$e,$today);$e['session']=$s?holidaySnapshot($s):null;}unset($e);respond(['day'=>$today,'timezone'=>'Europe/Rome','events'=>$events,'wallet'=>wallet($db,$pid)]);
     }
     if($op==='holiday-start'){
         if($isJourney){if(isset($body['event'])&&$body['event']!=='journey')fail('Scegli il percorso delle scoperte.');$body['event']='journey';}if(!is_string($body['event']??null)||(!$isJourney&&$body['event']==='journey'))fail('Scegli un percorso disponibile.');$e=holidayEvent($body['event'],$now);if(!$e['active'])fail('Le sfide di questa festività sono chiuse.',410);

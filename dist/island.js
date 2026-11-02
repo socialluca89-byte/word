@@ -41,25 +41,36 @@ const toyGames={
  ocean:{title:'Cerca il tesoro della baia',verb:'Raccogli',items:[['🐚','shell','conchiglia',0xeba5b9,'shell'],['🐟','fish','pesce',0x629dcd,'fish'],['⚪','pearl','perla',0xfff4df,'orb']]},
  dino:{title:'Le sorprese dei dinosauri',verb:'Scopri',items:[['🥚','egg','uovo',0xf6d9a4,'egg'],['🍃','leaf','foglia',0x78b994,'leaf'],['🐾','footprint','impronta',0xb78b69,'foot']]}
 };
+const toyDriving={kart:{action:'Guida',instruction:'Scegli una corsia e guida fino al segnale.'},football:{action:'Tira',instruction:'Sposta la mira e tira verso il colore richiesto.'},space:{action:'Vola',instruction:'Sposta il razzo e vola verso la figura richiesta.'}};
+function drivingFigure(kind,eq={}){
+ const color=kind==='kart'?({'kart-pink':'#f193a9','kart-mint':'#75d4a9','kart-gold':'#ffca57','kart-purple':'#a48be0','kart-christmas':'#d83c56','kart-leaf':'#56a381'})[eq.kart]||'#55c5dd':kind==='space'?({'rocket-mint':'#8cd8be','rocket-galaxy':'#9c83dd','rocket-christmas':'#c99a67','rocket-ocean':'#4b9fca'})[eq.rocket]||'#fff5df':({'ball-sun':'#ffc15c','ball-ocean':'#65b9e9'})[eq.ball]||'#fffdf0';
+ const body=kind==='kart'?'<path d="M19 48h82l24 16v16H16V62Z" fill="'+color+'" stroke="#253955" stroke-width="5"/><path d="M49 48V26h35l17 22" fill="#e3f4f6" stroke="#253955" stroke-width="5"/><path d="M32 60h60" stroke="#fffdf0" stroke-width="7"/><circle cx="39" cy="80" r="14" fill="#253955"/><circle cx="101" cy="80" r="14" fill="#253955"/><circle cx="39" cy="80" r="6" fill="#d7edf0"/><circle cx="101" cy="80" r="6" fill="#d7edf0"/>':kind==='space'?'<path d="M34 78 12 119l25-7m40-34 22 41-25-7" fill="#dd7791" stroke="#253955" stroke-width="4"/><path d="M55 5Q20 39 33 108h44Q90 39 55 5Z" fill="'+color+'" stroke="#253955" stroke-width="5"/><path d="M55 5Q39 18 34 37h42Q71 18 55 5Z" fill="#dd7791"/><circle cx="55" cy="62" r="14" fill="#75c9df" stroke="#253955" stroke-width="5"/>':'<circle cx="50" cy="50" r="45" fill="'+color+'" stroke="#253955" stroke-width="5"/><path d="M50 27 72 43 64 69H36L28 43Z" fill="#253955"/><path d="m17 20 13 23-15 19M83 20 70 43l15 19M18 82l18-13M82 82 64 69M50 4v23" fill="none" stroke="#253955" stroke-width="5"/>';
+ return '<svg viewBox="'+(kind==='space'?'0 0 110 145':kind==='kart'?'0 0 140 100':'0 0 100 100')+'" aria-hidden="true">'+body+'</svg>';
+}
 function mountToy(panel,kind,handlers={}){
  const game=toyGames[kind];if(!panel||!game)return null;
- let disposed=false,step=0,order=[],found=new Set();
+ const driving=toyDriving[kind];let disposed=false,step=0,order=[],found=new Set(),aimed=0;
  const wrap=document.createElement('section');wrap.className='worldToy';wrap.dataset.toyKind=kind;wrap.setAttribute('aria-label',game.title);
- wrap.innerHTML='<h4>'+game.title+'</h4><p class="toyObjective"></p><div class="toyChoices">'+game.items.map(([icon,en,it,color],i)=>'<button type="button" data-toy-choice="'+i+'" style="--toy-color:#'+color.toString(16).padStart(6,'0')+'"><span aria-hidden="true">'+icon+'</span><b lang="en">'+en+'</b><small>'+it+'</small></button>').join('')+'</div><p class="toyStatus" role="status" aria-live="polite" aria-atomic="true"></p><p class="toyHelp"></p><button class="primary toyLearn" type="button" hidden>Continua con gli esercizi</button><button class="audio toyReplay" type="button" hidden>Rigioca nel mondo</button><small class="toyNote">Gioco libero · nessuna moneta spesa. I premi si conquistano negli esercizi. Uscendo da questa scena ricominci.</small>';
- panel.append(wrap);const buttons=[...wrap.querySelectorAll('[data-toy-choice]')],objective=wrap.querySelector('.toyObjective'),status=wrap.querySelector('.toyStatus'),replay=wrap.querySelector('.toyReplay'),learn=wrap.querySelector('.toyLearn');
- function describe(){wrap.dataset.toyStep=String(step);wrap.dataset.toyTarget=step<3?String(order[step]):'';objective.innerHTML=step===3?'✨ Hai completato la scoperta!':game.verb+' <strong lang="en">'+game.items[order[step]][1]+'</strong><small>'+game.items[order[step]][0]+' '+game.items[order[step]][2]+'</small>';buttons.forEach((b,i)=>{b.disabled=found.has(i);b.classList.toggle('toyFound',found.has(i));b.setAttribute('aria-label',(found.has(i)?'Trovato: ':'Scegli ')+game.items[i][1]+' · '+game.items[i][2]);});replay.hidden=step!==3;wrap.querySelector('.toyLearn').hidden=step!==3;}
- function reset(){if(disposed)return;step=0;found=new Set();order=[0,1,2];for(let i=2;i>0;i--){const j=Math.floor(Math.random()*(i+1));[order[i],order[j]]=[order[j],order[i]];}describe();status.textContent='0 / 3 scoperte. Puoi giocare con calma.';handlers.reset?.();}
+ wrap.innerHTML='<h4>'+game.title+'</h4><p class="toyObjective"></p>'+(driving?'<div class="toyDriving" role="group" aria-label="'+driving.instruction+'"><p>'+driving.instruction+'</p><div class="toyAimTrack" aria-hidden="true">'+game.items.map(([icon,en],i)=>'<span data-aim-lane="'+i+'"><i>'+icon+'</i><b lang="en">'+en+'</b></span>').join('')+'</div><p class="toyAimStatus" role="status" aria-live="polite"></p><div class="toyDriveButtons"><button type="button" data-toy-move="-1" aria-label="Sposta a sinistra">← <span>Sinistra</span></button><button type="button" data-toy-drive>'+driving.action+'</button><button type="button" data-toy-move="1" aria-label="Sposta a destra"><span>Destra</span> →</button></div><small>Puoi usare anche ←, → e Spazio.</small></div>':'')+'<div class="toyChoices">'+game.items.map(([icon,en,it,color],i)=>'<button type="button" data-toy-choice="'+i+'" style="--toy-color:#'+color.toString(16).padStart(6,'0')+'"><span aria-hidden="true">'+icon+'</span><b lang="en">'+en+'</b><small>'+it+'</small></button>').join('')+'</div><p class="toyStatus" role="status" aria-live="polite" aria-atomic="true"></p><p class="toyHelp"></p><button class="primary toyLearn" type="button" hidden>Continua con gli esercizi</button><button class="audio toyReplay" type="button" hidden>Rigioca nel mondo</button><small class="toyNote">Gioco libero · nessuna moneta spesa. I premi si conquistano negli esercizi. Uscendo da questa scena ricominci.</small>';
+ panel.append(wrap);const buttons=[...wrap.querySelectorAll('[data-toy-choice]')],objective=wrap.querySelector('.toyObjective'),status=wrap.querySelector('.toyStatus'),replay=wrap.querySelector('.toyReplay'),learn=wrap.querySelector('.toyLearn'),drive=wrap.querySelector('[data-toy-drive]'),controls=wrap.querySelector('.toyDriving');
+ function describeAim(){if(!driving)return;wrap.dataset.toyAim=String(aimed);wrap.querySelectorAll('[data-aim-lane]').forEach(n=>n.classList.toggle('aimed',Number(n.dataset.aimLane)===aimed));wrap.querySelector('.toyAimStatus').innerHTML=(found.has(aimed)?'Già trovato: ':'Stai scegliendo: ')+'<strong lang="en">'+game.items[aimed][1]+'</strong> · '+game.items[aimed][2];drive.textContent=driving.action+' · '+game.items[aimed][1];drive.setAttribute('aria-disabled',String(found.has(aimed)));controls.hidden=step===3;}
+ function aim(index){if(disposed||!driving||!Number.isInteger(index)||index<0||index>2||step===3)return;aimed=index;describeAim();handlers.aim?.(aimed);}
+ function move(delta){if(disposed||step===3)return;let next=aimed;for(let i=0;i<3;i++){next=(next+delta+3)%3;if(!found.has(next))break;}aim(next);}
+ function describe(){wrap.dataset.toyStep=String(step);wrap.dataset.toyTarget=step<3?String(order[step]):'';objective.innerHTML=step===3?'✨ Hai completato la scoperta!':game.verb+' <strong lang="en">'+game.items[order[step]][1]+'</strong><small>'+game.items[order[step]][0]+' '+game.items[order[step]][2]+'</small>';buttons.forEach((b,i)=>{b.disabled=found.has(i);b.classList.toggle('toyFound',found.has(i));b.setAttribute('aria-label',(found.has(i)?'Trovato: ':'Scegli ')+game.items[i][1]+' · '+game.items[i][2]);});replay.hidden=step!==3;learn.hidden=step!==3;describeAim();}
+ function reset(){if(disposed)return;step=0;aimed=0;found=new Set();order=[0,1,2];for(let i=2;i>0;i--){const j=Math.floor(Math.random()*(i+1));[order[i],order[j]]=[order[j],order[i]];}describe();status.textContent='0 / 3 scoperte. Puoi giocare con calma.';handlers.reset?.();if(driving)handlers.aim?.(aimed);}
  function choose(index,explicit=false){
   if(disposed||!Number.isInteger(index)||index<0||index>2||found.has(index)||step===3)return false;
-  const correct=index===order[step],hadFocus=wrap.contains(document.activeElement);
+  if(driving){aimed=index;describeAim();handlers.aim?.(aimed);}
+  const correct=index===order[step],hadFocus=wrap.contains(document.activeElement),fromDrive=controls?.contains(document.activeElement);
   if(!correct){status.textContent='Hai scelto '+game.items[index][1]+' ('+game.items[index][2]+'). Cerca '+game.items[order[step]][1]+' ('+game.items[order[step]][2]+'): puoi riprovare.';handlers.choose?.(index,false,step);return false;}
   found.add(index);step++;describe();status.textContent=step===3?'3 / 3 · Scoperta completata! Puoi rigiocare o aprire la missione in inglese.':step+' / 3 · Trovato! Ora cerca il prossimo oggetto.';handlers.choose?.(index,true,step);
   if(step===3&&explicit){learn.focus({preventScroll:true});learn.scrollIntoView({block:'nearest',inline:'nearest',behavior:'instant'});}
-  else if(hadFocus&&step<3)buttons.find(b=>!b.disabled)?.focus({preventScroll:true});return true;
+  else if(hadFocus&&step<3)(fromDrive?wrap.querySelector('[data-toy-move="1"]'):buttons.find(b=>!b.disabled))?.focus({preventScroll:true});return true;
  }
- learn.onclick=()=>{if(!disposed)window.dispatchEvent(new CustomEvent('wordyland-play-place',{detail:kind}));};buttons.forEach((b,i)=>b.onclick=e=>choose(i,e.isTrusted));replay.onclick=()=>{reset();buttons[0].focus({preventScroll:true});};
+ learn.onclick=()=>{if(!disposed)window.dispatchEvent(new CustomEvent('wordyland-play-place',{detail:kind}));};buttons.forEach((b,i)=>b.onclick=e=>choose(i,e.isTrusted));replay.onclick=()=>{reset();(drive||buttons[0]).focus({preventScroll:true});};
+ if(driving){wrap.querySelectorAll('[data-toy-move]').forEach(b=>b.onclick=()=>move(Number(b.dataset.toyMove)));drive.onclick=e=>choose(aimed,e.isTrusted);controls.addEventListener('keydown',e=>{if(e.altKey||e.ctrlKey||e.metaKey||e.repeat)return;if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();move(e.key==='ArrowLeft'?-1:1);}else if((e.key===' '||e.code==='Space')&&!e.target.closest('[data-toy-drive]')){e.preventDefault();choose(aimed,e.isTrusted);}});}
  function scene(available){wrap.querySelector('.toyHelp').textContent=available===null?'Puoi iniziare con i pulsanti. La scena si apre quando la raggiungi.':available?'Tocca gli oggetti nella scena oppure usa i pulsanti.':'Scena 3D non disponibile: puoi giocare con i pulsanti.';}
- reset();scene(Boolean(handlers.scene));return {choose,scene,setHandlers(next){if(disposed)return;handlers=next;handlers.reset?.();for(let i=0;i<step;i++)handlers.choose?.(order[i],true,i+1);scene(Boolean(handlers.scene));},dispose(){disposed=true;wrap.remove();}};
+ reset();scene(Boolean(handlers.scene));return {choose,aim,scene,setHandlers(next){if(disposed)return;handlers=next;handlers.reset?.();for(let i=0;i<step;i++)handlers.choose?.(order[i],true,i+1);if(driving&&step<3)handlers.aim?.(aimed);scene(Boolean(handlers.scene));},dispose(){disposed=true;wrap.remove();}};
 }
 function mount3D(host,options={}){
  if(!host||!window.IntersectionObserver)return create3D(host,options);
@@ -311,7 +322,7 @@ const pin=document.createElement('button');pin.type='button';pin.className='isla
   if(moving)animations.forEach(fn=>fn(phase));
   if(options.preview&&moving&&!toy)kartDistance+=dt*(actionAge<2.3?5.5:.65);
   if(kind==='kart'&&model){const a=options.preview?kartDistance:-currentProgress*Math.PI*1.7;model.position.set(Math.sin(a)*2.5,.13+(moving?Math.sin(phase*18)*.015:0),Math.cos(a)*2.5);model.rotation.y=a+Math.PI/2;model.rotation.z=moving?Math.sin(phase*2)*.035:0;}
-  if(kind==='football'&&ball){const u=kick;ball.position.x=toy?toyAim*u:0;ball.position.z=1.7-u*4.1;ball.rotation.x=-u*9;ball.position.y=.28+Math.sin(u*Math.PI)*.65;}
+  if(kind==='football'&&ball){const u=kick;ball.position.x=toy?toyAim:0;ball.position.z=1.7-u*4.1;ball.rotation.x=-u*9;ball.position.y=.28+Math.sin(u*Math.PI)*.65;}
   if(kind==='space'&&model&&toy)model.position.x=toyAim;
   if(kind==='space'&&model){model.position.y=(options.preview&&actionAge<3.2?(moving?Math.min(7,Math.max(0,actionAge-.35)**2*3):4):currentProgress*2.8)+(moving?Math.sin(phase*1.7)*.13:0)+pulse*.5;model.rotation.z=moving?Math.sin(phase*1.2)*.025:0;}
   if(kind==='pets'&&model&&pulse>0){model.position.y=Math.abs(Math.sin(reactionAge*9))*pulse*.65;model.rotation.z=Math.sin(reactionAge*11)*pulse*.1;}
@@ -359,8 +370,8 @@ const pin=document.createElement('button');pin.type='button';pin.className='isla
   toyTargets.forEach(t=>{t.visible=true;t.userData.found=false;});
   if(model){model.userData.toyStep=0;if(['pets','dino'].includes(kind)){model.position.y=0;model.rotation.z=0;}if(kind==='treehouse'&&model.userData.window)model.userData.window.material=material(0x63a8ce);}
   requestDraw();
- },choose(index,correct,step){
-  if(!correct){control.react('retry');return;}
+ },aim(index){host.dataset.aimIndex=String(index);toyTargets.forEach((target,i)=>target.scale.setScalar(i===index?1.2:1));if(kind==='kart')kartDistance=(index-1)*1.35;if(kind==='football'){toyAim=(index-1)*.8;kick=0;kickTarget=0;}if(kind==='space')toyAim=(index-1)*2.1;requestDraw();},choose(index,correct,step){
+  if(!correct){if(toyDriving[kind])control.action();control.react('retry');return;}
   control.action();toyStep=step;progress=step/3;toyTargets[index].visible=false;toyTargets[index].userData.found=true;
   if(model)model.userData.toyStep=step;
   if(kind==='kart')kartDistance=(index-1)*1.35;
@@ -408,7 +419,14 @@ function illustratedView(host,options={}){
  const roomItems=['room','plant','rug','lamp','trophy','kart','palette','ball','rocket'].map(slot=>eq[slot]).filter(Boolean);
  if(roomItems.length){const strip=document.createElement('div');strip.className='illustratedDecor';strip.setAttribute('aria-label','Le tue personalizzazioni');roomItems.forEach(id=>{const item=illustratedReward(id),icon=item?.icon;if(icon){const b=document.createElement('span');b.dataset.reward=id;b.title=item.name;b.setAttribute('role','img');b.setAttribute('aria-label',item.name);b.textContent=icon;strip.append(b);}});layer.append(strip);}
  const targets=[],points=kind==='ocean'?[[23,83],[60,75],[20,49]]:kind==='football'?[[28,39],[50,36],[72,39]]:kind==='space'?[[24,24],[70,32],[75,66]]:[[23,61],[50,47],[76,66]];
- if(options.playground&&toyGames[kind])toyGames[kind].items.forEach(([icon,en,it],i)=>{const b=document.createElement('button');b.type='button';b.className='illustratedTarget';b.dataset.illustratedTarget=i;b.style.left=points[i][0]+'%';b.style.top=points[i][1]+'%';b.setAttribute('aria-label','Scegli '+en+' · '+it);b.innerHTML='<span aria-hidden="true">'+icon+'</span><b lang="en">'+en+'</b>';layer.append(b);targets.push(b);b.onclick=e=>toy?.choose(i,e.isTrusted);b.addEventListener('pointerup',e=>{if(e.pointerType==='touch'){e.preventDefault();toy?.choose(i,e.isTrusted);}});});
+ if(options.playground&&toyGames[kind])toyGames[kind].items.forEach(([icon,en,it],i)=>{const b=document.createElement('button');b.type='button';b.className='illustratedTarget';b.dataset.illustratedTarget=i;b.style.left=points[i][0]+'%';b.style.top=points[i][1]+'%';b.setAttribute('aria-label','Scegli '+en+' · '+it);b.innerHTML='<span aria-hidden="true">'+icon+'</span><b lang="en">'+en+'</b>';layer.append(b);targets.push(b);b.onclick=e=>toy?.choose(i,e.isTrusted);b.addEventListener('pointerdown',e=>{if(e.pointerType==='touch')e.preventDefault();});b.addEventListener('pointerup',e=>{if(e.pointerType==='touch'){e.preventDefault();toy?.choose(i,e.isTrusted);}});});
+ let pilot=null,aimIndex=0;
+ if(options.playground&&toyDriving[kind]){pilot=document.createElement('div');pilot.className='drivingPilot';pilot.dataset.pilotKind=kind;pilot.innerHTML=drivingFigure(kind,eq);pilot.setAttribute('role','img');layer.append(pilot);}
+ function aimPilot(index){
+  if(!pilot)return;pilot.hidden=false;aimIndex=index;host.dataset.aimIndex=String(index);clearTimeout(action.timer);action.node?.remove();action.node=null;
+  targets.forEach((target,i)=>{target.classList.toggle('aimed',i===index&&!target.disabled);target.setAttribute('aria-pressed',String(i===index));});
+  pilot.style.left=points[index][0]+'%';pilot.style.top=(kind==='football'?93:87)+'%';pilot.dataset.pilotIndex=String(index);pilot.setAttribute('aria-label',(kind==='kart'?'Kart':kind==='football'?'Pallone':'Razzo')+' verso '+toyGames[kind].items[index][1]);
+ }
  if(isHoliday&&event==='christmas'){
   const snowman=document.createElement('div');snowman.className='illustratedSnowman';snowman.innerHTML='<span class="racerModel" data-racer="snowpal" aria-label="Pupazzo del villaggio" role="img"></span>';layer.append(snowman);
   const elf=options.elf?.active?options.elf:null,prank=elf&&!options.elfResolved?elf.prank?.id:null;
@@ -420,7 +438,14 @@ function illustratedView(host,options={}){
  }
  function position(p){progress=Math.max(0,Math.min(1,p));host.dataset.sceneProgress=String(progress);actor.style.left=(isHoliday?50:kind==='space'?70-progress*40:kind==='kart'?18+progress*62:80-progress*60)+'%';actor.style.top=(isHoliday?82:kind==='space'?Math.max(38,Math.min(70,77-progress*45)):kind==='kart'?72-Math.sin(progress*Math.PI)*22:66)+'%';if(options.playground){actor.style.left=(kind==='ocean'?80:46)+'%';actor.style.top=(kind==='ocean'?35:84)+'%';}}
  position(progress);if(kind==='pets'&&options.preview&&!options.playground){actor.classList.add('illustratedPortrait');actor.style.left='50%';actor.style.top=options.controlsDock?'50%':'44%';}
- function action(){
+ function collectedPose(index){
+  const r=host.getBoundingClientRect(),height=actor.offsetHeight,width=actor.offsetWidth;
+  const headerBottom=Math.max(r.top,...[...host.querySelectorAll('.previewBadge,.sceneReaction')].map(n=>n.getBoundingClientRect().bottom));
+  const caption=layer.querySelector('.illustratedActionLabel'),floor=caption?caption.getBoundingClientRect().top:r.bottom;
+  const minX=(width/2+8)/r.width*100,maxX=100-minX,minY=(headerBottom-r.top+8+height*.75)/r.height*100,maxY=(floor-r.top-8-height*.25)/r.height*100;
+  actor.style.left=Math.max(minX,Math.min(maxX,points[index][0]))+'%';actor.style.top=Math.max(minY,Math.min(maxY,points[index][1]))+'%';
+ }
+ function action(shot=null){
   if(disposed)return;
   clearTimeout(action.timer);action.node?.remove();action.count=(action.count||0)+1;
   showAction(host,kind);layer.classList.remove('illustratedReact');void layer.offsetWidth;layer.classList.add('illustratedReact');
@@ -450,10 +475,19 @@ function illustratedView(host,options={}){
    const opened=Number(host.dataset.sceneProgress)>=1;visual.dataset.chestOpen=String(opened);if(opened&&options.playground){actor.style.left='80%';actor.style.top='70%';}
    visual.innerHTML=vector('actionChest','<path class="actionChestLid" d="M19 47V26Q70-7 121 26v21Z" fill="#b87d43" stroke="#5c4534" stroke-width="5"/><path d="M18 46h104v43H18Z" fill="#b87d43" stroke="#5c4534" stroke-width="5"/><path d="M37 17v72m66-72v72" stroke="#f6d371" stroke-width="9"/><rect x="60" y="45" width="20" height="22" rx="4" fill="#f7d777"/><g class="actionTreasure" fill="#ffe57f" stroke="#fff8cc" stroke-width="2"><path d="m47 15 3 8 8 3-8 3-3 8-3-8-8-3 8-3Z"/><path d="m85 1 3 8 8 3-8 3-3 8-3-8-8-3 8-3Z"/></g>');label=opened?'Tesoro scoperto!':'Il forziere brilla: trova i tre oggetti per aprirlo!';
   }
+  if(shot&&pilot){
+   pilot.hidden=true;const index=shot.index,finishX=points[index][0],finishY=Math.min(76,points[index][1]+16),part=visual.querySelector(kind==='kart'?'.actionKart':kind==='football'?'.actionBall':'.actionRocket');
+   visual.classList.add('drivingShot');visual.dataset.shotIndex=String(index);visual.dataset.shotCorrect=String(shot.correct);visual.style.setProperty('--finish-x',finishX+'%');visual.style.setProperty('--finish-y',finishY+'%');
+   visual.style.setProperty('--travel-x',((Number.parseFloat(pilot.style.left)-finishX)*layer.clientWidth/100)+'px');visual.style.setProperty('--travel-y',((Number.parseFloat(pilot.style.top)-finishY)*layer.clientHeight/100)+'px');
+   if(part){part.style.left=finishX+'%';part.style.top=finishY+'%';}
+   if(kind==='football'){const goal=visual.querySelector('.actionGoal');goal.style.left=(finishX-18)+'%';goal.style.top=(finishY-24)+'%';}
+   const name=toyGames[kind].items[index][1];label=shot.correct?(kind==='football'?'Gol nel bersaglio ':kind==='kart'?'Hai raggiunto il segnale ':'Hai raggiunto ')+name+'!':'Hai scelto '+name+'. Segui la parola richiesta e riprova.';
+   if(!shot.correct){feedback(host,'retry',kind);label='Hai scelto '+name+'. Segui la parola richiesta e riprova.';}
+  }
   const caption=document.createElement('span');caption.className='illustratedActionLabel';caption.setAttribute('role','status');caption.textContent=label;visual.append(caption);layer.append(visual);action.node=visual;host.dataset.lastAction=kind;host.dataset.actionCount=String(action.count);
   action.timer=setTimeout(()=>{if(!disposed&&action.node===visual)visual.dataset.actionState='settled';},950);
  }
- toy=mountToy(options.playground,kind,{scene:true,reset(){clearTimeout(action.timer);action.node?.remove();action.node=null;delete host.dataset.lastAction;delete host.dataset.actionCount;targets.forEach(b=>{b.disabled=false;b.classList.remove('found');});position(0);},choose(index,correct,step){if(!correct){feedback(host,'retry',kind);return;}targets[index].disabled=true;targets[index].classList.add('found');actor.style.left=points[index][0]+'%';actor.style.top=points[index][1]+'%';host.dataset.sceneProgress=String(step/3);action();}});
+ toy=mountToy(options.playground,kind,{scene:true,reset(){clearTimeout(action.timer);action.node?.remove();action.node=null;delete host.dataset.lastAction;delete host.dataset.actionCount;targets.forEach(b=>{b.disabled=false;b.classList.remove('found');});position(0);},aim:aimPilot,choose(index,correct,step){if(!correct){if(pilot)action({index,correct:false});else feedback(host,'retry',kind);return;}targets[index].disabled=true;targets[index].classList.add('found');targets[index].classList.remove('aimed');host.dataset.sceneProgress=String(step/3);action(pilot?{index,correct:true}:null);if(!(kind==='ocean'&&step===3))collectedPose(index);}});
  return {action,react(type='success'){feedback(host,type,kind);},update(next={}){if(Number.isFinite(next.progress))position(next.progress);if(typeof next.paused==='boolean')layer.classList.toggle('illustratedPaused',next.paused);},rotate(delta){pan=Math.max(-5,Math.min(5,pan+delta*5));svg.style.transform='translateX('+pan+'%) scale('+zoom+')';},zoom(delta){zoom=Math.max(1,Math.min(1.3,zoom-delta));svg.style.transform='translateX('+pan+'%) scale('+zoom+')';},dispose(){if(disposed)return;disposed=true;clearTimeout(action.timer);action.node?.remove();action.node=null;toy?.dispose();clearFeedback(host);layer.remove();host.classList.remove('illustratedScene','illustratedPlayable');}};
 }
 function mount(host,options={}){

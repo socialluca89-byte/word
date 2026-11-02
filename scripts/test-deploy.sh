@@ -78,6 +78,7 @@ echo '--- simulated transfer failure leaves the site untouched'
 before=$(sha256sum "$docroot/index.html")
 FAKE_SSH_FAIL_ON='incoming/' bash scripts/deploy-siteground.sh deploy >/dev/null 2>&1 && fail 'transfer failure not detected'
 [[ $(sha256sum "$docroot/index.html") == "$before" ]] || fail 'site changed after failed transfer'
+[[ ! -e "$docroot/guardian.php" ]] || fail 'failed transfer installed the new guardian module'
 
 echo '--- first deploy'
 bash scripts/deploy-siteground.sh deploy | tee "$root/out1"
@@ -86,7 +87,7 @@ bash scripts/deploy-siteground.sh deploy | tee "$root/out1"
 [[ ! -e "$docroot/api.php.wordyland-previous" ]] || fail 'stray PHP copy still public'
 [[ -z $(find "$docroot" \( -name '*.wordyland-*' -o -name '*.tar' -o -name SHA256SUMS \) ! -name .wordyland-managed) ]] || fail 'temporary files in docroot'
 [[ -f "$docroot/.well-known/acme" && -f "$site/.wordyland-data/keep" ]] || fail 'preserved files lost'
-for f in community.php classroom.php arena.php api.php platform.php classroom.js presence.js arena.js curriculum.json quests.css data.js worlds.js learning.js app.js accounts.js quests.js community.js arcade.css arcade.js island.css island.js island-places.webp three.min.js study-import.js pdf.min.js pdf.worker.min.js study-ocr.js ocr-worker.min.js ocr-core-775a35df6f2a.js ocr-eng-45b4cb346724.traineddata.gz ocr-ita-f702fcfad297.traineddata.gz race-world.webp race-circuits.webp race-racers.webp character-portraits.png character-portraits.webp holiday-worlds.png holiday-worlds.webp manifest.webmanifest icon-192.png icon-512.png icon-maskable-512.png offline.html offline.js pwa.css pwa.js sw.js index.html; do
+for f in guardian.php community.php classroom.php arena.php api.php platform.php classroom.js presence.js arena.js curriculum.json quests.css data.js worlds.js learning.js app.js accounts.js quests.js community.js arcade.css arcade.js island.css island.js island-places.webp three.min.js study-import.js pdf.min.js pdf.worker.min.js study-ocr.js ocr-worker.min.js ocr-core-775a35df6f2a.js ocr-eng-45b4cb346724.traineddata.gz ocr-ita-f702fcfad297.traineddata.gz race-world.webp race-circuits.webp race-racers.webp character-portraits.png character-portraits.webp holiday-worlds.png holiday-worlds.webp manifest.webmanifest icon-192.png icon-512.png icon-maskable-512.png offline.html offline.js pwa.css pwa.js sw.js index.html; do
   cmp -s "dist/$f" "$docroot/$f" || fail "$f differs"
 done
 priv="$site/.wordyland-deploy"; [[ $(stat -c %a "$priv") == 700 ]] || fail 'private dir not 700'
@@ -164,13 +165,17 @@ grep -q 'no SSH connection' "$root/out_unreachable" || fail 'unreachable preflig
 echo '--- failed HTTPS checks after publishing restore the previous release'
 parent=$(git rev-parse HEAD~1)
 printf '%s\n' "$parent" > "$docroot/.wordyland-managed"; echo 'previous page WordyLand' > "$docroot/index.html"
+# Model an older healthy release that did not yet contain this additive module.
+rm -f "$docroot/guardian.php"
 rm -f "$home/install-attempted"
 FAKE_HEALTH_FAILURE_AFTER_INSTALL=1 bash scripts/deploy-siteground.sh deploy >"$root/out_live" 2>&1 && fail 'deploy passed with failing live checks'
 grep -q 'restoring backup' "$root/out_live" || fail 'no rollback after live check failure'
 grep -q 'previous page' "$docroot/index.html" || fail 'previous index.html not restored after live failure'
 [[ $(cat "$docroot/.wordyland-managed") == "$parent" ]] || fail 'marker not restored after live failure'
+[[ ! -e "$docroot/guardian.php" ]] || fail 'rollback kept a guardian module absent from the previous release'
 bash scripts/deploy-siteground.sh deploy >/dev/null || fail 'redeploy after live failure'
 cmp -s dist/index.html "$docroot/index.html" || fail 'redeploy content'
+cmp -s dist/guardian.php "$docroot/guardian.php" || fail 'redeploy did not restore the guardian module'
 
 echo '--- valid script bytes with wrong MIME fail and restore previous release'
 printf '%s\n' "$parent" > "$docroot/.wordyland-managed"; echo 'previous MIME page WordyLand' > "$docroot/index.html"
@@ -198,7 +203,90 @@ grep -q 'Public health could not be verified after rollback' "$root/out_challeng
 if grep -q 'Site still unhealthy' "$root/out_challenge"; then fail 'hosting challenge incorrectly presented as a visitor outage'; fi
 [[ $(cat "$docroot/.wordyland-managed") == "$parent" ]] || fail 'challenge rollback marker mismatch'
 
+echo '--- same-second backups are distinct, immutable and ordered by filesystem time'
+(
+  # Source the exact remote helpers without entering a command mode. All paths
+  # below belong to a second, isolated hosting fixture, never the running site.
+  awk '/^case "\$mode" in$/ {exit} {print}' scripts/siteground-remote.sh > "$root/remote-helpers.sh"
+  source "$root/remote-helpers.sh"
+  fixture_home="$root/backup-home"
+  target="$fixture_home/www/wordyland.eu/public_html"
+  priv="$fixture_home/www/wordyland.eu/.wordyland-deploy"
+  mkdir -p "$target" "$priv/releases" "$fixture_home/www/wordyland.eu/.wordyland-data"
+  printf 'private fixture' > "$fixture_home/www/wordyland.eu/.wordyland-data/keep"
+  printf 'unmanaged fixture' > "$target/unmanaged.txt"
+  date() {
+    case "$*" in
+      '-u +%Y%m%dT%H%M%SZ') printf '%s\n' 20300101T000000Z ;;
+      '-u +%FT%TZ') printf '%s\n' 2030-01-01T00:00:00Z ;;
+      *) command date "$@" ;;
+    esac
+  }
+  printf '%s\n' "$parent" > "$target/.wordyland-managed"
+  printf 'first snapshot WordyLand' > "$target/index.html"
+  printf 'first guardian fixture' > "$target/guardian.php"
+  backup_current "$parent" > "$root/collision-first.log"
+  first_backup=$BACKUP_DIR
+  first_manifest=$(sha256sum "$first_backup/SHA256SUMS")
+  rm "$target/guardian.php"
+  printf 'second snapshot WordyLand' > "$target/index.html"
+  backup_current "$parent" > "$root/collision-second.log"
+  second_backup=$BACKUP_DIR
+  [[ "$first_backup" != "$second_backup" ]] || fail 'same-second backup directory was reused'
+  [[ $(basename "$first_backup") == "20300101T000000Z-${parent:0:12}-"* && $(basename "$second_backup") == "20300101T000000Z-${parent:0:12}-"* ]] || fail 'clock collision fixture did not share timestamp and SHA'
+  [[ $(sha256sum "$first_backup/SHA256SUMS") == "$first_manifest" ]] || fail 'first snapshot checksum list was overwritten'
+  grep -q 'first snapshot' "$first_backup/index.html" || fail 'first snapshot files were overwritten'
+  [[ -f "$first_backup/guardian.php" && ! -e "$second_backup/guardian.php" ]] || fail 'same-second snapshots retained a removed module'
+  (cd "$first_backup" && sha256sum -c --quiet --strict SHA256SUMS) || fail 'first immutable snapshot corrupted'
+  (cd "$second_backup" && sha256sum -c --quiet --strict SHA256SUMS) || fail 'second immutable snapshot corrupted'
+
+  # A missing-file restore must refuse links/directories before changing any
+  # other file. In particular, a directory at a new module name is never erased.
+  before_restore=$(sha256sum "$target/index.html")
+  mkdir "$target/guardian.php"; printf keep > "$target/guardian.php/keep"
+  (restore_from "$second_backup") > "$root/restore-directory.log" 2>&1 && fail 'rollback accepted an allowlisted directory'
+  grep -q 'is not a regular file' "$root/restore-directory.log" || fail 'rollback directory guard not diagnosed'
+  [[ -f "$target/guardian.php/keep" && $(sha256sum "$target/index.html") == "$before_restore" ]] || fail 'rollback directory guard changed public files'
+  rm "$target/guardian.php/keep"; rmdir "$target/guardian.php"
+  printf 'outside sentinel' > "$root/outside-sentinel"
+  ln -s "$root/outside-sentinel" "$target/guardian.php"
+  (restore_from "$second_backup") > "$root/restore-symlink.log" 2>&1 && fail 'rollback accepted an allowlisted symlink'
+  [[ -L "$target/guardian.php" && $(cat "$root/outside-sentinel") == 'outside sentinel' ]] || fail 'rollback followed or removed a symlink'
+  rm "$target/guardian.php"
+
+  # Force the lexically smaller random name to be newer: latest must use mtime,
+  # and cannot accidentally pass by sorting the random suffixes.
+  newest_backup=$(printf '%s\n' "$first_backup" "$second_backup" | sort | sed -n '1p')
+  for candidate in "$first_backup" "$second_backup"; do touch -m -t 202901010000 "$candidate"; done
+  touch -m -t 203001020000 "$newest_backup"
+  cp "$newest_backup/index.html" "$root/expected-latest-index"
+  FAKE_HOME="$fixture_home" ssh tester@ssh.example.test "bash -s -- rollback $(printf '%q' "$target") latest" < scripts/siteground-remote.sh > "$root/collision-latest.log"
+  cmp -s "$root/expected-latest-index" "$target/index.html" || fail 'latest backup was selected by name instead of mtime'
+  if [[ -f "$newest_backup/guardian.php" ]]; then
+    cmp -s "$newest_backup/guardian.php" "$target/guardian.php" || fail 'latest rollback lost a previous module'
+  else
+    [[ ! -e "$target/guardian.php" ]] || fail 'latest rollback retained a new module'
+  fi
+
+  # Old unsuffixed names stay usable by explicit rollback selection.
+  legacy_name="20300103T000000Z-${parent:0:12}"
+  cp -a "$second_backup" "$priv/releases/$legacy_name"
+  FAKE_HOME="$fixture_home" ssh tester@ssh.example.test "bash -s -- rollback $(printf '%q' "$target") $legacy_name" < scripts/siteground-remote.sh > "$root/collision-legacy.log"
+  cmp -s "$second_backup/index.html" "$target/index.html" || fail 'legacy backup name could not be restored'
+  [[ ! -e "$target/guardian.php" ]] || fail 'legacy rollback retained an absent module'
+
+  # Additional snapshots under the very same clock still prune to five. A
+  # non-release private directory is neither selected nor removed by cleanup.
+  mkdir "$priv/releases/unrelated-private-directory"
+  printf keep > "$priv/releases/unrelated-private-directory/keep"
+  for round in 1 2 3 4 5; do backup_current "$parent" > /dev/null; done
+  prune_releases
+  [[ $(release_names_newest_first | wc -l) == 5 ]] || fail 'backup retention is not five releases'
+  [[ -f "$priv/releases/unrelated-private-directory/keep" ]] || fail 'backup cleanup removed an unrelated directory'
+  [[ $(cat "$target/unmanaged.txt") == 'unmanaged fixture' && $(cat "$fixture_home/www/wordyland.eu/.wordyland-data/keep") == 'private fixture' ]] || fail 'rollback changed unmanaged files or private data'
+)
+
 echo '--- refuses unknown site without marker'
 rm "$docroot/.wordyland-managed"; echo '<html>other</html>' > "$docroot/index.html"
 bash scripts/deploy-siteground.sh deploy >/dev/null 2>&1 && fail 'overwrote unknown site'
-echo 'Deployment tests passed: path/symlink refusal, transfer failure, private staging, checksums, idempotence, stale/unknown marker, rollback, live-check rollback, preservation.'
+echo 'Deployment tests passed: path/symlink refusal, transfer failure, private staging, checksums, idempotence, stale/unknown marker, rollback, absent-module cleanup, same-second immutable snapshots, mtime ordering, legacy backups, five-release retention, preservation.'

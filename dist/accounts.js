@@ -38,6 +38,7 @@
   function ownershipPause(paused){
     const changed=ownershipPaused!==paused;
     ownershipPaused=paused;
+    if(paused){const guardian=area.querySelector('#guardianArea');if(guardian){guardian.querySelector('#guardianState')?.replaceChildren();guardian.querySelector('#guardianCodeOutput')?.replaceChildren();const note=guardian.querySelector('#guardianStatus');if(note)note.textContent='Verifica prima il tuo accesso. I progressi collegati restano privati.';}}
     if(paused){document.documentElement.dataset.accountVerification='pending';for(const node of document.querySelector('main').children)if(!node.matches('.accountArea,.classGate')){if(!inertSurfaces.has(node))inertSurfaces.set(node,node.hasAttribute('inert'));node.setAttribute('inert','');}}
     else{delete document.documentElement.dataset.accountVerification;for(const [node,wasInert] of inertSurfaces)if(!wasInert)node.removeAttribute('inert');inertSurfaces.clear();}
     if(changed)updateAccessTools();
@@ -341,6 +342,44 @@
     if(!copy?.invalid&&copy?.owner===session.username&&copy.profile===profile.id){if(stateFingerprint(copy.state)!==stateFingerprint(profile.state))offerCopy(profile,copy,'envelope');else consumeCopy(copy);}
     try{loadVerifiedProfile(profile);}catch(error){const held=pendingCopy();if(!held?.invalid&&held?.owner===session.username&&held.profile===profile.id)offerCopy(profile,held,'envelope');throw error;}
   }
+  function mountGuardian(){
+    if(!session?.username||!['adult','admin'].includes(session.role))return;
+    const owner=session,host=document.createElement('details');host.id='guardianArea';host.className='accountSecurity';
+    host.innerHTML='<summary>Genitori · progressi di un alunno della classe</summary><p>Questa sezione collega il tuo account adulto a un alunno che usa un accesso di classe separato. Potrai solo leggere un riepilogo: non entrerai nel suo profilo e non vedrai compagni, schede, password o monete.</p><h3>1 · Chiedi il collegamento</h3><p>Genera un codice e comunicalo privatamente a chi gestisce la classe. Il gestore verifica il rapporto e sceglie l’alunno. Il codice vale 15 minuti; generarne un altro sostituisce il precedente.</p><button type="button" class="audio" id="guardianPairCode">Genera codice privato di abbinamento</button><p id="guardianCodeOutput" style="overflow-wrap:anywhere"></p><h3>2 · Conferma l’invito del gestore</h3><p>Usa Aggiorna dopo che il gestore ha autorizzato il collegamento. Un invito non accettato scade dopo 24 ore. Puoi revocare l’accesso in ogni momento.</p><button type="button" class="audio" id="guardianRefresh">Aggiorna collegamenti</button><p id="guardianStatus" role="status" aria-live="polite"></p><div id="guardianState"></div>';
+    panel.append(host);const status=host.querySelector('#guardianStatus'),box=host.querySelector('#guardianState');let sequence=0,working=false;
+    const valid=()=>host.isConnected&&session===owner&&!ownershipPaused&&!accessExpired&&['adult','admin'].includes(session?.role);
+    const safe=()=>{if(valid())return true;box.replaceChildren();host.querySelector('#guardianCodeOutput').replaceChildren();if(host.isConnected)status.textContent='Verifica prima il tuo accesso. Nessun progresso collegato viene mostrato.';return false;};
+    const disable=value=>host.querySelectorAll('button,input,select').forEach(node=>node.disabled=value);
+    async function load(){
+      if(working||!safe())return;const operation=++sequence;status.textContent='Verifica dei collegamenti…';host.querySelector('#guardianRefresh').disabled=true;
+      try{const data=await request('guardian-state');if(!valid()||operation!==sequence)return;render(data);status.textContent='Collegamenti aggiornati. Nessun profilo di gioco è stato cambiato.';}
+      catch(error){if(valid()&&operation===sequence){box.replaceChildren();status.textContent='Collegamenti non verificati. '+error.message;}}
+      finally{if(valid()&&operation===sequence)host.querySelector('#guardianRefresh').disabled=false;}
+    }
+    async function perform(action,body,codeOnly=false){
+      if(working||!safe())return;working=true;const operation=++sequence;disable(true);status.textContent='Attendi la conferma…';let confirmed=false;
+      try{
+        const result=await request(action,body);if(!valid()||operation!==sequence)return;confirmed=true;
+        if(codeOnly){const output=host.querySelector('#guardianCodeOutput');output.replaceChildren();const code=document.createElement('code');code.textContent=result.code;output.append(code,document.createElement('br'),'Condividilo solo con il gestore della classe. Scade tra 15 minuti. Non inserirlo in segnalazioni o chat pubbliche.');status.textContent='Codice creato. Non è ancora un’autorizzazione ai progressi.';}
+        else{const data=await request('guardian-state');if(!valid()||operation!==sequence)return;render(data);status.textContent='Operazione confermata. I profili di gioco restano separati.';}
+      }catch(error){if(valid()&&operation===sequence)status.textContent=(confirmed?'Operazione confermata, ma elenco non aggiornato. ':'Esito non confermato. ')+error.message+' Usa Aggiorna collegamenti per verificare lo stato prima di ripetere.';}
+      finally{if(host.isConnected&&session===owner){working=false;disable(false);}}
+    }
+    function render(data){
+      const received=Array.isArray(data.received)?data.received:[],classes=Array.isArray(data.managedClasses)?data.managedClasses:[],issued=Array.isArray(data.issued)?data.issued:[];
+      box.innerHTML='<section aria-label="I tuoi collegamenti genitore"><h3>I tuoi inviti e progressi</h3>'+(received.length?received.map(link=>'<article class="pendingLocalCopy" data-guardian-link="'+Number(link.id)+'"><h4>'+esc(link.nickname)+' · '+esc(link.className)+'</h4>'+(link.status==='pending'?'<p>Il gestore ha autorizzato questo invito. Leggilo e conferma solo se riguarda l’alunno di cui sei genitore o tutore.</p><form data-guardian-accept="'+Number(link.id)+'"><label class="adultCheck"><input type="checkbox" name="confirmGuardian" required> Sono il genitore o tutore autorizzato di questo alunno e richiedo solo la lettura dei suoi progressi</label><button class="primary">Accetta collegamento in sola lettura</button></form>':'<p>Accesso ai soli riepiloghi autorizzati. L’alunno continua a giocare con il proprio accesso.</p><button type="button" class="audio" data-guardian-progress="'+Number(link.id)+'">Vedi progressi</button><div data-guardian-report="'+Number(link.id)+'"></div>')+'<button type="button" class="audio" data-guardian-revoke="'+Number(link.id)+'">'+(link.status==='pending'?'Rifiuta invito':'Revoca collegamento')+'</button></article>').join(''):'<p>Nessun invito o collegamento attivo per questo account. I profili creati da te restano disponibili nella normale area account.</p>')+'</section>'+(classes.length?'<details id="guardianManager"><summary>Per chi gestisce la classe · autorizza un genitore</summary><p>Verifica privatamente chi richiede l’accesso e il suo rapporto con l’alunno. Non usare email, nome o link della classe per un collegamento automatico. Qui compaiono solo gli alunni delle classi che gestisci.</p><form id="guardianInvite"><label>Alunno e classe<select name="learner" required><option value="">Scegli l’alunno</option>'+classes.flatMap(club=>club.learners.map(child=>'<option value="'+Number(club.id)+':'+Number(child.id)+'">'+esc(child.nickname)+' · '+esc(club.name)+'</option>')).join('')+'</select></label><label>Codice privato ricevuto dal genitore<input name="code" autocomplete="off" spellcheck="false" minlength="32" maxlength="32" required></label><label class="adultCheck"><input type="checkbox" name="authorized" required> Ho verificato il rapporto e autorizzo questo adulto a leggere solo i progressi dell’alunno selezionato</label><button class="primary">Invia invito al suo account adulto</button></form><h4>Inviti e collegamenti della tua classe</h4>'+(issued.length?issued.map(link=>'<p>'+esc(link.nickname)+' · '+esc(link.className)+' · '+esc({pending:'da accettare',active:'attivo',expired:'scaduto',revoked:'revocato'}[link.status]||'da verificare')+' <button type="button" class="audio" data-guardian-issued-revoke="'+Number(link.id)+'">Revoca autorizzazione</button></p>').join(''):'<p>Nessuna autorizzazione attiva.</p>')+'</details>':'');
+      box.querySelectorAll('[data-guardian-accept]').forEach(form=>form.onsubmit=event=>{event.preventDefault();const link=received.find(item=>item.id===Number(form.dataset.guardianAccept));if(link)perform('guardian-accept',{link:link.id,version:link.version,confirmGuardian:form.elements.confirmGuardian.checked});});
+      for(const [attribute,links] of [['data-guardian-revoke',received],['data-guardian-issued-revoke',issued]])box.querySelectorAll('['+attribute+']').forEach(button=>button.onclick=()=>{const link=links.find(item=>item.id===Number(button.getAttribute(attribute)));if(link)perform('guardian-revoke',{link:link.id,version:link.version});});
+      box.querySelector('#guardianInvite')?.addEventListener('submit',event=>{event.preventDefault();const form=event.currentTarget,[club,profile]=form.elements.learner.value.split(':').map(Number);perform('guardian-invite',{club,profile,code:form.elements.code.value.trim().toLowerCase(),authorized:form.elements.authorized.checked});});
+      box.querySelectorAll('[data-guardian-progress]').forEach(button=>button.onclick=async()=>{
+        if(working||!safe())return;const operation=++sequence,id=Number(button.dataset.guardianProgress),report=box.querySelector('[data-guardian-report="'+id+'"]');button.disabled=true;report.textContent='Caricamento del riepilogo…';
+        try{const data=await request('guardian-progress&link='+id);if(!valid()||operation!==sequence||!report.isConnected)return;const m=data.missions,t=data.training,p=data.phonics;report.innerHTML='<h4>Missioni · ultimi 90 giorni</h4><p>'+(m.available?Number(m.completed)+' missioni completate · '+Number(m.pending)+' da continuare.':'Non sono ancora disponibili dati sulle missioni.')+'</p><h4>Allenamento e Spelling · ultimi 90 giorni</h4><p>'+(t.available?Number(t.activities)+' attività confermate in '+Number(t.days)+' '+(Number(t.days)===1?'giorno':'giorni')+': '+Number(t.independent)+' senza aiuto e '+Number(t.guided)+' con modello, aiuto o correzione. Riascolti: '+Number(t.replays)+'. Tentativi da riprovare: '+Number(t.errors)+'.':'Non sono ancora disponibili dati di Allenamento.')+'</p><h4>Suoni nelle parole · attività guidate</h4><p>'+(p.available?'Percorsi iniziati negli ultimi 30 giorni e conclusi: '+Number(p.guidedPaths)+'. Non è il totale storico. Non valuta pronuncia o padronanza dei fonemi.':'Non sono ancora disponibili dati sulle attività guidate.')+'</p><p>'+esc(data.notes)+'</p>';}
+        catch(error){if(valid()&&operation===sequence&&report.isConnected){report.replaceChildren();report.textContent='Riepilogo non disponibile. '+error.message;}}
+        finally{if(button.isConnected)button.disabled=false;}
+      });
+    }
+    host.querySelector('#guardianPairCode').onclick=()=>perform('guardian-code',{},true);host.querySelector('#guardianRefresh').onclick=load;host.addEventListener('toggle',()=>{if(host.open)load();});
+  }
   function show() {
     const notice=area.querySelector('#recoveryNotice');if(notice&&session?.username&&notice.dataset.owner!==session.username.trim().toLowerCase())notice.remove();
     if(profileChanging&&profileLockSession!==session)setProfileBusy(false);
@@ -517,7 +556,7 @@
         finally{setProfileBusy(false,operation);if(form.isConnected)form.setAttribute('aria-busy','false');}
       };
     }
-    appendPendingRecovery();reflectProfileBusy();signalProfile();
+    mountGuardian();appendPendingRecovery();reflectProfileBusy();signalProfile();
   }
   function logout() {
     if(logoutFlight)return logoutFlight;

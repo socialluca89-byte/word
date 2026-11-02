@@ -13,13 +13,13 @@
 #   <site>/.wordyland-deploy/               private, mode 700
 #       incoming/<sha>.tar                  uploaded bundle + SHA256SUMS
 #       staging/<sha>/                      verified files before install
-#       releases/<UTC>-<prevsha12>/         previous application files + INFO
+#       releases/<UTC>-<prevsha12>-<unique>/ previous application files + INFO
 #       quarantine/                         stray files moved out of public_html
 #       deploy.lock, current, deploy.log
 set -euo pipefail
 umask 077
-FILES=(community.php classroom.php arena.php training.php api.php platform.php classroom.js presence.js arena.js curriculum.json training.json quests.css data.js worlds.js learning.js app.js accounts.js quests.js community.js training.js arcade.css arcade.js island.css island.js island-places.webp three.min.js study-import.js pdf.min.js pdf.worker.min.js study-ocr.js ocr-worker.min.js ocr-core-775a35df6f2a.js ocr-eng-45b4cb346724.traineddata.gz ocr-ita-f702fcfad297.traineddata.gz race-world.webp race-circuits.webp race-racers.webp character-portraits.png character-portraits.webp holiday-worlds.png holiday-worlds.webp manifest.webmanifest icon-192.png icon-512.png icon-maskable-512.png offline.html offline.js pwa.css pwa.js sw.js index.html)
-PHP_FILES=(community.php classroom.php arena.php training.php api.php platform.php)
+FILES=(guardian.php community.php classroom.php arena.php training.php api.php platform.php classroom.js presence.js arena.js curriculum.json training.json quests.css data.js worlds.js learning.js app.js accounts.js quests.js community.js training.js arcade.css arcade.js island.css island.js island-places.webp three.min.js study-import.js pdf.min.js pdf.worker.min.js study-ocr.js ocr-worker.min.js ocr-core-775a35df6f2a.js ocr-eng-45b4cb346724.traineddata.gz ocr-ita-f702fcfad297.traineddata.gz race-world.webp race-circuits.webp race-racers.webp character-portraits.png character-portraits.webp holiday-worlds.png holiday-worlds.webp manifest.webmanifest icon-192.png icon-512.png icon-maskable-512.png offline.html offline.js pwa.css pwa.js sw.js index.html)
+PHP_FILES=(guardian.php community.php classroom.php arena.php training.php api.php platform.php)
 KEEP_RELEASES=5
 
 die() { echo "ERROR: $*" >&2; exit 1; }
@@ -95,10 +95,11 @@ php_checks() {
 }
 
 backup_current() {
-  local prev=$1 dir f
-  dir="$priv/releases/$(date -u +%Y%m%dT%H%M%SZ)-${prev:0:12}"
-  [[ -n "$prev" ]] || dir="${dir}initial"
-  mkdir -p -- "$dir"
+  local prev=$1 dir f previous_label=${1:0:12}
+  [[ -n "$previous_label" ]] || previous_label=initial
+  # A rollback/redeploy can snapshot the same SHA more than once in one second.
+  # Each snapshot needs a fresh directory so absent files cannot survive a reuse.
+  dir=$(mktemp -d "$priv/releases/$(date -u +%Y%m%dT%H%M%SZ)-$previous_label-XXXXXX")
   for f in "${FILES[@]}"; do
     [[ ! -L "$target/$f" ]] || die "$f in public_html is a symlink"
     if [[ -f "$target/$f" ]]; then cp -p -- "$target/$f" "$dir/$f"; fi
@@ -109,11 +110,25 @@ backup_current() {
   echo "Private backup: $dir"
 }
 
+valid_backup_name() {
+  # Accept existing backups as well as the unique names created above.
+  [[ "$1" =~ ^[0-9]{8}T[0-9]{6}Z-[0-9a-z]{1,12}(-[A-Za-z0-9]{6})?$ ]]
+}
+
+release_names_newest_first() {
+  # Random suffixes do not express creation order. Use filesystem time instead.
+  # No process substitution: the hosting shell has no /dev/fd.
+  find "$priv/releases" -mindepth 1 -maxdepth 1 -type d -printf '%T@ %f\n' | LC_ALL=C sort -nr | cut -d ' ' -f2- |
+    while IFS= read -r name; do
+      if valid_backup_name "$name"; then printf '%s\n' "$name"; fi
+    done
+}
+
 prune_releases() {
-  local old
-  old=$(find "$priv/releases" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort -r | tail -n +$((KEEP_RELEASES + 1)))
+  local old d
+  old=$(release_names_newest_first | tail -n +$((KEEP_RELEASES + 1)))
   for d in $old; do
-    if [[ "$d" =~ ^[0-9]{8}T[0-9]{6}Z-[0-9a-z]+$ ]]; then rm -rf -- "${priv:?}/releases/$d"; fi
+    if valid_backup_name "$d"; then rm -rf -- "${priv:?}/releases/$d"; fi
   done
 }
 
@@ -135,10 +150,21 @@ write_marker() {
 restore_from() {
   # Restore application files from backup dir $1 (files only, never the database).
   local dir=$1 f
+  # Validate the complete destination set before restoring or removing anything.
+  # An allowlisted name that has become a link or directory must never be followed
+  # or recursively removed, including when that file is absent from the backup.
+  for f in "${FILES[@]}"; do
+    [[ ! -L "$target/$f" ]] || die "$f in public_html is a symlink"
+    [[ ! -e "$target/$f" || -f "$target/$f" ]] || die "$f in public_html is not a regular file"
+  done
   for f in "${FILES[@]}"; do
     if [[ -f "$dir/$f" ]]; then
       cp -p -- "$dir/$f" "$priv/restore.tmp"
       publish_file "$priv/restore.tmp" "$f"
+    else
+      # The previous release did not have this application module/asset.
+      # Only the allowlisted regular file is removed; private data is untouched.
+      rm -f -- "$target/$f"
     fi
   done
 }
@@ -211,7 +237,7 @@ case "$mode" in
     [[ -f "$archive" && ! -L "$archive" ]] || die 'uploaded bundle missing'
     rm -rf -- "$stage"; mkdir -p -- "$stage"
     tar -xf "$archive" -C "$stage" --no-same-owner --no-same-permissions
-    # exactly the 51 application files plus the checksum list, all regular files
+    # exactly the 52 application files plus the checksum list, all regular files
     expected=$(printf '%s\n' "${FILES[@]}" SHA256SUMS | sort)
     actual=$(cd -- "$stage" && find . -mindepth 1 -printf '%P\n' | sort)
     [[ "$expected" == "$actual" ]] || die 'bundle content differs from the expected file list'
@@ -251,10 +277,12 @@ case "$mode" in
     ;;
   rollback)
     which=${3:-latest}
-    [[ "$which" == latest || "$which" =~ ^[0-9]{8}T[0-9]{6}Z-[0-9a-z]{1,12}$ ]] || die 'invalid backup name'
+    [[ "$which" == latest ]] || valid_backup_name "$which" || die 'invalid backup name'
     check_target; prepare_priv; lock; recognise_site
     if [[ "$which" == latest ]]; then
-      which=$(find "$priv/releases" -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort -r | head -n1)
+      # Consume the list completely: head may SIGPIPE the validating loop under
+      # pipefail even though it has already found a perfectly valid backup.
+      which=$(release_names_newest_first | sed -n '1p')
       [[ -n "$which" ]] || die 'no backup available'
     fi
     dir="$priv/releases/$which"; [[ -d "$dir" && ! -L "$dir" ]] || die "backup not found: $which"
