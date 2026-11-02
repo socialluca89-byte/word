@@ -67,4 +67,16 @@ I controlli locali sono conservati per segmenti:39gruppi verify e primi test sul
 
 Il riavvio dell'ambiente ha interrotto gli agenti, ma file, misure e log sono stati ritrovati integri. L'ultima parte del guardaroba è stata ripresa nello stesso task e collaudata, senza sostituire il progetto o perdere le correzioni.
 
+## Primo controllo CI e difetto reale di Spazio
+
+Il primo candidato `0ad95a8005a9fcc4bcfd3b79dc7daba0f58dd9eb` ha superato verify e le nuove prove di layout, ma il run [41528526244](https://github.com/socialluca89-byte/word/actions/runs/41528526244) si è fermato su world-play: un vero tocco non raccoglieva il bersaglio di Spazio. Il deploy è stato saltato prima di preflight, SSH o caricamento; la versione live è rimasta `e947652`. Non è stato nascosto il problema con retry o soglie più larghe.
+
+Una prova locale controllata ha trattenuto e rilasciato il vero frame successivo a una scelta errata: la camera cambiava orientamento e spostava il bersaglio di16,9074px tra il calcolo della posizione e il tocco, con canvas e scorrimento invariati. Il punto precedente non intersecava più la geometria; un tocco sulla nuova posizione avanzava regolarmente. Nel minigioco la camera mantiene ora la stessa inquadratura1.3 dall'inizio; la soglia della sequenza cinematica delle altre anteprime rimane invariata. Una nuova regressione confronta tutti e tre i bersagli prima/dopo quel frame, conservando le prove originali di touch, tastiera, pause, ripetizioni e assenza di scritture private.
+
+Il controllo visivo ha poi confermato un secondo difetto preesistente: il razzo rimaneva fuori campo a quota4 con movimento ridotto. Nel solo minigioco è ora a terra durante pausa/movimento ridotto; con movimento normale conserva oscillazione, fiamma e un piccolo salto limitato a0,25unità. Le altre anteprime mantengono la formula di lancio originale. In sei casi320/390px × ridotto/normale/pausa,258frame reali hanno mantenuto l'intera geometria dentro il canvas, anche dopo errore e ciascuna delle tre raccolte. Il feedback cosmetico di due secondi rimane quello esistente; i bounds del canvas non sono presentati come assenza di ogni sovrapposizione temporanea.
+
+World-play rafforzato, world-driving, illustrated e motion sono passati localmente senza modificare soglie o ripetere input per mascherare fallimenti. La nuova condizione di razzo fermo dopo ogni scelta era fallita prima della correzione. La revisione statica indipendente conferma l'isolamento al playground; il nuovo digest applicativo è registrato nel rapporto JSON. Il fallimento CI precedente resta distinto e la nuova matrice completa, il deploy e il controllo live devono ancora essere confermati sul commit corretto.
+
 [Galleria reale](review/README.md). Tutti gli account e i dati usati sono sintetici. Screen reader e dispositivi fisici, qualità della voce reale e vecchio tablet non sono validati. Nessuna nuova richiesta al sito, modifica a credenziali o messaggio esterno è implicita nel collaudo locale.
+
+La nuova esecuzione completa dei39gruppi verify è passata sul digest `db53996b9d16d752c0732484b0299fc1447c468d9e12234d568aeb05f1c2473f`, dopo il versionamento degli asset. Queste prove locali non sostituiscono la CI54 o la conferma della versione pubblicata.

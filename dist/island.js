@@ -324,7 +324,12 @@ const pin=document.createElement('button');pin.type='button';pin.className='isla
   if(kind==='kart'&&model){const a=options.preview?kartDistance:-currentProgress*Math.PI*1.7;model.position.set(Math.sin(a)*2.5,.13+(moving?Math.sin(phase*18)*.015:0),Math.cos(a)*2.5);model.rotation.y=a+Math.PI/2;model.rotation.z=moving?Math.sin(phase*2)*.035:0;}
   if(kind==='football'&&ball){const u=kick;ball.position.x=toy?toyAim:0;ball.position.z=1.7-u*4.1;ball.rotation.x=-u*9;ball.position.y=.28+Math.sin(u*Math.PI)*.65;}
   if(kind==='space'&&model&&toy)model.position.x=toyAim;
-  if(kind==='space'&&model){model.position.y=(options.preview&&actionAge<3.2?(moving?Math.min(7,Math.max(0,actionAge-.35)**2*3):4):currentProgress*2.8)+(moving?Math.sin(phase*1.7)*.13:0)+pulse*.5;model.rotation.z=moving?Math.sin(phase*1.2)*.025:0;}
+  if(kind==='space'&&model){
+   // Keep the playground rocket in its target frame; full launches belong to mission previews.
+   const playgroundHeight=moving?(1+Math.sin(phase*1.7))*.065+pulse*.12:0;
+   model.position.y=options.playground?playgroundHeight:(options.preview&&actionAge<3.2?(moving?Math.min(7,Math.max(0,actionAge-.35)**2*3):4):currentProgress*2.8)+(moving?Math.sin(phase*1.7)*.13:0)+pulse*.5;
+   model.rotation.z=moving?Math.sin(phase*1.2)*.025:0;
+  }
   if(kind==='pets'&&model&&pulse>0){model.position.y=Math.abs(Math.sin(reactionAge*9))*pulse*.65;model.rotation.z=Math.sin(reactionAge*11)*pulse*.1;}
   if(kind==='dino'&&model){model.rotation.z=pulse*Math.sin(reactionAge*7)*.08;if(pulse>0)model.position.y=Math.abs(Math.sin(reactionAge*7))*pulse*.55;}
   if(kind==='creative'&&model&&actionAge<1.2&&moving)model.rotation.y=Math.sin(actionAge*6)*.15;
@@ -333,7 +338,7 @@ const pin=document.createElement('button');pin.type='button';pin.className='isla
   effects.forEach((o,i)=>{o.visible=pulse>0;if(o.visible){const a=i*Math.PI/6;o.position.set(Math.cos(a)*(1-pulse)*3,1.1+(1-pulse)*2.3+Math.sin(a)*.3,Math.sin(a)*(1-pulse)*3);o.scale.setScalar(pulse*1.8);}});
   if(flame)flame.scale.y=moving?1.3+Math.sin(phase*8)*.35+pulse:1;
   const introEase=1-Math.pow(1-intro,3);
-  camera.position.copy(initialCamera).multiplyScalar(zoom*(1+(1-introEase)*.13)-pulse*.015);camera.lookAt(0,kind==='island'?0:kind==='space'&&options.preview&&actionAge<3.2?1.3:.7,0);
+  camera.position.copy(initialCamera).multiplyScalar(zoom*(1+(1-introEase)*.13)-pulse*.015);camera.lookAt(0,kind==='island'?0:kind==='space'&&options.preview&&(options.playground||actionAge<3.2)?1.3:.7,0);
   renderer.render(scene,camera);
   for(const {pin,point,id}of pins){const v=point.clone().applyMatrix4(root.matrixWorld).project(camera);pin.style.left='clamp(var(--pin-x-inset,34px),'+(v.x*.5+.5)*100+'%,calc(100% - var(--pin-x-inset,34px)))';pin.style.top='clamp(var(--pin-y-inset,34px),'+(-v.y*.5+.5)*100+'%,calc(100% - var(--pin-y-inset,34px)))';pin.setAttribute('aria-pressed',String(selected===id));}
   if(moving&&visible&&!document.hidden)frame=requestAnimationFrame(tick);
