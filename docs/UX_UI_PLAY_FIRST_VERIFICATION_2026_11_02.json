@@ -1,6 +1,6 @@
 {
   "baseline_commit": "e9476524e032d98b141999010b6d2d6f39be5eca",
-  "final_application_digest": "db53996b9d16d752c0732484b0299fc1447c468d9e12234d568aeb05f1c2473f",
+  "final_application_digest": "a35431565a01677e1f4dc4ca25288acda90c3012ec81ab9db7be933a578bab7e",
   "skills": {
     "frontend_design": "existing pinned official skill",
     "web_design_guidelines": {
@@ -375,7 +375,7 @@
       28,
       26
     ],
-    "state": "First candidate blocked before deploy by world-play; full matrix required again for corrected commit."
+    "state": "Full local39verify passed after overlay fix; next exact-commit CI and live confirmation required."
   },
   "live_state": "New UX/UI not yet deployed; previous e947652 remains the last verified release.",
   "limits": [
@@ -519,6 +519,129 @@
         "exit": 0,
         "log": "/workspace/wordyland-dev-runtime/ux-20261102/integrated/spacefix/verify-4.log"
       }
+    ]
+  },
+  "second_ui_candidate": {
+    "commit": "9a9625f15b4163e8c09b378d3c8965c55e69018d",
+    "application_digest": "db53996b9d16d752c0732484b0299fc1447c468d9e12234d568aeb05f1c2473f",
+    "run_url": "https://github.com/socialluca89-byte/word/actions/runs/41532952426",
+    "verify": "passed",
+    "browser": "failed: Real choice advances space step 0 target 2",
+    "deploy": "skipped before preflight or SSH",
+    "cause_confirmed_locally": "Ray intersects target2 but elementFromPoint and trusted pointerdown/up hit BUTTON#tryScene overlay. All first-target0/1 attempts hit canvas and advance.",
+    "previous_fix": "Camera stability and grounded rocket conditions pass; this is a separate pre-existing overlay hit-target issue."
+  },
+  "local_verify_after_overlay": {
+    "status": "passed",
+    "groups": 39,
+    "application_digest": "a35431565a01677e1f4dc4ca25288acda90c3012ec81ab9db7be933a578bab7e",
+    "blocks": [
+      {
+        "block": 1,
+        "exit": 0,
+        "log": "/workspace/wordyland-dev-runtime/ux-20261102/integrated/space2fix/verify-1.log"
+      },
+      {
+        "block": 2,
+        "exit": 0,
+        "log": "/workspace/wordyland-dev-runtime/ux-20261102/integrated/space2fix/verify-2.log"
+      },
+      {
+        "block": 3,
+        "exit": 0,
+        "log": "/workspace/wordyland-dev-runtime/ux-20261102/integrated/space2fix/verify-3.log"
+      },
+      {
+        "block": 4,
+        "exit": 0,
+        "log": "/workspace/wordyland-dev-runtime/ux-20261102/integrated/space2fix/verify-4.log"
+      }
+    ]
+  },
+  "space_demo_overlay": {
+    "status": "all first targets, strengthened world-play, world-driving, illustrated, motion and39verify passed locally; exact-commit CI pending",
+    "application_sha256": "558896608461b99941344c419dc2a772789261632e0a69b9744cd35ba327f3c7",
+    "static_review": "No new block; same demonstration node and onclick, existing dock/CSS, renderer switch/disposal preserved, nonplayground callsites excluded.",
+    "actual_trusted_input_proof": [
+      {
+        "first": 0,
+        "before": {
+          "top_element": {
+            "tag": "CANVAS",
+            "id": "",
+            "className": "islandCanvas"
+          },
+          "step_after_trusted_tap": "1"
+        },
+        "after": {
+          "top_element": {
+            "tag": "CANVAS",
+            "id": "",
+            "className": "islandCanvas"
+          },
+          "step_after_trusted_tap": "1",
+          "button_height": 48,
+          "button_parent": "sceneDemoActions"
+        },
+        "same_target_coordinates": true
+      },
+      {
+        "first": 1,
+        "before": {
+          "top_element": {
+            "tag": "CANVAS",
+            "id": "",
+            "className": "islandCanvas"
+          },
+          "step_after_trusted_tap": "1"
+        },
+        "after": {
+          "top_element": {
+            "tag": "CANVAS",
+            "id": "",
+            "className": "islandCanvas"
+          },
+          "step_after_trusted_tap": "1",
+          "button_height": 48,
+          "button_parent": "sceneDemoActions"
+        },
+        "same_target_coordinates": true
+      },
+      {
+        "first": 2,
+        "before": {
+          "top_element": {
+            "tag": "BUTTON",
+            "id": "tryScene",
+            "className": "scenePlayButton"
+          },
+          "step_after_trusted_tap": "0"
+        },
+        "after": {
+          "top_element": {
+            "tag": "CANVAS",
+            "id": "",
+            "className": "islandCanvas"
+          },
+          "step_after_trusted_tap": "1",
+          "button_height": 48,
+          "button_parent": "sceneDemoActions"
+        },
+        "same_target_coordinates": true
+      }
+    ],
+    "new_browser_coverage": [
+      "every first target0/1/2 in reduced and normal motion",
+      "topmost element is the actual canvas",
+      "trusted touchscreen tap advances each target",
+      "demo remains the same node, docked, working and non-collecting across illustrated/3D in eight worlds"
+    ],
+    "no_test_thresholds_relaxed": true,
+    "suites_passed": [
+      "world-play",
+      "world-driving",
+      "illustrated",
+      "motion"
     ]
   }
 }
