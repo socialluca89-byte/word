@@ -157,6 +157,10 @@ html[data-account-verification="pending"] #total,html[data-account-verification=
 .startHub .todayQuest{margin-top:8px}.startHub .trainingEntry,.startHub .holidayPortal,.startHub .prepositionsFeature{margin-top:0;margin-bottom:0}
 @media(max-width:650px){
  header{padding-top:12px;padding-bottom:12px}.accountToolbar{margin-bottom:6px}.accountToolbar[data-mode=guest] .accountSessionLabel{font-size:14px;line-height:1.25}.adultNavigation{margin-top:6px;margin-bottom:6px}.adultNavigation>summary{min-height:48px;padding-top:10px;padding-bottom:10px}.accountArea:not([open])>summary{min-height:48px;padding-top:10px;padding-bottom:10px}
+ /* Keep both guest actions on one row when the optional font becomes ready. */
+ .accountToolbar[data-mode=guest]{display:grid;grid-template-columns:minmax(72px,.7fr) minmax(0,2fr);align-items:stretch}
+ .accountToolbar[data-mode=guest] .accountSessionLabel,.accountToolbar[data-mode=guest] #accessStatus{grid-column:1/-1}
+ .accountToolbar[data-mode=guest] button{min-width:0;width:100%;padding:10px 8px;line-height:1.25;white-space:normal;overflow-wrap:anywhere}
  .startHub{grid-template-columns:minmax(0,1fr);gap:12px;padding:18px 14px}.startHub>h1{font-size:29px}.startHub>p{font-size:17px;line-height:1.4}
  .startHub>.welcomeIsland{grid-column:1;min-height:148px}.startHub>.startChoices{grid-column:1;gap:10px}
  .startHub .startChoices a{min-height:72px;padding:10px 30px 10px 12px;gap:12px}.startHub .startChoices a>span:first-child{height:44px;width:44px;flex-basis:44px;font-size:28px}.startHub .startChoices b{font-size:21px}.startHub .startChoices small{font-size:15px;line-height:1.3}

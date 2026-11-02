@@ -1,7 +1,7 @@
 {
   "baseline_commit": "6445b4bcaad5ac5ba930c92769d2829332ccb29b",
   "branch": "fix/consistent-play-experience-20261101",
-  "application_digest_sha256": "be3f880a5d3cb99436e549678ac6a2ed83675f484497f088f918228cc3af1e23",
+  "application_digest_sha256": "32dd087e87fdf2022269a1dba12d7eaf3cf8bc1bf1ababe50b0f03f641914275",
   "application_files": 51,
   "publication": "work only; no merge, deployment, production probe or hosting/security change",
   "last_verified_live": "901fd989cf79d84e651164af5ccc8f6774e53bf1",
@@ -55,20 +55,21 @@
     "local_verification": {
       "verify": {
         "passed": 35,
-        "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
+        "application_digest": "be3f880a5d3cb99436e549678ac6a2ed83675f484497f088f918228cc3af1e23",
+        "ci_run": "41475582231",
         "backend_and_verify_scripts_unchanged_afterwards": true
       },
       "browser_unique_passed": 46,
       "complete_local_matrix_on_one_digest": false,
-      "reason": "The final source adds the missing adaptive two-choice notice and refreshes asset hashes after the earlier partial matrix. All affected learning suites and the remaining suites pass on the final digest. Exact-commit CI repeats every check.",
+      "reason": "The final sources restore an adaptive two-choice explanation, then fix guest action wrapping when optional web fonts load. Each affected learning/home/navigation/access/performance suite is repeated; unchanged areas retain their recorded earlier digest. Exact-commit CI repeats every check.",
       "browser_suites": {
         "access": {
-          "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
-          "seconds": 42.58
+          "application_digest": "32dd087e87fdf2022269a1dba12d7eaf3cf8bc1bf1ababe50b0f03f641914275",
+          "seconds": 38.21
         },
         "account-resilience": {
-          "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
-          "seconds": 82.06
+          "application_digest": "32dd087e87fdf2022269a1dba12d7eaf3cf8bc1bf1ababe50b0f03f641914275",
+          "seconds": 103.74
         },
         "appearance-consistency": {
           "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
@@ -79,8 +80,8 @@
           "seconds": 10.23
         },
         "child-experience": {
-          "application_digest": "be3f880a5d3cb99436e549678ac6a2ed83675f484497f088f918228cc3af1e23",
-          "seconds": 30.13
+          "application_digest": "32dd087e87fdf2022269a1dba12d7eaf3cf8bc1bf1ababe50b0f03f641914275",
+          "seconds": 27.73
         },
         "christmas-cast": {
           "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
@@ -163,8 +164,8 @@
           "seconds": 48.44
         },
         "navigation": {
-          "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
-          "seconds": 89.42
+          "application_digest": "32dd087e87fdf2022269a1dba12d7eaf3cf8bc1bf1ababe50b0f03f641914275",
+          "seconds": 43.97
         },
         "ocr": {
           "application_digest": "be3f880a5d3cb99436e549678ac6a2ed83675f484497f088f918228cc3af1e23",
@@ -191,8 +192,8 @@
           "seconds": 28.58
         },
         "performance": {
-          "application_digest": "be3f880a5d3cb99436e549678ac6a2ed83675f484497f088f918228cc3af1e23",
-          "seconds": 12.29
+          "application_digest": "32dd087e87fdf2022269a1dba12d7eaf3cf8bc1bf1ababe50b0f03f641914275",
+          "seconds": 17.92
         },
         "phonics": {
           "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
@@ -289,13 +290,35 @@
           "passed": 1,
           "planned": 1,
           "stopped_on_failure": false
+        },
+        {
+          "phase": "layout-fix",
+          "application_digest": "32dd087e87fdf2022269a1dba12d7eaf3cf8bc1bf1ababe50b0f03f641914275",
+          "passed": 4,
+          "planned": 4,
+          "stopped_on_failure": false
+        },
+        {
+          "phase": "layout-performance",
+          "application_digest": "32dd087e87fdf2022269a1dba12d7eaf3cf8bc1bf1ababe50b0f03f641914275",
+          "passed": 1,
+          "planned": 1,
+          "stopped_on_failure": false
         }
       ]
     },
     "ci": {
       "workflow": ".github/workflows/deploy.yml",
       "branch_runs_verify_and_browser_only": true,
-      "exact_containing_commit": "Use the containing commit and Actions result; this report does not assert CI completion or deployment."
+      "exact_containing_commit": "Use the containing commit and Actions result; this report does not assert CI completion or deployment.",
+      "last_completed_candidate": {
+        "commit": "f5e546038a8c230b12c0618f24bec590e218466d",
+        "run": "https://github.com/socialluca89-byte/word/actions/runs/41475582231",
+        "verify": "PASS (35 checks)",
+        "browser": "FAIL first suite: third home entry below viewport at 320px with original fonts",
+        "deploy": "SKIPPED",
+        "result": "Not accepted as successful; diagnosed and fixed in the following source revision."
+      }
     }
   },
   "independent_review": "Targeted final source-only review found no new blocker after the adaptive-notice correction: audio ownership/epochs, deferred controller state and disposal, navigation, unchanged backend/account/economy, public-only cache and main-only production gates checked.",
@@ -308,17 +331,98 @@
   ],
   "screenshots": {
     "index": "review/README.md",
-    "application_digest": "be3f880a5d3cb99436e549678ac6a2ed83675f484497f088f918228cc3af1e23",
-    "source": "Real local Chromium viewport/component captures with synthetic data only; before-home is the baseline capture."
+    "viewport_application_digest": "32dd087e87fdf2022269a1dba12d7eaf3cf8bc1bf1ababe50b0f03f641914275",
+    "feedback_component_capture_digest": "be3f880a5d3cb99436e549678ac6a2ed83675f484497f088f918228cc3af1e23",
+    "feedback_component_note": "Training feedback source and component appearance are unchanged by the later guest-toolbar-only layout correction. The four viewport screenshots were recaptured on the final application digest.",
+    "source": "Actual local Chromium viewport/component captures with synthetic data only; before-home is the baseline capture."
   },
   "regressions_fixed_during_validation": [
     "The new welcome initially displaced the third home entry on a 320px screen: compacted artwork and copy, retaining readable fonts and touch targets.",
     "Wrong-answer text initially inherited poor contrast: corrected and verified at 4.5 or above.",
-    "Adaptive support still reduced four letter choices to two but the new feedback omitted the explanation: restored the notice in the product; original letter-progression assertions unchanged."
+    "Adaptive support still reduced four letter choices to two but the new feedback omitted the explanation: restored the notice in the product; original letter-progression assertions unchanged.",
+    "Original fonts wrapped the guest recovery action onto a separate toolbar row at 320px, hiding the third entry. A two-column guest grid preserves text/control sizes and keeps all three entries visible; original assertion retained, real-font and fallback cases verified."
   ],
   "test_preconditions_updated": [
     "Graphics probes now reveal the intended scene and bind observations to its actually rendered canvas; all seasonal geometry/calendar/currency assertions retained.",
     "The original hero navigation probe is scoped to its hero after a second intentional home entry was added, covered separately by child-experience.",
     "The final ocean victory pose is tested for a real opened chest, readable caption and restored replay pose; original non-final target movement checks retained."
-  ]
+  ],
+  "font_layout_validation": {
+    "before_320": {
+      "fallback_toolbar_height": 73.5,
+      "original_font_toolbar_height": 129.5,
+      "fallback_last_entry_bottom": 810.9375,
+      "original_font_last_entry_bottom": 866.9375,
+      "viewport_height": 844
+    },
+    "after": [
+      {
+        "width": 320,
+        "original_fonts": false,
+        "toolbar_height": 73.5,
+        "last_entry_bottom": 810.9375,
+        "viewport_height": 844
+      },
+      {
+        "width": 390,
+        "original_fonts": false,
+        "toolbar_height": 73.5,
+        "last_entry_bottom": 819.34375,
+        "viewport_height": 844
+      },
+      {
+        "width": 768,
+        "original_fonts": false,
+        "toolbar_height": 48,
+        "last_entry_bottom": 701.046875,
+        "viewport_height": 844
+      },
+      {
+        "width": 1360,
+        "original_fonts": false,
+        "toolbar_height": 48,
+        "last_entry_bottom": 690.1875,
+        "viewport_height": 844
+      },
+      {
+        "width": 320,
+        "original_fonts": true,
+        "toolbar_height": 73.5,
+        "last_entry_bottom": 810.9375,
+        "viewport_height": 844
+      },
+      {
+        "width": 390,
+        "original_fonts": true,
+        "toolbar_height": 73.5,
+        "last_entry_bottom": 821.34375,
+        "viewport_height": 844
+      },
+      {
+        "width": 768,
+        "original_fonts": true,
+        "toolbar_height": 48,
+        "last_entry_bottom": 701.546875,
+        "viewport_height": 844
+      },
+      {
+        "width": 1360,
+        "original_fonts": true,
+        "toolbar_height": 48,
+        "last_entry_bottom": 693.1875,
+        "viewport_height": 844
+      }
+    ],
+    "temporary_fixture_fonts": [
+      {
+        "source": "https://github.com/google/fonts/blob/main/ofl/dmsans/DMSans%5Bopsz%2Cwght%5D.ttf",
+        "sha256": "8cd08d97e89c24d0aa92edd2f0f4c8ee6195eee9b7c9f154865a58b02f0c1c0d"
+      },
+      {
+        "source": "https://github.com/google/fonts/blob/main/ofl/outfit/Outfit%5Bwght%5D.ttf",
+        "sha256": "fc7287273e66929776e2ba54f144fe699080bec29f61bf649d70d871468aeade"
+      }
+    ],
+    "limits": "Fonts downloaded only to a temporary test fixture from the official Google Fonts repository. No fonts, runtime dependency or service was added to the product. Layout values are local Chromium measurements."
+  }
 }
