@@ -50,3 +50,10 @@ La prima CI del nuovo lotto (`41475582231`, commit `f5e5460`) ha passato verify 
 La diagnosi ha usato copie temporanee dei font dal repository ufficiale Google Fonts, soltanto in una fixture locale: nessun nuovo font, servizio o pacchetto è stato aggiunto al prodotto. La regressione ora aspetta il font realmente pronto e registra le misure prima dell’assert, mantenendone la condizione originale. La nuova CI deve ripetere l’intera matrice; il run fallito resta documentato e non conta come successo.
 
 [Copertura e misure](GAME_UPGRADE_VERIFICATION_2026_11_02.json). Il collaudo locale usa due browser isolati e la misura di prestazioni separata a CPU tranquilla; non viene presentato come una matrice unica se i digest differiscono. La CI del commit esatto ripete tutti i 35 controlli e le 46 suite browser in sequenza, con gli stessi limiti temporali. Le misure sintetiche non certificano il tablet originale, la pronuncia reale o l’invio di email.
+
+
+## Verifica delle scene dopo la seconda CI
+
+Il run `41477888499` ha passato verify e le prime dieci suite browser, inclusa la home a 320px con il font reale. La successiva prova dei personaggi natalizi usava ancora l’ultima scena globale registrata a DOMContentLoaded, senza collegarla al canvas della schermata. È stata sostituita da una spia installata prima dell’app, associata al canvas che ha effettivamente disegnato la scena; la prova porta prima in vista l’anteprima o la missione. Non si attribuisce al rendering fuori vista la causa CI specifica senza una misura che lo dimostri.
+
+Lo stesso problema di identificazione è stato corretto nelle prove di guardaroba, collezioni e villaggio. Tutte e quattro sono passate localmente: nove famiglie natalizie, trenta risposte confermate, ventisette scene con personaggi conquistati, accessori sui sei avatar, sessanta esercizi del percorso permanente, calendario, persistenza, saldi e isolamento restano verificati. Solo i test cambiano dopo `96b4afd`; il digest applicativo resta `32dd087e87fdf2022269a1dba12d7eaf3cf8bc1bf1ababe50b0f03f641914275`. Il nuovo commit deve comunque superare tutta la CI.

@@ -55,9 +55,9 @@
     "local_verification": {
       "verify": {
         "passed": 35,
-        "application_digest": "be3f880a5d3cb99436e549678ac6a2ed83675f484497f088f918228cc3af1e23",
-        "ci_run": "41475582231",
-        "backend_and_verify_scripts_unchanged_afterwards": true
+        "application_digest": "32dd087e87fdf2022269a1dba12d7eaf3cf8bc1bf1ababe50b0f03f641914275",
+        "ci_run": "41477888499",
+        "application_unchanged_afterwards": true
       },
       "browser_unique_passed": 46,
       "complete_local_matrix_on_one_digest": false,
@@ -84,8 +84,8 @@
           "seconds": 27.73
         },
         "christmas-cast": {
-          "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
-          "seconds": 130.1
+          "application_digest": "32dd087e87fdf2022269a1dba12d7eaf3cf8bc1bf1ababe50b0f03f641914275",
+          "evidence": "Christmas cast passed: twelve reachable seasonal pilots, nine original character models with verified rendering families and temporary unowned previews, thirty real fixture exercises, direct earned use in 27 game scenes, saved identities/portrait mapping, native/chosen hat compatibility, four widths and permanent use after closure."
         },
         "classic-illustrated": {
           "application_digest": "be3f880a5d3cb99436e549678ac6a2ed83675f484497f088f918228cc3af1e23",
@@ -124,8 +124,8 @@
           "seconds": 40.86
         },
         "holidays": {
-          "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
-          "seconds": 69.52
+          "application_digest": "32dd087e87fdf2022269a1dba12d7eaf3cf8bc1bf1ababe50b0f03f641914275",
+          "evidence": "Holiday browser passed: guest invitation, actual village, daily double-click, hints/wrong/paused/reloaded mission, unchanged 13 topics, lost committed reply with one gift, closed events, permanent wearable reward, five activity types and cookie keyboard undo, three earned pilots in all three games, no forged coins, four viewports and touch targets."
         },
         "illustrated": {
           "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
@@ -136,8 +136,8 @@
           "seconds": 19.13
         },
         "journey": {
-          "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
-          "seconds": 23.38
+          "application_digest": "32dd087e87fdf2022269a1dba12d7eaf3cf8bc1bf1ababe50b0f03f641914275",
+          "evidence": "Journey browser passed: permanent route and guest notice, keyboard collections, pause/hint across eight skipped days, wrong answer, lost committed reply with one reward, 60 real saved exercises, earned pilots in six game scenes, actual collection meshes, locked future rewards, January festive closure with evergreen access, unchanged lessons/economy, offline honesty and four widths."
         },
         "journey-navigation": {
           "application_digest": "be3f880a5d3cb99436e549678ac6a2ed83675f484497f088f918228cc3af1e23",
@@ -240,8 +240,8 @@
           "seconds": 15.0
         },
         "wardrobe": {
-          "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
-          "seconds": 125.89
+          "application_digest": "32dd087e87fdf2022269a1dba12d7eaf3cf8bc1bf1ababe50b0f03f641914275",
+          "evidence": "Wardrobe browser passed: keyboard focus, distinct names, free unowned 3D preview, unchanged wallet/inventory, return control, actual owned character in game four viewport sizes, twelve real festive meshes, twenty-eight festive choices, scarf removal, persisted outfit and six original avatar variants and earned-only Christmas controls."
         },
         "world-play": {
           "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
@@ -305,20 +305,41 @@
           "planned": 1,
           "stopped_on_failure": false
         }
-      ]
+      ],
+      "scene_probe_validation": {
+        "suites": [
+          "christmas-cast",
+          "wardrobe",
+          "journey",
+          "holidays"
+        ],
+        "all_passed": true,
+        "application_unchanged": true,
+        "limits": "Local Christmas preview was already visible in this reproduction; offscreen state is not asserted as the proven CI cause. The old DCL/global-last-scene instrumentation could not identify a canvas. The corrected probes wait for and inspect the actual displayed scene."
+      }
     },
     "ci": {
       "workflow": ".github/workflows/deploy.yml",
       "branch_runs_verify_and_browser_only": true,
       "exact_containing_commit": "Use the containing commit and Actions result; this report does not assert CI completion or deployment.",
       "last_completed_candidate": {
-        "commit": "f5e546038a8c230b12c0618f24bec590e218466d",
-        "run": "https://github.com/socialluca89-byte/word/actions/runs/41475582231",
+        "commit": "96b4afd06f20cb4547766f9c14d9166d028dce3a",
+        "run": "https://github.com/socialluca89-byte/word/actions/runs/41477888499",
         "verify": "PASS (35 checks)",
-        "browser": "FAIL first suite: third home entry below viewport at 320px with original fonts",
+        "browser": "First 10 suites PASS including the real-font 320px home; christmas-cast FAIL at the old global-scene probe",
         "deploy": "SKIPPED",
-        "result": "Not accepted as successful; diagnosed and fixed in the following source revision."
-      }
+        "result": "Not accepted as a complete pass. Scene probes now reveal the intended host and inspect that canvas after an actual render; every original model/economy assertion retained."
+      },
+      "earlier_failed_candidates": [
+        {
+          "commit": "f5e546038a8c230b12c0618f24bec590e218466d",
+          "run": "https://github.com/socialluca89-byte/word/actions/runs/41475582231",
+          "verify": "PASS (35 checks)",
+          "browser": "FAIL first suite: third home entry below viewport at 320px with original fonts",
+          "deploy": "SKIPPED",
+          "result": "Not accepted as successful; diagnosed and fixed in the following source revision."
+        }
+      ]
     }
   },
   "independent_review": "Targeted final source-only review found no new blocker after the adaptive-notice correction: audio ownership/epochs, deferred controller state and disposal, navigation, unchanged backend/account/economy, public-only cache and main-only production gates checked.",
@@ -345,7 +366,8 @@
   "test_preconditions_updated": [
     "Graphics probes now reveal the intended scene and bind observations to its actually rendered canvas; all seasonal geometry/calendar/currency assertions retained.",
     "The original hero navigation probe is scoped to its hero after a second intentional home entry was added, covered separately by child-experience.",
-    "The final ocean victory pose is tested for a real opened chest, readable caption and restored replay pose; original non-final target movement checks retained."
+    "The final ocean victory pose is tested for a real opened chest, readable caption and restored replay pose; original non-final target movement checks retained.",
+    "Following the second CI failure, Christmas cast, wardrobe, permanent collections and holiday probes now install before the app, reveal the target host and inspect that canvas after a real render; model families, all earned scenes, calendars, costs and persistence assertions are unchanged."
   ],
   "font_layout_validation": {
     "before_320": {
