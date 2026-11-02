@@ -3,7 +3,7 @@ import {createHash} from 'node:crypto';
 
 // Run after changing browser assets, before committing a release.
 const assets=['data.js','worlds.js','learning.js','app.js','accounts.js','classroom.js','arena.js','quests.js','quests.css','arcade.js','arcade.css','island.css','island.js','community.js','presence.js','three.min.js','pwa.css','pwa.js','training.js','study-import.js','manifest.webmanifest','icon-192.png'];
-for(const name of ['race-circuits.webp','race-racers.webp','character-portraits.png']){
+for(const name of ['race-circuits.webp','race-racers.webp','character-portraits.png','character-portraits.webp']){
   const hash=createHash('sha256').update(fs.readFileSync('dist/'+name)).digest('hex').slice(0,12);
   const css=fs.readFileSync('dist/arcade.css','utf8').replace(new RegExp(name.replaceAll('.','\\.')+'(?:\\?v=[a-f0-9]+)?','g'),name+'?v='+hash);
   fs.writeFileSync('dist/arcade.css',css);
@@ -16,7 +16,7 @@ const islandCode=fs.readFileSync('dist/island.js','utf8');
 const artworkBlock=islandCode.match(/const illustratedArt=\{[^}]+\};/)?.[0];
 if(!artworkBlock)throw Error('Missing illustrated asset URL registry');
 let versionedArtwork=artworkBlock;
-for(const name of ['island-places.webp','holiday-worlds.png','race-circuits.webp']){
+for(const name of ['island-places.webp','holiday-worlds.png','holiday-worlds.webp','race-circuits.webp']){
  const hash=createHash('sha256').update(fs.readFileSync('dist/'+name)).digest('hex').slice(0,12);
  versionedArtwork=versionedArtwork.replace(new RegExp(name.replaceAll('.','\\.')+'(?:\\?v=[a-f0-9]+)?','g'),name+'?v='+hash);
 }

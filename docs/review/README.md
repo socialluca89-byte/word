@@ -1,3 +1,21 @@
+# Gioco, grafica e feedback — 2 novembre 2026, non pubblicato
+
+Schermate reali del candidato locale, con soli dati sintetici. Nessuna immagine promozionale sostituisce la schermata del gioco. Il digest applicativo è registrato nel [rapporto di verifica](../GAME_UPGRADE_VERIFICATION_2026_11_02.json); [scelte e correzioni](../GAME_DESIGN_2026_11_02.md). Il blocco di pubblicazione SiteGround resta separato.
+
+- [Home prima, 390px](upgrade-20261102-before-home-390.png) → [home illustrata dopo, 390px](upgrade-20261102-home-390.png)
+- [Home desktop](upgrade-20261102-home-1360.png)
+- [Mondo marino realmente giocabile, 390px](upgrade-20261102-world-390.png)
+- [Tre scoperte e continuazione agli esercizi, desktop](upgrade-20261102-world-complete-1360.png)
+- [Errore: scelta, modello e riprova](upgrade-20261102-letter-error-390.png)
+- [Risposta corretta e continuazione](upgrade-20261102-letter-success-390.png)
+- [Confronto di spelling su schermo da 320px](upgrade-20261102-word-error-320.png)
+
+Le schede di feedback sono ritagli prodotti direttamente dal browser sul componente reale; le altre immagini sono schermate del viewport. Parlato sintetico controllato nei test: non è una prova della qualità della voce sul dispositivo fisico.
+
+Le sezioni successive documentano i lotti precedenti e non attestano la versione live attuale.
+
+---
+
 # Revisione completa dei percorsi — candidato non pubblicato
 
 Schermate reali della pagina locale completa con profili sintetici. [Revisione, problemi e matrice](../FULL_PRODUCT_REVIEW_2026_11_01.md). Lo stato live resta separato: il blocco SiteGround non è risolto da queste immagini.

@@ -41,8 +41,18 @@
   if(element.matches('input'))element.setAttribute('aria-invalid',String(!correct));
   else if(element.matches('button')){element.querySelector('.answerMark')?.remove();const symbol=document.createElement('span');symbol.className='answerMark';symbol.setAttribute('aria-hidden','true');symbol.textContent=correct?'✓':'✕';element.append(symbol);}
  }
+ let feedbackSpeech=null,feedbackEpoch=0;
+ function stopSpeech(container=null){
+  const own=feedbackSpeech;if(!own||container&&container!==own.container&&!container.contains(own.container))return;
+  feedbackSpeech=null;feedbackEpoch++;own.button?.removeAttribute('data-feedback-speaking');if('speechSynthesis'in window)speechSynthesis.cancel();
+ }
+ if(typeof document!=='undefined'&&typeof window.addEventListener==='function'){
+  window.addEventListener('wordyland-stop-audio',()=>stopSpeech());window.addEventListener('hashchange',()=>stopSpeech());window.addEventListener('pagehide',()=>stopSpeech());
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)stopSpeech();});
+  if(typeof MutationObserver==='function'&&document.body)new MutationObserver(()=>{if(feedbackSpeech&&(!feedbackSpeech.container.isConnected||feedbackSpeech.surface!==feedbackSpeech.container.firstElementChild))stopSpeech();}).observe(document.body,{childList:true,subtree:true});
+ }
  function show(container,correct,context={}){
-  if(!container)return;
+  if(!container)return;window.dispatchEvent(new Event('wordyland-stop-audio'));
   const explanation=correct?(context.message||'Hai trovato la risposta. Un’altra scoperta per te!'):explain(context);
   const sample=context.word||context.expected||'',display=correct?sample:context.expected||sample;
   const animate=correct&&!matchMedia('(prefers-reduced-motion: reduce)').matches&&document.documentElement.dataset.animations!=='paused';
@@ -50,10 +60,20 @@
   container.innerHTML='<div class="learningFeedback '+(correct?'feedbackSuccess':'feedbackRetry')+(animate?' feedbackAnimated':'')+'"><div class="feedbackMark" aria-hidden="true">'+(correct?'✓':'✕')+'</div><div class="feedbackCopy"><h4>'+(correct?'Esatto! Ben fatto!':context.retry===false?'Guardiamo insieme!':'Un altro tentativo, insieme!')+'</h4><p class="learningExplanation">'+escape(explanation)+'</p>'+(display?'<div class="feedbackModel"><small>'+(correct?'La tua scoperta':'Guarda bene la risposta')+'</small><strong>'+escape(display)+'</strong></div>':'')+(correct?'<div class="feedbackStars" aria-hidden="true"><span>⭐</span><span>🌟</span><span>⭐</span></div>':'')+('speechSynthesis'in window?'<div class="feedbackAudio">'+(!correct?'<button type="button" data-explain-audio>🔊 Ascolta la spiegazione</button>':'')+'<button type="button" data-word-audio>🔊 Ascolta in inglese</button></div><small class="feedbackVoiceNote" role="status"></small>':'')+'</div></div>';
   mark(context.button,correct);mark(context.input,correct);
   if(context.input&&container.id)context.input.setAttribute('aria-describedby',container.id);
-  function speak(message,lang){speechSynthesis.cancel();const utterance=new SpeechSynthesisUtterance(message);utterance.lang=lang;utterance.rate=.8;utterance.onerror=()=>{const note=container.querySelector('.feedbackVoiceNote');if(note)note.textContent='La voce non è disponibile. Puoi leggere la spiegazione.';};speechSynthesis.speak(utterance);}
-  container.querySelector('[data-explain-audio]')?.addEventListener('click',()=>speak(explanation,'it-IT'));
-  container.querySelector('[data-word-audio]')?.addEventListener('click',()=>speak(sample,'en-GB'));
+  const surface=container.firstElementChild;
+  function speak(message,lang,button){
+   if(!container.isConnected||container.firstElementChild!==surface||!button?.isConnected)return;
+   window.dispatchEvent(new Event('wordyland-stop-audio'));speechSynthesis.cancel();
+   const utterance=new SpeechSynthesisUtterance(message),generation=feedbackEpoch;feedbackSpeech={container,surface,button,utterance};utterance.lang=lang;utterance.rate=.8;button.dataset.feedbackSpeaking='true';
+   const valid=()=>feedbackSpeech?.utterance===utterance&&generation===feedbackEpoch&&container.isConnected&&container.firstElementChild===surface;
+   const clear=()=>{feedbackSpeech=null;button.removeAttribute('data-feedback-speaking');};
+   const failure=()=>{clear();const note=container.querySelector('.feedbackVoiceNote');if(note)note.textContent='La voce non è disponibile. Puoi leggere la spiegazione.';};
+   utterance.onend=()=>{if(valid())clear();};utterance.onerror=event=>{if(!valid())return;if(['interrupted','canceled'].includes(event?.error))clear();else failure();};
+   try{speechSynthesis.speak(utterance);}catch{if(valid())failure();}
+  }
+  container.querySelector('[data-explain-audio]')?.addEventListener('click',event=>speak(explanation,'it-IT',event.currentTarget));
+  container.querySelector('[data-word-audio]')?.addEventListener('click',event=>speak(sample,'en-GB',event.currentTarget));
   requestAnimationFrame(()=>{if(!container.isConnected)return;const box=container.getBoundingClientRect();if(box.bottom>innerHeight||box.top<0)container.scrollIntoView({block:'nearest',behavior:animate?'smooth':'instant'});});
  }
- window.wordylandLearning={expected,explain,show,mark};
+ window.wordylandLearning={expected,explain,show,mark,stopSpeech};
 })();

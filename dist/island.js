@@ -26,7 +26,7 @@ function feedback(host,type='success',kind='pets'){
 window.wordylandMotion={feedback,allowed:motionAllowed};
 const actions={treehouse:{label:'Accendi le luci',message:'La tua casa si illumina! 🏡'},pets:{label:'Fallo saltare',message:'Un salto per te! 💗'},creative:{label:'Mescola i colori',message:'Una nuova combinazione! 🎨'},kart:{label:'TURBO! Tieni forte',message:'TURBO! 🏁'},football:{label:'Tira in porta!',message:'GOOOL! ⚽'},space:{label:'Lancia il razzo!',message:'3, 2, 1… VIA! 🚀'},ocean:{label:'Esplora il tesoro',message:'Trova conchiglia, pesce e perla per aprire il tesoro! 🐚'},dino:{label:'Chiama il dinosauro',message:'Eccomi! 🦕'}};
 function showAction(host,kind){
- feedback(host,'success',kind);const node=reactions.get(host)?.node;if(node)node.textContent=actions[kind]?.message||'Si parte!';
+ feedback(host,'success',kind);const node=reactions.get(host)?.node;if(node)node.textContent=kind==='ocean'&&Number(host.dataset.sceneProgress)>=1?'Tesoro scoperto! 🐚':actions[kind]?.message||'Si parte!';
 }
 const palette={sun:[0xffcb55,0xff806d,0x70cfc0],ocean:[0x58bfee,0x8c83eb,0x57d6bd],berry:[0xef87b7,0xac83ed,0xffce79],forest:[0x4fa978,0xb2d86c,0xdfa463],candy:[0xf29fc5,0x9e8ce8,0x8bdad0]};
 // Small, finite games in the world itself. These never write learning/wallet state.
@@ -45,22 +45,37 @@ function mountToy(panel,kind,handlers={}){
  const game=toyGames[kind];if(!panel||!game)return null;
  let disposed=false,step=0,order=[],found=new Set();
  const wrap=document.createElement('section');wrap.className='worldToy';wrap.dataset.toyKind=kind;wrap.setAttribute('aria-label',game.title);
- wrap.innerHTML='<h4>'+game.title+'</h4><p class="toyObjective"></p><div class="toyChoices">'+game.items.map(([icon,en,it,color],i)=>'<button type="button" data-toy-choice="'+i+'" style="--toy-color:#'+color.toString(16).padStart(6,'0')+'"><span aria-hidden="true">'+icon+'</span><b lang="en">'+en+'</b><small>'+it+'</small></button>').join('')+'</div><p class="toyStatus" role="status" aria-live="polite" aria-atomic="true"></p><p class="toyHelp"></p><button class="audio toyReplay" type="button" hidden>Rigioca nel mondo</button><button class="primary toyLearn" type="button" hidden>Continua con gli esercizi</button><small class="toyNote">Gioco libero · nessuna moneta spesa. I premi si conquistano negli esercizi. Uscendo da questa scena ricominci.</small>';
- panel.append(wrap);const buttons=[...wrap.querySelectorAll('[data-toy-choice]')],objective=wrap.querySelector('.toyObjective'),status=wrap.querySelector('.toyStatus'),replay=wrap.querySelector('.toyReplay');
+ wrap.innerHTML='<h4>'+game.title+'</h4><p class="toyObjective"></p><div class="toyChoices">'+game.items.map(([icon,en,it,color],i)=>'<button type="button" data-toy-choice="'+i+'" style="--toy-color:#'+color.toString(16).padStart(6,'0')+'"><span aria-hidden="true">'+icon+'</span><b lang="en">'+en+'</b><small>'+it+'</small></button>').join('')+'</div><p class="toyStatus" role="status" aria-live="polite" aria-atomic="true"></p><p class="toyHelp"></p><button class="primary toyLearn" type="button" hidden>Continua con gli esercizi</button><button class="audio toyReplay" type="button" hidden>Rigioca nel mondo</button><small class="toyNote">Gioco libero · nessuna moneta spesa. I premi si conquistano negli esercizi. Uscendo da questa scena ricominci.</small>';
+ panel.append(wrap);const buttons=[...wrap.querySelectorAll('[data-toy-choice]')],objective=wrap.querySelector('.toyObjective'),status=wrap.querySelector('.toyStatus'),replay=wrap.querySelector('.toyReplay'),learn=wrap.querySelector('.toyLearn');
  function describe(){wrap.dataset.toyStep=String(step);wrap.dataset.toyTarget=step<3?String(order[step]):'';objective.innerHTML=step===3?'✨ Hai completato la scoperta!':game.verb+' <strong lang="en">'+game.items[order[step]][1]+'</strong><small>'+game.items[order[step]][0]+' '+game.items[order[step]][2]+'</small>';buttons.forEach((b,i)=>{b.disabled=found.has(i);b.classList.toggle('toyFound',found.has(i));b.setAttribute('aria-label',(found.has(i)?'Trovato: ':'Scegli ')+game.items[i][1]+' · '+game.items[i][2]);});replay.hidden=step!==3;wrap.querySelector('.toyLearn').hidden=step!==3;}
  function reset(){if(disposed)return;step=0;found=new Set();order=[0,1,2];for(let i=2;i>0;i--){const j=Math.floor(Math.random()*(i+1));[order[i],order[j]]=[order[j],order[i]];}describe();status.textContent='0 / 3 scoperte. Puoi giocare con calma.';handlers.reset?.();}
- function choose(index){
+ function choose(index,explicit=false){
   if(disposed||!Number.isInteger(index)||index<0||index>2||found.has(index)||step===3)return false;
   const correct=index===order[step],hadFocus=wrap.contains(document.activeElement);
   if(!correct){status.textContent='Hai scelto '+game.items[index][1]+' ('+game.items[index][2]+'). Cerca '+game.items[order[step]][1]+' ('+game.items[order[step]][2]+'): puoi riprovare.';handlers.choose?.(index,false,step);return false;}
   found.add(index);step++;describe();status.textContent=step===3?'3 / 3 · Scoperta completata! Puoi rigiocare o aprire la missione in inglese.':step+' / 3 · Trovato! Ora cerca il prossimo oggetto.';handlers.choose?.(index,true,step);
-  if(hadFocus)(step===3?replay:buttons.find(b=>!b.disabled))?.focus({preventScroll:true});return true;
+  if(step===3&&explicit){learn.focus({preventScroll:true});learn.scrollIntoView({block:'nearest',inline:'nearest',behavior:'instant'});}
+  else if(hadFocus&&step<3)buttons.find(b=>!b.disabled)?.focus({preventScroll:true});return true;
  }
- wrap.querySelector('.toyLearn').onclick=()=>{if(!disposed)window.dispatchEvent(new CustomEvent('wordyland-play-place',{detail:kind}));};buttons.forEach((b,i)=>b.onclick=()=>choose(i));replay.onclick=()=>{reset();buttons[0].focus({preventScroll:true});};
- function scene(available){wrap.querySelector('.toyHelp').textContent=available?'Tocca gli oggetti nella scena oppure usa i pulsanti.':'Scena 3D non disponibile: puoi giocare con i pulsanti.';}
- reset();scene(Boolean(handlers.scene));return {choose,scene,dispose(){disposed=true;wrap.remove();}};
+ learn.onclick=()=>{if(!disposed)window.dispatchEvent(new CustomEvent('wordyland-play-place',{detail:kind}));};buttons.forEach((b,i)=>b.onclick=e=>choose(i,e.isTrusted));replay.onclick=()=>{reset();buttons[0].focus({preventScroll:true});};
+ function scene(available){wrap.querySelector('.toyHelp').textContent=available===null?'Puoi iniziare con i pulsanti. La scena si apre quando la raggiungi.':available?'Tocca gli oggetti nella scena oppure usa i pulsanti.':'Scena 3D non disponibile: puoi giocare con i pulsanti.';}
+ reset();scene(Boolean(handlers.scene));return {choose,scene,setHandlers(next){if(disposed)return;handlers=next;handlers.reset?.();for(let i=0;i<step;i++)handlers.choose?.(order[i],true,i+1);scene(Boolean(handlers.scene));},dispose(){disposed=true;wrap.remove();}};
 }
 function mount3D(host,options={}){
+ if(!host||!window.IntersectionObserver)return create3D(host,options);
+ const box=host.getBoundingClientRect();
+ if(box.width&&box.height&&box.top<innerHeight+80&&box.bottom>-80)return create3D(host,options);
+ // Keep the labelled game available without constructing an offscreen renderer.
+ // Its same controller, order and collected objects are adopted when revealed.
+ let view=null,disposed=false,settings={...options};
+ const toy=mountToy(options.playground,options.kind,{choose:(_index,correct)=>feedback(host,correct?'success':'retry',options.kind)});toy?.scene(null);host.dataset.render='deferred3d';
+ function start(){if(disposed||view)return;observer.disconnect();removed.disconnect();view=create3D(host,{...settings,toy});}
+ const observer=new IntersectionObserver(entries=>{if(entries.some(e=>e.isIntersecting))start();},{rootMargin:'80px'});observer.observe(host);
+ const removed=new MutationObserver(()=>{if(!host.isConnected)proxy.dispose();});removed.observe(document.body,{childList:true,subtree:true});
+ const proxy={action(){start();view?.action?.();},react(type){if(view)view.react?.(type);else feedback(host,type,options.kind);},update(next={}){settings={...settings,...next};view?.update?.(next);},rotate(delta){start();view?.rotate?.(delta);},zoom(delta){start();view?.zoom?.(delta);},dispose(){if(disposed)return;disposed=true;observer.disconnect();removed.disconnect();view?.dispose();toy?.dispose();clearFeedback(host);}};
+ return proxy;
+}
+function create3D(host,options={}){
  if(!host)return {dispose(){},update(){},rotate(){}};
  let toy=null;
  function fallback(){
@@ -70,7 +85,7 @@ function mount3D(host,options={}){
    choices=document.createElement('nav');choices.className='islandFallbackChoices';choices.setAttribute('aria-label','Scegli un luogo nella mappa semplificata');
    Object.entries(places).forEach(([id,place])=>{const b=document.createElement('button');b.type='button';b.dataset.place=id;b.textContent=place.icon+' '+place.name;b.setAttribute('aria-pressed',String(id===options.selected));b.onclick=()=>options.onSelect(id);choices.append(b);});host.append(choices);
   }
-  toy=mountToy(options.playground,options.kind,{choose:(_i,correct)=>feedback(host,correct?'success':'retry',options.kind)});
+  const handlers={choose:(_i,correct)=>feedback(host,correct?'success':'retry',options.kind)};toy=options.toy||mountToy(options.playground,options.kind,handlers);if(options.toy)toy.setHandlers(handlers);
   return {dispose(){toy?.dispose();clearFeedback(host);choices?.remove();},action(){if(options.preview)showAction(host,options.kind);},react(type){feedback(host,type,options.kind);},update(next={}){if(next.selected)choices?.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.place===next.selected)));},rotate(){}};
  }
  const T=window.THREE;
@@ -325,7 +340,7 @@ const pin=document.createElement('button');pin.type='button';pin.className='isla
  const onDown=e=>{interactedAt=performance.now();startX=e.clientX;startY=e.clientY;dragging=true;moved=false;};
  const onMove=e=>{if(!dragging)return;const dx=e.clientX-startX,dy=e.clientY-startY;if(Math.abs(dx)>5&&Math.abs(dx)>Math.abs(dy)){angle+=dx*.006;startX=e.clientX;startY=e.clientY;moved=true;requestDraw();}};
  const ray=new T.Raycaster();
- const onUp=e=>{if(!dragging)return;dragging=false;if(moved)return;const r=canvas.getBoundingClientRect();ray.setFromCamera(new T.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),camera);if(toy){const hit=ray.intersectObjects(toyTargets.filter(t=>t.visible),true)[0];if(hit){let o=hit.object;while(o&&o.userData.toyIndex===undefined)o=o.parent;if(o)toy.choose(o.userData.toyIndex);}return;}if(kind!=='island'){if(options.preview)control.action();return;}const hit=ray.intersectObjects(colliders,true)[0];if(hit){let o=hit.object;while(o&&!o.userData.place)o=o.parent;if(o)options.onSelect?.(o.userData.place);}};
+ const onUp=e=>{if(!dragging)return;dragging=false;if(moved)return;const r=canvas.getBoundingClientRect();ray.setFromCamera(new T.Vector2((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1),camera);if(toy){const hit=ray.intersectObjects(toyTargets.filter(t=>t.visible),true)[0];if(hit){let o=hit.object;while(o&&o.userData.toyIndex===undefined)o=o.parent;if(o)toy.choose(o.userData.toyIndex,e.isTrusted);}return;}if(kind!=='island'){if(options.preview)control.action();return;}const hit=ray.intersectObjects(colliders,true)[0];if(hit){let o=hit.object;while(o&&!o.userData.place)o=o.parent;if(o)options.onSelect?.(o.userData.place);}};
  canvas.addEventListener('pointerdown',onDown);canvas.addEventListener('pointermove',onMove);canvas.addEventListener('pointerup',onUp);canvas.addEventListener('pointercancel',()=>dragging=false);canvas.addEventListener('pointerleave',()=>dragging=false);
  const onLost=e=>{e.preventDefault();contextLost=true;host.dataset.render='fallback';toy?.scene(false);cancelAnimationFrame(frame);frame=0;};canvas.addEventListener('webglcontextlost',onLost);
  resize();
@@ -339,7 +354,7 @@ const pin=document.createElement('button');pin.type='button';pin.className='isla
  requestDraw();
  },react(type='success'){reactionAge=0;reactionKind=type;feedback(host,type,kind);requestDraw();},update(next={}){if(Number.isFinite(next.progress)){if(next.progress>progress&&kind==='football'){kick=0;kickTarget=1;}progress=Math.max(0,Math.min(1,next.progress));}if(next.selected)selected=next.selected;if(typeof next.paused==='boolean')paused=next.paused;requestDraw();},rotate(delta){interactedAt=performance.now();angle+=delta;requestDraw();},zoom(delta){zoom=Math.max(.75,Math.min(1.4,zoom+delta));requestDraw();},dispose(){if(disposed)return;disposed=true;toy?.dispose();clearFeedback(host);cancelAnimationFrame(frame);ro.disconnect();io.disconnect();removed.disconnect();document.removeEventListener('visibilitychange',onVisibility);motion.removeEventListener('change',onMotion);window.removeEventListener('wordyland-motion',onPause);for(const g of geometries)g.dispose();for(const m of materials.values())m.dispose();canvas.removeEventListener('webglcontextlost',onLost);renderer.dispose();renderer.forceContextLoss();canvas.remove();pins.forEach(x=>x.pin.remove());}};
  if(options.playground&&ball)ball.userData.toyBall=true;
-toy=mountToy(options.playground,kind,{scene:true,reset(){
+ const toyHandlers={scene:true,reset(){
   toyStep=0;toyAim=0;kartDistance=0;kick=0;kickTarget=0;paintIndex=0;progress=0;actionAge=10;reactionAge=10;
   toyTargets.forEach(t=>{t.visible=true;t.userData.found=false;});
   if(model){model.userData.toyStep=0;if(['pets','dino'].includes(kind)){model.position.y=0;model.rotation.z=0;}if(kind==='treehouse'&&model.userData.window)model.userData.window.material=material(0x63a8ce);}
@@ -354,12 +369,13 @@ toy=mountToy(options.playground,kind,{scene:true,reset(){
   if(kind==='treehouse'&&model?.userData.window)model.userData.window.material=material(toyGames[kind].items[index][3]);
   if(kind==='creative')progressObjects.forEach(o=>o.material=material(toyGames[kind].items[index][3]));
   requestDraw();
- }});
+ }};
+ toy=options.toy||mountToy(options.playground,kind,toyHandlers);if(options.toy)toy.setHandlers(toyHandlers);
  const removed=new MutationObserver(()=>{if(!host.isConnected)control.dispose();});removed.observe(document.body,{childList:true,subtree:true});
  return control;
 }
 // Default scenes reuse the exact public illustrations shown in the cards.
-const illustratedArt={worlds:'island-places.webp?v=caee87979db0',holidays:'holiday-worlds.png?v=286124dff4a8',circuits:'race-circuits.webp?v=34b59b21f510'};
+const illustratedArt={worlds:'island-places.webp?v=caee87979db0',holidays:'holiday-worlds.webp?v=102e6f20e148',holidayFallback:'holiday-worlds.png?v=286124dff4a8',circuits:'race-circuits.webp?v=34b59b21f510'};
 const worldCells={treehouse:[0,0],pets:[1,0],creative:[2,0],kart:[3,0],football:[0,1],space:[1,1],ocean:[2,1],dino:[3,1]};
 const holidayCells={christmas:[0,0],carnival:[1,0],easter:[0,1],halloween:[1,1]};
 const actorIds=['fox','panda','robot','dragon','octopus','lion','reindeer','penguin','snowpal','bunny','koala','elf-boy','elf-girl','polar-bear','gingerbread','silver-reindeer','mrs-claus','santa','nutcracker','yeti'];
@@ -378,7 +394,7 @@ function illustratedView(host,options={}){
  layer.classList.toggle('illustratedPaused',Boolean(options.paused));host.prepend(layer);host.classList.add('illustratedScene');if(options.playground)host.classList.add('illustratedPlayable');host.dataset.render='illustrated';host.dataset.artReady='loading';
  const ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg'),image=document.createElementNS(ns,'image');svg.classList.add('illustratedArt');svg.setAttribute('viewBox',cell[0]*100+' '+cell[1]*cellHeight+' 100 '+cellHeight);svg.setAttribute('preserveAspectRatio','xMidYMid slice');svg.setAttribute('aria-hidden','true');image.setAttribute('width',columns*100);image.setAttribute('height',rows*cellHeight);image.setAttribute('preserveAspectRatio','none');const artURL=circuit?illustratedArt.circuits:isHoliday?illustratedArt.holidays:illustratedArt.worlds;image.setAttribute('href',artURL);layer.dataset.artSource=artURL;svg.append(image);layer.append(svg);
  const loading=document.createElement('p');loading.className='illustratedLoading';loading.setAttribute('role','status');loading.textContent='Apriamo l’illustrazione…';layer.append(loading);let disposed=false;
- image.addEventListener('load',()=>{if(!disposed){host.dataset.artReady='ready';loading.remove();}});image.addEventListener('error',()=>{if(!disposed){host.dataset.artReady='error';loading.textContent='Illustrazione non caricata. Puoi continuare con i comandi.';}});
+ let fallbackTried=false;image.addEventListener('load',()=>{if(!disposed){host.dataset.artReady='ready';loading.remove();}});image.addEventListener('error',()=>{if(disposed)return;if(isHoliday&&!circuit&&!fallbackTried){fallbackTried=true;image.setAttribute('href',illustratedArt.holidayFallback);layer.dataset.artSource=illustratedArt.holidayFallback;return;}host.dataset.artReady='error';loading.textContent='Illustrazione non caricata. Puoi continuare con i comandi.';});
  let progress=Number(options.progress)||0,pan=0,zoom=1,toy=null;
  const eq=options.equipped||{},rawActor=kind==='pets'&&options.preview?(eq.pet||eq.avatar||'fox'):(eq.avatar||'fox'),actorId=actorIds.includes(rawActor)?rawActor:rawActor==='pet-bunny'?'bunny':rawActor==='pet-penguin'?'penguin':rawActor==='pet-fox'?'fox':null;
  const actor=document.createElement('div');actor.className='illustratedActor';actor.dataset.character=rawActor;actor.setAttribute('role','img');actor.setAttribute('aria-label',({fox:'Volpe esploratrice',panda:'Panda delle stelle',robot:'Robot inventore',dragon:'Drago delle parole',octopus:'Polpo creativo',lion:'Leone coraggioso'})[rawActor]||window.wordylandRewardExtras?.find(i=>i.id===rawActor)?.name||'Il tuo compagno');
@@ -392,7 +408,7 @@ function illustratedView(host,options={}){
  const roomItems=['room','plant','rug','lamp','trophy','kart','palette','ball','rocket'].map(slot=>eq[slot]).filter(Boolean);
  if(roomItems.length){const strip=document.createElement('div');strip.className='illustratedDecor';strip.setAttribute('aria-label','Le tue personalizzazioni');roomItems.forEach(id=>{const item=illustratedReward(id),icon=item?.icon;if(icon){const b=document.createElement('span');b.dataset.reward=id;b.title=item.name;b.setAttribute('role','img');b.setAttribute('aria-label',item.name);b.textContent=icon;strip.append(b);}});layer.append(strip);}
  const targets=[],points=kind==='ocean'?[[23,83],[60,75],[20,49]]:kind==='football'?[[28,39],[50,36],[72,39]]:kind==='space'?[[24,24],[70,32],[75,66]]:[[23,61],[50,47],[76,66]];
- if(options.playground&&toyGames[kind])toyGames[kind].items.forEach(([icon,en,it],i)=>{const b=document.createElement('button');b.type='button';b.className='illustratedTarget';b.dataset.illustratedTarget=i;b.style.left=points[i][0]+'%';b.style.top=points[i][1]+'%';b.setAttribute('aria-label','Scegli '+en+' · '+it);b.innerHTML='<span aria-hidden="true">'+icon+'</span><b lang="en">'+en+'</b>';layer.append(b);targets.push(b);b.onclick=()=>toy?.choose(i);b.addEventListener('pointerup',e=>{if(e.pointerType==='touch'){e.preventDefault();toy?.choose(i);}});});
+ if(options.playground&&toyGames[kind])toyGames[kind].items.forEach(([icon,en,it],i)=>{const b=document.createElement('button');b.type='button';b.className='illustratedTarget';b.dataset.illustratedTarget=i;b.style.left=points[i][0]+'%';b.style.top=points[i][1]+'%';b.setAttribute('aria-label','Scegli '+en+' · '+it);b.innerHTML='<span aria-hidden="true">'+icon+'</span><b lang="en">'+en+'</b>';layer.append(b);targets.push(b);b.onclick=e=>toy?.choose(i,e.isTrusted);b.addEventListener('pointerup',e=>{if(e.pointerType==='touch'){e.preventDefault();toy?.choose(i,e.isTrusted);}});});
  if(isHoliday&&event==='christmas'){
   const snowman=document.createElement('div');snowman.className='illustratedSnowman';snowman.innerHTML='<span class="racerModel" data-racer="snowpal" aria-label="Pupazzo del villaggio" role="img"></span>';layer.append(snowman);
   const elf=options.elf?.active?options.elf:null,prank=elf&&!options.elfResolved?elf.prank?.id:null;
@@ -431,8 +447,8 @@ function illustratedView(host,options={}){
   }else if(kind==='dino'){
    visual.innerHTML=vector('actionDinosaur','<path d="M15 70Q1 72 5 50l15 7Q35 23 66 44l12-27Q79 1 98 6l28 10-3 21-25 1-8 28 21 20H88L75 72H53L42 89H24l7-25" fill="#82bd82" stroke="#285655" stroke-width="5" stroke-linejoin="round"/><circle cx="107" cy="19" r="4" fill="#253955"/><path d="m39 37 5-12 12 10m12 6 9-12" fill="#f3cb6e" stroke="#285655" stroke-width="3"/>');label='Il dinosauro è arrivato a salutarti!';
   }else if(kind==='ocean'){
-   const opened=Number(host.dataset.sceneProgress)>=1;visual.dataset.chestOpen=String(opened);
-   visual.innerHTML=vector('actionChest','<path class="actionChestLid" d="M19 47V26Q70-7 121 26v21Z" fill="#b87d43" stroke="#5c4534" stroke-width="5"/><path d="M18 46h104v43H18Z" fill="#b87d43" stroke="#5c4534" stroke-width="5"/><path d="M37 17v72m66-72v72" stroke="#f6d371" stroke-width="9"/><rect x="60" y="45" width="20" height="22" rx="4" fill="#f7d777"/><g class="actionTreasure" fill="#ffe57f" stroke="#fff8cc" stroke-width="2"><path d="m47 15 3 8 8 3-8 3-3 8-3-8-8-3 8-3Z"/><path d="m85 1 3 8 8 3-8 3-3 8-3-8-8-3 8-3Z"/></g>');label=opened?'Il forziere si è aperto: scoperta completata!':'Il forziere brilla: trova i tre oggetti per aprirlo!';
+   const opened=Number(host.dataset.sceneProgress)>=1;visual.dataset.chestOpen=String(opened);if(opened&&options.playground){actor.style.left='80%';actor.style.top='70%';}
+   visual.innerHTML=vector('actionChest','<path class="actionChestLid" d="M19 47V26Q70-7 121 26v21Z" fill="#b87d43" stroke="#5c4534" stroke-width="5"/><path d="M18 46h104v43H18Z" fill="#b87d43" stroke="#5c4534" stroke-width="5"/><path d="M37 17v72m66-72v72" stroke="#f6d371" stroke-width="9"/><rect x="60" y="45" width="20" height="22" rx="4" fill="#f7d777"/><g class="actionTreasure" fill="#ffe57f" stroke="#fff8cc" stroke-width="2"><path d="m47 15 3 8 8 3-8 3-3 8-3-8-8-3 8-3Z"/><path d="m85 1 3 8 8 3-8 3-3 8-3-8-8-3 8-3Z"/></g>');label=opened?'Tesoro scoperto!':'Il forziere brilla: trova i tre oggetti per aprirlo!';
   }
   const caption=document.createElement('span');caption.className='illustratedActionLabel';caption.setAttribute('role','status');caption.textContent=label;visual.append(caption);layer.append(visual);action.node=visual;host.dataset.lastAction=kind;host.dataset.actionCount=String(action.count);
   action.timer=setTimeout(()=>{if(!disposed&&action.node===visual)visual.dataset.actionState='settled';},950);
@@ -445,7 +461,7 @@ function mount(host,options={}){
  let settings={...options},view=null,disposed=false;const modes=document.createElement('nav');modes.className='sceneViewModes';modes.setAttribute('aria-label','Aspetto della scena');modes.innerHTML='<button type="button" data-scene-style="illustrated">Illustrazioni</button><button type="button" data-scene-style="3d">3D classico</button>';
  if(options.controlsDock?.nodeType===1)options.controlsDock.append(modes);else if(options.playground)options.playground.append(modes);else if(kind==='holiday')host.after(modes);else{host.append(modes);modes.classList.add('sceneViewOverlay');}
  const demonstration=options.playground?host.querySelector('.scenePlayButton'):null,dock=document.createElement('div');dock.className='sceneDemoActions';if(demonstration)options.playground.append(dock);
- function draw(){if(disposed)return;view?.dispose();if(demonstration)(sceneStyle==='illustrated'?dock:host).append(demonstration);view=sceneStyle==='3d'?mount3D(host,settings):illustratedView(host,settings);modes.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.sceneStyle===sceneStyle)));}
+ function draw(){if(disposed)return;view?.dispose();if(demonstration)(sceneStyle==='illustrated'?dock:host).append(demonstration);view=sceneStyle==='3d'?mount3D(host,settings):illustratedView(host,settings);modes.querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.sceneStyle===sceneStyle)));if(options.playground){options.playground.append(modes);if(demonstration)options.playground.append(dock);}}
  function changed(){draw();}window.addEventListener('wordyland-scene-style',changed);
  modes.querySelectorAll('button').forEach(b=>b.onclick=()=>{if(disposed||sceneStyle===b.dataset.sceneStyle)return;sceneStyle=b.dataset.sceneStyle;try{localStorage.setItem('wordylandSceneStyle',sceneStyle);}catch{}window.dispatchEvent(new Event('wordyland-scene-style'));b.focus({preventScroll:true});});
  const removed=new MutationObserver(()=>{if(!host.isConnected)proxy.dispose();});removed.observe(document.body,{childList:true,subtree:true});

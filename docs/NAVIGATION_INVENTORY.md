@@ -2,6 +2,12 @@
 
 Vincolo esplicito dell’utente: «home più chiara solo riorganizzata senza togliere nessuna delle funzioni fatte». Non eliminare funzioni né renderle irraggiungibili su telefono o desktop. Prima di cambiare destinazioni o raggruppamenti, aggiornare questo inventario e le regressioni di raggiungibilità. Nascondere temporaneamente i menu durante un esercizio è ammesso soltanto se Pausa ripristina le destinazioni.
 
+## Lotto del 2 novembre: ingressi illustrati e ritorni
+
+La home conserva Allenati, Gioca in classe e Personaggi, visibili insieme anche a 320px. **Esplora l’isola**, sull’illustrazione originale, apre gli otto mondi già presenti. Scegliendo un mondo si raggiungono direttamente scena e gioco; **Cambia mondo** torna alla scheda selezionata. Il riepilogo **Scoperte e personalizzazioni** mantiene cura del compagno, traguardi e arredi. I controlli Illustrazioni/3D e Rigioca restano disponibili, dopo l’attività nel loro ordine di tastiera.
+
+**Tutte le attività** riporta alle schede di navigazione. Allenati apre un esercizio realmente avviabile; Personaggi, Classe, Preposizioni, Festività e Missione di oggi raggiungono il proprio contenuto. Il completamento di tre scoperte porta il focus a **Continua con gli esercizi**, senza avviare automaticamente una missione o assegnare monete. Sono riorganizzazioni degli accessi esistenti, senza cambi di autorizzazioni. Regressioni: child-experience, navigation, world-play, illustrated, journey-navigation, motion e suite dei singoli percorsi. Questa nota descrive il candidato di lavoro, non la versione pubblicata.
+
 ## Destinazioni esistenti da preservare
 
 | Destinazione | Accesso attuale | Regressioni pertinenti |

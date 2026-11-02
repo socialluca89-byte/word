@@ -32,11 +32,27 @@ const base=process.env.WORDYLAND_TEST_URL;assert(['localhost','127.0.0.1'].inclu
    const repeated=await p.evaluate(()=>webglStarts.length);
    if(!process.env.WORDYLAND_PERFORMANCE_BASELINE)assert.equal(repeated,before.contexts,'Repeated unchanged guest notifications must not recreate WebGL previews');
    if(!process.env.WORDYLAND_PERFORMANCE_BASELINE&&before.mapTop>before.viewport+120)assert.equal(before.mapStarts,0,'Offscreen map must not allocate a WebGL context');
+   if(!process.env.WORDYLAND_PERFORMANCE_BASELINE){
+    const offscreen=await p.evaluate(()=>({previewTop:document.querySelector('#placePreview').getBoundingClientRect().top,viewport:innerHeight,previewStarts:webglStarts.filter(x=>document.querySelector('#placePreview').contains(x.canvas)).length,circuitRequested:performance.getEntriesByType('resource').some(r=>new URL(r.name).pathname==='/race-circuits.webp')}));
+    if(offscreen.previewTop>offscreen.viewport+80)assert.equal(offscreen.previewStarts,0,'Offscreen preview must not allocate a WebGL context either');
+    assert.equal(offscreen.circuitRequested,false,'Closed practice does not download its circuit artwork');
+    const circuit=p.waitForResponse(r=>new URL(r.url()).pathname==='/race-circuits.webp');await p.locator('details.practiceZone').evaluate(n=>n.open=true);await circuit;await p.locator('details.practiceZone').evaluate(n=>n.open=false);
+   }
    await p.locator('#islandMap').scrollIntoViewIfNeeded();await p.waitForFunction(()=>document.querySelector('#islandMap').dataset.render==='3d');
    const after=await p.evaluate(()=>({contexts:webglStarts.length,mapStarts:webglStarts.filter(x=>document.querySelector('#islandMap').contains(x.canvas)).length}));
    if(!process.env.WORDYLAND_PERFORMANCE_BASELINE)assert.equal(after.mapStarts,1,'Scrolling initializes the map once');
    await p.locator('[data-live-place=football]').click();await p.locator('#heroSceneAction').click();await p.locator('#islandMap .sceneReaction').waitFor();
    await p.locator('[data-live-place=island]').click();assert.equal(await p.locator('.islandPin').count(),8);assert.equal(await p.locator('#islandMap canvas').count(),1);
+   if(!process.env.WORDYLAND_PERFORMANCE_BASELINE){
+    // Choices made before a renderer exists stay in the same game/controller.
+    const starts=await p.evaluate(()=>webglStarts.length);
+    await p.evaluate(()=>{const holder=document.createElement('section');holder.id='deferredFixture';holder.style.cssText='position:absolute;top:20000px;left:0;width:340px';holder.innerHTML='<div id="deferredScene" style="width:340px;height:300px;position:relative"></div><div id="deferredGame"></div>';document.body.append(holder);window.deferredView=wordylandIsland.mount(holder.querySelector('#deferredScene'),{kind:'ocean',preview:true,playground:holder.querySelector('#deferredGame')});window.deferredToy=holder.querySelector('.worldToy');deferredToy.querySelector('[data-toy-choice="'+deferredToy.dataset.toyTarget+'"]').click();deferredView.update({paused:true});});
+    assert.equal(await p.evaluate(()=>webglStarts.length),starts,'An offscreen game works before allocating its renderer');assert.equal(await p.locator('#deferredGame .worldToy').getAttribute('data-toy-step'),'1');
+    await p.locator('#deferredScene').scrollIntoViewIfNeeded();await p.locator('#deferredScene[data-render="3d"] canvas').waitFor();assert(await p.evaluate(()=>deferredToy===document.querySelector('#deferredGame .worldToy')),'Same controller and DOM survive lazy scene creation');assert.equal(await p.locator('#deferredGame .worldToy').getAttribute('data-toy-step'),'1');assert.equal(await p.locator('#deferredGame button:disabled').count(),1);
+    for(let i=0;i<2;i++){const target=await p.locator('#deferredGame .worldToy').getAttribute('data-toy-target');await p.locator('#deferredGame [data-toy-choice="'+target+'"]').focus();await p.keyboard.press('Enter');}
+    assert(await p.locator('#deferredGame .toyLearn').evaluate(n=>n===document.activeElement),'Finishing with a real keyboard gesture focuses the primary exercise action');assert(await p.locator('#deferredGame .toyReplay').isVisible());
+    await p.evaluate(()=>{deferredView.dispose();document.querySelector('#deferredFixture').remove();});
+   }
    assert.deepEqual(errors,[]);results.push({width,before,afterRepeatedGuestNotifications:repeated,after});await p.close();
   }
   console.log('WebGL initialization measurements:',JSON.stringify(results));

@@ -18,7 +18,7 @@
  function stopAudio(){speechEpoch++;if(ownSpeech&&'speechSynthesis'in window)speechSynthesis.cancel();ownSpeech=false;root.querySelectorAll('[data-speaking]').forEach(node=>node.removeAttribute('data-speaking'));}
  function say(text){const node=root.querySelector('#trainingStatus');if(node)node.textContent=text;}
  function speakParts(parts,lang,onComplete){
-  stopAudio();const selected=voice(lang);if(!selected){say('Questa voce non è disponibile. Puoi usare la modalità lettura e farti aiutare da un adulto.');return false;}
+  window.dispatchEvent(new Event('wordyland-stop-audio'));stopAudio();const selected=voice(lang);if(!selected){say('Questa voce non è disponibile. Puoi usare la modalità lettura e farti aiutare da un adulto.');return false;}
   speechSynthesis.cancel();ownSpeech=true;const generation=speechEpoch;let index=0;
   function next(){if(generation!==speechEpoch||!visible())return;if(index>=parts.length){ownSpeech=false;onComplete?.();return;}
    const part=parts[index++],utterance=new SpeechSynthesisUtterance(part.text);utterance.lang=lang;utterance.voice=selected;utterance.rate=.75;
@@ -131,13 +131,34 @@
   else{try{const next=JSON.parse(JSON.stringify(guest)),saved=next.sessions.find(s=>s.token===current.token&&s.step===current.step);if(saved){saved.helped=true;saved.hint=level;saveGuest(next);}}catch(error){say(error.guestConflict?error.message:'L’aiuto è disponibile. Il browser non ha ancora confermato il salvataggio.');}}
  }
  function renderHint(level){const q=session.question,host=target().querySelector('#trainingHintModel');if(!host)return;host.innerHTML='<p>Guardiamo insieme.</p><div class="trainingWord">'+esc(q.letter?q.letter.id+' '+q.letter.lower:level===1?q.word.id[0]+'…':q.word.id)+'</div>'+(q.word?'<p>'+esc(q.word.meaning)+'</p>':'');if(q.mode==='letter')renderLetterChoices();}
+ function trainingFeedback(q,value,correct){
+  window.dispatchEvent(new Event('wordyland-stop-audio'));const feedback=target().querySelector('#trainingFeedback'),isLetter=Boolean(q.letter),word=q.word?.id||'',chosenWord=content.words.find(item=>item.id===value);
+  const expected=isLetter?q.letter.id+' '+q.letter.lower:correct&&q.mode==='phrase'?q.word.phrase:word;
+  const chosen=isLetter?String(value).toUpperCase()+' '+String(value).toLowerCase():String(value).trim();
+  let explanation;
+  if(correct)explanation=isLetter?(q.mode==='model'?'Hai esplorato la lettera ':'Hai trovato la lettera ')+q.letter.id+'. Continuiamo al tuo ritmo.':q.mode==='model'?'Hai osservato come si scrive '+word+'.':q.mode==='build'?'Hai ricomposto '+word+'!':q.mode==='phrase'?'La piccola frase è completa.':'Hai trovato '+word+'!';
+  else if(isLetter)explanation=(readingFallback?'Il modello è ':'Cerchiamo la lettera ')+q.letter.id+'. Hai scelto '+String(value).toUpperCase()+'. '+(readingFallback?'Guarda il modello e riprova con calma.':'Riascolta il nome inglese e riprova con calma.');
+  else if(q.mode==='phrase')explanation='Nella frase «'+q.word.gap+'» serve «'+word+'». Vuol dire '+q.word.meaning+'.';
+  else explanation=window.wordylandLearning.explain({expected:word,answer:value,word,translation:q.word.meaning,kind:q.mode==='recognize'?'choice':q.mode==='build'?'build':'write',chosenTranslation:chosenWord?.meaning});
+  if(!correct&&q.mode==='letter'&&session.errors>=2&&session.hint)explanation+=' Torniamo a due lettere e guardiamo insieme.';
+  const animated=correct&&window.wordylandMotion?.allowed()&&!matchMedia('(prefers-reduced-motion: reduce)').matches;
+  feedback.setAttribute('aria-atomic','true');feedback.className=(correct?'trainingSuccess':'trainingTry')+' trainingFeedbackPanel'+(animated?' trainingFeedbackAnimated':'');
+  feedback.innerHTML='<div class="trainingFeedbackMark" aria-hidden="true">'+(correct?'✓':'✕')+'</div><div class="trainingFeedbackCopy"><h3>'+(correct?'Una scoperta in più!':'Guardiamo insieme')+'</h3><p class="trainingFeedbackExplanation">'+esc(explanation)+'</p>'+(correct?'':'<div class="trainingFeedbackModel"><span>Hai scelto</span><strong class="trainingChosenValue" lang="en">'+esc(chosen||'…')+'</strong></div>')+'<div class="trainingFeedbackModel"><span>'+(correct?'La tua scoperta':'Il modello')+'</span><strong class="trainingExpectedValue" lang="en">'+esc(expected)+'</strong></div>'+(correct?'<div class="trainingFeedbackStars" aria-hidden="true">⭐ ✨ ⭐</div><button class="primary" id="nextTrainingStep">Continua →</button>':'<button class="audio" id="retryTrainingStep">Riprova con calma</button>')+'</div>';
+  target().querySelectorAll('#trainingExercise .answerWrong,#trainingExercise .answerCorrect').forEach(node=>{node.classList.remove('answerWrong','answerCorrect');node.querySelector('.answerMark')?.remove();if(node.matches('input'))node.removeAttribute('aria-invalid');});
+  const chosenControl=target().querySelector('#trainingAnswer')||[...target().querySelectorAll('[data-training-choice]')].find(node=>node.dataset.trainingChoice===value);
+  window.wordylandLearning.mark(chosenControl,correct);if(chosenControl?.matches('input'))chosenControl.setAttribute('aria-describedby','trainingFeedback');
+  if(correct)feedback.querySelector('#nextTrainingStep').onclick=draw;
+  else feedback.querySelector('#retryTrainingStep').onclick=()=>{const exercise=target().querySelector('#trainingExercise'),control=exercise.querySelector('input,[data-training-choice]:not(:disabled),[data-training-slot],[data-training-tile]:not(:disabled)');if(control){control.focus({preventScroll:true});control.scrollIntoView({block:'nearest',behavior:window.wordylandMotion?.allowed()?'smooth':'instant'});}};
+  if(correct)feedback.querySelector('#nextTrainingStep').focus({preventScroll:true});else{feedback.tabIndex=-1;feedback.focus({preventScroll:true});}
+  requestAnimationFrame(()=>{if(feedback.isConnected&&!root.hidden)feedback.scrollIntoView({block:'nearest',behavior:window.wordylandMotion?.allowed()?'smooth':'instant'});});
+ }
  async function answer(value){if(!session||busy)return;if(['letter','recognize'].includes(session.question.mode)&&!readingFallback&&!audioUsed){say('Ascolta prima, oppure scegli Preferisco leggere.');return;}const current=session,q=current.question,attempt=random(),payload={token:current.token,step:current.step,attempt,answer:value,helped,audioUsed,replays:Math.max(0,replays-1),letterAudioVerified:q.letter?verified(q.letter.id):false,choiceCount:q.mode==='letter'?target().querySelectorAll('[data-training-choice]').length:2};
   const result=await act(async owner=>{if(owner)return account.request('training-answer',{...payload,profile:owner});const next=JSON.parse(JSON.stringify(guest)),s=next.sessions.find(s=>s.token===current.token);if(!s)throw Error('Riprendi il percorso.');if(s.step!==current.step)return {replayed:true,session:guestSnapshot(s),stickers:next.stickers};
    if(q.mode!=='model'&&normalize(value)!==normalize(q.answer)){s.errors=(s.errors||0)+1;s.helped=helped;s.hint=current.hint;saveGuest(next);return {correct:false,session:guestSnapshot(s)};}
    if(q.mode==='letter')recordGuestLetterPractice(next,q,!helped&&!s.helped&&!s.errors,payload.audioUsed&&payload.letterAudioVerified?'listening':'reading',s.errors||0,payload.choiceCount);
    next.itemCounts??={};next.itemCounts[q.item]=(next.itemCounts[q.item]||0)+1;s.step++;s.errors=0;s.helped=false;s.hint=0;s.done=s.step===s.plan.length;next.items=[...new Set([...(next.items||[]),q.item])];if(s.done){next.completed=(next.completed||0)+1;next.firstDay??=new Date().toISOString().slice(0,10);next.lastDay=new Date().toISOString().slice(0,10);for(const [id,earned] of [['first',true],['explore',next.items.length>=4],['return',next.completed>=3&&next.firstDay!==next.lastDay]])if(earned&&!next.stickers.includes(id))next.stickers.push(id);}saveGuest(next);return {correct:true,session:guestSnapshot(s),stickers:next.stickers};});
-  if(!result)return;if(result.replayed){draw();return;}if(result.correct===false){const feedback=target().querySelector('#trainingFeedback');feedback.textContent='Un altro tentativo, insieme. Riascolta o apri Un aiuto: non perdi nulla.';feedback.className='trainingTry';if(q.mode==='letter'&&session.errors>=2&&!session.hint){await hint();feedback.textContent+=' Torniamo a due lettere e guardiamo insieme.';}return;}
-  stopAudio();updateTrainingProgress();const feedback=target().querySelector('#trainingFeedback');feedback.className='trainingSuccess';feedback.innerHTML='<strong>✓ Un piccolo passo fatto!</strong><p>Puoi continuare quando vuoi.</p><button class="primary" id="nextTrainingStep">Continua →</button>';target().querySelectorAll('#trainingExercise button,#trainingExercise input,#trainingHint,#trainingItalian,#trainingListen,#trainingSpellListen,#readTrainingModel').forEach(node=>node.disabled=true);feedback.querySelector('button').onclick=draw;feedback.querySelector('button').focus();
+  if(!result)return;if(result.replayed){draw();return;}if(result.correct===false){const generation=epoch,feedbackOperation=operation,token=session.token,step=session.step;if(q.mode==='letter'&&session.errors>=2&&!session.hint)await hint();if(generation!==epoch||feedbackOperation!==operation||session?.token!==token||session?.step!==step||!visible())return;trainingFeedback(q,value,false);return;}
+  stopAudio();updateTrainingProgress();trainingFeedback(q,value,true);target().querySelectorAll('#trainingExercise button,#trainingExercise input,#trainingHint,#trainingItalian,#trainingListen,#trainingSpellListen,#readTrainingModel').forEach(node=>node.disabled=true);
  }
  // This separate store/protocol keeps old clients from pruning new guided sessions.
  const phonicsGuestKey='wordylandPhonicsGuestV1';let phonicsAnswered=false,phonicsHelped=false,phonicsReplays=0;
@@ -199,6 +220,7 @@
   detail.addEventListener('toggle',()=>{if(detail.open)load();});button.onclick=load;
  }
  window.wordylandTraining={open,mountParent,stopAudio,leaveForGame(){++epoch;++operation;busy=false;root.setAttribute('aria-busy','false');stopAudio();root.hidden=true;history.replaceState(null,'','#missioni');document.querySelector('#questHub').hidden=false;window.dispatchEvent(new Event('wordyland-play-view'));}};
+ window.addEventListener('wordyland-stop-audio',stopAudio);
  window.addEventListener('wordyland-training-open',open);
  window.addEventListener('hashchange',()=>{if(location.hash!=='#allenamento'){++epoch;++operation;busy=false;root.setAttribute('aria-busy','false');stopAudio();root.hidden=true;}});
  window.addEventListener('wordyland-profile',()=>{++epoch;++operation;busy=false;root.setAttribute('aria-busy','false');stopAudio();session=null;if(location.hash==='#allenamento')open();});

@@ -1,0 +1,324 @@
+{
+  "baseline_commit": "6445b4bcaad5ac5ba930c92769d2829332ccb29b",
+  "branch": "fix/consistent-play-experience-20261101",
+  "application_digest_sha256": "be3f880a5d3cb99436e549678ac6a2ed83675f484497f088f918228cc3af1e23",
+  "application_files": 51,
+  "publication": "work only; no merge, deployment, production probe or hosting/security change",
+  "last_verified_live": "901fd989cf79d84e651164af5ccc8f6774e53bf1",
+  "design": "GAME_DESIGN_2026_11_02.md",
+  "scope": [
+    "Illustrated home with all three child entry points visible in the first phone viewport",
+    "World selection reveals the actual selected scene; activity entry reveals a startable lesson; return paths remain reachable",
+    "Free-world completion focuses the visible next exercise action; original games, settings, personalization and rewards retained",
+    "Concrete training choice/model feedback, large X/check, readable contrast and motion preferences",
+    "Scoped speech cancellation on next, pause, close and route; obsolete callbacks cannot overwrite a new activity",
+    "Lossless image delivery and deferred invisible graphics work"
+  ],
+  "measured_before_after": {
+    "image_delivery_bytes": [
+      {
+        "asset": "character-portraits",
+        "png": 2568009,
+        "webp": 1918648,
+        "pixels": "identical; original PNG kept"
+      },
+      {
+        "asset": "holiday-worlds",
+        "png": 3509394,
+        "webp": 2699502,
+        "pixels": "identical; original PNG kept"
+      }
+    ],
+    "combined_image_bytes_saved": 1459253,
+    "closed_practice_circuit_initial_bytes": [
+      409472,
+      0
+    ],
+    "offscreen_preview_webgl_contexts": [
+      1,
+      0
+    ],
+    "offscreen_preview_initial_draw_calls": [
+      128,
+      0
+    ],
+    "measurement_limits": "Local Chromium/software graphics at390/1360; bytes/context counts are robust. No overall speed percentage or original-tablet benchmark claimed. Other source changes overlapped before/after timing measurements."
+  },
+  "coverage": {
+    "mandatory_verify": 35,
+    "mandatory_browser": 46,
+    "new_browser_suites": [
+      "child-experience",
+      "learning-experience"
+    ],
+    "candidate_state": "All 46 browser suites passed locally across documented source snapshots. Final commit must independently pass the complete mandatory CI matrix; local results are not publication.",
+    "local_verification": {
+      "verify": {
+        "passed": 35,
+        "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
+        "backend_and_verify_scripts_unchanged_afterwards": true
+      },
+      "browser_unique_passed": 46,
+      "complete_local_matrix_on_one_digest": false,
+      "reason": "The final source adds the missing adaptive two-choice notice and refreshes asset hashes after the earlier partial matrix. All affected learning suites and the remaining suites pass on the final digest. Exact-commit CI repeats every check.",
+      "browser_suites": {
+        "access": {
+          "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
+          "seconds": 42.58
+        },
+        "account-resilience": {
+          "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
+          "seconds": 82.06
+        },
+        "appearance-consistency": {
+          "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
+          "seconds": 72.77
+        },
+        "autonomy": {
+          "application_digest": "be3f880a5d3cb99436e549678ac6a2ed83675f484497f088f918228cc3af1e23",
+          "seconds": 10.23
+        },
+        "child-experience": {
+          "application_digest": "be3f880a5d3cb99436e549678ac6a2ed83675f484497f088f918228cc3af1e23",
+          "seconds": 30.13
+        },
+        "christmas-cast": {
+          "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
+          "seconds": 130.1
+        },
+        "classic-illustrated": {
+          "application_digest": "be3f880a5d3cb99436e549678ac6a2ed83675f484497f088f918228cc3af1e23",
+          "seconds": 8.28
+        },
+        "community": {
+          "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
+          "seconds": 15.48
+        },
+        "compatibility": {
+          "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
+          "seconds": 63.38
+        },
+        "duel-identity": {
+          "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
+          "seconds": 82.8
+        },
+        "duel-resilience": {
+          "application_digest": "be3f880a5d3cb99436e549678ac6a2ed83675f484497f088f918228cc3af1e23",
+          "seconds": 9.76
+        },
+        "elf": {
+          "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
+          "evidence": "Standalone final elf check passed after binding the probe to the revealed canvas; no application change."
+        },
+        "email": {
+          "application_digest": "be3f880a5d3cb99436e549678ac6a2ed83675f484497f088f918228cc3af1e23",
+          "seconds": 9.94
+        },
+        "foundations": {
+          "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
+          "seconds": 70.25
+        },
+        "game-resilience": {
+          "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
+          "seconds": 40.86
+        },
+        "holidays": {
+          "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
+          "seconds": 69.52
+        },
+        "illustrated": {
+          "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
+          "seconds": 72.06
+        },
+        "illustrated-actions": {
+          "application_digest": "be3f880a5d3cb99436e549678ac6a2ed83675f484497f088f918228cc3af1e23",
+          "seconds": 19.13
+        },
+        "journey": {
+          "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
+          "seconds": 23.38
+        },
+        "journey-navigation": {
+          "application_digest": "be3f880a5d3cb99436e549678ac6a2ed83675f484497f088f918228cc3af1e23",
+          "seconds": 14.85
+        },
+        "learning": {
+          "application_digest": "be3f880a5d3cb99436e549678ac6a2ed83675f484497f088f918228cc3af1e23",
+          "seconds": 6.59
+        },
+        "learning-experience": {
+          "application_digest": "be3f880a5d3cb99436e549678ac6a2ed83675f484497f088f918228cc3af1e23",
+          "seconds": 13.61
+        },
+        "letter-progression": {
+          "application_digest": "be3f880a5d3cb99436e549678ac6a2ed83675f484497f088f918228cc3af1e23",
+          "seconds": 13.78
+        },
+        "materials": {
+          "application_digest": "be3f880a5d3cb99436e549678ac6a2ed83675f484497f088f918228cc3af1e23",
+          "seconds": 26.7
+        },
+        "motion": {
+          "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
+          "seconds": 48.44
+        },
+        "navigation": {
+          "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
+          "seconds": 89.42
+        },
+        "ocr": {
+          "application_digest": "be3f880a5d3cb99436e549678ac6a2ed83675f484497f088f918228cc3af1e23",
+          "seconds": 10.24
+        },
+        "offline-audio": {
+          "application_digest": "be3f880a5d3cb99436e549678ac6a2ed83675f484497f088f918228cc3af1e23",
+          "seconds": 3.45
+        },
+        "offline-letters": {
+          "application_digest": "be3f880a5d3cb99436e549678ac6a2ed83675f484497f088f918228cc3af1e23",
+          "seconds": 17.84
+        },
+        "offline-training": {
+          "application_digest": "be3f880a5d3cb99436e549678ac6a2ed83675f484497f088f918228cc3af1e23",
+          "seconds": 9.34
+        },
+        "parent-summary": {
+          "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
+          "seconds": 49.91
+        },
+        "pdf-scan": {
+          "application_digest": "be3f880a5d3cb99436e549678ac6a2ed83675f484497f088f918228cc3af1e23",
+          "seconds": 28.58
+        },
+        "performance": {
+          "application_digest": "be3f880a5d3cb99436e549678ac6a2ed83675f484497f088f918228cc3af1e23",
+          "seconds": 12.29
+        },
+        "phonics": {
+          "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
+          "seconds": 14.54
+        },
+        "presence": {
+          "application_digest": "be3f880a5d3cb99436e549678ac6a2ed83675f484497f088f918228cc3af1e23",
+          "seconds": 22.51
+        },
+        "pwa": {
+          "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
+          "seconds": 15.23
+        },
+        "resume": {
+          "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
+          "seconds": 24.57
+        },
+        "review": {
+          "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
+          "seconds": 14.91
+        },
+        "rewards": {
+          "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
+          "seconds": 69.01
+        },
+        "spelling": {
+          "application_digest": "be3f880a5d3cb99436e549678ac6a2ed83675f484497f088f918228cc3af1e23",
+          "seconds": 9.23
+        },
+        "tiles": {
+          "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
+          "seconds": 35.0
+        },
+        "training": {
+          "application_digest": "be3f880a5d3cb99436e549678ac6a2ed83675f484497f088f918228cc3af1e23",
+          "seconds": 21.1
+        },
+        "ux": {
+          "application_digest": "be3f880a5d3cb99436e549678ac6a2ed83675f484497f088f918228cc3af1e23",
+          "seconds": 6.17
+        },
+        "wallet": {
+          "application_digest": "be3f880a5d3cb99436e549678ac6a2ed83675f484497f088f918228cc3af1e23",
+          "seconds": 15.0
+        },
+        "wardrobe": {
+          "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
+          "seconds": 125.89
+        },
+        "world-play": {
+          "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
+          "seconds": 102.18
+        }
+      },
+      "phases": [
+        {
+          "phase": "browser-a-final",
+          "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
+          "passed": 10,
+          "planned": 23,
+          "stopped_on_failure": true
+        },
+        {
+          "phase": "browser-b-final",
+          "application_digest": "4990173f3056dd572b4d7419f05b6c33940f44565d3f3661ef046342dd5650fe",
+          "passed": 15,
+          "planned": 22,
+          "stopped_on_failure": true
+        },
+        {
+          "phase": "browser-a-complete-fixed",
+          "application_digest": "be3f880a5d3cb99436e549678ac6a2ed83675f484497f088f918228cc3af1e23",
+          "passed": 12,
+          "planned": 12,
+          "stopped_on_failure": false
+        },
+        {
+          "phase": "browser-b-complete",
+          "application_digest": "be3f880a5d3cb99436e549678ac6a2ed83675f484497f088f918228cc3af1e23",
+          "passed": 6,
+          "planned": 6,
+          "stopped_on_failure": false
+        },
+        {
+          "phase": "feedback-captures-final",
+          "application_digest": "be3f880a5d3cb99436e549678ac6a2ed83675f484497f088f918228cc3af1e23",
+          "passed": 3,
+          "planned": 3,
+          "stopped_on_failure": false
+        },
+        {
+          "phase": "performance-complete",
+          "application_digest": "be3f880a5d3cb99436e549678ac6a2ed83675f484497f088f918228cc3af1e23",
+          "passed": 1,
+          "planned": 1,
+          "stopped_on_failure": false
+        }
+      ]
+    },
+    "ci": {
+      "workflow": ".github/workflows/deploy.yml",
+      "branch_runs_verify_and_browser_only": true,
+      "exact_containing_commit": "Use the containing commit and Actions result; this report does not assert CI completion or deployment."
+    }
+  },
+  "independent_review": "Targeted final source-only review found no new blocker after the adaptive-notice correction: audio ownership/epochs, deferred controller state and disposal, navigation, unchanged backend/account/economy, public-only cache and main-only production gates checked.",
+  "retained_functions": "All original destinations remain listed in NAVIGATION_INVENTORY.md; secondary care/personalization controls are in a visible details section and exercised by actual summary controls",
+  "limits": [
+    "Synthetic accounts and simulated speech; no real delivery/voice-quality proof",
+    "Old physical tablet remains deferred",
+    "No new credentials, paid services, access expansions, student-data reads or support messages",
+    "Production release remains held by the previously documented SiteGround preflight challenge"
+  ],
+  "screenshots": {
+    "index": "review/README.md",
+    "application_digest": "be3f880a5d3cb99436e549678ac6a2ed83675f484497f088f918228cc3af1e23",
+    "source": "Real local Chromium viewport/component captures with synthetic data only; before-home is the baseline capture."
+  },
+  "regressions_fixed_during_validation": [
+    "The new welcome initially displaced the third home entry on a 320px screen: compacted artwork and copy, retaining readable fonts and touch targets.",
+    "Wrong-answer text initially inherited poor contrast: corrected and verified at 4.5 or above.",
+    "Adaptive support still reduced four letter choices to two but the new feedback omitted the explanation: restored the notice in the product; original letter-progression assertions unchanged."
+  ],
+  "test_preconditions_updated": [
+    "Graphics probes now reveal the intended scene and bind observations to its actually rendered canvas; all seasonal geometry/calendar/currency assertions retained.",
+    "The original hero navigation probe is scoped to its hero after a second intentional home entry was added, covered separately by child-experience.",
+    "The final ocean victory pose is tested for a real opened chest, readable caption and restored replay pose; original non-final target movement checks retained."
+  ]
+}

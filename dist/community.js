@@ -17,12 +17,12 @@
   document.body.classList.toggle('communityPage',['#classe-crea','#segnalazioni','#admin','#iscritti'].includes(hash)||hash.startsWith('#admin-attiva='));
   if(!info().username)newRecovery=null;
   const match=hash.match(/^#admin-attiva=([a-f0-9]{64})$/);if(match){activationCode=match[1];history.replaceState(null,'','#admin');}
-  if(hash==='#scoperte'){window.wordylandUI?.play();root.hidden=true;document.querySelector('.questHub').hidden=false;window.dispatchEvent(new Event('wordyland-journey'));if(scroll)document.querySelector('.questHub').scrollIntoView({block:'start'});return;}
-  if(hash==='#natale'||hash==='#festivita'){window.wordylandUI?.play();root.hidden=true;document.querySelector('.questHub').hidden=false;window.dispatchEvent(new Event('wordyland-holiday'));if(scroll)document.querySelector('.questHub').scrollIntoView({block:'start'});return;}
+  if(hash==='#scoperte'){window.wordylandUI?.play();root.hidden=true;document.querySelector('.questHub').hidden=false;window.dispatchEvent(new Event('wordyland-journey'));if(scroll)window.wordylandUI?.reveal?.();return;}
+  if(hash==='#natale'||hash==='#festivita'){window.wordylandUI?.play();root.hidden=true;document.querySelector('.questHub').hidden=false;window.dispatchEvent(new Event('wordyland-holiday'));if(scroll)window.wordylandUI?.reveal?.();return;}
   if(hash==='#allenamento'){window.wordylandUI?.play();root.hidden=true;document.querySelector('.questHub').hidden=true;window.dispatchEvent(new Event('wordyland-training-open'));return;}
   if(hash==='#continua'){root.hidden=true;document.querySelector('.questHub').hidden=false;window.dispatchEvent(new CustomEvent('wordyland-continue'));return;}
   if(hash==='#sfide'||hash==='#personaggi'||hash==='#allenati'||hash==='#preposizioni'){
-   root.hidden=true;document.querySelector('.questHub').hidden=false;if(hash==='#preposizioni')window.dispatchEvent(new CustomEvent('wordyland-prepositions'));else if(hash==='#personaggi')window.dispatchEvent(new CustomEvent('wordyland-style'));else document.querySelector(hash==='#allenati'?'[data-tab=lessons]':'[data-tab=arena]')?.click();if(scroll)document.querySelector(hash==='#preposizioni'?'#questContent':'.questHub').scrollIntoView({behavior:window.wordylandMotion.allowed()?'smooth':'instant',block:'start'});return;
+   root.hidden=true;document.querySelector('.questHub').hidden=false;if(hash==='#preposizioni')window.dispatchEvent(new CustomEvent('wordyland-prepositions'));else if(hash==='#personaggi')window.dispatchEvent(new CustomEvent('wordyland-style'));else document.querySelector(hash==='#allenati'?'[data-tab=lessons]':'[data-tab=arena]')?.click();if(scroll)window.wordylandUI?.reveal?.();return;
   }
   if(!['#classe-crea','#segnalazioni','#admin','#iscritti'].includes(location.hash)){root.hidden=true;document.querySelector('.questHub').hidden=false;return;}
   root.hidden=false;document.querySelector('.questHub').hidden=true;

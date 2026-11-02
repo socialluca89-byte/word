@@ -32,7 +32,7 @@ const hash=b=>crypto.createHash('sha256').update(b).digest('hex');
  await p.locator('#questNext').click();assert(await canvas.evaluate(e=>e.isConnected),'Next question must preserve the scene');assert(await p.locator('.sceneReaction').count()<=1);
  await p.locator('#pauseQuest').click();await p.locator('[data-tab=adventures]').waitFor();assert(!(await canvas.evaluate(e=>e.isConnected)),'Leaving must dispose the previous scene');
  await p.emulateMedia({reducedMotion:'reduce'});await p.locator('#islandMap').scrollIntoViewIfNeeded();await p.waitForTimeout(200);const still=await snap();await p.waitForTimeout(350);assert.equal(hash(still),hash(await snap()),'Reduced motion must freeze ambient animation');
- await p.locator('[data-destination=pets]').click();await p.locator('[data-care=water]').click();await p.locator('#petCareStatus').waitFor();assert.equal(await p.locator('.sceneReaction').count(),1,'Static feedback remains available');
+ await p.locator('[data-destination=pets]').click();await p.locator('.placeInfo>summary').click();await p.locator('[data-care=water]').click();await p.locator('#petCareStatus').waitFor();assert.equal(await p.locator('.sceneReaction').count(),1,'Static feedback remains available');
  await p.setViewportSize({width:360,height:800});assert(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));assert.deepEqual(errors,[]);
  await browser.close();console.log('Motion checks passed: visible ambient motion, global pause, reduced motion, goal reaction, focused mission, one WebGL canvas through ready/next, cleanup on leave, accessible feedback and mobile.');
 })().catch(e=>{console.error(e);process.exit(1)});

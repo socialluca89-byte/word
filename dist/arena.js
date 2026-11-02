@@ -134,6 +134,6 @@
     window.wordylandUI?.play();
     window.dispatchEvent(new Event('wordyland-play-view'));
     document.querySelector('[data-tab="'+action+'"]')?.click();
-    document.querySelector('.questHub')?.scrollIntoView({behavior:window.wordylandMotion?.allowed()?'smooth':'instant',block:'start'});
+    window.wordylandUI?.reveal?.();
   });
 })();

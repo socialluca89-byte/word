@@ -144,3 +144,45 @@ html[data-account-verification="pending"] #total,html[data-account-verification=
 .pendingLocalCopy{margin:16px 0;padding:16px;border:2px solid #d1af67;border-radius:14px;background:#fff8e4}.pendingLocalCopy p{font-size:17px}.pendingLocalCopy button{min-height:48px}.accountOfflineLink{display:block;margin:14px 0;font-size:17px}
 
 .classicStorageNotice{padding:12px 16px;border:2px solid #d99c58;border-radius:14px;background:#fff4dc;color:#654122;font-size:18px;line-height:1.5}
+
+/* A picture that opens the game, with the three child paths kept together. */
+.startHub{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:14px 24px;background:#fffdf6;color:#163b50}
+.startHub>h1,.startHub>p,.startHub>:not(h1):not(p):not(.welcomeIsland):not(.startChoices){grid-column:1/-1}
+.startHub>h1{color:#163b50;font-size:clamp(28px,3vw,38px);line-height:1.15;margin:0}
+.startHub>p{color:#365c6b;font-size:18px;line-height:1.45;margin:0 0 4px}
+.startHub>.welcomeIsland{grid-column:1;min-width:0;min-height:270px;margin:0}
+.startHub>.startChoices{grid-column:2;display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin:0}
+.startHub .startChoices a{min-height:76px;padding:12px 34px 12px 14px;flex-direction:row;align-items:center;gap:14px}
+.startHub .startChoices b{font-size:22px;line-height:1.25}.startHub .startChoices small{font-size:16px;line-height:1.35;margin-top:4px}
+.startHub .todayQuest{margin-top:8px}.startHub .trainingEntry,.startHub .holidayPortal,.startHub .prepositionsFeature{margin-top:0;margin-bottom:0}
+@media(max-width:650px){
+ header{padding-top:12px;padding-bottom:12px}.accountToolbar{margin-bottom:6px}.accountToolbar[data-mode=guest] .accountSessionLabel{font-size:14px;line-height:1.25}.adultNavigation{margin-top:6px;margin-bottom:6px}.adultNavigation>summary{min-height:48px;padding-top:10px;padding-bottom:10px}.accountArea:not([open])>summary{min-height:48px;padding-top:10px;padding-bottom:10px}
+ .startHub{grid-template-columns:minmax(0,1fr);gap:12px;padding:18px 14px}.startHub>h1{font-size:29px}.startHub>p{font-size:17px;line-height:1.4}
+ .startHub>.welcomeIsland{grid-column:1;min-height:148px}.startHub>.startChoices{grid-column:1;gap:10px}
+ .startHub .startChoices a{min-height:72px;padding:10px 30px 10px 12px;gap:12px}.startHub .startChoices a>span:first-child{height:44px;width:44px;flex-basis:44px;font-size:28px}.startHub .startChoices b{font-size:21px}.startHub .startChoices small{font-size:15px;line-height:1.3}
+}
+/* A clear route back remains available above every section. */
+.questSectionTools{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;border-top:1px solid #dbe6df;border-bottom:1px solid #dbe6df;background:#f4faf8;scroll-margin-top:12px}
+.questSectionTools button{font-size:17px;min-height:48px;margin:0}.questSectionTools>span{font-size:15px;line-height:1.4;color:#40616b;text-align:right}
+#questContent{scroll-margin-top:12px}.questHub>.questTabs{padding:12px;gap:8px}.questHub>.questTabs button{min-height:54px;padding:10px 8px;line-height:1.3}
+body[data-play]:not([data-play=""]) .questSectionTools{display:none}
+@media(max-width:360px){.questSectionTools{padding:10px 12px}.questSectionTools>span{font-size:14px;max-width:100px}}
+/* Feedback uses the actual choice and model, rather than a generic verdict. */
+.trainingHub .trainingFeedbackPanel{display:grid;grid-template-columns:72px minmax(0,1fr);align-items:start;gap:14px;padding:18px;margin:16px 0 0;border:2px solid #e7b3b0;border-radius:22px;background:#fff2ea;color:#713b38;text-align:left;scroll-margin-top:16px;max-width:100%;box-sizing:border-box}
+.trainingHub .trainingFeedbackPanel.trainingSuccess{background:#eef8e6;border-color:#b7d99e;color:#225b45}
+.trainingFeedbackMark{display:flex;align-items:center;justify-content:center;width:72px;height:72px;font:900 58px/1 system-ui,sans-serif;border:3px solid currentColor;border-radius:20px;background:#fffdf8;box-sizing:border-box}
+.trainingFeedbackCopy{min-width:0}.trainingFeedbackCopy h3{font-size:26px;line-height:1.2;margin:0 0 10px}.trainingFeedbackCopy .trainingFeedbackExplanation{font-size:20px;line-height:1.45;margin:8px 0 14px;overflow-wrap:anywhere}
+.trainingFeedbackModel{display:grid;gap:4px;padding:12px 14px;margin:10px 0;border-radius:14px;background:#fffcf7;border:1px solid #e8d9c7;min-width:0}
+.trainingFeedbackModel>span{font-size:16px;line-height:1.4;color:#52646b}.trainingFeedbackModel strong{font-size:34px;line-height:1.25;overflow-wrap:anywhere;min-width:0}.trainingFeedbackModel .trainingChosenValue{color:#963b47}.trainingFeedbackModel .trainingExpectedValue{color:#1b765f}
+.trainingFeedbackStars{display:flex;gap:10px;font-size:28px;line-height:1.4;margin:12px 0}
+.trainingFeedbackPanel #retryTrainingStep,.trainingFeedbackPanel #nextTrainingStep{font-size:20px;line-height:1.3;min-height:54px;width:100%;max-width:100%;margin:12px 0 0;padding:12px 15px;white-space:normal}
+.trainingFeedbackAnimated .trainingFeedbackMark,.trainingFeedbackAnimated .trainingFeedbackStars{animation:trainingDiscovery .42s ease-out both}
+@keyframes trainingDiscovery{0%{transform:scale(.85) translateY(5px)}70%{transform:scale(1.06) translateY(-3px)}100%{transform:none}}
+@media(max-width:360px){.trainingHub .trainingFeedbackPanel{grid-template-columns:minmax(0,1fr);padding:14px;gap:12px}.trainingFeedbackMark{width:60px;height:60px;font-size:50px}.trainingFeedbackCopy h3{font-size:25px}}
+@media(prefers-reduced-motion:reduce){.trainingFeedbackAnimated *{animation:none!important}}
+html[data-animations=paused] .trainingFeedbackAnimated *{animation:none!important}
+button[data-classic-speaking],button[data-quest-speaking],button[data-feedback-speaking]{outline:3px solid #397ba0;outline-offset:2px;background:#e3f4ff;color:#163b50}
+/* Selection feedback must stay readable after replacing the primary background. */
+.trainingChoices button.answerWrong,.trainingChoices button.answerWrong :is(span,small){color:#8e303c!important}
+.trainingChoices button.answerCorrect,.trainingChoices button.answerCorrect :is(span,small){color:#19583e!important}
+.trainingFeedbackPanel #retryTrainingStep{background:#dff1e8;color:#18543e}

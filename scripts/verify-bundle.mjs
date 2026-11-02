@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import {createHash} from 'node:crypto';
 const html=fs.readFileSync('dist/index.html','utf8');
-const expected=['index.html','learning.js','app.js','data.js','worlds.js','accounts.js','api.php','quests.js','quests.css','platform.php','curriculum.json','arena.php','arena.js','classroom.php','classroom.js','arcade.js','arcade.css','race-world.webp','race-circuits.webp','race-racers.webp','character-portraits.png','holiday-worlds.png','island.js','island.css','island-places.webp','three.min.js','community.php','community.js','presence.js','manifest.webmanifest','icon-192.png','icon-512.png','icon-maskable-512.png','offline.html','offline.js','pwa.css','pwa.js','sw.js','training.js','training.php','training.json','study-import.js','pdf.min.js','pdf.worker.min.js','study-ocr.js','ocr-worker.min.js','ocr-core-775a35df6f2a.js','ocr-eng-45b4cb346724.traineddata.gz','ocr-ita-f702fcfad297.traineddata.gz'];
+const expected=['index.html','learning.js','app.js','data.js','worlds.js','accounts.js','api.php','quests.js','quests.css','platform.php','curriculum.json','arena.php','arena.js','classroom.php','classroom.js','arcade.js','arcade.css','race-world.webp','race-circuits.webp','race-racers.webp','character-portraits.png','character-portraits.webp','holiday-worlds.png','holiday-worlds.webp','island.js','island.css','island-places.webp','three.min.js','community.php','community.js','presence.js','manifest.webmanifest','icon-192.png','icon-512.png','icon-maskable-512.png','offline.html','offline.js','pwa.css','pwa.js','sw.js','training.js','training.php','training.json','study-import.js','pdf.min.js','pdf.worker.min.js','study-ocr.js','ocr-worker.min.js','ocr-core-775a35df6f2a.js','ocr-eng-45b4cb346724.traineddata.gz','ocr-ita-f702fcfad297.traineddata.gz'];
 for(const name of ['learning.js','app.js','data.js','worlds.js','accounts.js','quests.js','arena.js','classroom.js','arcade.js','island.js','community.js','presence.js','three.min.js','pwa.js','training.js','study-import.js']) {
   const hash=createHash('sha256').update(fs.readFileSync('dist/'+name)).digest('hex').slice(0,12);
   if(!html.includes('src="'+name+'?v='+hash+'"')) throw Error('Missing or outdated public dependency: '+name+'; run node scripts/version-assets.mjs');
@@ -16,14 +16,14 @@ for(const name of ['arcade.css','island.css','pwa.css']){
   const hash=createHash('sha256').update(fs.readFileSync('dist/'+name)).digest('hex').slice(0,12);
   if(!html.includes('href="'+name+'?v='+hash+'"')) throw Error('Outdated stylesheet: '+name);
 }
-for(const name of ['race-circuits.webp','race-racers.webp','character-portraits.png']){
+for(const name of ['race-circuits.webp','race-racers.webp','character-portraits.png','character-portraits.webp']){
   const hash=createHash('sha256').update(fs.readFileSync('dist/'+name)).digest('hex').slice(0,12);
   if(!fs.readFileSync('dist/arcade.css','utf8').includes(name+'?v='+hash)) throw Error('Outdated illustration: '+name);
 }
 const islandHash=createHash('sha256').update(fs.readFileSync('dist/island-places.webp')).digest('hex').slice(0,12);
 if(!fs.readFileSync('dist/island.css','utf8').includes('island-places.webp?v='+islandHash))throw Error('Outdated island illustration');
-for(const name of ['island-places.webp','holiday-worlds.png','race-circuits.webp']){const hash=createHash('sha256').update(fs.readFileSync('dist/'+name)).digest('hex').slice(0,12);if(!fs.readFileSync('dist/island.js','utf8').includes(name+'?v='+hash))throw Error('Outdated playable illustration: '+name);}
-console.log('Public bundle verified: forty-nine application files, no configuration, database or keys.');
+for(const name of ['island-places.webp','holiday-worlds.png','holiday-worlds.webp','race-circuits.webp']){const hash=createHash('sha256').update(fs.readFileSync('dist/'+name)).digest('hex').slice(0,12);if(!fs.readFileSync('dist/island.js','utf8').includes(name+'?v='+hash))throw Error('Outdated playable illustration: '+name);}
+console.log('Public bundle verified: fifty-one application files, no configuration, database or keys.');
 
 const manifest=JSON.parse(fs.readFileSync('dist/manifest.webmanifest','utf8'));
 if(manifest.start_url!=='/'||manifest.scope!=='/'||manifest.display!=='standalone')throw Error('Invalid PWA entry point');
