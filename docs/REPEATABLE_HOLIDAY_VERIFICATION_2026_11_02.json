@@ -1,0 +1,30 @@
+{
+  "base_commit": "f99e498b14a0f60f89a0dd35dddf221c884c5566",
+  "application_digest": "f6a961a0aba6008490c10426fbc3e8d77afb0212ff01b5767b54756f0ed1e68e",
+  "local_verify": "all 39 workflow command groups passed",
+  "local_browser": [
+    "holiday-rounds",
+    "holidays",
+    "holiday-calendar",
+    "christmas-cast",
+    "elf",
+    "journey",
+    "illustrated",
+    "wardrobe"
+  ],
+  "api_focus": "30 saved answers same day, concurrent start across two PHP workers, distinct-date badges and permanent owned avatars",
+  "screenshots": [
+    "review/holiday-rounds-320.png",
+    "review/holiday-rounds-390.png",
+    "review/holiday-rounds-1360.png"
+  ],
+  "review": "independent static review: no concrete blocking findings",
+  "workflow_required_browser_suites": 51,
+  "ci_and_deploy": "pending on exact final commit; local results are not publication",
+  "limits": [
+    "Synthetic local data only, no real accounts or children data.",
+    "Old physical tablet and real audio not validated.",
+    "Incomplete festival rounds still expire at Italian midnight; confirmed answers retain their credit.",
+    "The Grinch is not part of this application change."
+  ]
+}

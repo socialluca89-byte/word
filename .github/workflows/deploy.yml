@@ -107,7 +107,7 @@ jobs:
           WORDYLAND_PLAYWRIGHT_MODULE: /tmp/wordyland-browser-deps/node_modules/playwright
         run: |
           export WORDYLAND_CHROMIUM=$(node -p "require(process.env.WORDYLAND_PLAYWRIGHT_MODULE).chromium.executablePath()")
-          for check in world-driving holiday-calendar child-experience game-resilience journey-navigation appearance-consistency classic-illustrated illustrated-actions illustrated world-play christmas-cast elf journey holidays compatibility ux rewards motion performance navigation wardrobe pwa presence community duel-resilience; do bash scripts/test-browser.sh "$check"; done
+          for check in holiday-rounds world-driving holiday-calendar child-experience game-resilience journey-navigation appearance-consistency classic-illustrated illustrated-actions illustrated world-play christmas-cast elf journey holidays compatibility ux rewards motion performance navigation wardrobe pwa presence community duel-resilience; do bash scripts/test-browser.sh "$check"; done
       - name: Verify learning, accounts and privacy in isolated browsers
         # Two complete groups retain every suite and assertion deadline.
         # Each group has its own 15-minute execution budget; setup is separate.

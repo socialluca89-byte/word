@@ -290,8 +290,11 @@ function holidayQuestion(array $s): ?array {
     $public=['mode'=>$mode,'title'=>$titles[$mode]??$titles['write'],'prompt'=>$prompt,'options'=>in_array($mode,['meaning','word','gap'],true)?$q['options']:[]];
     if(!empty($q['review']))$public['review']=true;if($mode==='build')$public['tiles']=$q['tiles'];if((int)$s['hint']>0)$public['hint']=$q['answer'];return $public;
 }
-function holidaySnapshot(array $s): array {return ['token'=>$s['token'],'day'=>$s['day'],'step'=>(int)$s['step'],'total'=>3,'done'=>(int)$s['step']===3,'question'=>holidayQuestion($s)];}
-function holidayExercises(PDO $db,int $pid,string $season): int {return (int)one($db,'SELECT COALESCE(SUM(step),0) AS n FROM holiday_days WHERE profile_id=? AND season=?',[$pid,$season])['n'];}
+function holidaySnapshot(array $s): array {return ['token'=>$s['token'],'day'=>$s['day'],'round'=>(int)($s['round']??1),'step'=>(int)$s['step'],'total'=>3,'done'=>(int)$s['step']===3,'question'=>holidayQuestion($s)];}
+function holidayExercises(PDO $db,int $pid,string $season): int {
+    $n=(int)one($db,'SELECT COALESCE(SUM(step),0) AS n FROM holiday_days WHERE profile_id=? AND season=?',[$pid,$season])['n'];
+    if($season!=='journey:v1')$n+=(int)one($db,'SELECT COALESCE(SUM(step),0) AS n FROM holiday_rounds WHERE profile_id=? AND season=?',[$pid,$season])['n'];return $n;
+}
 function holidayEarn(PDO $db,int $pid,array $event): array {
     $days=(int)one($db,'SELECT COUNT(*) AS n FROM holiday_days WHERE profile_id=? AND season=? AND step=3',[$pid,$event['season']])['n'];$exercises=holidayExercises($db,$pid,$event['season']);$earned=[];
     foreach(shopCatalog() as $it)if(($it['event']??null)===$event['id']&&(isset($it['eventExercises'])?$exercises>=$it['eventExercises']:$days>=$it['eventDays'])){
@@ -307,7 +310,13 @@ function challengeSession(PDO $db,int $pid,array $event,string $today): array|fa
     if($event['id']==='journey'){
         $pending=one($db,'SELECT * FROM holiday_days WHERE profile_id=? AND season=? AND step<3 ORDER BY day LIMIT 1',[$pid,$event['season']]);if($pending)return $pending;
     }
-    return one($db,'SELECT * FROM holiday_days WHERE profile_id=? AND season=? AND day=?',[$pid,$event['season'],$today]);
+    if($event['id']!=='journey'){
+        $round=one($db,'SELECT * FROM holiday_rounds WHERE profile_id=? AND season=? AND day=? ORDER BY round DESC LIMIT 1',[$pid,$event['season'],$today]);if($round)return $round;
+    }
+    return one($db,'SELECT *,1 AS round FROM holiday_days WHERE profile_id=? AND season=? AND day=?',[$pid,$event['season'],$today]);
+}
+function holidayStoredSession(PDO $db,int $pid,string $token): array|false {
+    return one($db,'SELECT *,1 AS round FROM holiday_days WHERE token=? AND profile_id=?',[$token,$pid])?:one($db,'SELECT * FROM holiday_rounds WHERE token=? AND profile_id=?',[$token,$pid]);
 }
 if(str_starts_with($action,'holiday-')||str_starts_with($action,'journey-')){
     $isJourney=str_starts_with($action,'journey-');$op=$isJourney?'holiday-'.substr($action,8):$action;
@@ -315,15 +324,27 @@ if(str_starts_with($action,'holiday-')||str_starts_with($action,'journey-')){
     if(!isset($allowed[$op]))fail('Operazione non trovata.',404);if($method!==$allowed[$op])fail('Metodo non consentito.',405);
     $p=ownedProfile($db,$id,$method==='GET'?($_GET['profile']??0):($body['profile']??0));$pid=(int)$p['id'];
     $db->exec('CREATE TABLE IF NOT EXISTS holiday_days(profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,season TEXT NOT NULL,day TEXT NOT NULL,token TEXT UNIQUE NOT NULL,plan TEXT NOT NULL,step INTEGER NOT NULL DEFAULT 0,hint INTEGER NOT NULL DEFAULT 0,errors INTEGER NOT NULL DEFAULT 0,last_attempt TEXT,PRIMARY KEY(profile_id,season,day));');
+    // Extra festival rounds are additive: historic daily rows and their date badges remain intact.
+    $db->exec('CREATE TABLE IF NOT EXISTS holiday_rounds(profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,season TEXT NOT NULL,day TEXT NOT NULL,round INTEGER NOT NULL CHECK(round>=2),token TEXT UNIQUE NOT NULL,plan TEXT NOT NULL,step INTEGER NOT NULL DEFAULT 0,hint INTEGER NOT NULL DEFAULT 0,errors INTEGER NOT NULL DEFAULT 0,last_attempt TEXT,PRIMARY KEY(profile_id,season,day,round));');
     $now=holidayNow();$today=$now->format('Y-m-d');
     if($op==='holiday-state'){
-        $events=$isJourney?[journeyEvent()]:holidayEvents($now);foreach($events as &$e){$e['elf']=holidayElf($e,$now);if($e['id']==='christmas')$e['elfSchedule']=holidayElfSchedule($e,$now);$e['rewards']=holidayRewards($db,$pid,$e);$s=challengeSession($db,$pid,$e,$today);$e['session']=$s?holidaySnapshot($s):null;}unset($e);respond(['day'=>$today,'timezone'=>'Europe/Rome','events'=>$events,'wallet'=>wallet($db,$pid)]);
+        $events=$isJourney?[journeyEvent()]:holidayEvents($now);foreach($events as &$e){$e['elf']=holidayElf($e,$now);if($e['id']==='christmas')$e['elfSchedule']=holidayElfSchedule($e,$now);$e['repeatable']=!$isJourney;$e['dailyComplete']=(bool)one($db,'SELECT token FROM holiday_days WHERE profile_id=? AND season=? AND day=? AND step=3',[$pid,$e['season'],$today]);$e['rewards']=holidayRewards($db,$pid,$e);$s=challengeSession($db,$pid,$e,$today);$e['session']=$s?holidaySnapshot($s):null;}unset($e);respond(['day'=>$today,'timezone'=>'Europe/Rome','events'=>$events,'wallet'=>wallet($db,$pid)]);
     }
     if($op==='holiday-start'){
         if($isJourney){if(isset($body['event'])&&$body['event']!=='journey')fail('Scegli il percorso delle scoperte.');$body['event']='journey';}if(!is_string($body['event']??null)||(!$isJourney&&$body['event']==='journey'))fail('Scegli un percorso disponibile.');$e=holidayEvent($body['event'],$now);if(!$e['active'])fail('Le sfide di questa festività sono chiuse.',410);
+        $another=$body['another']??false;if(!is_bool($another)||($isJourney&&$another))fail('Scegli una sfida disponibile.');
+        if($another&&(!is_string($body['after']??null)||!preg_match('/^[a-f0-9]{48}$/',$body['after'])))fail('Riprendi la sfida completata prima di aprirne un’altra.');
         limitAttempts($db,'holiday-start:'.$pid,100);
-        $db->exec('BEGIN IMMEDIATE');$s=challengeSession($db,$pid,$e,$today);
-        if(!$s){$words=json_decode(file_get_contents(__DIR__.'/training.json'),true,32,JSON_THROW_ON_ERROR)['foundationWords'];$offset=(int)(hexdec(substr(hash('sha256',$e['season'].$today),0,6))%count($words));$plan=[];
+        $db->exec('BEGIN IMMEDIATE');$s=challengeSession($db,$pid,$e,$today);$round=1;$table='holiday_days';
+        if($another){
+            $previous=holidayStoredSession($db,$pid,$body['after']);
+            if(!$previous||$previous['season']!==$e['season']){$db->exec('ROLLBACK');fail('Sfida non trovata.',404);}
+            if($previous['day']!==$today||(int)$previous['step']!==3||!$s){$db->exec('ROLLBACK');fail('Aggiorna il villaggio e completa la sfida in corso.',409);}
+            // A retried request names its completed predecessor. It cannot skip a newer
+            // pending round or allocate again after that newer round was completed elsewhere.
+            if((int)$s['step']===3&&hash_equals($s['token'],$body['after'])){$round=(int)($s['round']??1)+1;$table='holiday_rounds';$s=false;}
+        }
+        if(!$s){$words=json_decode(file_get_contents(__DIR__.'/training.json'),true,32,JSON_THROW_ON_ERROR)['foundationWords'];$offset=(int)(hexdec(substr(hash('sha256',$e['season'].$today),0,6))%count($words));if($round>1)$offset=($offset+($round-1)*3)%count($words);$plan=[];
             if($isJourney){
                 // Review only the selected profile's existing curated word signals.
                 if(holidayExercises($db,$pid,$e['season'])<6)$words=array_slice($words,0,6);
@@ -331,27 +352,28 @@ if(str_starts_with($action,'holiday-')||str_starts_with($action,'journey-')){
                 $offset=$offset%count($words);$rotated=array_merge(array_slice($words,$offset),array_slice($words,0,$offset));$words=array_values(array_column(array_merge(array_slice($priority,0,2),$rotated),null,'id'));$offset=0;
             }
             for($j=0;$j<3;$j++){
-                $w=$words[($offset+$j)%count($words)];$mode=$j===0?'meaning':($j===2?'write':['write','gap','build','word'][((int)$now->format('j')-1)%4]);
+                $w=$words[($offset+$j)%count($words)];$mode=$j===0?'meaning':($j===2?'write':['write','gap','build','word'][((int)$now->format('j')+$round-2)%4]);
                 $options=[$w['meaning'],$words[($offset+$j+1)%count($words)]['meaning'],$words[($offset+$j+2)%count($words)]['meaning']];$answer=$mode==='meaning'?$w['meaning']:$w['id'];$q=['word'=>$w['id'],'meaning'=>$w['meaning'],'mode'=>$mode,'answer'=>$answer,'review'=>$isJourney&&in_array($w['id'],$review??[],true)];
                 if($mode==='word')$options=[$w['id'],$words[($offset+$j+1)%count($words)]['id'],$words[($offset+$j+2)%count($words)]['id']];
                 if($mode==='gap'){$answer=$w['id'][0];$q['answer']=$answer;$q['mask']='_'.substr($w['id'],1);$options=[$answer];foreach(range('a','z') as $letter)if(count($options)<3&&!in_array($letter,$options,true))$options[]=$letter;}
                 if($mode==='build'){$q['tiles']=str_split($w['id']);shuffle($q['tiles']);}
                 shuffle($options);$q['options']=$options;$plan[]=$q;
             }
-            $token=bin2hex(random_bytes(24));runSql($db,'INSERT INTO holiday_days(profile_id,season,day,token,plan) VALUES(?,?,?,?,?)',[$pid,$e['season'],$today,$token,json_encode($plan,JSON_UNESCAPED_UNICODE)]);$s=one($db,'SELECT * FROM holiday_days WHERE token=?',[$token]);}
+            $token=bin2hex(random_bytes(24));$values=[$pid,$e['season'],$today,$token,json_encode($plan,JSON_UNESCAPED_UNICODE)];if($round===1)runSql($db,'INSERT INTO holiday_days(profile_id,season,day,token,plan) VALUES(?,?,?,?,?)',$values);else runSql($db,'INSERT INTO holiday_rounds(profile_id,season,day,token,plan,round) VALUES(?,?,?,?,?,?)',[...$values,$round]);$s=holidayStoredSession($db,$pid,$token);}
         $db->exec('COMMIT');respond(['session'=>holidaySnapshot($s)]);
     }
     if(!is_string($body['token']??null)||!preg_match('/^[a-f0-9]{48}$/',$body['token'])||!is_int($body['step']??null))fail('Riprendi la sfida confermata.');
-    $db->exec('BEGIN IMMEDIATE');$s=one($db,'SELECT * FROM holiday_days WHERE token=? AND profile_id=?',[$body['token'],$pid]);
+    $db->exec('BEGIN IMMEDIATE');$s=holidayStoredSession($db,$pid,$body['token']);
     if(!$s||(($s['season']==='journey:v1')!==$isJourney)){$db->exec('ROLLBACK');fail('Sfida non trovata.',404);}$e=holidayEvent(explode(':',$s['season'])[0],$now);
     if(!$e['active']||$e['season']!==$s['season']||(!$isJourney&&$s['day']!==$today)){$db->exec('ROLLBACK');fail('La giornata o la festività è terminata. I premi ottenuti restano tuoi.',410);}
     if($s['step']!==$body['step']||$s['step']===3){$db->exec('COMMIT');respond(['replayed'=>true,'session'=>holidaySnapshot($s)]);}
-    if($op==='holiday-hint'){runSql($db,'UPDATE holiday_days SET hint=1 WHERE token=?',[$s['token']]);$s['hint']=1;$db->exec('COMMIT');respond(['session'=>holidaySnapshot($s)]);}
+    $table=(int)($s['round']??1)>1?'holiday_rounds':'holiday_days';
+    if($op==='holiday-hint'){runSql($db,'UPDATE '.$table.' SET hint=1 WHERE token=?',[$s['token']]);$s['hint']=1;$db->exec('COMMIT');respond(['session'=>holidaySnapshot($s)]);}
     if(!is_string($body['answer']??null)||strlen($body['answer'])>100||!is_string($body['attempt']??null)||!preg_match('/^[a-f0-9]{32}$/',$body['attempt'])){$db->exec('ROLLBACK');fail('Risposta non valida.');}
     if($s['last_attempt']===$body['attempt']){$db->exec('COMMIT');respond(['replayed'=>true,'session'=>holidaySnapshot($s)]);}
     $q=json_decode($s['plan'],true,32,JSON_THROW_ON_ERROR)[$s['step']];$correct=normalWord($body['answer'])===normalWord($q['answer']);
     if($correct){$s['step']++;$s['hint']=0;}else{$s['errors']=min(1000,$s['errors']+1);$s['hint']=1;}
-    runSql($db,'UPDATE holiday_days SET step=?,hint=?,errors=?,last_attempt=? WHERE token=?',[$s['step'],$s['hint'],$s['errors'],$body['attempt'],$s['token']]);$earned=[];
+    runSql($db,'UPDATE '.$table.' SET step=?,hint=?,errors=?,last_attempt=? WHERE token=?',[$s['step'],$s['hint'],$s['errors'],$body['attempt'],$s['token']]);$earned=[];
     if($correct)$earned=holidayEarn($db,$pid,$e);
     $db->exec('COMMIT');respond(['correct'=>$correct,'session'=>holidaySnapshot($s),'earned'=>$earned,'rewards'=>holidayRewards($db,$pid,$e),'wallet'=>wallet($db,$pid)]);
 }
