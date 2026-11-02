@@ -505,8 +505,9 @@ function mount(host,options={}){
 window.wordylandIsland={places,actions,mount};
 const mapHost=document.querySelector('#islandMap');
 if(mapHost){
- let view=null,signature='',equipped={},adventures={},selected='treehouse',liveKind='island',paused=false,close=false,sound=false,audio=null,started=false,visibilityObserver=null;
+ let view=null,signature='',equipped={},adventures={},selected='treehouse',liveKind='island',paused=false,close=false,sound=false,soundGeneration=0,audio=null,started=false,visibilityObserver=null;
  const hud=document.querySelector('#heroSceneHUD'),liveStatus=document.querySelector('#heroSceneStatus');
+ const soundStatus=document.createElement('p');soundStatus.id='islandSoundStatus';soundStatus.className='islandSoundStatus';soundStatus.setAttribute('role','status');soundStatus.setAttribute('aria-live','polite');soundStatus.setAttribute('aria-atomic','true');document.querySelector('#islandSound').closest('.mapToolbar').after(soundStatus);
  const rebuild=()=>{
   view?.dispose();mapHost.querySelectorAll('.sceneFallback').forEach(e=>e.remove());
   mapHost.dataset.kind=liveKind;
@@ -531,7 +532,13 @@ if(mapHost){
  document.querySelector('#islandRight').onclick=()=>{start();view?.rotate(.35);};
  document.querySelector('#islandZoom').onclick=e=>{start();close=!close;view?.zoom?.(close?-.22:.22);e.currentTarget.setAttribute('aria-pressed',String(close));};
  document.querySelector('#islandMotion').onclick=e=>{paused=!paused;document.documentElement.dataset.animations=paused?'paused':'running';window.dispatchEvent(new CustomEvent('wordyland-motion',{detail:paused}));e.currentTarget.setAttribute('aria-pressed',String(paused));e.currentTarget.setAttribute('aria-label',paused?'Riprendi le animazioni':'Metti in pausa le animazioni');e.currentTarget.textContent=paused?'▷':'Ⅱ';};
- document.querySelector('#islandSound').onclick=e=>{sound=!sound;e.currentTarget.setAttribute('aria-pressed',String(sound));e.currentTarget.setAttribute('aria-label',sound?'Disattiva i suoni':'Attiva i suoni');e.currentTarget.textContent=sound?'🔊':'🔇';try{if(sound){const A=window.AudioContext||window.webkitAudioContext;if(A){audio??=new A();audio.resume().catch(()=>{});}}}catch{sound=false;e.currentTarget.setAttribute('aria-pressed','false');e.currentTarget.textContent='🔇';}};
+ function updateSoundControl(enabled){sound=enabled;const button=document.querySelector('#islandSound');button.setAttribute('aria-pressed',String(sound));button.setAttribute('aria-label',sound?'Disattiva i suoni':'Attiva i suoni');button.textContent=sound?'🔊':'🔇';soundStatus.textContent='';}
+ function soundUnavailable(generation){if(generation!==soundGeneration)return;updateSoundControl(false);soundStatus.textContent='I suoni non sono disponibili qui. Puoi continuare a giocare.';}
+ document.querySelector('#islandSound').onclick=()=>{
+  const generation=++soundGeneration;updateSoundControl(!sound);if(!sound)return;
+  try{const A=window.AudioContext||window.webkitAudioContext;if(!A)throw Error('Audio non disponibile');audio??=new A();if(typeof audio.resume==='function')Promise.resolve(audio.resume()).catch(()=>soundUnavailable(generation));else if(audio.state==='suspended')soundUnavailable(generation);}
+  catch{soundUnavailable(generation);}
+ };
  window.addEventListener('wordyland-celebrate',()=>{
   if(sound&&audio){try{[523,659,784].forEach((frequency,i)=>{const o=audio.createOscillator(),g=audio.createGain(),t=audio.currentTime+i*.13;o.type='sine';o.frequency.value=frequency;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.055,t+.025);g.gain.exponentialRampToValueAtTime(.001,t+.3);o.connect(g);g.connect(audio.destination);o.start(t);o.stop(t+.32);});}catch{}}
   if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;

@@ -2,6 +2,17 @@
 
 Vincolo esplicito dell’utente: «home più chiara solo riorganizzata senza togliere nessuna delle funzioni fatte». Non eliminare funzioni né renderle irraggiungibili su telefono o desktop. Prima di cambiare destinazioni o raggruppamenti, aggiornare questo inventario e le regressioni di raggiungibilità. Nascondere temporaneamente i menu durante un esercizio è ammesso soltanto se Pausa ripristina le destinazioni.
 
+## Nuovo lotto UX/UI: azione e scelte prima dei dettagli
+
+Base pubblicata `e947652`; questo elenco descrive il candidato successivo, non una prova di pubblicazione.
+
+- **Villaggi:** stessi `#festivita`, `#natale` e `#scoperte`. Il nuovo comando in testa porta alla vera azione del profilo senza avviarla automaticamente. Calendario, quattro festività, regole, collezione e Birillo restano dopo la zona gioco. In caso di risposta incerta, l'ingresso porta al recupero tramite GET. Durante la richiesta resta inattivo.
+- **Guardaroba:** stesso `#personaggi`, tutte dodici le categorie e gli stessi oggetti. Le categorie scorrono nel proprio contenitore su telefono e si raggiungono con Tab; il comando alle scelte non cambia hash né dati. Istruzioni lunghe raccolte in un dettaglio consultabile, anteprime gratuite, ritorno all'oggetto e tre ingressi Kart/Calcio/Spazio preservati. Nessun personaggio sbloccato o equipaggiato dal semplice cambio di filtro.
+- **Allenamento:** Lettere IT/EN porta anche il focus ai blocchi; il riepilogo fonetica ha una destinazione dopo l'ultimo Continua. Tutti i percorsi, aiuti e progressi restano.
+- **Nome e controlli scena:** editor ospite focalizzato all'apertura, ritorno a Cambia soprannome quando si chiude/salva; il percorso di un account online resta quello autorizzato preesistente. I cinque comandi della mappa hanno bersagli48×48px e un messaggio audio dedicato in caso di indisponibilità.
+
+Regressioni nuove: holiday-layout, wardrobe-layout, interaction-focus; tutte le precedenti restano obbligatorie. Nessuna modifica a ruoli, inventario, database, classi, audio fonetici o credenziali.
+
 ## Lotto del 2 novembre: ingressi illustrati e ritorni
 
 La home conserva Allenati, Gioca in classe e Personaggi, visibili insieme anche a 320px. **Esplora l’isola**, sull’illustrazione originale, apre gli otto mondi già presenti. Scegliendo un mondo si raggiungono direttamente scena e gioco; **Cambia mondo** torna alla scheda selezionata. Il riepilogo **Scoperte e personalizzazioni** mantiene cura del compagno, traguardi e arredi. I controlli Illustrazioni/3D e Rigioca restano disponibili, dopo l’attività nel loro ordine di tastiera.

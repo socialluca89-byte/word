@@ -1,0 +1,387 @@
+{
+  "baseline_commit": "e9476524e032d98b141999010b6d2d6f39be5eca",
+  "final_application_digest": "bd815b860c91a28b2ab13bb93c19d13eaac6ab0069cf594d2607edb2000f80eb",
+  "skills": {
+    "frontend_design": "existing pinned official skill",
+    "web_design_guidelines": {
+      "repository": "https://github.com/vercel-labs/agent-skills",
+      "commit": "1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62",
+      "path": "skills/web-design-guidelines/SKILL.md",
+      "skill_sha256": "f4647ca866a3accf763777f83e7682954f0187cd6bea7eea0399796652414e8f",
+      "license_declared_by_upstream_readme": "MIT",
+      "license_source": "https://github.com/vercel-labs/agent-skills/blob/1a2c79d4e6c4a2283dc2c614b6538cbe1ed5ca62/README.md#license",
+      "guidelines_reviewed": {
+        "repository": "https://github.com/vercel-labs/web-interface-guidelines",
+        "commit": "434b7f91364665f2f733b310ec54809bf8f37937",
+        "path": "command.md",
+        "sha256": "d246b026f4f29b5823a9cc857f9edf3d2507002e055e32040cadeaf3b38e0234"
+      },
+      "downloaded_utc": "2026-11-02T20:45:31.895572+00:00"
+    }
+  },
+  "local_verify": {
+    "status": "passed",
+    "groups": 39,
+    "application_digest": "e17d4f12dc5785a4f0c711ac68257acc80de5a957536735fb6dcfb88dcacf6b1",
+    "note": "Before the final recovery-shortcut label change. After that change, syntax/PWA/bundle checks passed; API and data sources unchanged."
+  },
+  "new_browser_initial": {
+    "initial_digest": "e17d4f12dc5785a4f0c711ac68257acc80de5a957536735fb6dcfb88dcacf6b1",
+    "suites": [
+      {
+        "name": "holiday-layout",
+        "exit": 0
+      },
+      {
+        "name": "wardrobe-layout",
+        "exit": 0
+      },
+      {
+        "name": "interaction-focus",
+        "exit": 0
+      }
+    ],
+    "final_digest": "e17d4f12dc5785a4f0c711ac68257acc80de5a957536735fb6dcfb88dcacf6b1"
+  },
+  "regressions_initial": {
+    "base_commit": "e9476524e032d98b141999010b6d2d6f39be5eca",
+    "expected_application_digest": "e17d4f12dc5785a4f0c711ac68257acc80de5a957536735fb6dcfb88dcacf6b1",
+    "initial_application_digest": "e17d4f12dc5785a4f0c711ac68257acc80de5a957536735fb6dcfb88dcacf6b1",
+    "started_utc": "2026-11-02T21:18:53.630876+00:00",
+    "status": "failed",
+    "suites": [
+      {
+        "suite": "navigation",
+        "started_utc": "2026-11-02T21:18:53.660848+00:00",
+        "finished_utc": "2026-11-02T21:19:24.003684+00:00",
+        "seconds": 30.34,
+        "exit_code": 0,
+        "status": "passed"
+      },
+      {
+        "suite": "appearance-consistency",
+        "started_utc": "2026-11-02T21:19:24.035519+00:00",
+        "finished_utc": "2026-11-02T21:19:40.874416+00:00",
+        "seconds": 16.84,
+        "exit_code": 0,
+        "status": "passed"
+      },
+      {
+        "suite": "journey-navigation",
+        "started_utc": "2026-11-02T21:19:40.905700+00:00",
+        "finished_utc": "2026-11-02T21:19:47.796256+00:00",
+        "seconds": 6.89,
+        "exit_code": 0,
+        "status": "passed"
+      },
+      {
+        "suite": "wardrobe",
+        "started_utc": "2026-11-02T21:19:47.828185+00:00",
+        "finished_utc": "2026-11-02T21:20:04.150482+00:00",
+        "seconds": 16.32,
+        "exit_code": 0,
+        "status": "passed"
+      },
+      {
+        "suite": "holidays",
+        "started_utc": "2026-11-02T21:20:04.182046+00:00",
+        "finished_utc": "2026-11-02T21:20:08.803025+00:00",
+        "seconds": 4.62,
+        "exit_code": 1,
+        "status": "failed"
+      }
+    ],
+    "final_application_digest": "e17d4f12dc5785a4f0c711ac68257acc80de5a957536735fb6dcfb88dcacf6b1",
+    "finished_utc": "2026-11-02T21:20:08.819401+00:00"
+  },
+  "regressions_after_label_fix": {
+    "base_commit": "e9476524e032d98b141999010b6d2d6f39be5eca",
+    "expected_application_digest": "bd815b860c91a28b2ab13bb93c19d13eaac6ab0069cf594d2607edb2000f80eb",
+    "initial_application_digest": "bd815b860c91a28b2ab13bb93c19d13eaac6ab0069cf594d2607edb2000f80eb",
+    "started_utc": "2026-11-02T21:22:59.107859+00:00",
+    "status": "passed",
+    "suites": [
+      {
+        "suite": "holidays",
+        "started_utc": "2026-11-02T21:22:59.123698+00:00",
+        "finished_utc": "2026-11-02T21:23:18.432060+00:00",
+        "seconds": 19.31,
+        "exit_code": 0,
+        "status": "passed"
+      },
+      {
+        "suite": "phonics",
+        "started_utc": "2026-11-02T21:23:18.463725+00:00",
+        "finished_utc": "2026-11-02T21:23:26.392655+00:00",
+        "seconds": 7.93,
+        "exit_code": 0,
+        "status": "passed"
+      },
+      {
+        "suite": "motion",
+        "started_utc": "2026-11-02T21:23:26.426247+00:00",
+        "finished_utc": "2026-11-02T21:23:36.124304+00:00",
+        "seconds": 9.7,
+        "exit_code": 0,
+        "status": "passed"
+      },
+      {
+        "suite": "child-experience",
+        "started_utc": "2026-11-02T21:23:36.156063+00:00",
+        "finished_utc": "2026-11-02T21:23:43.525364+00:00",
+        "seconds": 7.37,
+        "exit_code": 0,
+        "status": "passed"
+      },
+      {
+        "suite": "learning-experience",
+        "started_utc": "2026-11-02T21:23:43.556622+00:00",
+        "finished_utc": "2026-11-02T21:23:48.283913+00:00",
+        "seconds": 4.73,
+        "exit_code": 0,
+        "status": "passed"
+      }
+    ],
+    "final_application_digest": "bd815b860c91a28b2ab13bb93c19d13eaac6ab0069cf594d2607edb2000f80eb",
+    "finished_utc": "2026-11-02T21:23:48.329955+00:00"
+  },
+  "holiday_layout_after_label_fix": {
+    "status": "passed",
+    "note": "Header navigation name distinct from the single actual recovery action; real lost-response GET reconciliation preserved."
+  },
+  "performance": {
+    "status": "passed",
+    "run_alone": true,
+    "note": "Optional remote font stylesheet held; main choices remained usable, map GL context deferred until entering view. Synthetic local measurements, no real-device speed claim."
+  },
+  "interaction_focus": {
+    "scope": "Four interaction accessibility fixes only; shared CSS target sizing by parent",
+    "files": {
+      "dist/training.js": "d6cd6c48bd4cb4cf08239e75b633d3c621caa7485f944906fd28bdb38ffe755c",
+      "dist/worlds.js": "5f948cab7b275b2bc811df3d31d69e9bb8bc694311b2b02361f686b9cfd45035",
+      "dist/island.js": "c3529e52c52e422215f54dfa5c24eb2294c4d758a0067db513479f5955c18122",
+      "scripts/test-interaction-focus-browser.cjs": "f906c97b70b591d1b32472eb542df435257ef1897fe9fde835e3269182a2b3c9"
+    },
+    "baseline": {
+      "report": "baseline.json",
+      "passed": 18,
+      "failed": 14,
+      "total": 32,
+      "expected_failure": true,
+      "note": "The first diagnostic JSON reused name for the sound button label; failure booleans and counts are unchanged. The test now calls that property label."
+    },
+    "intermediate": {
+      "report": "after.json",
+      "passed": 30,
+      "failed": 2,
+      "cause": "Map deferred rebuild replaced the reused global sound status; fixed with a dedicated live region, not by weakening assertions."
+    },
+    "after_sound_fix": {
+      "report": "after-final.json",
+      "passed": 35,
+      "failed": 0,
+      "note": "Parent CSS48 toolbar change was not in this fixture; old44 target threshold still applied."
+    },
+    "final_after_css48": {
+      "report": "after-48px.json",
+      "passed": 35,
+      "failed": 0,
+      "cases": [
+        "letters focus+Tab at320/390/1360",
+        "phonics six actual guided steps then completion focus+visible heading",
+        "guest local-name edit/cancel/save focus and48px trigger",
+        "absent/throw/reject audio states and live-region persistence after deferred map initialization",
+        "real retry success clears old sound error; late rejected request cannot reset a newer choice",
+        "all five toolbar controls48x48/no page overflow at320/390/1360",
+        "no private POST or page JavaScript error"
+      ]
+    },
+    "screenshots": [
+      "docs/review/interaction-phonics-complete-390.png",
+      "docs/review/interaction-nickname-390.png"
+    ],
+    "limits": [
+      "Synthetic guest and audio contexts only; no claims about real-device voice/acoustic quality or screen-reader hardware.",
+      "No production data, accounts, passwords, hosting configuration or permissions touched.",
+      "Cumulative tests and publication are parent-coordinated; no commit/push/deploy by this agent."
+    ]
+  },
+  "wardrobe": {
+    "base": "e9476524e032d98b141999010b6d2d6f39be5eca",
+    "status": "passed",
+    "check": "wardrobe-layout",
+    "log": "after/wardrobe-layout-short-status.log",
+    "root_scope": "renderShop and wardrobe CSS only; unrelated shared-file changes belong to parent/other modules",
+    "last_fix": "Short constant preview status prevents a large sticky-pane shift caused by duplicate candidate/pilot descriptions; candidate remains in label/ARIA, equipped character remains in separate Play note.",
+    "measured_failure_before": {
+      "scroll_before": 4234,
+      "scroll_after": 4129,
+      "scroll_delta": 105,
+      "pane_height_before": 555.5,
+      "pane_height_after": 646.984375,
+      "portrait_top_before": 2.75,
+      "portrait_top_after": 16.265625
+    },
+    "final_assertions": [
+      "Full preview visible before desktop click",
+      "At most80px focus clearance adjustment (2px when already has16px clearance)",
+      "Focused preview16px clearance",
+      "Return focuses initiating Santa preview button and entire card visible",
+      "Short600px desktop uses static pane; every preview/game control reachable",
+      "Twelve categories and all97 catalog IDs reachable from keyboard",
+      "44 default avatar/accessory cards unchanged",
+      "No API writes or local wallet/stat changes from filters/previews",
+      "Same Santa portrait card and preview",
+      "Actual equipped Robot/crown used in game after unowned Santa preview"
+    ],
+    "first_card_from_heading_px": {
+      "320": 804.09375,
+      "390": 752.796875,
+      "1360": 310.59375
+    },
+    "touch_targets": "48px direct action and play controls, category accessibility preserved",
+    "timeouts_or_thresholds_relaxed": false,
+    "hashes": {
+      "dist/quests.js": "8c343757687bdf8f0b367dbcb1082aa31b46e5dacace583137125a45619bb68b",
+      "dist/quests.css": "01b6bef748d7c571c4be3a9b680676435699f9abb1f655330dd229f3b1269516",
+      "scripts/test-wardrobe-layout-browser.cjs": "df91de8d0d9c1becf1923021fab35fb9659084ea3544274ed54a2e0d18a38123"
+    },
+    "verified_at_utc": "2026-11-02T21:16:45.852447+00:00",
+    "limits": [
+      "Local synthetic account/browser data only.",
+      "No real tablet/audio/screenreader validation.",
+      "Shared CSS/JS hashes are snapshots before parent asset versioning and cumulative integration tests.",
+      "No commit/deploy/version-assets performed."
+    ]
+  },
+  "village_measures": {
+    "baseline": "e9476524e032d98b141999010b6d2d6f39be5eca",
+    "method": "Fresh document with actual home portal click, measured before any focus/scroll helper, synthetic localhost, external fonts blocked",
+    "rows": [
+      {
+        "stage": "guest",
+        "width": 320,
+        "before_relative_px": 928.5,
+        "after_relative_px": 600.9,
+        "reduction_percent": 35.3,
+        "jump_initial_visible": true,
+        "actual_action_initial_visible": true
+      },
+      {
+        "stage": "guest",
+        "width": 390,
+        "before_relative_px": 801.5,
+        "after_relative_px": 535.9,
+        "reduction_percent": 33.1,
+        "jump_initial_visible": true,
+        "actual_action_initial_visible": true
+      },
+      {
+        "stage": "guest",
+        "width": 1360,
+        "before_relative_px": 790.5,
+        "after_relative_px": 181.8,
+        "reduction_percent": 77.0,
+        "jump_initial_visible": true,
+        "actual_action_initial_visible": true
+      },
+      {
+        "stage": "new",
+        "width": 320,
+        "before_relative_px": 2321.3,
+        "after_relative_px": 760.9,
+        "reduction_percent": 67.2,
+        "jump_initial_visible": true,
+        "actual_action_initial_visible": false
+      },
+      {
+        "stage": "new",
+        "width": 390,
+        "before_relative_px": 1854.0,
+        "after_relative_px": 702.4,
+        "reduction_percent": 62.1,
+        "jump_initial_visible": true,
+        "actual_action_initial_visible": false
+      },
+      {
+        "stage": "new",
+        "width": 1360,
+        "before_relative_px": 1487.2,
+        "after_relative_px": 287.7,
+        "reduction_percent": 80.7,
+        "jump_initial_visible": true,
+        "actual_action_initial_visible": true
+      },
+      {
+        "stage": "pending",
+        "width": 320,
+        "before_relative_px": 2474.5,
+        "after_relative_px": 896.8,
+        "reduction_percent": 63.8,
+        "jump_initial_visible": true,
+        "actual_action_initial_visible": false
+      },
+      {
+        "stage": "pending",
+        "width": 390,
+        "before_relative_px": 1947.4,
+        "after_relative_px": 808.3,
+        "reduction_percent": 58.5,
+        "jump_initial_visible": true,
+        "actual_action_initial_visible": false
+      },
+      {
+        "stage": "pending",
+        "width": 1360,
+        "before_relative_px": 1621.0,
+        "after_relative_px": 431.6,
+        "reduction_percent": 73.4,
+        "jump_initial_visible": true,
+        "actual_action_initial_visible": true
+      },
+      {
+        "stage": "completed",
+        "width": 320,
+        "before_relative_px": 2680.5,
+        "after_relative_px": 1023.5,
+        "reduction_percent": 61.8,
+        "jump_initial_visible": true,
+        "actual_action_initial_visible": false
+      },
+      {
+        "stage": "completed",
+        "width": 390,
+        "before_relative_px": 2084.3,
+        "after_relative_px": 879.5,
+        "reduction_percent": 57.8,
+        "jump_initial_visible": true,
+        "actual_action_initial_visible": false
+      },
+      {
+        "stage": "completed",
+        "width": 1360,
+        "before_relative_px": 1616.3,
+        "after_relative_px": 406.9,
+        "reduction_percent": 74.8,
+        "jump_initial_visible": true,
+        "actual_action_initial_visible": true
+      }
+    ]
+  },
+  "required_final_ci": {
+    "verify_groups": 39,
+    "browser_suites": 54,
+    "groups": [
+      28,
+      26
+    ],
+    "state": "not yet run on final commit"
+  },
+  "live_state": "New UX/UI not yet deployed; previous e947652 remains the last verified release.",
+  "limits": [
+    "Synthetic local accounts only. No real children/account data, hosting changes, credentials or email deliveries.",
+    "Modern CSS sticky enhancement falls back to static in short windows; old physical tablet not validated.",
+    "Mock audio and keyboard checks do not establish real voice or screen-reader quality.",
+    "Grinch remains an incomplete separate request."
+  ]
+}

@@ -1,3 +1,15 @@
+# UX/UI: azione e personaggi prima dei dettagli — 2 novembre 2026
+
+Nuovo lotto successivo alla versione pubblicata `e947652`. Le immagini sono schermate reali con dati sintetici, non promesse di pubblicazione. [Piano, misure e limiti](../UX_UI_PLAY_FIRST_2026_11_02.md).
+
+- [Villaggio: azione diretta e scena originale, telefono390px](ux-village-390.png) · [desktop con scena ed esercizio affiancati](ux-village-1360.png)
+- [Scelta del personaggio, telefono390px](ux-wardrobe-choices-390.png) · [anteprima gratuita mentre scorri la collezione](ux-wardrobe-preview-1360.png)
+- [Fine fonetica: focus sul riepilogo](interaction-phonics-complete-390.png) · [editor soprannome locale](interaction-nickname-390.png)
+
+Nessuna funzione, personaggio o premio eliminato. La sidebar usa CSS moderni con ritorno statico nelle finestre basse; non certifica il tablet originale o uno screen reader reale. Le sezioni successive sono cronologia: eventuali diciture precedenti «non pubblicato» non sostituiscono le prove Actions del rilascio effettivo.
+
+---
+
 # Guida nei mondi, allenamento consigliato e genitori — 2 novembre 2026
 
 Schermate reali del candidato completo, con soli account/dati fittizi. Nessuna immagine promozionale sostituisce il gioco. Stato di pubblicazione distinto dalle immagini: vedere il commit e il run di rilascio. [Perimetro e verifiche richieste](../NEXT_GAME_RELEASE_2026_11_02.md).
