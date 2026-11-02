@@ -10,7 +10,8 @@
     "elf",
     "journey",
     "illustrated",
-    "wardrobe"
+    "wardrobe",
+    "access (corrected deterministic feedback regression)"
   ],
   "api_focus": "30 saved answers same day, concurrent start across two PHP workers, distinct-date badges and permanent owned avatars",
   "screenshots": [
@@ -26,5 +27,21 @@
     "Old physical tablet and real audio not validated.",
     "Incomplete festival rounds still expire at Italian midnight; confirmed answers retain their credit.",
     "The Grinch is not part of this application change."
-  ]
+  ],
+  "first_ci": {
+    "run": "https://github.com/socialluca89-byte/word/actions/runs/41515283881",
+    "status": "failure",
+    "verify": "passed",
+    "worlds_events_navigation_26": "passed",
+    "failed_suite": "access",
+    "location": "scripts/test-access-browser.cjs:13:384",
+    "deploy": "skipped before public preflight or SSH"
+  },
+  "access_test_correction": {
+    "reproduced": "real autosave replaced global message while dedicated password feedback remained correct",
+    "fixed": "stable dedicated feedback plus observed original global emission, real autosave, HTTP401/200, identity, fields and mismatch-no-POST assertions",
+    "local_result": "passed first execution after correction",
+    "application_bytes_changed": false,
+    "timeouts_or_retries_changed": false
+  }
 }

@@ -35,3 +35,11 @@ Verifiche locali completate:
 La CI completa sul commit finale stabilisce il risultato cumulativo. Il workflow richiede51suite browser, inclusa la nuova, e conserva tutte le precedenti. Le prove locali non equivalgono alla pubblicazione: il normale deploy e la verifica dei file online restano necessari. Nessun utente reale, credenziale, nuova integrazione o impostazione hosting viene modificato dagli strumenti.
 
 Il Grinch resta una richiesta separata non completata: la sua bozza grafica non fa parte di questo rilascio. Vedi [registro delle aggiunte](REQUESTS_FOLLOWUP_2026_11_02.md).
+
+## Prima CI e stabilizzazione del controllo password
+
+Il primo run [41515283881](https://github.com/socialluca89-byte/word/actions/runs/41515283881), commit `9967f837`, ha superato verify e tutte26suite del gruppo mondi/eventi, ma si è fermato nel gruppo successivo a `test-access-browser.cjs:13:384`. Il deploy è stato saltato prima del preflight e di SSH; il live è rimasto `f99e498`.
+
+La riproduzione controllata ha mostrato che il test attendeva l'errore della password nel messaggio globale, sostituito legittimamente dalla sincronizzazione automatica. Il risultato nel modulo dedicato restava corretto. Il codice applicativo di account/API era invariato. Un vero salvataggio avviato al comparire dell'errore riproduce sia il caso password errata sia quello di conferma discordante, senza attendere artificialmente il timeout.
+
+Il test ora attende il risultato persistente del modulo, verifica con MutationObserver che il messaggio globale sia stato comunque emesso e controlla un autosave reale nei tre esiti. Mantiene tutti i percorsi precedenti e aggiunge401/200, identità/profilo invariati, campi conservati o azzerati, pulsante disponibile, nessun POST per conferma discordante e attributi/focus di accessibilità. La suite `access` corretta è passata al primo avvio; nessun timeout o retry modificato. I byte dell'applicazione e il digest restano identici. La nuova CI completa, non un tentativo invariato del vecchio run, stabilisce l'esito finale.
