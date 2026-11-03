@@ -34,7 +34,11 @@ try{
  }
  assert.deepEqual(await p.evaluate(()=>({wallet:localStorage.getItem('wordylandGuestWallet'),stats:structuredClone(stats),stars})),before);assert.deepEqual(writes,[],'Guest exploration itself creates no API writes');
  // An existing visual option stays reachable; its choice survives reload.
- await p.locator('#placePlayground [data-scene-style="3d"]').click();await p.locator('#placePreview[data-render="3d"] canvas').waitFor();assert.equal(await p.evaluate(()=>localStorage.getItem('wordylandSceneStyle')),'3d');await p.reload();await p.locator('#stylePreview[data-render="3d"]').waitFor();await p.locator('#shopPreviewControls [data-scene-style=illustrated]').click();await p.locator('#stylePreview[data-render=illustrated]').waitFor();
+ await p.locator('#placePlayground [data-scene-style="3d"]').click();await p.locator('#placePreview[data-render="3d"] canvas').waitFor();assert.equal(await p.evaluate(()=>localStorage.getItem('wordylandSceneStyle')),'3d');await p.reload();await p.evaluate(()=>wordylandAccount.ready);
+ // Reload restores the wardrobe route and can restore a scroll position beyond
+ // its preview. Reveal the actual scene, as a user does, before requiring its
+ // lazy renderer; keep the saved preference and the real canvas assertions.
+ assert.equal(await p.evaluate(()=>localStorage.getItem('wordylandSceneStyle')),'3d');await p.locator('#shopPreviewControls [data-scene-style="3d"][aria-pressed=true]').waitFor();await p.locator('#stylePreview').scrollIntoViewIfNeeded();await p.locator('#stylePreview[data-render="3d"]').waitFor();await p.locator('#stylePreview[data-render="3d"] canvas').waitFor();await p.locator('#shopPreviewControls [data-scene-style=illustrated]').click();await p.locator('#stylePreview[data-render=illustrated]').waitFor();
  // Owned identity/accessory and ordinary quest-start continue through the same APIs.
  const profile=await p.evaluate(async()=>{const a=wordylandAccount;await a.connect(await a.request('register',{username:'illustrated_parent',password:'Illustrated-test-only-123',adult:true}));return a.createProfile('Prova illustrazioni');});
  // Wallet rows are initialized lazily by hub; wait before seeding synthetic funds.

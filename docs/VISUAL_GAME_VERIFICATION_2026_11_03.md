@@ -31,3 +31,9 @@ Collaudo locale concluso sul pacchetto congelato: tutti i47verify, inclusi isola
 L'audio usa le capacità già presenti: le voci sintetiche dei test non attestano la qualità delle voci sul dispositivo. Nessuna prova su tablet originale o screen reader reale, nessun nuovo asset generato e nessuna promessa di fotorealismo o grafica3D aggiuntiva. Nessuna modifica a backend, account, permessi, punti o premi. Il Grinch e le verifiche reali di account/email/hosting restano separati.
 
 Pubblicazione solo tramite workflow ordinario autorizzato: verify,61browser, preflight intatto, deploy e controlli live sul commit esatto. Nessuna nuova sonda per superare il precedente403 cloud, identità alternativa o modifica delle protezioni.
+
+## Verifica del ritorno al guardaroba
+
+Il primo run41653643780 su774f44d ha passato verify ma si è fermato in illustrated:37:291; deploy saltato. Il timeout originale è stato riprodotto localmente. La diagnostica conferma che la preferenza3D viene conservata e il catalogo rimane utilizzabile; dopo reload il browser può restaurare una posizione oltre l'anteprima. Un ulteriore giro strumentato è passato senza interventi, quindi non si attribuisce al prodotto una causa deterministica non dimostrata.
+
+Corretto solo il percorso del test: attesa dell'account, verifica della preferenza e del selettore3D, scorrimento reale alla preview, rendering3D e canvas richiesti, successivo cambio illustrato conservato. Nessun force-render, retry o timeout aumentato, nessuna asserzione rimossa. Suite illustrated completa PASS e review indipendente conforme. Tutti i54file dell'applicazione restano identici a774f44d, già sottoposti a47verify locali e CI. Le suite locali pertinenti passate sono ora16; il nuovo run completo61 e il deploy devono ancora essere confermati.
