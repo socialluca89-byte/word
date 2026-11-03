@@ -1,6 +1,31 @@
 // Synthetic local-only exercise of themed foundations and interrupted guest paths.
 const {chromium}=require(process.env.WORDYLAND_PLAYWRIGHT_MODULE||'playwright'),assert=require('assert/strict'),fs=require('fs');
 const base=process.env.WORDYLAND_TEST_URL;assert(['localhost','127.0.0.1'].includes(new URL(base).hostname));
+async function assertRecallHelp(page,token,answer,before=null){
+ // Reading recall shows one full model, rather than a duplicate hint panel.
+ const model=page.locator('#trainingFallback');await model.waitFor({state:'visible'});
+ assert.equal((await model.textContent()).trim(),answer,'The complete expected word is visibly available after resume');
+ assert.equal(await page.locator('#trainingHintModel').isHidden(),true,'The duplicate hint panel stays hidden');
+ const saved=await page.evaluate(token=>{
+  const data=JSON.parse(localStorage.getItem('wordylandTrainingGuest'));
+  const session=data.sessions.find(row=>row?.token===token);
+  return {session,completed:data.completed??0,itemCounts:data.itemCounts??{}};
+ },token);
+ assert(saved.session,'The same paused session is retained');
+ assert.equal(saved.session.token,token);assert.equal(saved.session.plan[saved.session.step].mode,'recall');
+ assert.equal(saved.session.plan[saved.session.step].answer,answer);
+ assert.equal(saved.session.helped,true,'Reading the model remains recorded as assistance');
+ assert.equal(saved.session.hint,2,'The full-model assistance level is persisted');
+ assert(saved.session.errors>0,'The preceding incorrect attempt remains recorded');
+ if(before){
+  assert.equal(saved.session.track,before.session.track);assert.equal(saved.session.step,before.session.step);
+  assert.deepEqual(saved.session.plan,before.session.plan,'Help, pause and reload preserve the exercise plan');
+  assert.equal(saved.session.errors,before.session.errors);
+  assert.deepEqual(saved.itemCounts,before.itemCounts,'Viewing help and resuming grant no extra item progress');
+  assert.equal(saved.completed,before.completed,'Viewing help and resuming complete no extra paths');
+ }
+ return saved;
+}
 (async()=>{const browser=await chromium.launch({executablePath:process.env.WORDYLAND_CHROMIUM,args:['--no-sandbox','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
 try{const p=await browser.newPage({viewport:{width:390,height:844},reducedMotion:'reduce'}),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.addInitScript(()=>{if('speechSynthesis'in window)speechSynthesis.getVoices=()=>[];});
  await p.goto(base+'/#allenamento');await p.locator('[data-training-pack]').first().waitFor();
@@ -25,7 +50,13 @@ try{const p=await browser.newPage({viewport:{width:390,height:844},reducedMotion
    await p.locator('[data-training-slot="0"]').click();assert.equal(await p.locator('[data-training-slot]').count(),q.answer.length-1);
    while(await p.locator('[data-training-slot]').count())await p.locator('[data-training-slot="0"]').click();for(const char of q.answer)await p.locator('[data-training-tile]:not(:disabled)').filter({hasText:char}).first().click();await p.locator('#trainingBuildCheck').click();
   }else if(q.mode==='recall'){
-   if(!wrong){await p.locator('#trainingAnswer').fill('synthetic-wrong');await p.locator('#trainingWrite button').click();await p.locator('.trainingTry').waitFor();await p.locator('#trainingHint').click();await p.locator('#pauseTraining').click();await p.reload();await p.locator('[data-training-resume="'+s.token+'"]').click();await p.locator('#trainingAnswer').waitFor();assert.match(await p.locator('#trainingHintModel').textContent(),/Guardiamo insieme/);wrong=true;}
+   if(!wrong){
+    await p.locator('#trainingAnswer').fill('synthetic-wrong');await p.locator('#trainingWrite button').click();await p.locator('.trainingTry').waitFor();
+    const beforeHelp=await assertRecallHelp(p,s.token,q.answer);assert.equal(beforeHelp.session.step,s.step);
+    await p.locator('#trainingHint').click();await assertRecallHelp(p,s.token,q.answer,beforeHelp);
+    await p.locator('#pauseTraining').click();await p.reload();await p.locator('[data-training-resume="'+s.token+'"]').click();await p.locator('#trainingAnswer').waitFor();
+    await assertRecallHelp(p,s.token,q.answer,beforeHelp);wrong=true;
+   }
    await p.locator('#trainingAnswer').fill(q.answer);await p.locator('#trainingWrite button').click();
   }else{if(q.mode==='phrase'){assert.match(await p.locator('#trainingModel').textContent(),new RegExp(q.word.phraseMeaning.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')));phrase=true;}await p.locator('[data-training-choice="'+q.answer+'"]').click();}
   await p.locator('#nextTrainingStep').click();
@@ -51,7 +82,12 @@ try{const p=await browser.newPage({viewport:{width:390,height:844},reducedMotion
   await cp.evaluate(({ids,word})=>{const g=JSON.parse(localStorage.getItem('wordylandTrainingGuest')||'null')||{version:1,sessions:[],stickers:[]};g.itemCounts=Object.fromEntries(ids.map(id=>['word:'+id,id===word?0:100]));localStorage.setItem('wordylandTrainingGuest',JSON.stringify(g));},{ids:content.wordPacks.find(p=>p.id==='classroom').words,word});await cp.reload();await cp.locator('[data-training-pack=classroom]').click();await cp.locator('#trainingContinue').click();await cp.locator('#nextTrainingStep').click();await cp.locator('[data-training-choice="'+word+'"]').click();await cp.locator('#nextTrainingStep').click();
   const tiles=await cp.locator('[data-training-tile]').count();assert.equal(tiles,word.length);if(word.includes(' '))assert.equal(await cp.locator('[data-training-tile]').filter({hasText:'␣'}).count(),1);
   for(const char of word){const tile=cp.locator('[data-training-tile]:not(:disabled)').filter({hasText:new RegExp('^'+(char===' '?'␣':char)+'$')}).first();await tile.click();}await cp.locator('#trainingBuildCheck').click();await cp.locator('#nextTrainingStep').click();
-  await cp.locator('#trainingAnswer').fill('wrong');await cp.locator('#trainingWrite button').click();await cp.locator('.trainingTry').waitFor();await cp.locator('#trainingHint').click();await cp.locator('#pauseTraining').click();await cp.reload();await cp.locator('[data-training-pack=classroom]').click();await cp.locator('#trainingAnswer').waitFor();assert.match(await cp.locator('#trainingHintModel').textContent(),/Guardiamo insieme/);await cp.locator('#trainingAnswer').fill(word);await cp.locator('#trainingWrite button').click();await cp.locator('.trainingSuccess').waitFor();
+  await cp.locator('#trainingAnswer').fill('wrong');await cp.locator('#trainingWrite button').click();await cp.locator('.trainingTry').waitFor();
+  const token=await cp.evaluate(()=>JSON.parse(localStorage.getItem('wordylandTrainingGuest')).sessions.find(s=>s.track==='words:classroom'&&!s.done).token);
+  const beforeHelp=await assertRecallHelp(cp,token,word);
+  await cp.locator('#trainingHint').click();await assertRecallHelp(cp,token,word,beforeHelp);
+  await cp.locator('#pauseTraining').click();await cp.reload();await cp.locator('[data-training-pack=classroom]').click();await cp.locator('#trainingAnswer').waitFor();
+  await assertRecallHelp(cp,token,word,beforeHelp);await cp.locator('#trainingAnswer').fill(word);await cp.locator('#trainingWrite button').click();await cp.locator('.trainingSuccess').waitFor();
   assert(await cp.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));const progress=await cp.evaluate(()=>JSON.parse(localStorage.getItem('wordylandTrainingGuest')).itemCounts);assert(progress['word:'+word]>0);await cp.reload();await cp.locator('[data-training-pack=classroom]').click();assert(await cp.evaluate(w=>JSON.parse(localStorage.getItem('wordylandTrainingGuest')).itemCounts['word:'+w]>0,word));await cp.close();
  }
  console.log('Foundations browser passed: eight themes, 53 curated words, 21 paused guest tracks retained, legacy and frozen-choice resume, eight-letter keyboard tiles/undo, error/help/reload, translated phrase, four viewports, unchanged game state, markup rejection and preserved prepositions navigation.');

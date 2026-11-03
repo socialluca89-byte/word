@@ -38,3 +38,9 @@ La review indipendente ha individuato e l’autore ha riprodotto due P2: reimpor
 La nuova suite `training-memory` passa10casi; training, spelling, learning-experience e learning-entry passano. Review statica indipendente senza ulteriori blocchi nei due rami. I controlli completi59 del nuovo commit e il successivo esito deploy restano obbligatori; il successo precedente58 non li sostituisce.
 
 La verifica prestazioni del follow-up finale passa in una sola esecuzione isolata (load532ms locale, soglia5s invariata), tutti54file congelati invariati. Questa misura non valida il tablet reale.
+
+## Ripresa della pubblicazione: controllo foundations
+
+Il run [41625323778](https://github.com/socialluca89-byte/word/actions/runs/41625323778), commit123219a3, ha passato verify e il gruppo browser dei mondi, ma è fallito in foundations:28: il test cercava «Guardiamo insieme» nel pannello degli indizi che viene intenzionalmente nascosto quando il modello completo è già visibile. Deploy saltato, nessun problema di hosting dimostrato da questo fallimento.
+
+Il comportamento è stato riprodotto localmente. La correzione riguarda soltanto le asserzioni foundations dei richiami in lettura: controllano parola completa visibile, pannello duplicato nascosto, stesso token/passo/piano, aiuto2 ed errore conservati, contatori invariati attraverso aiuto/pausa/ricarica. Il controllo recognize sul pannello degli indizi resta intatto. Foundations passa; review indipendente conferma che non sono stati indeboliti i controlli. Tutti i54file dell’applicazione restano identici a123219a3: le due protezioni della memoria non sono state modificate. Il nuovo commit richiede ancora47verify,59browser e deploy verificato; nessun risultato precedente sostituisce l’esito finale.
