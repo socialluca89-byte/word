@@ -73,7 +73,7 @@ with tempfile.TemporaryDirectory(prefix='wordyland-holidays-') as tmp:
   for row in db.execute('SELECT plan FROM holiday_days WHERE profile_id=?',(pid,)):seen_modes.update(q['mode'] for q in json.loads(row[0]))
   assert seen_modes=={'meaning','word','gap','build','write'},seen_modes
   # Midnight and event cutoff are server-owned, including stale open browser sessions.
-  clock.write_text('2026-11-29 00:00:00');req(a,'holiday-hint',{'profile':pid,'token':s['token'],'step':3},ta,410)
+  clock.write_text('2026-11-29 00:00:00');assert req(a,'holiday-hint',{'profile':pid,'token':s['token'],'step':3},ta)['replayed']
   clock.write_text('2027-01-07 23:59:59');assert event()['active'];last=start()
   clock.write_text('2027-01-08 00:00:00');assert not event()['active']
   req(a,'holiday-start',{'profile':pid,'event':'christmas','day':'2027-01-07'},ta,410)
@@ -154,11 +154,12 @@ with tempfile.TemporaryDirectory(prefix='wordyland-holidays-') as tmp:
   assert db.execute('SELECT COUNT(*) FROM holiday_days WHERE profile_id=?',(cp,)).fetchone()[0]==1
   assert [tuple(row) for row in db.execute('SELECT * FROM holiday_days WHERE profile_id=? ORDER BY season,day',(pid,))]==legacy
   for avatar in [r['id'] for r in same_day['rewards'] if r['slot']=='avatar']:assert req(c,'equip',{'profile':cp,'item':avatar},tc)['wallet']['equipped']['avatar']==avatar
-  # New day starts its original daily mission; old extra tokens cannot manufacture today's rounds.
+  # New day allocates at most its single daily from an old completed predecessor.
   clock.write_text('2026-11-05 00:00:00')
-  req(c,'holiday-start',{'profile':cp,'event':'christmas','another':True,'after':current['token']},tc,409)
-  req(c,'holiday-hint',{'profile':cp,'token':current['token'],'step':3},tc,410)
-  daily=repeatstart();assert daily['round']==1 and daily['day']=='2026-11-05';finish(daily)
+  daily=repeatstart(another=True,after=current['token']);assert daily['round']==1 and daily['day']=='2026-11-05'
+  assert repeatstart(another=True,after=current['token'])['token']==daily['token']
+  assert req(c,'holiday-hint',{'profile':cp,'token':current['token'],'step':3},tc)['replayed']
+  assert repeatstart()['token']==daily['token'];finish(daily)
   clock.write_text('2026-11-07 12:00:00');finish(repeatstart())
   assert next(r for r in repeatstate()['rewards'] if r['days']==3)['owned']
   clock.write_text('2027-01-07 23:59:59');cutoff=finish(repeatstart());extra=repeatstart(another=True,after=cutoff['token']);assert extra['round']==2
@@ -167,7 +168,7 @@ with tempfile.TemporaryDirectory(prefix='wordyland-holidays-') as tmp:
   req(c,'holiday-start',{'profile':cp,'event':'christmas','another':True,'after':cutoff['token']},tc,410)
   assert req(c,'equip',{'profile':cp,'item':'yeti'},tc)['wallet']['equipped']['avatar']=='yeti'
   assert db.execute('SELECT COUNT(*) FROM rewards').fetchone()[0]==0
-  print('Holiday API passed: preserved annual calendars, daily rows/date badges and midnight cutoff; additive repeatable rounds, all characters earned in one day through 30 real exercises, two-worker double-start idempotence, lost-response replay, private device resume/hints, no forged/duplicate grants or XP/coins, permanent equip and unchanged historic daily plans.')
+  print('Holiday API passed: preserved annual calendars, daily rows/date badges and season cutoff; additive repeatable rounds, all characters earned in one day through 30 real exercises, two-worker double-start idempotence, lost-response replay, private device resume/hints, no forged/duplicate grants or XP/coins, permanent equip and unchanged historic daily plans.')
  finally:
   if server2:server2.terminate();server2.wait(timeout=5)
   server.terminate();server.wait(timeout=5);log.close()

@@ -44,7 +44,12 @@ $pid=(int)$me['id'];
 runSql($db,'UPDATE duels SET state="expired" WHERE (challenger=? OR opponent=?) AND expires_at<? AND state IN ("pending","active")',[$pid,$pid,time()]);
 if ($action==='arena') {
     $classes=rows($db,'SELECT c.id,c.name FROM clubs c JOIN club_profiles cp ON cp.club_id=c.id WHERE cp.profile_id=? ORDER BY c.name,c.id',[$pid]);
-    $opponents=rows($db,'SELECT DISTINCT p.id,p.nickname,w.equipped FROM profiles p JOIN club_profiles b ON b.profile_id=p.id JOIN club_profiles a ON a.club_id=b.club_id LEFT JOIN wallets w ON w.profile_id=p.id WHERE a.profile_id=? AND p.id!=? ORDER BY p.nickname,p.id LIMIT 100',[$pid,$pid]);
+    // Apply presence priority before the result cap, so a ready classmate is not
+    // excluded simply because their nickname sorts after the first hundred.
+    $hasPresence=(bool)$db->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='online_presence'")->fetchColumn();
+    $presenceJoin=$hasPresence?' LEFT JOIN (SELECT op.profile_id,MAX(CASE op.state WHEN "busy" THEN 3 WHEN "ready" THEN 2 ELSE 1 END) AS rank FROM online_presence op JOIN profiles pp ON pp.id=op.profile_id JOIN accounts aa ON aa.id=pp.account_id AND aa.session_version=op.session_version WHERE op.last_seen>='.(time()-90).' GROUP BY op.profile_id) active ON active.profile_id=p.id':'';
+    $priority=$hasPresence?'CASE active.rank WHEN 2 THEN 0 WHEN 1 THEN 1 WHEN 3 THEN 2 ELSE 3 END,':'';
+    $opponents=rows($db,'SELECT DISTINCT p.id,p.nickname,w.equipped FROM profiles p JOIN club_profiles b ON b.profile_id=p.id JOIN club_profiles a ON a.club_id=b.club_id LEFT JOIN wallets w ON w.profile_id=p.id'.$presenceJoin.' WHERE a.profile_id=? AND p.id!=? ORDER BY '.$priority.'LOWER(p.nickname),p.id LIMIT 100',[$pid,$pid]);
     foreach ($opponents as &$o) {
         $o['id']=(int)$o['id']; $o['equipped']=json_decode($o['equipped']??'{}',true);
         $o['classes']=array_column(rows($db,'SELECT c.name FROM clubs c JOIN club_profiles a ON a.club_id=c.id JOIN club_profiles b ON b.club_id=c.id WHERE a.profile_id=? AND b.profile_id=? ORDER BY c.name',[$pid,$o['id']]),'name');

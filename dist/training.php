@@ -27,11 +27,11 @@ if($action==='training-state'){
 if($method!=='POST')fail('Metodo non consentito.',405);
 if($action==='training-start'){
     $track=$body['track']??'letters';$block=$body['block']??'ae';$content=trainingContent();
-    if(!in_array($track,['letters','words'],true))fail('Scegli un percorso disponibile.');
+    if(!is_string($track)||!in_array($track,['letters','words','sentences','instructions'],true))fail('Scegli un percorso disponibile.');
     if($track==='letters'&&!in_array($block,array_column($content['blocks'],'id'),true))fail('Scegli un blocco disponibile.');
     $pack=$track==='words'?($body['pack']??'first'):'first';
     if($track==='words'&&(!is_string($pack)||!in_array($pack,array_column($content['wordPacks'],'id'),true)))fail('Scegli un gruppo di parole disponibile.');
-    $key=$track==='letters'?'letters:'.$block:($pack==='first'?'words':'words:'.$pack);limitAttempts($db,'training-start:'.$tp,60);
+    $key=$track==='letters'?'letters:'.$block:($track==='words'?($pack==='first'?'words':'words:'.$pack):$track.':basics');limitAttempts($db,'training-start:'.$tp,60);
     $db->exec('BEGIN IMMEDIATE');
     $old=one($db,'SELECT * FROM training_sessions WHERE profile_id=? AND track=? AND completed_at IS NULL AND created_at>=? ORDER BY rowid DESC LIMIT 1',[$tp,$key,time()-604800]);
     if($old){$db->exec('COMMIT');respond(['session'=>trainingSnapshot($old),'stickers'=>trainingStickers($db,$tp)]);}
@@ -70,9 +70,10 @@ if(!$correct){runSql($db,'UPDATE training_sessions SET errors=errors+1,helped=MA
 $helped=(int)$session['helped']===1||($body['helped']??false)===true||in_array($q['mode'],['model','build'],true);
 $independent=!$helped&&(int)$session['errors']===0;
 $audio=($body['audioUsed']??false)===true;
-$skill=match($q['mode']){'letter'=>'letter-reading.letter','recognize'=>'word-reading.meaning','build'=>'spelling.compose','recall'=>'spelling.recall','phrase'=>'phrase.match',default=>'model.explore'};
+$skill=match($q['mode']){'letter'=>'letter-reading.letter','recognize'=>'word-reading.meaning','build'=>'spelling.compose','recall'=>'spelling.recall','phrase'=>'phrase.match','sentence-build'=>'sentence.compose','instruction-choice'=>'instruction-reading.meaning',default=>'model.explore'};
 if($audio&&$q['mode']==='letter'&&($body['letterAudioVerified']??false)===true)$skill='letter-name.letter';
 if($audio&&$q['mode']==='recognize')$skill='heard-word.meaning';
+if($audio&&$q['mode']==='instruction-choice')$skill='heard-instruction.meaning';
 if($q['mode']==='letter'&&$independent&&$choiceCount>=3){
     runSql($db,'INSERT INTO training_choice_steps(profile_id,item,skill,choice_count,independent,independent_days,last_day) VALUES(?,?,?,?,1,1,?) ON CONFLICT(profile_id,item,skill,choice_count) DO UPDATE SET independent=independent+1,independent_days=independent_days+CASE WHEN last_day!=excluded.last_day THEN 1 ELSE 0 END,last_day=excluded.last_day',[$tp,$q['item'],$skill,$choiceCount,gmdate('Y-m-d')]);
 }
@@ -116,6 +117,18 @@ function trainingLetterChoiceSets(PDO $db,int $pid,string $id,array $pair,array 
 }
 function trainingPlan(PDO $db,int $pid,string $track,string $block,array $content,string $pack='first'):array{
     $plan=[];
+    if(in_array($track,['sentences','instructions'],true)){
+        $key=$track==='sentences'?'sentenceActivities':'instructionActivities';$activities=$content[$key]??[];
+        if(count($activities)<3)fail('Questo percorso non è ancora disponibile.',409);
+        $prefix=$track==='sentences'?'sentence:':'instruction:';
+        $counts=array_column(rows($db,'SELECT item,SUM(completed) AS n FROM training_items WHERE profile_id=? GROUP BY item',[$pid]),'n','item');
+        usort($activities,fn($a,$b)=>(int)($counts[$prefix.$a['id']]??0)<=>(int)($counts[$prefix.$b['id']]??0));
+        foreach(array_slice($activities,0,3) as $activity){
+            if($track==='sentences'){$sentence=$activity;shuffle($sentence['tokens']);$plan[]=['item'=>$prefix.$activity['id'],'mode'=>'sentence-build','sentence'=>$sentence,'answer'=>$activity['answer'],'topic'=>'piccole frasi'];}
+            else{$choices=$activity['choices'];shuffle($choices);$plan[]=['item'=>$prefix.$activity['id'],'mode'=>'instruction-choice','instruction'=>['id'=>$activity['id'],'english'=>$activity['instruction'],'meaning'=>$activity['meaning']],'choices'=>$choices,'answer'=>$activity['answer'],'topic'=>'capire le consegne'];}
+        }
+        return $plan;
+    }
     if($track==='letters'){
         $pair=$content['blocks'][array_search($block,array_column($content['blocks'],'id'),true)]['letters'];$letters=array_column($content['letters'],null,'id');
         foreach($pair as $id){$base=['item'=>'letter:'.$id,'letter'=>$letters[$id],'answer'=>$id,'choices'=>$pair,'topic'=>'nomi delle lettere'];
@@ -124,6 +137,7 @@ function trainingPlan(PDO $db,int $pid,string $track,string $block,array $conten
         }
     }else{
         $review=array_column(rows($db,'SELECT item FROM training_daily WHERE profile_id=? AND day>=? AND skill="spelling.recall" GROUP BY item HAVING SUM(errors)>=2 OR SUM(guided)>=2',[$pid,gmdate('Y-m-d',time()-7*86400)]),'item');
+        $review=array_values(array_unique(array_merge($review,array_map(fn($row)=>'word:'.$row['word'],array_filter(practiceReviewRows($db,$pid),fn($row)=>in_array('missions',$row['sources'],true))))));
         $ids=$content['wordPacks'][array_search($pack,array_column($content['wordPacks'],'id'),true)]['words'];$pool=array_values(array_filter($content['words'],fn($w)=>in_array($w['id'],$ids,true)));
         $words=$pool;$counts=array_column(rows($db,'SELECT item,SUM(completed) AS n FROM training_items WHERE profile_id=? GROUP BY item',[$pid]),'n','item');
         usort($words,fn($a,$b)=>((int)in_array('word:'.$b['id'],$review,true)<=>(int)in_array('word:'.$a['id'],$review,true))?:((int)($counts['word:'.$a['id']]??0)<=>(int)($counts['word:'.$b['id']]??0)));
@@ -143,7 +157,7 @@ function trainingRecommendation(array $content,array $evidence=[],array $session
     $valid=array_fill_keys(array_merge(array_map(fn($r)=>'letter:'.$r['id'],$letters),array_map(fn($r)=>'word:'.$r['id'],$words)),true);$counts=is_array($evidence['counts']??null)?$evidence['counts']:[];$seen=[];
     foreach(is_array($evidence['seen']??null)?$evidence['seen']:[] as $item)if(is_string($item)&&isset($valid[$item]))$seen[$item]=true;
     foreach($counts as $item=>$count)if(isset($valid[$item])&&(is_int($count)||is_float($count))&&is_finite((float)$count)&&$count>0)$seen[$item]=true;
-    $target=function(mixed $track)use($blocks,$packs):?array{if(!is_string($track))return null;if(str_starts_with($track,'letters:')){foreach($blocks as $block)if($block['id']===substr($track,8))return ['kind'=>'letters','track'=>$track,'block'=>$block['id']];return null;}$pack=$track==='words'?'first':(str_starts_with($track,'words:')?substr($track,6):null);foreach($packs as $row)if($pack!==null&&$row['id']===$pack)return ['kind'=>'words','track'=>$pack==='first'?'words':'words:'.$pack,'pack'=>$pack];return null;};
+    $target=function(mixed $track)use($blocks,$packs):?array{if(!is_string($track))return null;if(in_array($track,['sentences:basics','instructions:basics'],true))return ['kind'=>explode(':',$track)[0],'track'=>$track];if(str_starts_with($track,'letters:')){foreach($blocks as $block)if($block['id']===substr($track,8))return ['kind'=>'letters','track'=>$track,'block'=>$block['id']];return null;}$pack=$track==='words'?'first':(str_starts_with($track,'words:')?substr($track,6):null);foreach($packs as $row)if($pack!==null&&$row['id']===$pack)return ['kind'=>'words','track'=>$pack==='first'?'words':'words:'.$pack,'pack'=>$pack];return null;};
     foreach($sessions as $session){$choice=$target($session['track']??null);if($choice&&!($session['done']??false)&&is_string($session['token']??null)&&preg_match('/^[a-f0-9]{16,64}$/',$session['token'])&&is_int($session['step']??null)&&is_int($session['total']??null)&&$session['step']>=0&&$session['step']<$session['total']&&$session['total']<=12)return array_merge($choice,['kind'=>'resume','reason'=>'resume','token'=>$session['token'],'step'=>$session['step'],'total'=>$session['total']]);}
     $review=[];foreach(is_array($evidence['practice']??null)?$evidence['practice']:[] as $row){$item=$row['item']??'';$skill=$row['skill']??'';$eligible=is_string($item)&&str_starts_with($item,'letter:')?in_array($skill,['letter-reading.letter','letter-name.letter'],true):$skill==='spelling.recall';if($eligible&&isset($valid[$item],$seen[$item])&&(is_int($row['errors']??null)||is_float($row['errors']??null))&&is_finite((float)$row['errors'])&&$row['errors']>=2&&(is_int($row['errorDays']??null)||is_float($row['errorDays']??null))&&is_finite((float)$row['errorDays'])&&$row['errorDays']>=2&&(is_int($row['independent']??null)||is_float($row['independent']??null))&&is_finite((float)$row['independent'])&&$row['independent']>=0&&$row['independent']<3)$review[$item]=true;}
     $choices=[];foreach($blocks as $block)$choices[]=array_merge($target('letters:'.$block['id']),['items'=>array_map(fn($id)=>'letter:'.$id,$block['letters'])]);foreach($packs as $pack)$choices[]=array_merge($target($pack['id']==='first'?'words':'words:'.$pack['id']),['items'=>array_map(fn($id)=>'word:'.$id,$pack['words'])]);$choices=array_values(array_filter($choices,fn($choice)=>count($choice['items'])>0&&count(array_filter($choice['items'],fn($item)=>isset($valid[$item])))===count($choice['items'])));

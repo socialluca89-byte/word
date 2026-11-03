@@ -9,6 +9,29 @@ CREATE INDEX IF NOT EXISTS feedback_account ON feedback(account_id,id);');
 $isAdmin=$accountRole==='admin';
 $offset=max(0,min(1000000,(int)($_GET['offset']??0)));$pageSize=20;
 function communityRows(PDO $db,string $sql,array $args=[]): array{$q=$db->prepare($sql);$q->execute($args);return $q->fetchAll();}
+// An activity is a server-confirmed answer, including an incorrect answer.
+// Optional learning/event tables are created only when their APIs are first used.
+function communityPlayedSql(PDO $db): string {
+    $parts=['EXISTS(SELECT 1 FROM rewards rr WHERE rr.profile_id=p.id)','EXISTS(SELECT 1 FROM practice pp WHERE pp.profile_id=p.id AND (pp.good>0 OR pp.wrong>0))','EXISTS(SELECT 1 FROM duel_players dp WHERE dp.profile=p.id AND dp.step>0)'];
+    $tables=array_fill_keys(array_column(communityRows($db,"SELECT name FROM sqlite_master WHERE type='table'"),'name'),true);
+    foreach([
+        'holiday_days'=>'step>0 OR errors>0',
+        'holiday_rounds'=>'step>0 OR errors>0',
+        'training_items'=>'skill!="model.explore" AND (completed>0 OR errors>0)',
+        'training_sessions'=>'errors>0',
+        'phonics_practice'=>'skill!="guided-model" AND (completed>0 OR errors>0)',
+        'phonics_sessions'=>'errors>0'
+    ] as $table=>$answered)if(isset($tables[$table]))$parts[]='EXISTS(SELECT 1 FROM '.$table.' ca WHERE ca.profile_id=p.id AND ('.$answered.'))';
+    return '('.implode(' OR ',$parts).')';
+}
+// Native HTML maxlength/minlength count UTF-16 code units, not UTF-8 bytes.
+// Count the same units without requiring optional mbstring/intl extensions.
+function communityTextLength(string $value): int {
+    $characters=preg_match_all('/./us',$value);
+    $surrogatePairs=preg_match_all('/[\x{10000}-\x{10FFFF}]/u',$value);
+    if($characters===false||$surrogatePairs===false)fail('Il testo contiene caratteri non validi.');
+    return $characters+$surrogatePairs;
+}
 if($action==='admin-class-add'){
     if(!$isAdmin)fail('Solo il super amministratore può iscrivere un profilo esistente.',403);
     if(($body['consent']??false)!==true)fail('Conferma la partecipazione alla classe con soprannome, avatar e punti.');
@@ -49,7 +72,7 @@ if($action==='roster'){
     $clubs=$all?[]:array_column(communityRows($db,'SELECT DISTINCT c.id FROM clubs c LEFT JOIN club_profiles cp ON cp.club_id=c.id LEFT JOIN profiles p ON p.id=cp.profile_id WHERE c.owner_id=? OR p.account_id=?',[$id,$id]),'id');
     $where=$all?'1=1':'p.account_id=?';$args=$all?[]:[$id];
     if($clubs){$where='('.$where.' OR p.id IN (SELECT profile_id FROM club_profiles WHERE club_id IN ('.implode(',',array_fill(0,count($clubs),'?')).')))';$args=array_merge($args,$clubs);}
-    $played='(EXISTS(SELECT 1 FROM rewards rr WHERE rr.profile_id=p.id) OR EXISTS(SELECT 1 FROM practice pp WHERE pp.profile_id=p.id AND (pp.good>0 OR pp.wrong>0)) OR EXISTS(SELECT 1 FROM duel_players dp WHERE dp.profile=p.id AND dp.step>0))';
+    $played=communityPlayedSql($db);
     $start=(new DateTimeImmutable('today',new DateTimeZone('Europe/Rome')))->getTimestamp();
     $from=' FROM profiles p JOIN accounts a ON a.id=p.account_id LEFT JOIN wallets w ON w.profile_id=p.id LEFT JOIN (SELECT op.profile_id,MAX(CASE op.state WHEN "busy" THEN 3 WHEN "ready" THEN 2 ELSE 1 END) AS presence_rank FROM online_presence op JOIN profiles pp ON pp.id=op.profile_id JOIN accounts aa ON aa.id=pp.account_id AND aa.session_version=op.session_version WHERE op.last_seen>='.(time()-90).' GROUP BY op.profile_id) pr ON pr.profile_id=p.id WHERE '.$where;
     $summary=communityRows($db,'SELECT COUNT(*) AS registered,COALESCE(SUM(pr.presence_rank IS NOT NULL),0) AS online,COALESCE(SUM(pr.presence_rank=2),0) AS ready'.($all?',COALESCE(SUM(a.role="learner" AND a.created_at>='.$start.'),0) AS today,COALESCE(SUM('.$played.'),0) AS played':'').$from,$args)[0];
@@ -65,7 +88,11 @@ if($action==='roster'){
 
 if($action==='feedback-create'){
     $kind=$body['kind']??'';$title=is_string($body['title']??null)?trim($body['title']):'';$message=is_string($body['body']??null)?trim($body['body']):'';$screen=$body['screen']??'island';
-    if(!is_string($kind)||!in_array($kind,['bug','idea'],true)||strlen($title)<3||strlen($title)>100||strlen($message)<5||strlen($message)>2000||!is_string($screen)||!in_array($screen,['island','lessons','arena','classroom','feedback','admin'],true))fail('Scegli il tipo e scrivi titolo e descrizione (massimo 2000 caratteri).');
+    if(!is_string($kind)||!in_array($kind,['bug','idea'],true))fail('Scegli se inviare un problema o un’idea.');
+    $titleLength=communityTextLength($title);$messageLength=communityTextLength($message);
+    if($titleLength<3||$titleLength>100)fail('Il titolo deve contenere da 3 a 100 caratteri.');
+    if($messageLength<5||$messageLength>2000)fail('La descrizione deve contenere da 5 a 2000 caratteri.');
+    if(!is_string($screen)||!in_array($screen,['island','lessons','arena','classroom','feedback','admin'],true))fail('Scegli dove si verifica il problema o la tua idea.');
     $profile=(int)($body['profile']??0);
     if($profile&&!communityRows($db,'SELECT id FROM profiles WHERE id=? AND account_id=?',[$profile,$id]))fail('Profilo non disponibile.',404);
     limitAttempts($db,'feedback:'.$id,10);

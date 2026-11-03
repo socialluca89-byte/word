@@ -62,7 +62,7 @@ with tempfile.TemporaryDirectory(prefix='wordyland-classroom-') as temporary:
         assert request(teacher,'class-link',{'club':classroom['id']},token)['code']==code
         guest,csrf=anonymous()
         metadata=request(guest,'class-invite&code='+code)
-        assert metadata=={'name':'La nostra seconda','full':False,'joined':False}
+        assert metadata=={'registrationOpen':True,'name':'La nostra seconda','full':False,'joined':False}
         # Existing adult-owned profiles can follow a class link without becoming
         # learner accounts. The invite returns only this account's own choices.
         owner_metadata=request(teacher,'class-invite&code='+code)

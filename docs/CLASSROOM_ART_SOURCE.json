@@ -1,0 +1,49 @@
+{
+  "kind": "original generated educational object illustrations",
+  "tool": "image_gen.imagegen",
+  "source_file": "/workspace/generated_images/exec-d78bf315-23a4-418a-bfdf-ccb4ac0b2f6f.png",
+  "original_sha256": "f0ea11f0209002023bc214f8b573002104fd5aa8db2e15599d087be2b31eba3c",
+  "public_file": "dist/classroom-objects.png",
+  "public_sha256": "f0ea11f0209002023bc214f8b573002104fd5aa8db2e15599d087be2b31eba3c",
+  "dimensions": [
+    1448,
+    1086
+  ],
+  "columns": 4,
+  "rows": 3,
+  "cell_size": [
+    362,
+    362
+  ],
+  "order": [
+    "pencil",
+    "pen",
+    "book",
+    "eraser",
+    "scissors",
+    "glue stick",
+    "crayons",
+    "notebook",
+    "sharpener",
+    "marker",
+    "bookbag",
+    "desk"
+  ],
+  "request": "Twelve original, unbranded, semantically distinct classroom objects; no text/logos/faces; transparent background.",
+  "safety_refusals": 0,
+  "edits_or_retries": 0,
+  "visual_review": "Objects and cell alignment inspected using tool output and local image viewer. Browser file:// preview denied by managed policy; no repeat or policy change. App HTTP fixture rendering must still be verified by UI agent.",
+  "notes": [
+    "Alpha0/1 pixels carry RGB noise that is nearly transparent in correct compositing; image viewer displays raw colors.",
+    "No Grinch or denied artwork was generated or reused."
+  ],
+  "prompt_file": "docs/CLASSROOM_ART_PROMPT.txt",
+  "prompt_sha256": "b331c236e21aad18c8354b421a7cdac82a6983c98e253bffbbb4c19e1ea5fe2a",
+  "delivery": {
+    "webp_file": "classroom-objects.webp",
+    "webp_sha256": "2d986b9f0fe02cd7c5ad6eda1e06e69c001d6f51499e8b6e239fc8bda01302d9",
+    "png_fallback": "classroom-objects.png",
+    "rgba_pixel_identical": true,
+    "method": "lossless exact format encoding; original PNG preserved without retouch"
+  }
+}

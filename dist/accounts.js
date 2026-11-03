@@ -223,11 +223,11 @@
   }
   async function request(action, body, options = {}) {
     const requestSession=session;
-    const authMutation=body!==undefined&&['login','register','logout','recover','class-login','class-register','class-recover','change-password','new-recovery','email-recovery-confirm','delete-account'].includes(action);
+    const authMutation=body!==undefined&&['login','register','logout','recover','class-login','class-register','class-recover','class-assisted-confirm','change-password','new-recovery','email-recovery-confirm','delete-account'].includes(action);
     if(authMutation&&(authOperation||(logoutFlight&&action!=='logout'))){const error=new Error('Una modifica dell’accesso è già in corso. Attendi la conferma prima di continuare.');error.code=409;throw error;}
     const authOwner=authMutation?{}:null;if(authOwner)authOperation=authOwner;
     if(body!==undefined)pendingWrites++;
-    const accessAction=['session','login','register','logout','recover','auth-capabilities','email-recovery-request','email-recovery-confirm','change-password','new-recovery','delete-account','delete-profile','rename-profile','class-login','class-register','class-recover'].includes(action);
+    const accessAction=['session','login','register','logout','recover','auth-capabilities','email-recovery-request','email-recovery-confirm','change-password','new-recovery','delete-account','delete-profile','rename-profile','class-login','class-register','class-recover','class-assisted-confirm'].includes(action);
     const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),20000);
     try{
       const response = await fetch('api.php?action=' + action, {
@@ -239,7 +239,8 @@
       let result;
       try { result = await response.json(); } catch { throw new Error(accessAction?'L’operazione di accesso non è stata confermata. Verifica la connessione prima di riprovare.':'Il sito non ha confermato la risposta. Torna online e riprendi dal salvataggio.'); }
       if (!response.ok) {
-        const e = new Error(result.error || 'Operazione non riuscita.');e.code=response.status;
+        const supportId=typeof result.requestId==='string'&&/^[a-f0-9]{24}$/.test(result.requestId)?result.requestId:null;
+        const e = new Error((result.error || 'Operazione non riuscita.')+(response.status>=500&&supportId?' Codice assistenza: '+supportId+'.':''));e.code=response.status;if(supportId)e.requestId=supportId;
         if(session===requestSession&&session?.username&&active&&[401,403].includes(response.status)&&['Accedi con il tuo profilo.','Ricarica la pagina e riprova.'].includes(result.error)){accessExpired=true;queueMicrotask(showReauthentication);}
         throw e;
       }

@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import {createHash} from 'node:crypto';
 
 // Run after changing browser assets, before committing a release.
-const assets=['data.js','worlds.js','learning.js','app.js','accounts.js','classroom.js','arena.js','quests.js','quests.css','arcade.js','arcade.css','island.css','island.js','community.js','presence.js','three.min.js','pwa.css','pwa.js','training.js','study-import.js','manifest.webmanifest','icon-192.png'];
+const assets=['data.js','worlds.js','learning.js','app.js','accounts.js','classroom.js','arena.js','quests.js','quests.css','arcade.js','arcade.css','island.css','island.js','community.js','presence.js','pwa.css','pwa.js','training.js','study-import.js','manifest.webmanifest','icon-192.png'];
 for(const name of ['race-circuits.webp','race-racers.webp','character-portraits.png','character-portraits.webp']){
   const hash=createHash('sha256').update(fs.readFileSync('dist/'+name)).digest('hex').slice(0,12);
   const css=fs.readFileSync('dist/arcade.css','utf8').replace(new RegExp(name.replaceAll('.','\\.')+'(?:\\?v=[a-f0-9]+)?','g'),name+'?v='+hash);
@@ -20,10 +20,14 @@ for(const name of ['island-places.webp','holiday-worlds.png','holiday-worlds.web
  const hash=createHash('sha256').update(fs.readFileSync('dist/'+name)).digest('hex').slice(0,12);
  versionedArtwork=versionedArtwork.replace(new RegExp(name.replaceAll('.','\\.')+'(?:\\?v=[a-f0-9]+)?','g'),name+'?v='+hash);
 }
-fs.writeFileSync('dist/island.js',islandCode.replace(artworkBlock,versionedArtwork));
+const threeHash=createHash('sha256').update(fs.readFileSync('dist/three.min.js')).digest('hex').slice(0,12);
+if(!/const THREE_ASSET='[^']+';/.test(islandCode))throw Error('Missing deferred Three dependency');
+fs.writeFileSync('dist/island.js',islandCode.replace(artworkBlock,versionedArtwork).replace(/const THREE_ASSET='[^']+';/,"const THREE_ASSET='three.min.js?v="+threeHash+"';"));
 // Update offline dependencies first, then the worker, then its registration URL.
 const digest=name=>createHash('sha256').update(fs.readFileSync('dist/'+name)).digest('hex').slice(0,12);
 const versioned=name=>name+'?v='+digest(name);
+const trainingContent=JSON.parse(fs.readFileSync('dist/training.json','utf8'));
+if(trainingContent.classroomArt){trainingContent.classroomArt.urls={png:versioned('classroom-objects.png'),webp:versioned('classroom-objects.webp')};fs.writeFileSync('dist/training.json',JSON.stringify(trainingContent,null,2)+'\n');}
 fs.writeFileSync('dist/study-ocr.js',fs.readFileSync('dist/study-ocr.js','utf8').replace(/const workerURL='[^']+';/,"const workerURL='"+versioned('ocr-worker.min.js')+"';"));
 let importer=fs.readFileSync('dist/study-import.js','utf8');
 for(const name of ['pdf.min.js','pdf.worker.min.js','study-ocr.js'])importer=importer.replace(new RegExp(name.replaceAll('.','\\.')+'(?:\\?v=[a-f0-9]+)?','g'),versioned(name));

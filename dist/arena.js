@@ -130,7 +130,7 @@
   }};
   document.addEventListener('click',e=>{
     const action=e.target.closest('[data-jump]')?.dataset.jump;if(!action)return;
-    if(location.hash==='#allenamento')window.wordylandTraining?.leaveForGame();
+    if((location.hash==='#allenamento'||location.hash==='#dettato'))window.wordylandTraining?.leaveForGame();
     window.wordylandUI?.play();
     window.dispatchEvent(new Event('wordyland-play-view'));
     document.querySelector('[data-tab="'+action+'"]')?.click();

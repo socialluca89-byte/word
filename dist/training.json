@@ -424,6 +424,23 @@
         "bookbag",
         "desk"
       ]
+    },
+    {
+      "id": "numbers-teens",
+      "title": "Numeri da 11 a 20",
+      "icon": "🔢",
+      "words": [
+        "eleven",
+        "twelve",
+        "thirteen",
+        "fourteen",
+        "fifteen",
+        "sixteen",
+        "seventeen",
+        "eighteen",
+        "nineteen",
+        "twenty"
+      ]
     }
   ],
   "foundationWords": [
@@ -813,6 +830,96 @@
       "phrase": "I have a desk.",
       "phraseMeaning": "Ho un banco.",
       "gap": "I have a ___."
+    },
+    {
+      "id": "eleven",
+      "meaning": "undici",
+      "emoji": "11",
+      "topic": "numeri",
+      "phrase": "I see eleven stars.",
+      "phraseMeaning": "Vedo undici stelle.",
+      "gap": "I see ___ stars."
+    },
+    {
+      "id": "twelve",
+      "meaning": "dodici",
+      "emoji": "12",
+      "topic": "numeri",
+      "phrase": "I see twelve stars.",
+      "phraseMeaning": "Vedo dodici stelle.",
+      "gap": "I see ___ stars."
+    },
+    {
+      "id": "thirteen",
+      "meaning": "tredici",
+      "emoji": "13",
+      "topic": "numeri",
+      "phrase": "I see thirteen stars.",
+      "phraseMeaning": "Vedo tredici stelle.",
+      "gap": "I see ___ stars."
+    },
+    {
+      "id": "fourteen",
+      "meaning": "quattordici",
+      "emoji": "14",
+      "topic": "numeri",
+      "phrase": "I see fourteen stars.",
+      "phraseMeaning": "Vedo quattordici stelle.",
+      "gap": "I see ___ stars."
+    },
+    {
+      "id": "fifteen",
+      "meaning": "quindici",
+      "emoji": "15",
+      "topic": "numeri",
+      "phrase": "I see fifteen stars.",
+      "phraseMeaning": "Vedo quindici stelle.",
+      "gap": "I see ___ stars."
+    },
+    {
+      "id": "sixteen",
+      "meaning": "sedici",
+      "emoji": "16",
+      "topic": "numeri",
+      "phrase": "I see sixteen stars.",
+      "phraseMeaning": "Vedo sedici stelle.",
+      "gap": "I see ___ stars."
+    },
+    {
+      "id": "seventeen",
+      "meaning": "diciassette",
+      "emoji": "17",
+      "topic": "numeri",
+      "phrase": "I see seventeen stars.",
+      "phraseMeaning": "Vedo diciassette stelle.",
+      "gap": "I see ___ stars."
+    },
+    {
+      "id": "eighteen",
+      "meaning": "diciotto",
+      "emoji": "18",
+      "topic": "numeri",
+      "phrase": "I see eighteen stars.",
+      "phraseMeaning": "Vedo diciotto stelle.",
+      "gap": "I see ___ stars."
+    },
+    {
+      "id": "nineteen",
+      "meaning": "diciannove",
+      "emoji": "19",
+      "topic": "numeri",
+      "phrase": "I see nineteen stars.",
+      "phraseMeaning": "Vedo diciannove stelle.",
+      "gap": "I see ___ stars."
+    },
+    {
+      "id": "twenty",
+      "meaning": "venti",
+      "emoji": "20",
+      "topic": "numeri",
+      "phrase": "I see twenty stars.",
+      "phraseMeaning": "Vedo venti stelle.",
+      "gap": "I see ___ stars."
     }
   ],
   "phonics": {
@@ -874,5 +981,390 @@
         "adultCue": "Modella /n/ come un suono nasale, senza aggiungere la vocale del nome en o del nome italiano enne. Non confonderlo con la parola intera no."
       }
     ]
-  }
+  },
+  "classroomArt": {
+    "source": "classroom-objects.png",
+    "columns": 4,
+    "rows": 3,
+    "cells": {
+      "pencil": [
+        0,
+        0
+      ],
+      "pen": [
+        1,
+        0
+      ],
+      "book": [
+        2,
+        0
+      ],
+      "eraser": [
+        3,
+        0
+      ],
+      "scissors": [
+        0,
+        1
+      ],
+      "glue stick": [
+        1,
+        1
+      ],
+      "crayons": [
+        2,
+        1
+      ],
+      "notebook": [
+        3,
+        1
+      ],
+      "sharpener": [
+        0,
+        2
+      ],
+      "marker": [
+        1,
+        2
+      ],
+      "bookbag": [
+        2,
+        2
+      ],
+      "desk": [
+        3,
+        2
+      ]
+    },
+    "urls": {
+      "png": "classroom-objects.png?v=f0ea11f02090",
+      "webp": "classroom-objects.webp?v=2d986b9f0fe0"
+    }
+  },
+  "sentenceActivities": [
+    {
+      "id": "have-pen",
+      "answer": "I have a pen.",
+      "tokens": [
+        "I",
+        "have",
+        "a",
+        "pen"
+      ],
+      "meaning": "Ho una penna."
+    },
+    {
+      "id": "have-book",
+      "answer": "I have a book.",
+      "tokens": [
+        "I",
+        "have",
+        "a",
+        "book"
+      ],
+      "meaning": "Ho un libro."
+    },
+    {
+      "id": "have-pencil",
+      "answer": "I have a pencil.",
+      "tokens": [
+        "I",
+        "have",
+        "a",
+        "pencil"
+      ],
+      "meaning": "Ho una matita."
+    },
+    {
+      "id": "my-notebook",
+      "answer": "This is my notebook.",
+      "tokens": [
+        "This",
+        "is",
+        "my",
+        "notebook"
+      ],
+      "meaning": "Questo è il mio quaderno."
+    },
+    {
+      "id": "cat-in-box",
+      "answer": "The cat is in the box.",
+      "tokens": [
+        "The",
+        "cat",
+        "is",
+        "in",
+        "the",
+        "box"
+      ],
+      "meaning": "Il gatto è nella scatola."
+    },
+    {
+      "id": "cat-on-box",
+      "answer": "The cat is on the box.",
+      "tokens": [
+        "The",
+        "cat",
+        "is",
+        "on",
+        "the",
+        "box"
+      ],
+      "meaning": "Il gatto è sopra la scatola."
+    },
+    {
+      "id": "cat-under-box",
+      "answer": "The cat is under the box.",
+      "tokens": [
+        "The",
+        "cat",
+        "is",
+        "under",
+        "the",
+        "box"
+      ],
+      "meaning": "Il gatto è sotto la scatola."
+    },
+    {
+      "id": "red-ball",
+      "answer": "The ball is red.",
+      "tokens": [
+        "The",
+        "ball",
+        "is",
+        "red"
+      ],
+      "meaning": "La palla è rossa."
+    },
+    {
+      "id": "yellow-sun",
+      "answer": "The sun is yellow.",
+      "tokens": [
+        "The",
+        "sun",
+        "is",
+        "yellow"
+      ],
+      "meaning": "Il sole è giallo."
+    },
+    {
+      "id": "two-stars",
+      "answer": "I see two stars.",
+      "tokens": [
+        "I",
+        "see",
+        "two",
+        "stars"
+      ],
+      "meaning": "Vedo due stelle."
+    },
+    {
+      "id": "blue-crayons",
+      "answer": "I have blue crayons.",
+      "tokens": [
+        "I",
+        "have",
+        "blue",
+        "crayons"
+      ],
+      "meaning": "Ho dei pastelli a cera blu."
+    },
+    {
+      "id": "my-bookbag",
+      "answer": "This is my bookbag.",
+      "tokens": [
+        "This",
+        "is",
+        "my",
+        "bookbag"
+      ],
+      "meaning": "Questo è il mio zaino."
+    }
+  ],
+  "instructionActivities": [
+    {
+      "id": "show-pencil",
+      "instruction": "Show me the pencil.",
+      "meaning": "Indica la matita.",
+      "choices": [
+        {
+          "id": "pen",
+          "label": "Penna",
+          "icon": "🖊️"
+        },
+        {
+          "id": "pencil",
+          "label": "Matita",
+          "icon": "✏️"
+        },
+        {
+          "id": "marker",
+          "label": "Pennarello",
+          "icon": "🖍️"
+        }
+      ],
+      "answer": "pencil"
+    },
+    {
+      "id": "find-eraser",
+      "instruction": "Find the eraser.",
+      "meaning": "Trova la gomma.",
+      "choices": [
+        {
+          "id": "eraser",
+          "label": "Gomma",
+          "icon": "▱"
+        },
+        {
+          "id": "sharpener",
+          "label": "Temperino",
+          "icon": "▣"
+        },
+        {
+          "id": "notebook",
+          "label": "Quaderno",
+          "icon": "📓"
+        }
+      ],
+      "answer": "eraser"
+    },
+    {
+      "id": "show-scissors",
+      "instruction": "Show me the scissors.",
+      "meaning": "Indica le forbici.",
+      "choices": [
+        {
+          "id": "glue stick",
+          "label": "Colla stick",
+          "icon": "🧴"
+        },
+        {
+          "id": "crayons",
+          "label": "Pastelli a cera",
+          "icon": "🖍️"
+        },
+        {
+          "id": "scissors",
+          "label": "Forbici",
+          "icon": "✂️"
+        }
+      ],
+      "answer": "scissors"
+    },
+    {
+      "id": "find-glue-stick",
+      "instruction": "Find the glue stick.",
+      "meaning": "Trova la colla stick.",
+      "choices": [
+        {
+          "id": "glue stick",
+          "label": "Colla stick",
+          "icon": "🧴"
+        },
+        {
+          "id": "eraser",
+          "label": "Gomma",
+          "icon": "▱"
+        },
+        {
+          "id": "pen",
+          "label": "Penna",
+          "icon": "🖊️"
+        }
+      ],
+      "answer": "glue stick"
+    },
+    {
+      "id": "show-bookbag",
+      "instruction": "Show me the bookbag.",
+      "meaning": "Indica lo zaino.",
+      "choices": [
+        {
+          "id": "book",
+          "label": "Libro",
+          "icon": "📕"
+        },
+        {
+          "id": "bookbag",
+          "label": "Zaino",
+          "icon": "🎒"
+        },
+        {
+          "id": "desk",
+          "label": "Banco",
+          "icon": "▤"
+        }
+      ],
+      "answer": "bookbag"
+    },
+    {
+      "id": "point-red-circle",
+      "instruction": "Point to the red circle.",
+      "meaning": "Indica il cerchio rosso.",
+      "choices": [
+        {
+          "id": "blue-circle",
+          "label": "Cerchio blu",
+          "icon": "🔵"
+        },
+        {
+          "id": "yellow-circle",
+          "label": "Cerchio giallo",
+          "icon": "🟡"
+        },
+        {
+          "id": "red-circle",
+          "label": "Cerchio rosso",
+          "icon": "🔴"
+        }
+      ],
+      "answer": "red-circle"
+    },
+    {
+      "id": "point-three-stars",
+      "instruction": "Point to three stars.",
+      "meaning": "Indica tre stelle.",
+      "choices": [
+        {
+          "id": "three-stars",
+          "label": "Tre stelle",
+          "icon": "⭐ ⭐ ⭐"
+        },
+        {
+          "id": "one-star",
+          "label": "Una stella",
+          "icon": "⭐"
+        },
+        {
+          "id": "two-stars",
+          "label": "Due stelle",
+          "icon": "⭐ ⭐"
+        }
+      ],
+      "answer": "three-stars"
+    },
+    {
+      "id": "open-book",
+      "instruction": "Open the book.",
+      "meaning": "Apri il libro.",
+      "choices": [
+        {
+          "id": "closed-notebook",
+          "label": "Quaderno chiuso",
+          "icon": "📓"
+        },
+        {
+          "id": "open-book",
+          "label": "Libro aperto",
+          "icon": "📖"
+        },
+        {
+          "id": "closed-book",
+          "label": "Libro chiuso",
+          "icon": "📕"
+        }
+      ],
+      "answer": "open-book"
+    }
+  ]
 }

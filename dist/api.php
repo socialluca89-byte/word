@@ -5,8 +5,23 @@ ini_set('display_errors', '0');
 header('Content-Type: application/json; charset=utf-8');
 header('Cache-Control: no-store');
 header('X-Content-Type-Options: nosniff');
+// Correlate service failures without recording identities, request bodies or URLs.
+function apiRequestMetadata(): array {
+    static $metadata=null;
+    if($metadata!==null)return $metadata;
+    $action=is_string($_GET['action']??null)?$_GET['action']:'session';
+    $category='other';
+    foreach(['class','guardian','training','phonics','holiday','journey','duel','presence','feedback','admin','club','quest','study'] as $prefix)if(str_starts_with($action,$prefix.'-')){$category=$prefix;break;}
+    if(in_array($action,['session','health','hub','arena','roster'],true))$category=$action;
+    elseif(in_array($action,['register','login','logout','recover','change-password','new-recovery','auth-capabilities','email-recovery-request','email-recovery-confirm'],true))$category='access';
+    $release='unmarked';$marker=__DIR__.'/.wordyland-managed';
+    if(is_file($marker)&&!is_link($marker)){$value=trim((string)@file_get_contents($marker,false,null,0,41));if(preg_match('/^[a-f0-9]{40}$/D',$value))$release=$value;}
+    return $metadata=['requestId'=>bin2hex(random_bytes(12)),'operation'=>$category,'release'=>$release];
+}
+header('X-Request-ID: '.apiRequestMetadata()['requestId']);
 function respond(array $data, int $status = 200): never {
     http_response_code($status);
+    if($status>=500)$data['requestId']=apiRequestMetadata()['requestId'];
     echo json_encode($data, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
     exit;
 }
@@ -15,7 +30,7 @@ function clearPresenceSession(PDO $db): void {
     if($db->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='online_presence'")->fetchColumn())$db->prepare('DELETE FROM online_presence WHERE session_key=?')->execute([hash('sha256',session_id())]);
 }
 set_exception_handler(function (Throwable $e): never {
-    error_log('WordyLand API: ' . get_class($e));
+    error_log('WordyLand API '.json_encode(apiRequestMetadata()+['error'=>get_class($e)],JSON_UNESCAPED_SLASHES));
     fail('Servizio momentaneamente non disponibile. I progressi locali restano sul dispositivo.', 503);
 });
 if (!extension_loaded('pdo_sqlite')) fail('Database non ancora disponibile sul server.', 503);
