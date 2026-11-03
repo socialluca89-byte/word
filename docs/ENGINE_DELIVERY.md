@@ -109,3 +109,5 @@ suite cumulative e normale pipeline di rilascio.
 ## Freeze finale dopo la regressione cumulativa
 
 La prova isolata finale è passata in una sola esecuzione sul candidato aggiornato: DOM418,9ms/load484,1ms, soglia5s invariata, zero contesti iniziali e una mappa dopo scroll a390/1360. I54file coincidono con il manifest congelato. Totale finale degli script iniziali555.872byte; la precedente misura443,5ms descrive il primo freeze e non viene confusa con quello definitivo. Prova: PERFORMANCE_FREEZE2.json nel registro di lavoro.
+
+Il successivo follow-up della memoria degli aiuti modifica solo training.js e mantiene il motore esaminato. Una nuova prova isolata sul suo freeze definitivo è PASS: DOM489,1ms/load532ms, cinque secondi invariati,54file integri, zero renderer iniziali e una mappa dopo scroll. Le misure precedenti restano i rispettivi snapshot, non dati del rilascio finale.

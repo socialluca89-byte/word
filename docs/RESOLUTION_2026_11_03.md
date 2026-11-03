@@ -16,7 +16,7 @@ Base: `b23e98a74fcccfbb16cf88dd7161b92740a342db`. [WORK_STATUS.md](WORK_STATUS.m
 
 ## Prestazioni e dati
 
-Il motore Three.js locale e versionato viene caricato quando serve, con una sola richiesta condivisa e ripiego testuale in caso di errore. Gli script iniziali passano da 1.190.627 a 555.872 byte grezzi; gzip stimato da 325.998 a 167.355 byte. Sono misure dei file, non traffico pubblico o prestazioni garantite sul tablet. La prova locale isolata di caricamento è passata con 484,1ms e la soglia originale di cinque secondi.
+Il motore Three.js locale e versionato viene caricato quando serve, con una sola richiesta condivisa e ripiego testuale in caso di errore. Gli script iniziali passano da 1.190.627 a 557.331 byte grezzi; gzip stimato da 325.998 a 167.759 byte. Sono misure dei file, non traffico pubblico o prestazioni garantite sul tablet. La prova locale isolata di caricamento è passata con 532ms e la soglia originale di cinque secondi.
 
 La nuova illustrazione Classroom mantiene gli stessi pixel RGBA nella codifica WebP: 1.028.944 byte invece dei 1.681.740 del PNG. Gli atlanti esistenti di feste e personaggi restano rispettivamente circa 2,70 e 1,92 MB: la consegna per singole celle/risoluzioni è una successiva ottimizzazione da validare, non una riduzione già ottenuta.
 
@@ -26,8 +26,14 @@ Il nuovo [CLI privato di backup/ripristino](DATA_BACKUP_RESTORE.md) verifica SQL
 
 ## Verifiche e limiti di consegna
 
-Il candidato richiede 47 gruppi verify e 58 suite browser (30+28), conservando tutti i controlli precedenti e le stesse scadenze delle asserzioni. Le prove usano account e documenti sintetici, PHP/SQLite temporanei e Chromium locale. I controlli specifici coprono accessi/CSRF, replay/concorrenza, isolamento, inviti revocati, date di chiusura, ricarica/pausa/indietro, tastiera, 320/390/1360px, fallback e cache privata esclusa. Lo stato cumulativo e l'eventuale run di pubblicazione sono nel registro corrente.
+Il candidato richiede 47 gruppi verify e 59 suite browser (30+29), conservando tutti i controlli precedenti e le stesse scadenze delle asserzioni. Le prove usano account e documenti sintetici, PHP/SQLite temporanei e Chromium locale. I controlli specifici coprono accessi/CSRF, replay/concorrenza, isolamento, inviti revocati, date di chiusura, ricarica/pausa/indietro, tastiera, 320/390/1360px, fallback e cache privata esclusa. Lo stato cumulativo e l'eventuale run di pubblicazione sono nel registro corrente.
 
 Restano verifiche operative distinte: accesso/ruolo reale di Luca e consegna email; appartenenze effettive Best 2; backup e ripristino sull'hosting; qualità delle voci IT/EN e delle foto reali. Tablet antico rinviato dall'utente. I fonemi isolati restano esplicitamente indisponibili, senza registrazioni curate e revisionate; questo non è un curriculum Cambridge completo.
 
 **Grinch non incluso:** la preparazione API resta separata; il precedente ritratto è stato rifiutato dal generatore, con sola categoria `other` disponibile. Nessun nuovo tentativo o personaggio sostitutivo. Non viene dichiarato completato o pubblicato.
+
+## Memoria dell’aiuto e importazioni ospite
+
+Il follow-up conserva nel solo ActivitiesV1 un marcatore per ogni preview già importata, indipendente dalla retention dei dettagli completati. Il V1 resta intatto e i suoi record migrati non diventano un secondo percorso di ripresa. Se la sorgente cambia in un’altra scheda, il bambino ricarica per leggere il salvataggio più recente.
+
+Il modello completo delle parole da ricordare e delle frasi viene mostrato dopo la conferma dell’aiuto, anche se la voce non è disponibile. Dopo pausa/ricarica la risposta resta guidata; leggere una consegna resta invece una modalità distinta, senza confonderla con la risposta mostrata. La nuova prova copre dieci casi, compresi quota/rete, cambio profilo e altro dispositivo. Nessun ritocco retroattivo alle evidenze precedenti.
