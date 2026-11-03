@@ -348,6 +348,10 @@
       }
     }catch(e){saveNote.textContent=e.guestConflict?'Progressi cambiati · ricarica e riprendi':e.guestStorageFailure?'Risposta non salvata · rimani qui e riprova':'Risposta da verificare · usa Riprendi dal salvataggio';feedback.textContent=e.message;if(owner===profile.id&&mission?.token===token&&!e.guestConflict&&(profile.id||e.guestStorageFailure)){const retry=document.createElement('button');retry.className='audio';retry.textContent=e.guestStorageFailure?'Riprova il salvataggio':'Riprendi dal salvataggio';retry.onclick=e.guestStorageFailure?()=>submitAnswer(answer,chosenButton):()=>resumeQuest(token);root.querySelector('#questActions')?.append(retry);}}finally{busy=false;const pause=root.querySelector('#pauseQuest');if(pause)pause.disabled=false;}
   }
+  function showSelectedWardrobeCategory(){
+    const tabs=root.querySelector('.styleTabs'),chosen=tabs?.querySelector('[aria-pressed=true]');if(!tabs||!chosen||tabs.scrollWidth<=tabs.clientWidth)return;
+    const left=chosen.offsetLeft,right=left+chosen.offsetWidth,current=tabs.scrollLeft,width=tabs.clientWidth;if(left<current+10)tabs.scrollLeft=Math.max(0,left-10);else if(right>current+width-10)tabs.scrollLeft=right-width+10;
+  }
   function renderShop(){
     clearScene();
     const groups={christmasCharacters:'🎅 Personaggi Natale',journey:'🧭 Collezioni',christmas:'🎄 Natale',avatar:'Personaggio',home:'Casa',pet:'Compagno',kart:'Kart',palette:'Atelier',trophy:'Trofei',ball:'Calcio',rocket:'Razzi',badge:'Distintivi'},w=wallet();
@@ -375,11 +379,11 @@
         previewHost.focus({preventScroll:true});const bounds=previewHost.getBoundingClientRect();if(bounds.top<16||bounds.bottom>window.innerHeight-16)previewHost.scrollIntoView({block:'nearest',behavior:window.wordylandMotion.allowed()?'smooth':'auto'});
       }
     }
-    previewReward();
+    previewReward();showSelectedWardrobeCategory();const categoryRow=root.querySelector('.styleTabs');document.fonts?.ready.then(()=>{if(categoryRow.isConnected)showSelectedWardrobeCategory();});
     root.querySelectorAll('[data-preview-item]').forEach(button=>button.onclick=()=>{if(!busy)previewReward(item(button.dataset.previewItem));});
     root.querySelector('#returnToReward').onclick=()=>{const button=root.querySelector('button[data-preview-item="'+previewHost.dataset.previewChoice+'"]');button?.focus({preventScroll:true});button?.closest('article')?.scrollIntoView({block:'nearest',behavior:'auto'});};
     root.querySelectorAll('[data-character-play]').forEach(b=>b.onclick=()=>chooseActivity(b.dataset.characterPlay,true));
-    root.querySelectorAll('[data-style]').forEach(b=>b.onclick=()=>{if(busy)return;const previousScroll=b.closest('.styleTabs').scrollLeft;shopGroup=b.dataset.style;renderShop();const tabs=root.querySelector('.styleTabs'),chosen=root.querySelector('[data-style="'+shopGroup+'"]');tabs.scrollLeft=previousScroll;chosen?.focus({preventScroll:true});if(chosen){const left=chosen.offsetLeft,right=left+chosen.offsetWidth,current=tabs.scrollLeft,width=tabs.clientWidth;if(left<current+10)tabs.scrollLeft=Math.max(0,left-10);else if(right>current+width-10)tabs.scrollLeft=right-width+10;}});
+    root.querySelectorAll('[data-style]').forEach(b=>b.onclick=()=>{if(busy)return;const previousScroll=b.closest('.styleTabs').scrollLeft;shopGroup=b.dataset.style;renderShop();const tabs=root.querySelector('.styleTabs'),chosen=root.querySelector('[data-style="'+shopGroup+'"]');tabs.scrollLeft=previousScroll;chosen?.focus({preventScroll:true});showSelectedWardrobeCategory();});
     root.querySelectorAll('[data-item]').forEach(b=>b.onclick=async()=>{
       if(busy)return;busy=true;purchasePending=true;let outcome='';const owner=profile.id,it=item(b.dataset.item),owned=w.inventory.includes(it.id);b.closest('article')?.querySelector('.shopPurchaseMessage')?.remove();b.removeAttribute('aria-describedby');b.disabled=true;
       try{

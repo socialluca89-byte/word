@@ -8,7 +8,7 @@ Base: main1537a74, rilascio verificato dal run41637701431. Richiesta corrente: c
 - web-design-guidelines: accessibilità e interazione, già installata dalla fonte ufficiale Vercel; regole aggiornate acquisite il3novembre, checksum invariato.
 - webapp-testing: aggiunta dal repository ufficiale Anthropic al commit ca45fc496a3436251f191354091d557da31c15b5, con licenza, helper e provenienza verificabile. Le suite di regressione mantengono il Playwright Node fissato del repository e le fixture locali esistenti; si applica il percorso ricognizione→screenshot→azione→verifica. Nessun installer remoto, servizio o nuova dipendenza runtime.
 
-La vecchia posizione develop-web-game non esiste nel catalogo OpenAI corrente; non viene dichiarata installata. L'elenco effettivo è verificato sul repository ufficiale. Il nuovo helper è stato letto per verifica, controllato con --help e parsing; i file originali sono conservati con hash in UPSTREAM.json.
+La vecchia posizione develop-web-game non esiste nel catalogo OpenAI corrente; non viene dichiarata installata. L'elenco effettivo è verificato sul repository ufficiale. Il nuovo helper è stato letto per verifica, controllato con --help e parsing; gli hash originali e installati sono in UPSTREAM.json; è documentata la sola rimozione di uno spazio finale nel Markdown.
 
 ## Direzione: un piccolo teatro illustrato
 

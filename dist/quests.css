@@ -159,3 +159,43 @@ main{padding-top:10px}.accountArea{background:white;border:1px solid #e3dff0;bor
 /* Leave real clearance for fractional device-pixel rounding when showing feedback. */
 #trainingHub .trainingFeedbackPanel{scroll-margin-bottom:16px}
 #mainContent .startHub #startTitle{margin:0}
+
+/* An illustrated learning theatre: the prompt and its next action stay together. */
+#trainingHub{background:#f4fafc;border-color:#c6dfe3;color:#193e55}
+#trainingHub .trainingHeading>.questEyebrow,#trainingHub .trainingHeading .questEyebrow{font-size:15px;line-height:1.3;letter-spacing:0;color:#396574}
+#trainingHub[data-session-mode]{padding:20px;background:#f4fafc;border:2px solid #b9d9df;box-shadow:0 5px 0 #d7e9eb}
+#trainingHub[data-session-mode] .trainingHeading{display:flex;flex-direction:column;align-items:flex-start;gap:10px;padding:0;margin:0 0 10px;max-width:none}
+#trainingHub[data-session-mode] .trainingHeading>.lessonShortcut{min-height:48px;margin:0;padding:10px 13px;border:1px solid #bfd9de;background:#fff;color:#22654f;box-shadow:0 2px 0 #d4e4e5}
+#trainingHub[data-session-mode] .trainingHeading h2{font:800 clamp(25px,3vw,32px)/1.18 Outfit,system-ui,sans-serif;letter-spacing:-.35px;margin:5px 0 0;text-wrap:balance;color:#193e55}
+#trainingHub[data-session-mode] #trainingStatus:empty{margin:0}
+#trainingHub[data-session-mode] .trainingSessionTop{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;margin:0;min-height:52px}
+#trainingHub[data-session-mode] .trainingSessionTop>span{font:600 18px/1.3 'DM Sans',sans-serif;color:#315767;min-width:0}
+#trainingHub[data-session-mode] #pauseTraining{font-size:18px;line-height:1.25;min-height:48px;margin:0;padding:10px 12px;border:1px solid #abcbd5;background:#fff;color:#193e55;box-shadow:0 2px 0 #c3d9e0}
+#trainingHub[data-session-mode] .trainingProgress{height:10px;margin:8px 0 12px;background:#dfedf0;border:1px solid #c1d9df}
+#trainingHub[data-session-mode] .trainingProgress>span{background:#168ba5}
+#trainingHub .trainingTheatre{position:relative;isolation:isolate;min-width:0;box-sizing:border-box;padding:18px 20px 20px;border:2px solid #bddde4;border-radius:26px 26px 20px 20px;background:#fff;box-shadow:0 5px 0 #d1e6e9}
+#trainingHub .trainingTheatre #trainingMode{font:500 18px/1.4 'DM Sans',sans-serif;color:#3b6070;margin:0 0 10px;text-align:center}
+#trainingHub .trainingTheatre #trainingModel{min-width:0;text-align:center}
+#trainingHub .trainingTheatre #trainingModel>p{font-size:20px;line-height:1.4;margin:4px 0 10px;color:#315767}
+#trainingHub .trainingTheatre .trainingImage{position:relative;isolation:isolate;display:grid;place-items:center;margin:0 auto;min-height:180px;max-width:240px;line-height:1}
+#trainingHub .trainingTheatre .trainingImage:before{content:'';position:absolute;z-index:-1;width:156px;height:128px;left:50%;top:50%;transform:translate(-50%,-40%) rotate(-8deg);border-radius:48% 44% 42% 50%;background:#e1f2f5}
+#trainingHub .trainingTheatre .trainingWord{font-family:Outfit,system-ui,sans-serif;font-size:clamp(34px,7vw,46px)!important;line-height:1.2;letter-spacing:1px;margin:8px 0;color:#193e55}
+#trainingHub .trainingTheatre .largeTrainingLetter{font-family:Outfit,system-ui,sans-serif;font-size:clamp(76px,18vw,108px);line-height:1.15;margin:8px 0 12px;color:#168ba5}
+#trainingHub .trainingTheatre .largeTrainingLetter small{color:#22654f}
+#trainingHub #trainingContinue{display:block;min-height:56px;width:100%;max-width:430px;box-sizing:border-box;margin:12px auto 0;padding:12px 18px;font:800 22px/1.25 Outfit,system-ui,sans-serif;border:2px solid #d8ad4b;border-radius:16px;background:#ffd16a;color:#193e55;box-shadow:0 4px 0 #b98e35;touch-action:manipulation}
+#trainingHub #trainingContinue:hover{background:#ffdc87}
+#trainingHub #trainingContinue:active{box-shadow:0 2px 0 #b98e35;transform:translateY(2px)}
+#trainingHub #trainingContinue:focus-visible{outline:4px solid #193e55;outline-offset:4px}
+#trainingHub[data-session-mode] .trainingAudio{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch;gap:8px;margin:16px 0 0;min-width:0}
+#trainingHub[data-session-mode] .trainingAudio button{min-height:48px;min-width:0;width:100%;box-sizing:border-box;margin:0;padding:10px 9px;font:700 18px/1.25 Outfit,system-ui,sans-serif;letter-spacing:0;border:1px solid #abcbd5;border-radius:13px;background:#fff;color:#193e55;box-shadow:0 2px 0 #cbdee4;touch-action:manipulation}
+#trainingHub[data-session-mode] .trainingAudio #trainingListen{grid-column:1/-1;background:#22654f;color:#fff;border-color:#22654f;font-size:20px}
+#trainingHub[data-session-mode] .trainingAudio #trainingItalian,#trainingHub[data-session-mode] .trainingAudio #trainingSpellListen,#trainingHub[data-session-mode] .trainingAudio>.hint{grid-column:1/-1}
+#trainingHub[data-session-mode] .trainingAudio>.hint{margin:0;font-size:17px;line-height:1.4}
+#trainingHub .trainingTheatre .trainingAudio{margin:12px 0}
+#trainingHub[data-session-mode] .trainingHint{margin:14px 0}
+#trainingHub[data-session-mode] .trainingHint>button{min-height:48px;margin:0;font-size:18px;padding:10px 14px;background:#e5f2f2;color:#22654f;border:1px solid #b5d7d3}
+#trainingHub .trainingTheatre .trainingChoices{margin:14px 0}
+#trainingHub .trainingTheatre #trainingWrite label{font-size:22px;line-height:1.35;margin:10px 0 8px}
+#trainingHub .trainingTheatre #trainingWrite button{margin:12px 0 0}
+@media(max-width:560px){#trainingHub[data-session-mode]{padding:14px 12px;margin:12px 8px}#trainingHub[data-session-mode] .trainingHeading{gap:8px}#trainingHub[data-session-mode] .trainingHeading>.lessonShortcut{width:auto;justify-content:flex-start;font-size:18px}#trainingHub[data-session-mode] .trainingTheatre{padding:14px 12px 16px;border-radius:22px 22px 18px 18px}#trainingHub[data-session-mode] .trainingHeading h2{font-size:25px;line-height:1.15}#trainingHub[data-session-mode] .trainingSessionTop>span{font-size:18px}#trainingHub[data-session-mode] .trainingTheatre #trainingMode{font-size:18px;line-height:1.35}#trainingHub[data-session-mode] .trainingTheatre .trainingImage{min-height:174px}#trainingHub[data-session-mode] .trainingTheatre .trainingImage .trainingWordArt{width:174px;height:174px}#trainingHub #trainingContinue{font-size:22px}#trainingHub[data-session-mode] .trainingAudio{margin-top:14px}#trainingHub[data-session-mode] .trainingAudio button{font-size:18px}#trainingHub[data-session-mode] .trainingAudio #trainingListen{font-size:20px}}
+@media(prefers-reduced-motion:reduce){#trainingHub #trainingContinue:active{transform:none}}

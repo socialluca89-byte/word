@@ -2,6 +2,16 @@
 
 Questo documento distingue codice preparato, collaudo e pubblicazione. Le note datate in altri documenti restano cronologia.
 
+## Aggiornamento corrente: grafica e gioco, 3 novembre
+
+Base ora verificata online: `1537a740432625c0a43d25bb2ce99ef1f0711483`, [run41637701431](https://github.com/socialluca89-byte/word/actions/runs/41637701431),47verify/59browser/deploy riusciti alle12:55:52UTC (13:55:52Europe/Rome). Include il follow-up memoria e la correzione del controllo foundations descritti nelle sezioni storiche sotto.
+
+La nuova richiesta di installare skill e migliorare grafica/gioco è in lavorazione sul ramo `improve-game-visuals-20261103`, **non ancora pubblicata**. Skill ufficiale webapp-testing installata con licenza/provenienza, insieme alle due skill di design già presenti. Il lotto finito comprende layout illustrato degli esercizi, categoria attiva del guardaroba visibile, obiettivo/scoperte reali nelle scene e pilota del kart con gesto di corsia. [Piano e criteri](VISUAL_GAME_UPGRADE_2026_11_03.md). Nessuna modifica a backend, accessi, economia o dati reali.
+
+La matrice candidata conserva tutti i47verify e59browser precedenti e aggiunge `visual-journey` e `kart-pilot`: **61suite**, in gruppi31+30. Risultati locali e pubblicazione del candidato saranno registrati separatamente; la presenza delle nuove suite nel workflow non equivale al loro successo.
+
+Lotto sviluppato e congelato:47verify e15suite browser pertinenti PASS localmente, performance isolata556ms con soglia5s invariata, versionamento idempotente e54hash invariati. [Risultati, misure e limiti](VISUAL_GAME_VERIFICATION_2026_11_03.md). È pronto per la pipeline completa; non viene dichiarato online prima della sua conclusione. Il risultato terminale del run sul commit finale determina la pubblicazione, senza ereditare l'esito del precedente1537a74.
+
 Base pubblicata verificata alla redazione del candidato: `53cc376ad1509be716d36c0365d6b86973f3f19b`, [run41621446398](https://github.com/socialluca89-byte/word/actions/runs/41621446398),47verify/58browser/deploy riusciti il3novembre alle10:57:16UTC. La base precedente b23e98a resta l’origine del confronto dell’audit. Ultimo controllo cloud extra health403: nessuna nuova sonda o identità alternativa in questo lotto.
 
 Richiesta corrente: «ok risolvi tutto», riferita all’analisi `/workspace/wordyland-analysis-2026-11-03/ANALISI.md`. Tutte le funzionalità precedenti restano raggiungibili, account/progressi/premi conservati.
