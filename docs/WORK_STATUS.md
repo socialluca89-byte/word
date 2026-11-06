@@ -1,5 +1,12 @@
 # Stato unico WordyLand
 
+## Lotto corrente: spiegazioni, aiuti e premi visibili (6 novembre)
+
+Verificato online **353027185b6629afbf60906b8d29c2e1e69a8e5a**, [run42270153520](https://github.com/socialluca89-byte/word/actions/runs/42270153520):49verify,63suite browser e deploy/live PASS, concluso alle19:37:37Europe/Rome. L’interruzione dell’attesa locale non ha annullato il rilascio; il run esatto è stato riletto fino al risultato terminale.
+
+L’utente chiede di continuare con subagenti. Audit distinti hanno trovato spiegazione della risposta sì/no al posto della domanda, aiuto automatico divergente tra ospite e account e adesivi ottenuti ma non visibili nella grammatica. Il nuovo lotto corregge questi punti e la chiarezza del ritorno; il focus mobile fuori schermo è stato riprodotto con touch e tastiera e viene corretto con scorrimento minimo. [Perimetro e criteri](CLASSROOM_SUPPORT_POLISH_2026_11_06.md). Aggiunta la correzione del client che restava sul passo vecchio quando una risposta errata conteneva già lo snapshot avanzato da un altro dispositivo; dimostrata con VM e fixture del contratto, non con una corsa reale del database. Solo contenuti delle schede già inviate, nessun nuovo tema. Codice sviluppato e collaudato localmente:49verify e8suite browser pertinenti PASS, grammatica16aree/10misureviewport, performance isolata402,7ms con5s invariati. File didattico e PHP identici,55file/48static congelati. La nuova pipeline completa63e il deploy/live sul commit finale sono ancora da attestare: non ancora dichiarato pubblicato. Tutti i vincoli su dati e protezioni restano.
+
+
 ## Stato corrente: stessi contenuti, due aiuti interattivi (6 novembre)
 
 Base verificata e pubblicata **a218c3d6936640ac9adc680fa0ac56addd1b9aa5**, [run42263085984](https://github.com/socialluca89-byte/word/actions/runs/42263085984), concluso alle17:52:25UTC/18:52:25Europe/Rome:49verify,62browser e deploy/live check riusciti. Le sezioni precedenti mantengono le loro fotografie storiche.

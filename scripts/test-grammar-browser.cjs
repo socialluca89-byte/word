@@ -3,6 +3,7 @@ const {chromium} = require(process.env.WORDYLAND_PLAYWRIGHT_MODULE || 'playwrigh
 const assert = require('assert/strict');
 const fs = require('fs');
 const path = require('path');
+const {randomBytes} = require('crypto');
 const base = process.env.WORDYLAND_TEST_URL;
 assert(['localhost', '127.0.0.1'].includes(new URL(base).hostname), 'Disposable localhost only');
 const origin = new URL(base).origin;
@@ -22,7 +23,7 @@ if (captures) {
   });
   const errors = [], guestWrites = [], checks = [], geometries = [], art = new Map();
   const shortAnswers = new Set(), articles = new Set(), sentenceStarts = new Set(), releases = new Set();
-  let undoChecked = false;
+  let undoChecked = false, stickerShotTaken = false;
   function gate() {
     let finish;
     const promise = new Promise(resolve => finish = resolve);
@@ -177,9 +178,85 @@ if (captures) {
       assert.equal(session.step, before + 1, 'One confirmation stores exactly one step');
       await p.locator('#grammarNext').click();
     }
+    await stickerView(p, '.grammarDone', (await saved(p)).stickers);
+    if (captures && !stickerShotTaken) {await p.locator('#trainingHub').screenshot({path: path.join(captures, 'grammar-earned-sticker-hub.png')}); stickerShotTaken = true;}
     await p.locator('#grammarAgain').click();
     await p.locator('#grammarMenu').waitFor();
+    await stickerView(p, '#grammarMenu', (await saved(p)).stickers);
     return {aliasCount, wrongDone};
+  }
+  const stickerCatalog = JSON.parse(fs.readFileSync('dist/training.json', 'utf8')).stickers;
+  async function stickerView(p, where, ids) {
+    const expected = stickerCatalog.filter(row => ids.includes(row.id));
+    const nodes = p.locator(where + ' .trainingStickers [data-grammar-sticker]');
+    assert.deepEqual(await nodes.evaluateAll(nodes => nodes.map(node => node.dataset.grammarSticker).sort()), expected.map(row => row.id).sort(), 'Only actual owned, valid catalog stickers are displayed once');
+    for (const sticker of expected) assert((await p.locator(where + ' [data-grammar-sticker="' + sticker.id + '"]').innerText()).includes(sticker.name));
+    if (expected.length) {
+      assert.equal(await p.locator(where + ' .trainingStickers').getAttribute('aria-label'), 'I tuoi adesivi');
+      assert(!/nuov[oaie]\s+(?:premi|adesiv)/i.test(await p.locator(where + ' .trainingStickers').innerText()), 'Previously owned stickers are not falsely announced as new grants');
+    }
+  }
+  async function choose(p, answer) {
+    await p.locator('[data-grammar-choice]').evaluateAll((nodes, value) => {
+      const node = nodes.find(node => node.dataset.grammarChoice === value);
+      if (!node) throw Error('Missing exact curated choice'); node.focus();
+    }, answer);
+    await p.keyboard.press('Enter');
+  }
+  async function wrongChoice(p, q) {
+    const wrong = q.choices.find(value => value !== q.answer); assert(wrong);
+    await choose(p, wrong);
+    await p.locator('#grammarFeedback[data-correct=false]').waitFor();
+  }
+  async function questionError(p, q) {
+    assert.equal(q.grammar.phase, 'question-build');
+    const words = q.answer.split(' '); [words[0], words[1]] = [words[1], words[0]];
+    for (const word of words) await token(p, word);
+    await p.locator('#grammarBuildCheck').click();
+    await p.locator('#grammarFeedback[data-correct=false]').waitFor();
+  }
+  const ownedSnapshot = (p, profile, token) => req(p, 'training-state&grammar=1&profile=' + profile + '&token=' + token).then(data => data.session);
+  async function createOwned(p, username) {
+    await p.goto(base + '/#allenamento'); await p.evaluate(() => wordylandAccount.ready);
+    return p.evaluate(async username => {
+      const a = wordylandAccount;
+      await a.connect(await a.request('register', {username, password: 'Synthetic-grammar-support-123', adult: true}));
+      return a.createProfile('Supporto sintetico');
+    }, username);
+  }
+  const supportViewports = [];
+  async function modelViewport(p, label) {
+    await p.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    const rect = await p.locator('#grammarModel').evaluate(node => {
+      const r = node.getBoundingClientRect(); return {top: r.top, bottom: r.bottom, height: r.height, viewport: innerHeight, scroll: scrollY};
+    });
+    supportViewports.push({label, kind: 'automatic-model', ...rect});
+    if (captures) {
+      fs.writeFileSync(path.join(captures, 'grammar-support-viewports.json'), JSON.stringify(supportViewports, null, 2) + '\n');
+      await p.screenshot({path: path.join(captures, label + '.png')});
+    }
+    assert(rect.bottom > 0 && rect.top < rect.viewport, 'The confirmed support model intersects the visible viewport: ' + JSON.stringify({label, ...rect}));
+    if (captures) await p.locator('#trainingHub').screenshot({path: path.join(captures, label + '-hub.png')});
+  }
+  async function openAtEdge(p, selector, edge, method) {
+    const before = await p.locator(selector).evaluate((node, edge) => {
+      const r = node.getBoundingClientRect();
+      scrollTo({top: scrollY + (edge === 'bottom' ? r.bottom - innerHeight + 16 : r.top - 16), behavior: 'instant'});
+      const next = node.getBoundingClientRect(); return {top: next.top, bottom: next.bottom, width: next.width, height: next.height, x: next.x, viewport: innerHeight};
+    }, edge);
+    assert(before.top >= 0 && before.bottom <= before.viewport, 'The aid opener is fully visible before activation');
+    if (method === 'touch') await p.touchscreen.tap(before.x + before.width / 2, before.top + before.height / 2);
+    else {await p.locator(selector).evaluate(node => node.focus({preventScroll: true})); await p.keyboard.press('Enter');}
+    await p.locator(selector === '#grammarLettersOpen' ? '#grammarLettersPanel' : '[data-grammar-count]').first().waitFor();
+    await p.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+    const focus = await p.evaluate(() => {
+      const node = document.activeElement, r = node.getBoundingClientRect();
+      return {top: r.top, bottom: r.bottom, height: r.height, viewport: innerHeight, letter: node.dataset.grammarLetter, object: node.dataset.grammarCount};
+    });
+    supportViewports.push({label: selector + '-' + edge + '-' + method, kind: 'aid-focus', width: await p.evaluate(() => innerWidth), before, focus});
+    if (captures) fs.writeFileSync(path.join(captures, 'grammar-support-viewports.json'), JSON.stringify(supportViewports, null, 2) + '\n');
+    assert(selector === '#grammarLettersOpen' ? focus.letter !== undefined : focus.object !== undefined, 'The first real aid control receives focus');
+    assert(focus.top >= 0 && focus.bottom <= focus.viewport, 'The focused aid target is fully on screen after confirmation: ' + JSON.stringify(focus));
   }
   const shot = async (p, name) => {if (captures) await p.screenshot({path: path.join(captures, name + '.png')});};
   try {
@@ -232,6 +309,158 @@ if (captures) {
     assert.notEqual(art.get('desk'), art.get('table'), 'School desk and table are visually distinct');
     assert.deepEqual(await legacy(p), before); await shot(p, 'grammar-completed-390'); await p.close();
     checks.push('five finite paths, wrong-answer explanation, sentence/question keyboard composition, both short answers, sixteen distinct objects and plural aliases');
+
+    // Return labels describe the real entry; confirmed plans survive both exits.
+    for (const [entry, hash, label] of [['#openGrammarTraining', '#allenamento', 'Lettere e parole'], ['#classroomGrammarTraining', '#dettato', 'Dettato classe']]) {
+      const back = await page(); back.grammarGuestOnly = true; await menu(back, entry);
+      assert((await back.locator('#grammarBack').innerText()).includes(label), 'Back names the actual source: ' + label);
+      await start(back, 'number'); let state = await guest(back);
+      await solve(back, state.plan[state.step]); await back.locator('#grammarNext').click(); state = await guest(back);
+      await back.locator('#grammarBack').click(); await back.locator(entry).waitFor();
+      assert.equal(await back.evaluate(() => location.hash), hash, 'Return preserves the original section');
+      await back.locator(entry).click(); await back.locator('[data-grammar-resume="' + state.token + '"]').click();
+      assert.equal((await guest(back)).step, state.step); assert.deepEqual((await guest(back)).plan, state.plan);
+      await back.close();
+    }
+    checks.push('both entry labels return to their actual section without losing a confirmed grammar step');
+
+    // A question needs question-order feedback, not the following yes/no answer.
+    const question = await page(); question.grammarGuestOnly = true; await menu(question); await start(question, 'questions');
+    let questionState = await guest(question); await solve(question, questionState.plan[questionState.step]); await question.locator('#grammarNext').click();
+    questionState = await guest(question); const questionRow = questionState.plan[questionState.step];
+    await questionError(question, questionRow);
+    assert((await question.locator('#grammarFeedback').innerText()).includes(questionRow.grammar.questionExplanation), 'An incorrectly ordered question explains Is before it');
+    assert(!(await question.locator('#grammarFeedback').innerText()).includes(questionRow.grammar.explanation), 'Question feedback does not substitute the next short-answer explanation');
+    assert.equal((await guest(question)).step, questionState.step);
+    // The second distinct attempt is on the same visible composition.
+    await question.locator('#grammarBuildCheck').click(); await question.locator('#grammarModel').waitFor();
+    assert.equal((await guest(question)).errors, 2); assert.equal((await guest(question)).hint, 2);
+    await modelViewport(question, 'guest-question-automatic-support');
+    assert.equal(await question.locator('#grammarModel>p[lang=en]').innerText(), questionRow.answer);
+    assert.equal(await question.locator('#grammarModel .grammarExplanation').innerText(), questionRow.grammar.questionExplanation, 'The revealed model explains this question phase');
+    const questionPlan = structuredClone(questionState.plan); await question.locator('#grammarPause').click(); await question.reload(); await question.evaluate(() => wordylandAccount.ready);
+    await question.locator('#openGrammarTraining').click(); await question.locator('[data-grammar-resume="' + questionState.token + '"]').click();
+    assert.equal((await guest(question)).hint, 2); assert.deepEqual((await guest(question)).plan, questionPlan);
+    assert.equal(await question.locator('#grammarModel .grammarExplanation').innerText(), questionRow.grammar.questionExplanation);
+    await solve(question, questionRow); await question.locator('#grammarNext').click();
+    const questionItem = (await saved(question)).items[questionRow.item + '|grammar.question.compose']; assert.equal(questionItem.guided, 1); assert.equal(questionItem.independent, 0);
+    questionState = await guest(question); const shortRow = questionState.plan[questionState.step]; assert.equal(shortRow.grammar.phase, 'short-answer');
+    await wrongChoice(question, shortRow);
+    assert((await question.locator('#grammarFeedback').innerText()).includes(shortRow.grammar.explanation), 'A wrong short answer retains its yes/no explanation');
+    assert.equal((await guest(question)).step, questionState.step); await question.close();
+    checks.push('question errors and revealed/resumed models explain question order; short answers keep their own rule; second-error help remains saved and guided');
+
+    // Existing earned stickers remain visible and finite; unknown or duplicate IDs create nothing.
+    const sticker = await page(); sticker.grammarGuestOnly = true; await menu(sticker);
+    await stickerView(sticker, '#grammarMenu', []); await round(sticker, 'number');
+    const earned = await saved(sticker); assert.deepEqual(earned.stickers, ['first']);
+    await round(sticker, 'number'); assert.deepEqual((await saved(sticker)).stickers, ['first'], 'Repeating a grammar round does not grant infinite duplicate rewards');
+    await sticker.evaluate(() => {
+      const key = 'wordylandGrammarGuestV1', state = JSON.parse(localStorage.getItem(key));
+      state.stickers = ['first', 'first', 'not-a-catalog-sticker']; localStorage.setItem(key, JSON.stringify(state));
+    });
+    await sticker.locator('#grammarBack').click(); await sticker.locator('#openGrammarTraining').click(); await sticker.locator('#grammarMenu').waitFor();
+    await stickerView(sticker, '#grammarMenu', ['first']);
+    assert.deepEqual((await saved(sticker)).stickers, ['first', 'first', 'not-a-catalog-sticker'], 'Displaying valid rewards does not rewrite the stored history');
+    await sticker.close(); checks.push('genuine stickers are visible on completion and menu, deduplicated by catalog without new grants or false reward claims');
+
+    // Owned pupils get the same second-error support, after the hint response is confirmed.
+    const support = await page(); const supportProfile = await createOwned(support, 'grammar_support_parent');
+    await support.locator('#openGrammarTraining').click(); await start(support, 'articles');
+    let supportToken = await support.locator('#grammarHub').getAttribute('data-token');
+    let supportState = await ownedSnapshot(support, supportProfile.id, supportToken); await solve(support, supportState.question); await support.locator('#grammarNext').click();
+    supportState = await ownedSnapshot(support, supportProfile.id, supportToken); const supportQuestion = supportState.question;
+    await wrongChoice(support, supportQuestion); assert.equal((await ownedSnapshot(support, supportProfile.id, supportToken)).errors, 1);
+    const supportCommit = gate(), supportReply = gate(); let automaticHints = 0;
+    await support.route('**/api.php?action=training-hint', async route => {automaticHints++; const response = await route.fetch(); supportCommit.release(); await supportReply.promise; await route.fulfill({response});});
+    await choose(support, supportQuestion.choices.find(value => value !== supportQuestion.answer)); await deadline(supportCommit.promise, 'Automatic owned hint commit');
+    assert.equal(automaticHints, 1); assert.equal(await support.locator('#grammarModel').isVisible(), false, 'A committed but unconfirmed automatic hint reveals nothing');
+    const committedSupport = await ownedSnapshot(support, supportProfile.id, supportToken); assert.equal(committedSupport.hint, 2); assert.equal(committedSupport.errors, 2); assert.equal(committedSupport.step, supportState.step);
+    const supportResponse = support.waitForResponse(response => response.url().includes('api.php?action=training-hint')); supportReply.release(); await supportResponse; await support.locator('#grammarModel').waitFor(); await support.unroute('**/api.php?action=training-hint');
+    await modelViewport(support, 'owned-article-automatic-support');
+    await support.locator('#grammarPause').click(); await support.reload(); await support.evaluate(() => wordylandAccount.ready); await support.locator('#openGrammarTraining').click(); await support.locator('[data-grammar-resume="' + supportToken + '"]').click();
+    await support.locator('#grammarHub[data-token="' + supportToken + '"][data-step="' + supportState.step + '"]').waitFor(); await support.locator('#grammarModel').waitFor();
+    assert.equal(await support.locator('#grammarModel').isVisible(), true); assert.equal((await ownedSnapshot(support, supportProfile.id, supportToken)).hint, 2);
+    await solve(support, supportQuestion); await support.locator('#grammarNext').click();
+    const supportProgress = await req(support, 'training-progress&profile=' + supportProfile.id);
+    const supportSkill = supportProgress.items.find(row => row.item === supportQuestion.item)?.competencies.find(row => row.skill === 'grammar.article');
+    assert(supportSkill); assert.equal(supportSkill.guided, 1); assert.equal(supportSkill.independent, 0); assert.equal(supportSkill.errors, 2);
+    // The account completion must display only the sticker IDs actually returned by the API.
+    let completion = await ownedSnapshot(support, supportProfile.id, supportToken), remaining = 0;
+    while (!completion.done) {
+      assert(++remaining <= 10); await solve(support, completion.question); await support.locator('#grammarNext').click();
+      completion = await ownedSnapshot(support, supportProfile.id, supportToken);
+    }
+    const ownedRewards = await req(support, 'training-state&grammar=1&profile=' + supportProfile.id + '&token=' + supportToken);
+    assert(ownedRewards.stickers.includes('first')); await stickerView(support, '.grammarDone', ownedRewards.stickers);
+    await support.locator('#grammarAgain').click(); await support.locator('#grammarMenu').waitFor(); await stickerView(support, '#grammarMenu', ownedRewards.stickers);
+    checks.push('owned and guest second-error assistance is saved before reveal and remains guided after reload');
+
+    // A failed automatic hint must keep the confirmed errors without exposing an unsaved model.
+    await support.locator('#grammarBack').click(); await support.locator('#openGrammarTraining').click(); await start(support, 'number');
+    supportToken = await support.locator('#grammarHub').getAttribute('data-token'); supportState = await ownedSnapshot(support, supportProfile.id, supportToken);
+    await solve(support, supportState.question); await support.locator('#grammarNext').click(); supportState = await ownedSnapshot(support, supportProfile.id, supportToken);
+    await wrongChoice(support, supportState.question); let rejectedHints = 0;
+    await support.route('**/api.php?action=training-hint', route => {rejectedHints++; return route.fulfill({status: 503, json: {error: 'Aiuto non disponibile nella prova sintetica.'}});});
+    await choose(support, supportState.question.choices.find(value => value !== supportState.question.answer)); await support.locator('#grammarRecover').waitFor();
+    const failedSupport = await ownedSnapshot(support, supportProfile.id, supportToken);
+    assert.equal(rejectedHints, 1); assert.equal(failedSupport.errors, 2); assert.equal(failedSupport.hint, 0); assert.equal(failedSupport.step, supportState.step);
+    assert.equal(await support.locator('#grammarModel').isVisible(), false); assert.equal(await support.locator('#grammarNext').count(), 0);
+    await support.unroute('**/api.php?action=training-hint'); await support.locator('#grammarRecover').click(); await support.locator('#grammarRead').click(); await support.locator('#grammarModel').waitFor();
+    assert.equal((await ownedSnapshot(support, supportProfile.id, supportToken)).hint, 2); await solve(support, supportState.question); await support.locator('#grammarNext').click();
+    supportState = await ownedSnapshot(support, supportProfile.id, supportToken); await solve(support, supportState.question); await support.locator('#grammarNext').click(); supportState = await ownedSnapshot(support, supportProfile.id, supportToken);
+    await wrongChoice(support, supportState.question);
+    const departingCommit = gate(), departingReply = gate();
+    await support.route('**/api.php?action=training-hint', async route => {const response = await route.fetch(); departingCommit.release(); await departingReply.promise; await route.fulfill({response});});
+    await choose(support, supportState.question.choices.find(value => value !== supportState.question.answer)); await deadline(departingCommit.promise, 'Departing automatic hint commit');
+    await support.evaluate(() => location.hash = '#allenati'); await support.locator('.lessonCard').first().waitFor();
+    const lateSupport = support.waitForResponse(response => response.url().includes('api.php?action=training-hint')); departingReply.release(); await lateSupport; await support.unroute('**/api.php?action=training-hint');
+    assert.equal(await support.locator('#grammarHub:visible').count(), 0, 'A late automatic-support response cannot restore the departed exercise');
+    assert.equal((await ownedSnapshot(support, supportProfile.id, supportToken)).hint, 2);
+    checks.push('automatic hint failure exposes no unsaved model; explicit recovery and late-navigation guards preserve confirmed errors, hints and steps');
+
+    // A wrong-answer response can contain a newer valid snapshot after another request wins.
+    await menu(support); await support.locator('[data-grammar-resume="' + supportToken + '"]').click();
+    supportState = await ownedSnapshot(support, supportProfile.id, supportToken);
+    const racedQuestion = supportState.question, racedStep = supportState.step;
+    assert.equal(racedQuestion.mode, 'grammar-choice');
+    const wrongCommitted = gate(), wrongReply = gate(); let wrongPayload, latestSnapshot, interceptedWrong = false, racedHints = 0;
+    support.on('request', request => {if (request.url().includes('/api.php?action=training-hint')) racedHints++;});
+    const badRacedAnswer = racedQuestion.choices.find(value => value !== racedQuestion.answer);
+    await support.route('**/api.php?action=training-answer', async route => {
+      const body = route.request().postDataJSON();
+      if (interceptedWrong || body.step !== racedStep || body.answer !== badRacedAnswer) return route.continue();
+      interceptedWrong = true; const response = await route.fetch(); wrongPayload = await response.json(); wrongCommitted.release(); await wrongReply.promise;
+      const payload = {...wrongPayload, session: latestSnapshot}; delete payload.replayed;
+      await route.fulfill({response, json: payload});
+    });
+    await choose(support, badRacedAnswer); await deadline(wrongCommitted.promise, 'Concurrent wrong answer commit');
+    assert.equal(wrongPayload.correct, false); assert.equal(wrongPayload.session.step, racedStep);
+    const overtaking = await req(support, 'training-answer', {profile: supportProfile.id, token: supportToken, step: racedStep, attempt: randomBytes(16).toString('hex'), answer: racedQuestion.answer});
+    assert.equal(overtaking.correct, true); latestSnapshot = await ownedSnapshot(support, supportProfile.id, supportToken);
+    assert.equal(latestSnapshot.step, racedStep + 1);
+    const racedResponse = support.waitForResponse(response => response.url().includes('/api.php?action=training-answer') && response.request().postDataJSON().answer === badRacedAnswer);
+    wrongReply.release(); await racedResponse;
+    await support.locator('#grammarHub[data-step="' + latestSnapshot.step + '"][data-mode="' + latestSnapshot.question.mode + '"]').waitFor();
+    assert.equal(await support.locator('#grammarHub').getAttribute('data-grammar-item'), latestSnapshot.question.item);
+    assert.equal(await support.locator('#grammarFeedback[data-correct=false]').count(), 0, 'The newer question does not keep the old error feedback');
+    assert.equal(racedHints, 0, 'A stale wrong reply cannot request support for the newer step');
+    const afterRace = await ownedSnapshot(support, supportProfile.id, supportToken); assert.equal(afterRace.step, latestSnapshot.step); assert.deepEqual(afterRace.question, latestSnapshot.question);
+    await support.unroute('**/api.php?action=training-answer'); await solve(support, latestSnapshot.question);
+    assert.equal((await ownedSnapshot(support, supportProfile.id, supportToken)).step, latestSnapshot.step + 1, 'The refreshed current question stays usable');
+    await support.close(); checks.push('a non-replayed wrong response with a newer valid session redraws the saved current step without stale feedback, an incorrect hint or a deadlocked exercise');
+
+    // Focus must follow an opened aid even when its opener is at the screen edge.
+    for (const width of [320, 390]) for (const method of ['touch', 'keyboard']) for (const kind of ['letters', 'count']) {
+      const focusPage = await page({width}); focusPage.grammarGuestOnly = true; await menu(focusPage); await start(focusPage, kind === 'letters' ? 'plurals' : 'number');
+      let state = await guest(focusPage);
+      const steps = kind === 'letters' ? 2 : 1;
+      for (let move = 0; move < steps; move++) {await solve(focusPage, state.plan[state.step]); await focusPage.locator('#grammarNext').click(); state = await guest(focusPage);}
+      await openAtEdge(focusPage, kind === 'letters' ? '#grammarLettersOpen' : '#grammarCountTogether', kind === 'letters' ? 'bottom' : 'top', method);
+      assert.equal((await guest(focusPage)).hint, 1); assert.equal((await guest(focusPage)).step, state.step);
+      await focusPage.close();
+    }
+    checks.push('opening aids at top/bottom edges keeps the newly focused control in view on320/390px with touch and Enter, after the help is saved');
 
     // A failed preferred atlas loads the local PNG; two failures stay explicit.
     for (const both of [false, true]) {
@@ -361,7 +590,7 @@ if (captures) {
     assert.equal(await audio.locator('#grammarHub:visible').count(), 0); await audio.close(); checks.push('synthetic audio replay/cancellation is scoped to the active route');
 
     assert.deepEqual(guestWrites, [], 'Guest grammar produces no API writes'); assert.deepEqual(errors, []);
-    const report = {status: 'passed', checks, geometries, syntheticOnly: true, voiceQuality: 'not validated', pageErrors: errors};
+    const report = {status: 'passed', checks, geometries, supportViewports, syntheticOnly: true, voiceQuality: 'not validated', pageErrors: errors};
     if (captures) fs.writeFileSync(path.join(captures, 'grammar-report.json'), JSON.stringify(report, null, 2) + '\n');
     console.log(JSON.stringify(report));
   } finally {for (const release of releases) release(); await browser.close();}

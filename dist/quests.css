@@ -288,10 +288,14 @@ main{padding-top:10px}.accountArea{background:white;border:1px solid #e3dff0;bor
 .grammarTraining .grammarFeedbackMark{font:900 62px/1 Outfit,system-ui,sans-serif;flex-shrink:0}
 .grammarTraining .grammarRetry{background:#fff1eb;color:#8c3931;border-color:#e1a49a!important}
 .grammarTraining .grammarSuccess{background:#edf7df;color:#2d5c42;border-color:#9bc28f!important}
+.grammarTraining .grammarStickers{margin:22px 0}
+.grammarTraining .grammarStickers h3{font:800 23px/1.35 Outfit,system-ui,sans-serif;margin:0 0 10px;color:#193e55}
+.grammarTraining .grammarDone .trainingStickers{justify-content:center}
 .grammarTraining .grammarDone{text-align:center;max-width:750px;margin:auto}
 .grammarTraining .grammarDone h3{font:800 30px/1.3 Outfit,system-ui,sans-serif}
 .grammarTraining .grammarDone p{font-size:21px;line-height:1.55}
 .grammarTraining .grammarCelebration{font-size:80px;line-height:1.4}
+.grammarTraining :is([data-grammar-count],[data-grammar-letter],#grammarCheck,#grammarInput){scroll-margin-block:12px}
 .grammarTraining :is(button,input):focus-visible{outline:4px solid #193e55;outline-offset:4px}
 @media(max-width:560px){#trainingHub.grammarTraining{padding:14px 12px;margin:12px 8px}.grammarTraining .grammarHeading{gap:10px}.grammarTraining .grammarHeading h2{font-size:27px}.grammarTraining .grammarStage{padding:14px 12px}.grammarTraining .grammarPack{grid-template-columns:40px minmax(0,1fr) 16px;gap:10px;padding:14px 10px}.grammarTraining .grammarPack>span:first-child{font-size:28px}.grammarTraining .grammarPack strong{font-size:22px}.grammarTraining .grammarPack small{font-size:18px}.grammarTraining .grammarSessionTop{gap:6px}.grammarTraining .grammarObject{flex-basis:100px;width:100px;height:100px}.grammarTraining .grammarObjects[data-count="1"] .grammarObject{flex-basis:148px;width:148px;height:148px}.grammarTraining .grammarObjects[data-count="3"] .grammarObject,.grammarTraining .grammarObjects[data-count="4"] .grammarObject{flex-basis:94px;width:94px;height:94px}.grammarTraining .grammarObjects{gap:8px;min-height:150px;padding:4px}.grammarTraining .grammarPrompt{font-size:23px}.grammarTraining .grammarExplanation{font-size:19px}.grammarTraining #grammarChoices{gap:8px}.grammarTraining #grammarChoices>button{font-size:23px;padding:12px 8px}.grammarTraining .grammarTools{gap:8px}.grammarTraining .grammarTools>button{padding:10px 8px}.grammarTraining #grammarFeedback{padding:15px 12px;gap:10px}.grammarTraining .grammarFeedbackMark{font-size:48px}.grammarTraining #grammarFeedback p{font-size:20px}.grammarTraining #grammarNext{width:100%;margin:0}.grammarTraining #grammarTokens>button,.grammarTraining .grammarPicked>button{font-size:22px;padding:10px}.grammarTraining #grammarBuildCheck{display:block;width:100%}}
 @media(prefers-reduced-motion:reduce){.grammarTraining *{scroll-behavior:auto!important}}
