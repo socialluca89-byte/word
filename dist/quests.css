@@ -235,9 +235,27 @@ main{padding-top:10px}.accountArea{background:white;border:1px solid #e3dff0;bor
 .grammarTraining .grammarObjects{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:12px;min-height:162px;margin:0 0 14px;padding:6px;border-bottom:2px dashed #cee5e8}
 .grammarTraining .grammarObject{display:grid;place-items:center;flex:0 1 132px;min-width:0;width:132px;height:132px}
 .grammarTraining .grammarObject>svg{display:block;width:100%;height:100%;overflow:visible}
-.grammarTraining .grammarObject .trainingWordArt{display:block;width:100%;height:100%;max-width:none;max-height:none}
+#trainingHub.grammarTraining .grammarObject .trainingWordArt{display:block;width:100%;height:100%;min-width:0;max-width:100%;max-height:100%}
 .grammarTraining .grammarObjects[data-count="1"] .grammarObject{width:166px;height:166px;flex-basis:166px}
 .grammarTraining .grammarObjects[data-count="3"] .grammarObject,.grammarTraining .grammarObjects[data-count="4"] .grammarObject{width:118px;height:118px;flex-basis:118px}
+.grammarTraining .grammarCountTools{margin:0 0 18px;text-align:center}
+.grammarTraining .grammarCountTools button,.grammarTraining .grammarLetterTools button{min-width:48px;min-height:48px;margin:0;padding:10px 14px;font:700 18px/1.4 Outfit,system-ui,sans-serif;background:#fff;color:#193e55;border:2px solid #9fc4cb;touch-action:manipulation}
+.grammarTraining .grammarCountTools>button,.grammarTraining #grammarLettersOpen{background:#e7f4f4}
+.grammarTraining #grammarCountStatus,.grammarTraining #grammarLetterStatus{font:600 19px/1.5 'DM Sans',sans-serif;margin:10px 0;color:#22654f}
+.grammarTraining .grammarCountObject{position:relative;background:#fff;border:2px dashed #9fc4cb;border-radius:18px;padding:7px;margin:0;touch-action:manipulation;cursor:pointer}
+.grammarTraining .grammarCountObject[aria-pressed="true"]{border:3px solid #22654f;background:#edf7df}
+.grammarTraining .grammarCountMark{position:absolute;right:2px;top:2px;display:grid;place-items:center;min-width:32px;height:32px;font:800 23px/1 Outfit,system-ui,sans-serif;background:#ffd16a;color:#193e55;border:2px solid #193e55;border-radius:50%}
+.grammarTraining .grammarCountMark:empty{display:none}
+.grammarTraining .grammarLetterTools{margin:16px 0 0}
+.grammarTraining #grammarLettersPanel{margin:12px 0 0;padding:14px 12px;background:#f1faf9;border-left:4px solid #168ba5;border-radius:8px}
+.grammarTraining #grammarLettersPanel>p:first-child{font:400 19px/1.5 'DM Sans',sans-serif;margin:0 0 12px}
+.grammarTraining #grammarLetterTiles{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+.grammarTraining #grammarLetterTiles>button{min-width:48px;min-height:52px;padding:8px 12px;font-size:26px;line-height:1.25;background:#fff}
+.grammarTraining #grammarLetterTiles>button:disabled{background:#dfedf0;color:#416474;border-style:dashed;opacity:.65}
+.grammarTraining .grammarLetterActions{display:flex;flex-wrap:wrap;gap:8px}
+.grammarTraining #grammarTypeInstead{background:#22654f;color:#fff;border-color:#22654f}
+.grammarTraining #grammarInput[readonly]{background:#f1faf9;border-color:#168ba5}
+.grammarTraining .grammarComposedWord{font:800 27px/1.4 Outfit,system-ui,sans-serif;color:#22654f;white-space:pre-wrap;overflow-wrap:anywhere;max-width:100%;margin:10px 0}
 .grammarTraining .grammarPrompt{font:700 clamp(22px,3vw,27px)/1.4 Outfit,system-ui,sans-serif;text-align:center;max-width:760px;margin:10px auto 16px;color:#193e55;overflow-wrap:anywhere}
 .grammarTraining .grammarSourceWord{font:800 clamp(29px,5vw,38px)/1.3 Outfit,system-ui,sans-serif;text-align:center;color:#22654f;margin:10px 0 18px;overflow-wrap:anywhere}
 .grammarTraining .grammarModel{padding:15px 16px;background:#eef6e9;border-left:5px solid #83ad86;border-radius:8px;margin:12px 0 16px}

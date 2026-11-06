@@ -1,5 +1,14 @@
 # Stato unico WordyLand
 
+## Stato corrente: stessi contenuti, due aiuti interattivi (6 novembre)
+
+Base verificata e pubblicata **a218c3d6936640ac9adc680fa0ac56addd1b9aa5**, [run42263085984](https://github.com/socialluca89-byte/word/actions/runs/42263085984), concluso alle17:52:25UTC/18:52:25Europe/Rome:49verify,62browser e deploy/live check riusciti. Le sezioni precedenti mantengono le loro fotografie storiche.
+
+Nuovo vincolo esplicito: nuovi argomenti, parole e regole soltanto dai materiali del genitore/insegnante. Questo lotto varia esclusivamente la forma dei40casi grammaticali già presenti: **Conta con me** e **Componi con le lettere**, entrambi aiuti opzionali confermati prima dell’effetto. Nessun nuovo contenuto didattico, backend, archivio, permesso o premio. [Perimetro e criteri](TEACHER_ONLY_EXERCISE_FORMS.md). Conservati tutti i percorsi e la priorità del dettato mobile.
+
+Lotto sviluppato e collaudato localmente:49verify e8suite browser pertinenti PASS (nuova grammar-aids, grammar, learning-entry, training-memory, visual-journey, guardian, parent-summary e performance). La prova isolata di caricamento391,5ms rispetta la soglia5s invariata; non è una misura del tablet fisico. Riprodotti e corretti atlante temperino344→320px e parola lunga tagliata, ora leggibile per intero. Training.json è identico alla base; nessun PHP/backend o dato modificato. Il workflow conserva tutte le62suite e aggiunge grammar-aids (63totali,31+32), bundle55/48static invariato. La pipeline completa e il deploy/live sul commit finale sono ancora da attestare alla redazione: nessuna sonda supplementare sul sito, credenziale o modifica delle protezioni.
+
+
 Questo documento distingue codice preparato, collaudo e pubblicazione. Le note datate in altri documenti restano cronologia.
 
 ## Nuovi esercizi della classe

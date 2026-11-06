@@ -1,5 +1,7 @@
 # Notes for agents
 
+- Latest user curriculum constraint,6November2026: **new educational words, rules and topics must come only from the teacher material the user shares**. Vary exercise forms and presentation within those contents; do not autonomously expand the curriculum. Keep every existing feature accessible. The verified baseline is a218c3d6936640ac9adc680fa0ac56addd1b9aa5, run42263085984 SUCCESS (49verify/62browser/deploy/live checks). The following optional counting/letter aids reuse the exact40grammar cases and16nouns, with training.json unchanged and hints confirmed before assistance; see docs/TEACHER_ONLY_EXERCISE_FORMS.md. No backend, storage, economy or access expansion. Root coordinates normal authorised publication after the exact candidate passes all gates; no supplementary production probe or bypass.
+
 - Production is `main`; every push to `main` is tested and, if tests pass, published to wordyland.eu by GitHub Actions. Read `docs/DEPLOYMENT.md` before changing anything related to publication.
 - Work on the real repository files through Git HTTPS. No ZIPs, no manual uploads to SiteGround, no cron jobs.
 - After JS/CSS changes run `node scripts/version-assets.mjs`; run every check of the `verify` job before merging; merge only authorised changes, never force push.
