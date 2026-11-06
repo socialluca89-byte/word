@@ -52,3 +52,11 @@ PASS tutti i 49 controlli obbligatori, compresi contenuti, API grammatica e lega
 PASS anche performance, training-memory, training, visual-journey, guardian e parent-summary originali. La performance è una sola esecuzione isolata sul pacchetto finale: load422ms locale, soglia5s invariata e nessuna inizializzazione WebGL anticipata. Versionamento idempotente; tutti i55hash restano invariati durante i controlli. La review indipendente del delta finale non rileva blocchi. Queste prove non validano voci/dispositivi fisici o il tablet originale.
 
 La pipeline candidata conserva tutti i61browser precedenti e aggiunge grammar, per62suite complete (31+31). Pubblicazione e controlli live sul commit finale ancora da attestare alla redazione; il pass locale non viene descritto come rilascio.
+
+## Priorità del dettato nella prima schermata
+
+Il primo run42259676027 su35bc9d4 ha passato49verify,31suite mondi e le nuove grammar/visual-journey/classroom-access, ma si è fermato in learning-entry: il riquadro grammatica precedeva i comandi del dettato e a320px spingeva l'avvio fino a905px. Deploy saltato. Riproduzione locale con il test originale, senza cambiare soglie o asserzioni.
+
+Corretto un solo ordinamento DOM nell'introduzione: soltanto in #dettato, i percorsi classici precedono il collegamento grammaticale; #allenamento resta identico. Il pulsante termina ora a568px, anche con DejaVu; il nuovo collegamento rimane disponibile dopo i percorsi. Learning-entry originale completo e grammar completo PASS. Modulo grammatica, contenuti, CSS e test rimangono identici a35bc9d4.
+
+Pacchetto successivo versionato/idempotente e55hash congelati. Tutti i49verify nuovamente PASS, insieme a performance, learning-entry, training-memory e visual-journey. Performance isolata412ms locale, limite5s invariato. Il nuovo risultato62suite/deploy deve essere confermato sul commit finale prima di dichiarare pubblicato il percorso.

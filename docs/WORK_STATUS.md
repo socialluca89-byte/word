@@ -14,6 +14,8 @@ Contenuti, API40casi, training legacy, rollback su fixture e roster sono passati
 
 Chiusura locale: tutti i49controlli obbligatori PASS; suitegrammar completa e sei regressioni originali PASS. Performance isolata422ms con soglia5s invariata,55hash congelati e versionamento idempotente. Review finale senza blocchi. Il candidato è pronto per la pipeline completa62 e la pubblicazione ordinaria autorizzata; esito terminale e versione online restano da confermare sul nuovo commit.
 
+Primo run [42259676027](https://github.com/socialluca89-byte/word/actions/runs/42259676027) su35bc9d4: verify49/mondi31 e le nuove grammar/visual-journey/classroom-accessPASS, learning-entry fermato dal pulsante dettato fuori prima schermata; deploy saltato. Riprodotto e corretto solo l'ordinamento DOM di #dettato: avvio classico prima della grammatica, CTA320da905a568px, resto invariato. Test originali learning-entry e grammar PASS; pacchetto riversionato,49verify e regressioni memory/visual/performance nuovamente PASS (412ms locale,5s invariati). Nessuna asserzione rimossa. Nuova pipeline62/deploy ancora da attestare; non si presenta il solo push come pubblicazione.
+
 ## Aggiornamento corrente: grafica e gioco, 3 novembre
 
 Base ora verificata online: `1537a740432625c0a43d25bb2ce99ef1f0711483`, [run41637701431](https://github.com/socialluca89-byte/word/actions/runs/41637701431),47verify/59browser/deploy riusciti alle12:55:52UTC (13:55:52Europe/Rome). Include il follow-up memoria e la correzione del controllo foundations descritti nelle sezioni storiche sotto.
