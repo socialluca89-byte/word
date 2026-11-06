@@ -1366,5 +1366,1032 @@
       ],
       "answer": "open-book"
     }
-  ]
+  ],
+  "grammarLessons": {
+    "version": 1,
+    "title": "Grammatica della classe",
+    "nouns": [
+      {
+        "id": "pencil",
+        "singular": "pencil",
+        "plural": "pencils",
+        "article": "a",
+        "meaning": "matita",
+        "pluralMeaning": "matite",
+        "art": "pencil",
+        "singularAliases": [],
+        "pluralAliases": []
+      },
+      {
+        "id": "door",
+        "singular": "door",
+        "plural": "doors",
+        "article": "a",
+        "meaning": "porta",
+        "pluralMeaning": "porte",
+        "art": "grammar-door",
+        "singularAliases": [],
+        "pluralAliases": []
+      },
+      {
+        "id": "ruler",
+        "singular": "ruler",
+        "plural": "rulers",
+        "article": "a",
+        "meaning": "righello",
+        "pluralMeaning": "righelli",
+        "art": "grammar-ruler",
+        "singularAliases": [],
+        "pluralAliases": []
+      },
+      {
+        "id": "chair",
+        "singular": "chair",
+        "plural": "chairs",
+        "article": "a",
+        "meaning": "sedia",
+        "pluralMeaning": "sedie",
+        "art": "grammar-chair",
+        "singularAliases": [],
+        "pluralAliases": []
+      },
+      {
+        "id": "book",
+        "singular": "book",
+        "plural": "books",
+        "article": "a",
+        "meaning": "libro",
+        "pluralMeaning": "libri",
+        "art": "book",
+        "singularAliases": [],
+        "pluralAliases": []
+      },
+      {
+        "id": "table",
+        "singular": "table",
+        "plural": "tables",
+        "article": "a",
+        "meaning": "tavolo",
+        "pluralMeaning": "tavoli",
+        "art": "grammar-table",
+        "singularAliases": [],
+        "pluralAliases": []
+      },
+      {
+        "id": "egg",
+        "singular": "egg",
+        "plural": "eggs",
+        "article": "an",
+        "meaning": "uovo",
+        "pluralMeaning": "uova",
+        "art": "grammar-egg",
+        "singularAliases": [],
+        "pluralAliases": []
+      },
+      {
+        "id": "apple",
+        "singular": "apple",
+        "plural": "apples",
+        "article": "an",
+        "meaning": "mela",
+        "pluralMeaning": "mele",
+        "art": "grammar-apple",
+        "singularAliases": [],
+        "pluralAliases": []
+      },
+      {
+        "id": "cup",
+        "singular": "cup",
+        "plural": "cups",
+        "article": "a",
+        "meaning": "tazza",
+        "pluralMeaning": "tazze",
+        "art": "grammar-cup",
+        "singularAliases": [],
+        "pluralAliases": []
+      },
+      {
+        "id": "notebook",
+        "singular": "notebook",
+        "plural": "notebooks",
+        "article": "a",
+        "meaning": "quaderno",
+        "pluralMeaning": "quaderni",
+        "art": "notebook",
+        "singularAliases": [],
+        "pluralAliases": []
+      },
+      {
+        "id": "pen",
+        "singular": "pen",
+        "plural": "pens",
+        "article": "a",
+        "meaning": "penna",
+        "pluralMeaning": "penne",
+        "art": "pen",
+        "singularAliases": [],
+        "pluralAliases": []
+      },
+      {
+        "id": "eraser",
+        "singular": "eraser",
+        "plural": "erasers",
+        "article": "an",
+        "meaning": "gomma",
+        "pluralMeaning": "gomme",
+        "art": "eraser",
+        "singularAliases": [],
+        "pluralAliases": []
+      },
+      {
+        "id": "pencil-sharpener",
+        "singular": "pencil sharpener",
+        "plural": "pencil sharpeners",
+        "article": "a",
+        "meaning": "temperamatite",
+        "pluralMeaning": "temperamatite",
+        "art": "sharpener",
+        "singularAliases": [
+          "sharpener"
+        ],
+        "pluralAliases": [
+          "sharpeners"
+        ]
+      },
+      {
+        "id": "book-bag",
+        "singular": "book bag",
+        "plural": "book bags",
+        "article": "a",
+        "meaning": "zaino",
+        "pluralMeaning": "zaini",
+        "art": "bookbag",
+        "singularAliases": [
+          "bookbag"
+        ],
+        "pluralAliases": [
+          "bookbags"
+        ]
+      },
+      {
+        "id": "glue-stick",
+        "singular": "glue stick",
+        "plural": "glue sticks",
+        "article": "a",
+        "meaning": "colla stick",
+        "pluralMeaning": "stick di colla",
+        "art": "glue stick",
+        "singularAliases": [],
+        "pluralAliases": []
+      },
+      {
+        "id": "desk",
+        "singular": "desk",
+        "plural": "desks",
+        "article": "a",
+        "meaning": "banco",
+        "pluralMeaning": "banchi",
+        "art": "desk",
+        "singularAliases": [],
+        "pluralAliases": []
+      }
+    ],
+    "packs": [
+      {
+        "id": "number",
+        "title": "Uno o tanti?",
+        "icon": "🔎",
+        "description": "Guarda gli oggetti e scegli la parola per uno oppure per più di uno.",
+        "tip": "Un oggetto: book. Più oggetti: books. Puoi contare con calma.",
+        "cases": [
+          {
+            "id": "number-pencil-one",
+            "noun": "pencil",
+            "count": 1,
+            "task": "number",
+            "prompt": "Uno o tanti? Scegli la parola.",
+            "answer": "pencil",
+            "aliases": [],
+            "explanation": "Vedi un solo oggetto: usiamo pencil.",
+            "choices": [
+              "pencil",
+              "pencils"
+            ],
+            "tokens": [
+              "pencil"
+            ],
+            "audio": "pencil"
+          },
+          {
+            "id": "number-pencil-many",
+            "noun": "pencil",
+            "count": 3,
+            "task": "number",
+            "prompt": "Uno o tanti? Scegli la parola.",
+            "answer": "pencils",
+            "aliases": [],
+            "explanation": "Vedi più oggetti: pencil diventa pencils. Guarda la s finale.",
+            "choices": [
+              "pencil",
+              "pencils"
+            ],
+            "tokens": [
+              "pencils"
+            ],
+            "audio": "pencil"
+          },
+          {
+            "id": "number-book-one",
+            "noun": "book",
+            "count": 1,
+            "task": "number",
+            "prompt": "Uno o tanti? Scegli la parola.",
+            "answer": "book",
+            "aliases": [],
+            "explanation": "Vedi un solo oggetto: usiamo book.",
+            "choices": [
+              "book",
+              "books"
+            ],
+            "tokens": [
+              "book"
+            ],
+            "audio": "book"
+          },
+          {
+            "id": "number-book-many",
+            "noun": "book",
+            "count": 2,
+            "task": "number",
+            "prompt": "Uno o tanti? Scegli la parola.",
+            "answer": "books",
+            "aliases": [],
+            "explanation": "Vedi più oggetti: book diventa books. Guarda la s finale.",
+            "choices": [
+              "book",
+              "books"
+            ],
+            "tokens": [
+              "books"
+            ],
+            "audio": "book"
+          },
+          {
+            "id": "number-chair-one",
+            "noun": "chair",
+            "count": 1,
+            "task": "number",
+            "prompt": "Uno o tanti? Scegli la parola.",
+            "answer": "chair",
+            "aliases": [],
+            "explanation": "Vedi un solo oggetto: usiamo chair.",
+            "choices": [
+              "chair",
+              "chairs"
+            ],
+            "tokens": [
+              "chair"
+            ],
+            "audio": "chair"
+          },
+          {
+            "id": "number-chair-many",
+            "noun": "chair",
+            "count": 4,
+            "task": "number",
+            "prompt": "Uno o tanti? Scegli la parola.",
+            "answer": "chairs",
+            "aliases": [],
+            "explanation": "Vedi più oggetti: chair diventa chairs. Guarda la s finale.",
+            "choices": [
+              "chair",
+              "chairs"
+            ],
+            "tokens": [
+              "chairs"
+            ],
+            "audio": "chair"
+          },
+          {
+            "id": "number-apple-one",
+            "noun": "apple",
+            "count": 1,
+            "task": "number",
+            "prompt": "Uno o tanti? Scegli la parola.",
+            "answer": "apple",
+            "aliases": [],
+            "explanation": "Vedi un solo oggetto: usiamo apple.",
+            "choices": [
+              "apple",
+              "apples"
+            ],
+            "tokens": [
+              "apple"
+            ],
+            "audio": "apple"
+          },
+          {
+            "id": "number-apple-many",
+            "noun": "apple",
+            "count": 2,
+            "task": "number",
+            "prompt": "Uno o tanti? Scegli la parola.",
+            "answer": "apples",
+            "aliases": [],
+            "explanation": "Vedi più oggetti: apple diventa apples. Guarda la s finale.",
+            "choices": [
+              "apple",
+              "apples"
+            ],
+            "tokens": [
+              "apples"
+            ],
+            "audio": "apple"
+          }
+        ]
+      },
+      {
+        "id": "plurals",
+        "title": "La s finale",
+        "icon": "✏️",
+        "description": "Scegli e scrivi il plurale delle parole della tua classe.",
+        "tip": "Per queste parole aggiungiamo una sola s alla fine. Nei nomi di più parole cambia l’ultima.",
+        "cases": [
+          {
+            "id": "plural-pencil",
+            "noun": "pencil",
+            "count": 2,
+            "task": "plural",
+            "prompt": "Più di uno: come si scrive?",
+            "answer": "pencils",
+            "aliases": [],
+            "explanation": "Per queste parole, con più oggetti aggiungiamo una s alla fine: pencil diventa pencils.",
+            "choices": [
+              "pencils",
+              "pencil",
+              "pencilss"
+            ],
+            "tokens": [
+              "pencils"
+            ],
+            "audio": "pencil"
+          },
+          {
+            "id": "plural-door",
+            "noun": "door",
+            "count": 3,
+            "task": "plural",
+            "prompt": "Più di uno: come si scrive?",
+            "answer": "doors",
+            "aliases": [],
+            "explanation": "Per queste parole, con più oggetti aggiungiamo una s alla fine: door diventa doors.",
+            "choices": [
+              "door",
+              "doors",
+              "doorss"
+            ],
+            "tokens": [
+              "doors"
+            ],
+            "audio": "door"
+          },
+          {
+            "id": "plural-ruler",
+            "noun": "ruler",
+            "count": 4,
+            "task": "plural",
+            "prompt": "Più di uno: come si scrive?",
+            "answer": "rulers",
+            "aliases": [],
+            "explanation": "Per queste parole, con più oggetti aggiungiamo una s alla fine: ruler diventa rulers.",
+            "choices": [
+              "ruler",
+              "rulerss",
+              "rulers"
+            ],
+            "tokens": [
+              "rulers"
+            ],
+            "audio": "ruler"
+          },
+          {
+            "id": "plural-chair",
+            "noun": "chair",
+            "count": 2,
+            "task": "plural",
+            "prompt": "Più di uno: come si scrive?",
+            "answer": "chairs",
+            "aliases": [],
+            "explanation": "Per queste parole, con più oggetti aggiungiamo una s alla fine: chair diventa chairs.",
+            "choices": [
+              "chairs",
+              "chair",
+              "chairss"
+            ],
+            "tokens": [
+              "chairs"
+            ],
+            "audio": "chair"
+          },
+          {
+            "id": "plural-book",
+            "noun": "book",
+            "count": 3,
+            "task": "plural",
+            "prompt": "Più di uno: come si scrive?",
+            "answer": "books",
+            "aliases": [],
+            "explanation": "Per queste parole, con più oggetti aggiungiamo una s alla fine: book diventa books.",
+            "choices": [
+              "book",
+              "books",
+              "bookss"
+            ],
+            "tokens": [
+              "books"
+            ],
+            "audio": "book"
+          },
+          {
+            "id": "plural-table",
+            "noun": "table",
+            "count": 4,
+            "task": "plural",
+            "prompt": "Più di uno: come si scrive?",
+            "answer": "tables",
+            "aliases": [],
+            "explanation": "Per queste parole, con più oggetti aggiungiamo una s alla fine: table diventa tables.",
+            "choices": [
+              "table",
+              "tabless",
+              "tables"
+            ],
+            "tokens": [
+              "tables"
+            ],
+            "audio": "table"
+          },
+          {
+            "id": "plural-egg",
+            "noun": "egg",
+            "count": 2,
+            "task": "plural",
+            "prompt": "Più di uno: come si scrive?",
+            "answer": "eggs",
+            "aliases": [],
+            "explanation": "Per queste parole, con più oggetti aggiungiamo una s alla fine: egg diventa eggs.",
+            "choices": [
+              "eggs",
+              "egg",
+              "eggss"
+            ],
+            "tokens": [
+              "eggs"
+            ],
+            "audio": "egg"
+          },
+          {
+            "id": "plural-apple",
+            "noun": "apple",
+            "count": 3,
+            "task": "plural",
+            "prompt": "Più di uno: come si scrive?",
+            "answer": "apples",
+            "aliases": [],
+            "explanation": "Per queste parole, con più oggetti aggiungiamo una s alla fine: apple diventa apples.",
+            "choices": [
+              "apple",
+              "apples",
+              "appless"
+            ],
+            "tokens": [
+              "apples"
+            ],
+            "audio": "apple"
+          },
+          {
+            "id": "plural-cup",
+            "noun": "cup",
+            "count": 4,
+            "task": "plural",
+            "prompt": "Più di uno: come si scrive?",
+            "answer": "cups",
+            "aliases": [],
+            "explanation": "Per queste parole, con più oggetti aggiungiamo una s alla fine: cup diventa cups.",
+            "choices": [
+              "cup",
+              "cupss",
+              "cups"
+            ],
+            "tokens": [
+              "cups"
+            ],
+            "audio": "cup"
+          },
+          {
+            "id": "plural-notebook",
+            "noun": "notebook",
+            "count": 2,
+            "task": "plural",
+            "prompt": "Più di uno: come si scrive?",
+            "answer": "notebooks",
+            "aliases": [],
+            "explanation": "Per queste parole, con più oggetti aggiungiamo una s alla fine: notebook diventa notebooks.",
+            "choices": [
+              "notebooks",
+              "notebook",
+              "notebookss"
+            ],
+            "tokens": [
+              "notebooks"
+            ],
+            "audio": "notebook"
+          },
+          {
+            "id": "plural-pen",
+            "noun": "pen",
+            "count": 3,
+            "task": "plural",
+            "prompt": "Più di uno: come si scrive?",
+            "answer": "pens",
+            "aliases": [],
+            "explanation": "Per queste parole, con più oggetti aggiungiamo una s alla fine: pen diventa pens.",
+            "choices": [
+              "pen",
+              "pens",
+              "penss"
+            ],
+            "tokens": [
+              "pens"
+            ],
+            "audio": "pen"
+          },
+          {
+            "id": "plural-eraser",
+            "noun": "eraser",
+            "count": 4,
+            "task": "plural",
+            "prompt": "Più di uno: come si scrive?",
+            "answer": "erasers",
+            "aliases": [],
+            "explanation": "Per queste parole, con più oggetti aggiungiamo una s alla fine: eraser diventa erasers.",
+            "choices": [
+              "eraser",
+              "eraserss",
+              "erasers"
+            ],
+            "tokens": [
+              "erasers"
+            ],
+            "audio": "eraser"
+          },
+          {
+            "id": "plural-pencil-sharpener",
+            "noun": "pencil-sharpener",
+            "count": 2,
+            "task": "plural",
+            "prompt": "Più di uno: come si scrive?",
+            "answer": "pencil sharpeners",
+            "aliases": [],
+            "explanation": "Per queste parole, con più oggetti aggiungiamo una s alla fine: pencil sharpener diventa pencil sharpeners. Anche sharpeners è corretto per l’oggetto; qui trasformiamo tutta l’espressione: pencil sharpeners.",
+            "choices": [
+              "pencil sharpeners",
+              "pencil sharpener",
+              "pencil sharpenerss"
+            ],
+            "tokens": [
+              "pencil",
+              "sharpeners"
+            ],
+            "audio": "pencil sharpener"
+          },
+          {
+            "id": "plural-book-bag",
+            "noun": "book-bag",
+            "count": 3,
+            "task": "plural",
+            "prompt": "Più di uno: come si scrive?",
+            "answer": "book bags",
+            "aliases": [
+              "bookbags"
+            ],
+            "explanation": "Per queste parole, con più oggetti aggiungiamo una s alla fine: book bag diventa book bags. Anche bookbags, scritto unito, è una forma corretta.",
+            "choices": [
+              "book bag",
+              "book bags",
+              "book bagss"
+            ],
+            "tokens": [
+              "book",
+              "bags"
+            ],
+            "audio": "book bag"
+          },
+          {
+            "id": "plural-glue-stick",
+            "noun": "glue-stick",
+            "count": 4,
+            "task": "plural",
+            "prompt": "Più di uno: come si scrive?",
+            "answer": "glue sticks",
+            "aliases": [],
+            "explanation": "Per queste parole, con più oggetti aggiungiamo una s alla fine: glue stick diventa glue sticks.",
+            "choices": [
+              "glue stick",
+              "glue stickss",
+              "glue sticks"
+            ],
+            "tokens": [
+              "glue",
+              "sticks"
+            ],
+            "audio": "glue stick"
+          },
+          {
+            "id": "plural-desk",
+            "noun": "desk",
+            "count": 2,
+            "task": "plural",
+            "prompt": "Più di uno: come si scrive?",
+            "answer": "desks",
+            "aliases": [],
+            "explanation": "Per queste parole, con più oggetti aggiungiamo una s alla fine: desk diventa desks.",
+            "choices": [
+              "desks",
+              "desk",
+              "deskss"
+            ],
+            "tokens": [
+              "desks"
+            ],
+            "audio": "desk"
+          }
+        ]
+      },
+      {
+        "id": "articles",
+        "title": "A oppure an?",
+        "icon": "🍎",
+        "description": "Una sola cosa: ascolta il nome e scegli il pezzetto iniziale.",
+        "tip": "Usiamo a o an con una cosa sola. Conta il suono iniziale: a pen, an apple.",
+        "cases": [
+          {
+            "id": "article-apple",
+            "noun": "apple",
+            "count": 1,
+            "task": "article",
+            "prompt": "Scegli a oppure an.",
+            "answer": "an",
+            "aliases": [],
+            "explanation": "Apple inizia con un suono vocalico: diciamo an apple.",
+            "choices": [
+              "a",
+              "an"
+            ],
+            "tokens": [
+              "an"
+            ],
+            "audio": "apple"
+          },
+          {
+            "id": "article-book",
+            "noun": "book",
+            "count": 1,
+            "task": "article",
+            "prompt": "Scegli a oppure an.",
+            "answer": "a",
+            "aliases": [],
+            "explanation": "Book inizia con un suono consonantico: diciamo a book.",
+            "choices": [
+              "a",
+              "an"
+            ],
+            "tokens": [
+              "a"
+            ],
+            "audio": "book"
+          },
+          {
+            "id": "article-egg",
+            "noun": "egg",
+            "count": 1,
+            "task": "article",
+            "prompt": "Scegli a oppure an.",
+            "answer": "an",
+            "aliases": [],
+            "explanation": "Egg inizia con un suono vocalico: diciamo an egg.",
+            "choices": [
+              "a",
+              "an"
+            ],
+            "tokens": [
+              "an"
+            ],
+            "audio": "egg"
+          },
+          {
+            "id": "article-pencil",
+            "noun": "pencil",
+            "count": 1,
+            "task": "article",
+            "prompt": "Scegli a oppure an.",
+            "answer": "a",
+            "aliases": [],
+            "explanation": "Pencil inizia con un suono consonantico: diciamo a pencil.",
+            "choices": [
+              "a",
+              "an"
+            ],
+            "tokens": [
+              "a"
+            ],
+            "audio": "pencil"
+          },
+          {
+            "id": "article-eraser",
+            "noun": "eraser",
+            "count": 1,
+            "task": "article",
+            "prompt": "Scegli a oppure an.",
+            "answer": "an",
+            "aliases": [],
+            "explanation": "Eraser inizia con un suono vocalico: diciamo an eraser.",
+            "choices": [
+              "a",
+              "an"
+            ],
+            "tokens": [
+              "an"
+            ],
+            "audio": "eraser"
+          },
+          {
+            "id": "article-cup",
+            "noun": "cup",
+            "count": 1,
+            "task": "article",
+            "prompt": "Scegli a oppure an.",
+            "answer": "a",
+            "aliases": [],
+            "explanation": "Cup inizia con un suono consonantico: diciamo a cup.",
+            "choices": [
+              "a",
+              "an"
+            ],
+            "tokens": [
+              "a"
+            ],
+            "audio": "cup"
+          }
+        ]
+      },
+      {
+        "id": "sentences",
+        "title": "It is / They are",
+        "icon": "🧩",
+        "description": "Costruisci piccole frasi per un oggetto oppure per tanti.",
+        "tip": "Una cosa: It is. Più cose: They are. Con il plurale non usiamo a o an.",
+        "cases": [
+          {
+            "id": "sentence-book-one",
+            "noun": "book",
+            "count": 1,
+            "task": "sentence",
+            "prompt": "Forma la frase per il disegno.",
+            "answer": "It is a book.",
+            "aliases": [
+              "It's a book."
+            ],
+            "explanation": "C’è una sola cosa: iniziamo con It is e usiamo a. It is a book.",
+            "choices": [],
+            "tokens": [
+              "It",
+              "is",
+              "a",
+              "book."
+            ],
+            "audio": "book"
+          },
+          {
+            "id": "sentence-book-many",
+            "noun": "book",
+            "count": 3,
+            "task": "sentence",
+            "prompt": "Forma la frase per il disegno.",
+            "answer": "They are books.",
+            "aliases": [],
+            "explanation": "Ci sono più cose: iniziamo con They are e usiamo il plurale, senza a o an. They are books.",
+            "choices": [],
+            "tokens": [
+              "They",
+              "are",
+              "books."
+            ],
+            "audio": "book"
+          },
+          {
+            "id": "sentence-pen-one",
+            "noun": "pen",
+            "count": 1,
+            "task": "sentence",
+            "prompt": "Forma la frase per il disegno.",
+            "answer": "It is a pen.",
+            "aliases": [
+              "It's a pen."
+            ],
+            "explanation": "C’è una sola cosa: iniziamo con It is e usiamo a. It is a pen.",
+            "choices": [],
+            "tokens": [
+              "It",
+              "is",
+              "a",
+              "pen."
+            ],
+            "audio": "pen"
+          },
+          {
+            "id": "sentence-pen-many",
+            "noun": "pen",
+            "count": 4,
+            "task": "sentence",
+            "prompt": "Forma la frase per il disegno.",
+            "answer": "They are pens.",
+            "aliases": [],
+            "explanation": "Ci sono più cose: iniziamo con They are e usiamo il plurale, senza a o an. They are pens.",
+            "choices": [],
+            "tokens": [
+              "They",
+              "are",
+              "pens."
+            ],
+            "audio": "pen"
+          },
+          {
+            "id": "sentence-eraser-one",
+            "noun": "eraser",
+            "count": 1,
+            "task": "sentence",
+            "prompt": "Forma la frase per il disegno.",
+            "answer": "It is an eraser.",
+            "aliases": [
+              "It's an eraser."
+            ],
+            "explanation": "C’è una sola cosa: iniziamo con It is e usiamo an. It is an eraser.",
+            "choices": [],
+            "tokens": [
+              "It",
+              "is",
+              "an",
+              "eraser."
+            ],
+            "audio": "eraser"
+          },
+          {
+            "id": "sentence-eraser-many",
+            "noun": "eraser",
+            "count": 2,
+            "task": "sentence",
+            "prompt": "Forma la frase per il disegno.",
+            "answer": "They are erasers.",
+            "aliases": [],
+            "explanation": "Ci sono più cose: iniziamo con They are e usiamo il plurale, senza a o an. They are erasers.",
+            "choices": [],
+            "tokens": [
+              "They",
+              "are",
+              "erasers."
+            ],
+            "audio": "eraser"
+          }
+        ]
+      },
+      {
+        "id": "questions",
+        "title": "Is it…?",
+        "icon": "💬",
+        "description": "Trasforma le parole in una domanda e rispondi guardando il disegno.",
+        "tip": "Nella domanda Is viene prima di it. Risposta breve: Yes, it is oppure No, it isn’t.",
+        "cases": [
+          {
+            "id": "question-pen-yes",
+            "noun": "pen",
+            "count": 1,
+            "task": "question",
+            "prompt": "Forma la domanda, poi rispondi.",
+            "answer": "Yes, it is.",
+            "aliases": [],
+            "explanation": "Il disegno mostra proprio pen: rispondiamo Yes, it is.",
+            "choices": [
+              "Yes, it is.",
+              "No, it isn't."
+            ],
+            "tokens": [
+              "Yes,",
+              "it",
+              "is."
+            ],
+            "audio": "Is it a pen?",
+            "question": "Is it a pen?",
+            "questionTokens": [
+              "Is",
+              "it",
+              "a",
+              "pen?"
+            ],
+            "questionExplanation": "Per fare la domanda mettiamo Is prima di it: Is it a pen? Dopo il punto interrogativo guardiamo il disegno e rispondiamo sì oppure no."
+          },
+          {
+            "id": "question-book-no",
+            "noun": "book",
+            "count": 1,
+            "task": "question",
+            "prompt": "Forma la domanda, poi rispondi.",
+            "answer": "No, it isn't.",
+            "aliases": [
+              "No, it is not.",
+              "No, it's not."
+            ],
+            "explanation": "Il disegno mostra book, non pen: rispondiamo No, it isn’t.",
+            "choices": [
+              "Yes, it is.",
+              "No, it isn't."
+            ],
+            "tokens": [
+              "No,",
+              "it",
+              "isn't."
+            ],
+            "audio": "Is it a pen?",
+            "question": "Is it a pen?",
+            "questionTokens": [
+              "Is",
+              "it",
+              "a",
+              "pen?"
+            ],
+            "questionExplanation": "Per fare la domanda mettiamo Is prima di it: Is it a pen? Dopo il punto interrogativo guardiamo il disegno e rispondiamo sì oppure no."
+          },
+          {
+            "id": "question-eraser-yes",
+            "noun": "eraser",
+            "count": 1,
+            "task": "question",
+            "prompt": "Forma la domanda, poi rispondi.",
+            "answer": "Yes, it is.",
+            "aliases": [],
+            "explanation": "Il disegno mostra proprio eraser: rispondiamo Yes, it is.",
+            "choices": [
+              "Yes, it is.",
+              "No, it isn't."
+            ],
+            "tokens": [
+              "Yes,",
+              "it",
+              "is."
+            ],
+            "audio": "Is it an eraser?",
+            "question": "Is it an eraser?",
+            "questionTokens": [
+              "Is",
+              "it",
+              "an",
+              "eraser?"
+            ],
+            "questionExplanation": "Per fare la domanda mettiamo Is prima di it: Is it an eraser? Dopo il punto interrogativo guardiamo il disegno e rispondiamo sì oppure no."
+          },
+          {
+            "id": "question-ruler-no",
+            "noun": "ruler",
+            "count": 1,
+            "task": "question",
+            "prompt": "Forma la domanda, poi rispondi.",
+            "answer": "No, it isn't.",
+            "aliases": [
+              "No, it is not.",
+              "No, it's not."
+            ],
+            "explanation": "Il disegno mostra ruler, non apple: rispondiamo No, it isn’t.",
+            "choices": [
+              "Yes, it is.",
+              "No, it isn't."
+            ],
+            "tokens": [
+              "No,",
+              "it",
+              "isn't."
+            ],
+            "audio": "Is it an apple?",
+            "question": "Is it an apple?",
+            "questionTokens": [
+              "Is",
+              "it",
+              "an",
+              "apple?"
+            ],
+            "questionExplanation": "Per fare la domanda mettiamo Is prima di it: Is it an apple? Dopo il punto interrogativo guardiamo il disegno e rispondiamo sì oppure no."
+          }
+        ]
+      }
+    ]
+  }
 }

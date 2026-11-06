@@ -18,7 +18,7 @@
 #       deploy.lock, current, deploy.log
 set -euo pipefail
 umask 077
-FILES=(guardian.php community.php classroom.php arena.php training.php api.php platform.php classroom.js presence.js arena.js curriculum.json training.json quests.css data.js worlds.js learning.js app.js accounts.js quests.js community.js training.js arcade.css arcade.js island.css island.js island-places.webp three.min.js study-import.js pdf.min.js pdf.worker.min.js study-ocr.js ocr-worker.min.js ocr-core-775a35df6f2a.js ocr-eng-45b4cb346724.traineddata.gz ocr-ita-f702fcfad297.traineddata.gz race-world.webp race-circuits.webp race-racers.webp character-portraits.png character-portraits.webp holiday-worlds.png holiday-worlds.webp classroom-objects.png classroom-objects.webp manifest.webmanifest icon-192.png icon-512.png icon-maskable-512.png offline.html offline.js pwa.css pwa.js sw.js index.html)
+FILES=(guardian.php community.php classroom.php arena.php training.php api.php platform.php classroom.js presence.js arena.js curriculum.json training.json quests.css data.js worlds.js learning.js app.js accounts.js quests.js community.js grammar.js training.js arcade.css arcade.js island.css island.js island-places.webp three.min.js study-import.js pdf.min.js pdf.worker.min.js study-ocr.js ocr-worker.min.js ocr-core-775a35df6f2a.js ocr-eng-45b4cb346724.traineddata.gz ocr-ita-f702fcfad297.traineddata.gz race-world.webp race-circuits.webp race-racers.webp character-portraits.png character-portraits.webp holiday-worlds.png holiday-worlds.webp classroom-objects.png classroom-objects.webp manifest.webmanifest icon-192.png icon-512.png icon-maskable-512.png offline.html offline.js pwa.css pwa.js sw.js index.html)
 PHP_FILES=(guardian.php community.php classroom.php arena.php training.php api.php platform.php)
 KEEP_RELEASES=5
 
@@ -237,7 +237,7 @@ case "$mode" in
     [[ -f "$archive" && ! -L "$archive" ]] || die 'uploaded bundle missing'
     rm -rf -- "$stage"; mkdir -p -- "$stage"
     tar -xf "$archive" -C "$stage" --no-same-owner --no-same-permissions
-    # exactly the 54 application files plus the checksum list, all regular files
+    # exactly the 55 application files plus the checksum list, all regular files
     expected=$(printf '%s\n' "${FILES[@]}" SHA256SUMS | sort)
     actual=$(cd -- "$stage" && find . -mindepth 1 -printf '%P\n' | sort)
     [[ "$expected" == "$actual" ]] || die 'bundle content differs from the expected file list'

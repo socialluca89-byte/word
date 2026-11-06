@@ -204,3 +204,76 @@ main{padding-top:10px}.accountArea{background:white;border:1px solid #e3dff0;bor
 @media(max-width:650px){body>header{padding-top:12px;padding-bottom:6px}body>.accountToolbar[data-mode=guest] button{padding-top:4px;padding-bottom:4px}#mainContent .accountArea:not([open])>summary{padding-top:0;padding-bottom:0;align-content:center}#mainContent .startHub{margin-top:0;padding-top:8px;gap:6px}}
 
 @media(max-width:650px){body>header{padding-bottom:4px}body>.accountToolbar[data-mode=guest]{grid-template-columns:minmax(min-content,.7fr) minmax(0,2fr)}body>.accountToolbar[data-mode=guest] button{padding-left:4px;padding-right:4px;font-size:18px;line-height:1.25;overflow-wrap:normal;word-break:normal}body>.accountToolbar[data-mode=guest] #headerLogin{min-width:min-content;white-space:nowrap}}
+
+/* One or several real objects, then one clear action. Existing training stays scoped. */
+#trainingHub .grammarEntry{padding:18px 0 20px;margin:6px 0 18px;border-bottom:2px solid #c6dfe3}
+#trainingHub .grammarEntry h3{font:800 25px/1.2 Outfit,system-ui,sans-serif;color:#193e55;margin:0 0 8px}
+#trainingHub .grammarEntry p{font:400 18px/1.5 'DM Sans',sans-serif;max-width:680px;margin:0 0 12px}
+#trainingHub .grammarEntry>button{min-height:56px;font:700 21px/1.3 Outfit,system-ui,sans-serif;padding:12px 18px;background:#ffd16a;color:#193e55;border:2px solid #ceab57;border-radius:15px;box-shadow:0 3px 0 #c6a44f}
+#trainingHub.grammarTraining{background:#f4fafc;border:2px solid #b9d9df;color:#193e55}
+.grammarTraining .grammarHeading{display:flex;flex-direction:column;align-items:flex-start;gap:14px;margin:0 0 14px}
+.grammarTraining .grammarHeading h2{font:800 clamp(27px,4vw,36px)/1.2 Outfit,system-ui,sans-serif;color:#193e55;margin:0;text-wrap:balance}
+.grammarTraining .grammarHeading>button{font-size:18px;min-height:48px;margin:0;background:#fff;color:#22654f}
+.grammarTraining #grammarStatus{font-size:18px;line-height:1.5;margin:8px 0;overflow-wrap:anywhere}
+.grammarTraining #grammarStatus:empty{margin:0}
+.grammarTraining #grammarRecover{min-height:48px;font-size:18px;margin:8px 0;background:#fff5d5;color:#193e55}
+.grammarTraining .grammarLead{font:500 21px/1.5 'DM Sans',sans-serif;margin:0 0 20px}
+.grammarTraining .grammarPackList{display:flex;flex-direction:column;gap:12px;max-width:850px}
+.grammarTraining .grammarPack{display:grid;grid-template-columns:70px minmax(0,1fr) auto;align-items:center;gap:16px;padding:18px;text-align:left;margin:0;min-height:106px;min-width:0;border:2px solid #c2dde0;border-radius:19px;background:#fff;box-shadow:0 3px 0 #d3e6e8;color:#193e55;touch-action:manipulation}
+.grammarTraining .grammarPack>span:first-child{font-size:37px;text-align:center}
+.grammarTraining .grammarPack strong{display:block;font:800 24px/1.3 Outfit,system-ui,sans-serif}
+.grammarTraining .grammarPack small{display:block;font:400 18px/1.45 'DM Sans',sans-serif;margin-top:5px}
+.grammarTraining .grammarPackArrow{font-size:32px;color:#22654f}
+.grammarTraining .grammarScope{font-size:17px;line-height:1.55;max-width:800px;margin:18px 0 0;color:#416474}
+.grammarTraining .grammarResume{margin:0 0 20px}
+.grammarTraining .grammarResume>button{display:block;font-size:18px;min-height:52px;margin:8px 0}
+.grammarTraining .grammarSessionTop{display:flex;align-items:center;justify-content:space-between;gap:12px;font:600 18px/1.4 'DM Sans',sans-serif;margin:0 0 8px}
+.grammarTraining #grammarPause{font-size:18px;min-height:48px;flex-shrink:0;background:#fff;color:#193e55;margin:0;padding:9px 12px}
+.grammarTraining .grammarProgress{height:10px;border-radius:10px;border:1px solid #bcd7dc;background:#dfedf0;overflow:hidden;margin:0 0 16px}
+.grammarTraining .grammarProgress>span{display:block;height:100%;background:#168ba5}
+.grammarTraining .grammarStage{padding:20px;border:2px solid #bddde4;border-radius:25px;background:#fff;box-shadow:0 4px 0 #d1e6e9;min-width:0}
+.grammarTraining .grammarObjects{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:12px;min-height:162px;margin:0 0 14px;padding:6px;border-bottom:2px dashed #cee5e8}
+.grammarTraining .grammarObject{display:grid;place-items:center;flex:0 1 132px;min-width:0;width:132px;height:132px}
+.grammarTraining .grammarObject>svg{display:block;width:100%;height:100%;overflow:visible}
+.grammarTraining .grammarObject .trainingWordArt{display:block;width:100%;height:100%;max-width:none;max-height:none}
+.grammarTraining .grammarObjects[data-count="1"] .grammarObject{width:166px;height:166px;flex-basis:166px}
+.grammarTraining .grammarObjects[data-count="3"] .grammarObject,.grammarTraining .grammarObjects[data-count="4"] .grammarObject{width:118px;height:118px;flex-basis:118px}
+.grammarTraining .grammarPrompt{font:700 clamp(22px,3vw,27px)/1.4 Outfit,system-ui,sans-serif;text-align:center;max-width:760px;margin:10px auto 16px;color:#193e55;overflow-wrap:anywhere}
+.grammarTraining .grammarSourceWord{font:800 clamp(29px,5vw,38px)/1.3 Outfit,system-ui,sans-serif;text-align:center;color:#22654f;margin:10px 0 18px;overflow-wrap:anywhere}
+.grammarTraining .grammarModel{padding:15px 16px;background:#eef6e9;border-left:5px solid #83ad86;border-radius:8px;margin:12px 0 16px}
+.grammarTraining .grammarModel>p:first-child{font:800 clamp(27px,4vw,35px)/1.35 Outfit,system-ui,sans-serif;color:#193e55;margin:0 0 8px;overflow-wrap:anywhere}
+.grammarTraining .grammarExplanation{font:400 19px/1.5 'DM Sans',sans-serif;margin:0;overflow-wrap:anywhere}
+.grammarTraining #grammarModelContinue,.grammarTraining #grammarNext,.grammarTraining #grammarAgain,.grammarTraining #grammarCheck,.grammarTraining #grammarBuildCheck{min-height:56px;font:800 22px/1.3 Outfit,system-ui,sans-serif;padding:12px 18px;border:2px solid #ceab57;background:#ffd16a;color:#193e55;border-radius:15px;box-shadow:0 3px 0 #c6a44f;touch-action:manipulation}
+.grammarTraining #grammarModelContinue{display:block;width:100%;margin:12px auto 0;max-width:450px}
+.grammarTraining #grammarChoices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;max-width:760px;margin:auto}
+.grammarTraining #grammarChoices>button{min-height:66px;font:800 24px/1.4 Outfit,system-ui,sans-serif;margin:0;padding:14px 12px;background:#e7f4f4;color:#193e55;border:2px solid #b9d9df;overflow-wrap:anywhere}
+.grammarTraining #grammarChoices>button:last-child:nth-child(odd){grid-column:1/-1}
+.grammarTraining #grammarWrite>label{display:block;font:700 22px/1.4 Outfit,system-ui,sans-serif;margin:0 0 8px}
+.grammarTraining #grammarInput{width:100%;box-sizing:border-box;min-height:58px;padding:10px 12px;font:700 27px/1.3 Outfit,system-ui,sans-serif;border:2px solid #88b3bd;border-radius:12px;background:#fff;color:#193e55}
+.grammarTraining #grammarCheck{display:block;width:100%;margin:14px 0 0}
+.grammarTraining #grammarTokens,.grammarTraining .grammarPicked{display:flex;flex-wrap:wrap;gap:8px;min-width:0;margin:10px 0}
+.grammarTraining .grammarPicked{min-height:64px;align-items:center;padding:10px;border:2px dashed #9fc4cb;border-radius:13px;background:#f1faf9}
+.grammarTraining #grammarTokens>button,.grammarTraining .grammarPicked>button{font:700 22px/1.3 Outfit,system-ui,sans-serif;min-height:52px;padding:11px 14px;margin:0;background:#e7f4f4;color:#193e55;overflow-wrap:anywhere}
+.grammarTraining .grammarPicked>button{background:#fff;border-color:#9fc4cb}
+.grammarTraining #grammarUndo{min-height:48px;font-size:18px;margin:8px 8px 8px 0}
+.grammarTraining #grammarBuildCheck{margin:8px 0}
+.grammarTraining .grammarTools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:18px 0 8px}
+.grammarTraining .grammarTools>button{min-height:50px;font:700 18px/1.35 Outfit,system-ui,sans-serif;margin:0;padding:11px 12px;background:#fff;border:1px solid #adcdd5;color:#193e55}
+.grammarTraining .grammarTools>#grammarListen{background:#22654f;color:#fff;border-color:#22654f}
+.grammarTraining .grammarAudioNote{font:400 17px/1.5 'DM Sans',sans-serif;color:#416474;margin:8px 0}
+.grammarTraining #grammarHintText{font:500 19px/1.5 'DM Sans',sans-serif;margin:14px 0;overflow-wrap:anywhere}
+.grammarTraining #grammarHintText:empty{margin:0}
+.grammarTraining #grammarFeedback:empty{margin:0}
+.grammarTraining #grammarFeedback{display:flex;align-items:flex-start;gap:15px;padding:18px;border:2px solid;border-radius:17px;margin:18px 0 0;overflow-wrap:anywhere}
+.grammarTraining #grammarFeedback h3{font:800 25px/1.3 Outfit,system-ui,sans-serif;margin:0 0 8px;color:inherit}
+.grammarTraining #grammarFeedback p{font-size:20px;line-height:1.5;margin:0 0 12px}
+.grammarTraining .grammarFeedbackMark{font:900 62px/1 Outfit,system-ui,sans-serif;flex-shrink:0}
+.grammarTraining .grammarRetry{background:#fff1eb;color:#8c3931;border-color:#e1a49a!important}
+.grammarTraining .grammarSuccess{background:#edf7df;color:#2d5c42;border-color:#9bc28f!important}
+.grammarTraining .grammarDone{text-align:center;max-width:750px;margin:auto}
+.grammarTraining .grammarDone h3{font:800 30px/1.3 Outfit,system-ui,sans-serif}
+.grammarTraining .grammarDone p{font-size:21px;line-height:1.55}
+.grammarTraining .grammarCelebration{font-size:80px;line-height:1.4}
+.grammarTraining :is(button,input):focus-visible{outline:4px solid #193e55;outline-offset:4px}
+@media(max-width:560px){#trainingHub.grammarTraining{padding:14px 12px;margin:12px 8px}.grammarTraining .grammarHeading{gap:10px}.grammarTraining .grammarHeading h2{font-size:27px}.grammarTraining .grammarStage{padding:14px 12px}.grammarTraining .grammarPack{grid-template-columns:40px minmax(0,1fr) 16px;gap:10px;padding:14px 10px}.grammarTraining .grammarPack>span:first-child{font-size:28px}.grammarTraining .grammarPack strong{font-size:22px}.grammarTraining .grammarPack small{font-size:18px}.grammarTraining .grammarSessionTop{gap:6px}.grammarTraining .grammarObject{flex-basis:100px;width:100px;height:100px}.grammarTraining .grammarObjects[data-count="1"] .grammarObject{flex-basis:148px;width:148px;height:148px}.grammarTraining .grammarObjects[data-count="3"] .grammarObject,.grammarTraining .grammarObjects[data-count="4"] .grammarObject{flex-basis:94px;width:94px;height:94px}.grammarTraining .grammarObjects{gap:8px;min-height:150px;padding:4px}.grammarTraining .grammarPrompt{font-size:23px}.grammarTraining .grammarExplanation{font-size:19px}.grammarTraining #grammarChoices{gap:8px}.grammarTraining #grammarChoices>button{font-size:23px;padding:12px 8px}.grammarTraining .grammarTools{gap:8px}.grammarTraining .grammarTools>button{padding:10px 8px}.grammarTraining #grammarFeedback{padding:15px 12px;gap:10px}.grammarTraining .grammarFeedbackMark{font-size:48px}.grammarTraining #grammarFeedback p{font-size:20px}.grammarTraining #grammarNext{width:100%;margin:0}.grammarTraining #grammarTokens>button,.grammarTraining .grammarPicked>button{font-size:22px;padding:10px}.grammarTraining #grammarBuildCheck{display:block;width:100%}}
+@media(prefers-reduced-motion:reduce){.grammarTraining *{scroll-behavior:auto!important}}

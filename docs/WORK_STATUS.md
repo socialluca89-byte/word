@@ -2,6 +2,18 @@
 
 Questo documento distingue codice preparato, collaudo e pubblicazione. Le note datate in altri documenti restano cronologia.
 
+## Nuovi esercizi della classe
+
+Ultimo rilascio verificato: `38434fc64717b8ba9d68ae3b3deaefa7a76dbeae`, [run41661924663](https://github.com/socialluca89-byte/word/actions/runs/41661924663),47 verify, 61 suite browser e deploy verificati il3novembre alle16:31:51Europe/Rome. I conteggi del candidato attuale sono distinti.
+
+Richiesta corrente: integrare le cinque nuove schede e migliorare l'app. Candidato sul ramo add-classroom-grammar-20261106:40attività originali,16nomi e5percorsi (uno/tanti, plurale, a/an, It is/They are, Is it...? con domanda e risposta). Entrate da Lettere e parole e dal dettato, sette destinazioni home conservate. Archivio ospite separato, piani e aiuti congelati, report genitore privato con lo stesso perimetro di autorizzazione; nessun punto/moneta/classifica aggiunti e nessun dato reale letto o modificato.
+
+La revisione ha riprodotto e corretto difetti di scelte, invio vuoto, normalizzazione, retention ospite, piano ricalcolato dopo aggiornamento e risposta tardiva dopo cambio profilo. La nuova tabella additiva delle sole sessioni impedisce che un rollback a38434fc mostri modi sconosciuti ai vecchi client. Aggregati e storico restano; il modello non conta come risposta giocata, mentre il roster include risposte vere anche errate. [Contratto, scelte didattiche e compatibilità](CLASSROOM_GRAMMAR_2026_11_06.md).
+
+Contenuti, API40casi, training legacy, rollback su fixture e roster sono passati nei collaudi specifici. Il nuovo pacchetto55file è versionato/idempotente;49verifiche obbligatorie e suite browser sono in collaudo. La pipeline richiede62suite complete (31+31) prima del deploy; la pubblicazione non è ancora attestata. Il precedente403 cloud supplementare non viene riprovato o aggirato. Grinch e verifiche reali di account/email/tablet rimangono separati.
+
+Chiusura locale: tutti i49controlli obbligatori PASS; suitegrammar completa e sei regressioni originali PASS. Performance isolata422ms con soglia5s invariata,55hash congelati e versionamento idempotente. Review finale senza blocchi. Il candidato è pronto per la pipeline completa62 e la pubblicazione ordinaria autorizzata; esito terminale e versione online restano da confermare sul nuovo commit.
+
 ## Aggiornamento corrente: grafica e gioco, 3 novembre
 
 Base ora verificata online: `1537a740432625c0a43d25bb2ce99ef1f0711483`, [run41637701431](https://github.com/socialluca89-byte/word/actions/runs/41637701431),47verify/59browser/deploy riusciti alle12:55:52UTC (13:55:52Europe/Rome). Include il follow-up memoria e la correzione del controllo foundations descritti nelle sezioni storiche sotto.

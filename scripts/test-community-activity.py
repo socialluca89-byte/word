@@ -111,7 +111,7 @@ with tempfile.TemporaryDirectory(prefix='wordyland-community-activity-') as temp
 
         assert roster('played')['total'] == 0
         assert roster()['counts']['played'] == 0
-        assert database.execute("SELECT COUNT(*) FROM sqlite_master WHERE name IN ('holiday_days','training_items','phonics_practice')").fetchone()[0] == 0
+        assert database.execute("SELECT COUNT(*) FROM sqlite_master WHERE name IN ('holiday_days','training_items','training_grammar_sessions','phonics_practice')").fetchone()[0] == 0
         passed('fresh optional tables absent: registered/start-only profiles are not counted and roster works')
 
         holiday = profile('Holiday only')
@@ -198,6 +198,64 @@ with tempfile.TemporaryDirectory(prefix='wordyland-community-activity-') as temp
         assert answered_profiles() == expected and models not in expected and idle not in expected
         passed('guided phonics counts answers but not the initial model; complete activity set has no duplicate profiles')
 
+        # New grammar storage stays optional; start/hint/model is not an answer.
+        grammar_person = client()
+        grammar_models, tg = register(grammar_person, 'activity_grammar')
+        grammar_correct = request(grammar_person, 'create-profile', {'nickname': 'Grammar correct'}, tg)['id']
+        grammar_practice = request(grammar_person, 'create-profile', {'nickname': 'Grammar guided'}, tg)['id']
+
+        def grammar_start(person, pid, csrf):
+            return request(person, 'training-start', {'profile': pid, 'track': 'grammar', 'pack': 'number'}, csrf)['session']
+
+        def grammar_answer(person, pid, csrf, session, wrong=False):
+            return request(person, 'training-answer', {'profile': pid, 'token': session['token'], 'step': session['step'],
+                                                       'attempt': secrets.token_hex(16), 'answer': 'wrong' if wrong else session['question']['answer']}, csrf)
+
+        for person, pid, csrf, outcome in [(grammar_person, grammar_models, tg, 'model-only'),
+                                            (grammar_person, grammar_correct, tg, 'correct'),
+                                            (outsider, outsider_id, to, 'wrong'),
+                                            (grammar_person, grammar_practice, tg, 'guided')]:
+            state = grammar_start(person, pid, csrf)
+            assert state['question']['mode'] == 'grammar-model' and pid not in answered_profiles()
+            request(person, 'training-hint', {'profile': pid, 'token': state['token'], 'step': 0}, csrf)
+            assert pid not in answered_profiles()
+            model = grammar_answer(person, pid, csrf, state)
+            assert model['correct'] and not model['independent']
+            state = model['session']
+            assert state['question']['mode'] == 'grammar-choice'
+            assert pid not in answered_profiles(), 'A grammar model confirmation alone never means played'
+            assert {row['skill'] for row in database.execute('SELECT skill FROM training_items WHERE profile_id=?', (pid,))} == {'model.explore'}
+            if outcome in ['model-only', 'guided']:
+                request(person, 'training-hint', {'profile': pid, 'token': state['token'], 'step': state['step']}, csrf)
+                assert pid not in answered_profiles(), 'A hint without an answer never means played'
+            if outcome == 'model-only':
+                continue
+            result = grammar_answer(person, pid, csrf, state, wrong=outcome == 'wrong')
+            assert result['correct'] == (outcome != 'wrong')
+            if outcome == 'guided':
+                assert not result['independent'], 'Guided practice is still a real answer'
+            assert pid in answered_profiles()
+            assert database.execute('SELECT COUNT(*) FROM training_sessions WHERE profile_id=?', (pid,)).fetchone()[0] == 0
+            if outcome == 'wrong':
+                assert result['session']['step'] == state['step']
+                assert database.execute('SELECT errors FROM training_grammar_sessions WHERE token=?', (state['token'],)).fetchone()[0] == 1
+                assert database.execute('SELECT COUNT(*) FROM training_items WHERE profile_id=? AND skill!="model.explore"', (pid,)).fetchone()[0] == 0, 'The wrong-only activity must be detected in the dedicated grammar session table'
+        expected |= {grammar_correct, outsider_id, grammar_practice}
+        assert answered_profiles() == expected and grammar_models not in expected
+        assert roster()['counts']['online'] == 0, 'Saved grammar answers do not imply presence'
+        passed('grammar start/model/hints excluded; correct, wrong-only session and guided answers count without legacy session rows')
+
+        # Two real synthetic classes: an answered profile never leaks via activity.
+        grammar_class = request(player, 'club-create', {'profile': idle, 'name': 'Grammar fixture A', 'consent': True}, tp)
+        request(grammar_person, 'club-join', {'profile': grammar_correct, 'code': grammar_class['code'], 'consent': True}, tg)
+        request(outsider, 'club-create', {'profile': outsider_id, 'name': 'Grammar fixture B', 'consent': True}, to)
+        class_rows = roster(person=player, scope='class')['items']
+        class_ids = {row['id'] for row in class_rows}
+        assert grammar_correct in class_ids
+        assert not {outsider_id, grammar_practice, grammar_models} & class_ids
+        assert all('has_server_activity' not in row and 'username' not in row for row in class_rows)
+        passed('grammar activity respects class membership; other-class and unjoined sibling profiles remain private')
+
         request(player, 'presence-heartbeat', {'profile': idle, 'tab': '1' * 32, 'state': 'ready'}, tp)
         assert roster('online')['total'] == 1 and roster('online')['items'][0]['id'] == idle
         assert roster()['counts']['ready'] == 1 and idle not in answered_profiles()
@@ -223,12 +281,12 @@ with tempfile.TemporaryDirectory(prefix='wordyland-community-activity-') as temp
         assert {row['id'] for row in first['items']}.isdisjoint({row['id'] for row in second['items']})
         assert first['counts']['played'] == first['total']
         before = {table: [tuple(row) for row in database.execute('SELECT * FROM ' + table + ' ORDER BY 1')]
-                  for table in ['accounts', 'wallets', 'inventory', 'practice', 'practice_outcomes', 'rewards', 'training_items', 'holiday_days', 'holiday_rounds']}
+                  for table in ['accounts', 'wallets', 'inventory', 'practice', 'practice_outcomes', 'rewards', 'training_items', 'holiday_days', 'holiday_rounds', 'training_grammar_sessions', 'training_daily', 'training_totals', 'training_stickers', 'clubs', 'club_profiles']}
         roster('played')
         roster('all')
         after = {table: [tuple(row) for row in database.execute('SELECT * FROM ' + table + ' ORDER BY 1')] for table in before}
         assert after == before
-        passed('played counts and pagination agree across 31 profiles; roster reads preserve wallets and progress')
+        passed('played counts and pagination agree across ' + str(len(expected) + 25) + ' profiles; roster reads preserve wallets, grammar/legacy progress and memberships')
 
         payload = {'kind': 'idea', 'title': 'Un nuovo gioco', 'body': 'Una descrizione chiara.', 'screen': 'lessons', 'profile': feedback_id}
         cases = [('ascii100', 'A' * 100), ('accent100', 'è' * 100), ('emoji50', '🚀' * 50),
