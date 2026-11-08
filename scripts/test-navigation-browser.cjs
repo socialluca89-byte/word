@@ -51,7 +51,7 @@ const base=process.env.WORDYLAND_TEST_URL;assert(['localhost','127.0.0.1'].inclu
     await p.locator('.startChoices a[href="#allenati"]').click();await p.locator('[data-lesson=catpositions]').waitFor();
     await p.locator('.startChoices a[href="#personaggi"]').click();await p.locator('.shopGrid').waitFor();
     await p.locator('.startChoices a[href="#sfide"]').click();await p.locator('#arenaLogin').waitFor();await p.locator('#arenaLogin').click();await p.locator('#accountUser').waitFor();
-    const destinations=['#personaggi','#iscritti','#classe-crea','#sfide','#segnalazioni','#admin','#allenamento'];
+    const destinations=['#personaggi','#iscritti','#classe-crea','#sfide','#segnalazioni','#admin','#programma-classe','#allenamento'];
     assert.deepEqual(await p.locator('.serviceNav a').evaluateAll(nodes=>nodes.map(node=>node.hash).sort()),[...destinations].sort(),'Preserve every service destination');
     for(const destination of destinations){
      if(await p.locator('.adultNavigation').getAttribute('open')===null)await p.locator('.adultNavigation>summary').click();
@@ -59,6 +59,7 @@ const base=process.env.WORDYLAND_TEST_URL;assert(['localhost','127.0.0.1'].inclu
      if(destination==='#allenamento')await p.locator('[data-training-block=ae]').waitFor();
      else if(destination==='#personaggi')await p.locator('.shopGrid').waitFor();
      else if(destination==='#sfide')await p.locator('#arenaLogin').waitFor();
+     else if(destination==='#programma-classe'){await p.locator('#classProgramHub h2').waitFor();assert(!await p.locator('.raceHero').isVisible(),'Class programme is a dedicated reachable panel');}
      else await p.locator('#communityHub #communityLogin').waitFor();
      assert.equal(new URL(p.url()).hash,destination);
      if(['#iscritti','#classe-crea','#segnalazioni','#admin'].includes(destination)){

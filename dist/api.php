@@ -231,6 +231,7 @@ if ($method === 'POST' && in_array($action, ['register','login'], true)) {
 $id = userId();
 if ($accountRole==='learner' && in_array($action,['create-profile','rename-profile','delete-profile','club-create','club-join','club-leave','study-save','study-remove'],true)) fail('Questa operazione è riservata all’adulto che gestisce i profili.',403);
 define('WORDYLAND_BOOTSTRAPPED', true);
+require_once __DIR__ . '/class-program.php';
 require __DIR__ . '/platform.php';
 require __DIR__ . '/training.php';
 require __DIR__ . '/community.php';

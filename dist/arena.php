@@ -14,6 +14,21 @@ ensureActivityColumn($db,'duels','kart');
 function duelClassmates(PDO $db, int $a, int $b): bool {
     return (bool)one($db, 'SELECT 1 FROM club_profiles a JOIN club_profiles b ON a.club_id=b.club_id WHERE a.profile_id=? AND b.profile_id=? LIMIT 1', [$a,$b]);
 }
+/** A bound duel remains tied to its exact class for both participants. */
+function duelProgramVisible(PDO $db,array $duel): bool {
+    $a=cpSessionMetadata($db,(int)$duel['challenger'],'duel',$duel['id']);
+    $b=cpSessionMetadata($db,(int)$duel['opponent'],'duel',$duel['id']);
+    if($a===null&&$b===null)return true;
+    return $a!==null&&$b!==null&&($a['accessible']??false)===true&&($b['accessible']??false)===true
+        &&($a['club']??null)===($b['club']??null)&&($a['revision']??null)===($b['revision']??null);
+}
+function duelAssertProgramAccess(PDO $db,array $duel): void {
+    $a=cpAssertSessionAccess($db,(int)$duel['challenger'],'duel',$duel['id']);
+    $b=cpAssertSessionAccess($db,(int)$duel['opponent'],'duel',$duel['id']);
+    if($a===null&&$b===null)return;
+    if($a===null||$b===null||($a['active']['club']??null)!==($b['active']['club']??null)||($a['active']['revision']??null)!==($b['active']['revision']??null))
+        fail('Il contesto della sfida non è più disponibile. Apri una nuova sfida dal programma della classe.',403);
+}
 function duelEquipped(PDO $db, int $profile): array {
     $row=one($db,'SELECT equipped FROM wallets WHERE profile_id=?',[$profile]);
     $equipped=json_decode($row['equipped']??'{}',true);
@@ -34,7 +49,7 @@ function duelView(PDO $db, array $d, int $pid): array {
     return ['id'=>$d['id'],'opponent'=>$other,'nickname'=>$p['nickname'],'category'=>$d['category'],'state'=>$d['state'],
         'activity'=>$d['activity'],'incoming'=>(int)$d['opponent']===$pid,'step'=>(int)$mine['step'],'score'=>(int)$mine['score'],
         'rivalScore'=>$d['state']==='completed'?(int)$rival['score']:null,'rivalDone'=>(int)$rival['step']===$total,
-        'total'=>$total,'expiresAt'=>(int)$d['expires_at']];
+        'total'=>$total,'expiresAt'=>(int)$d['expires_at']]+gameProgramMetadata($db,$pid,'duel',$d['id']);
 }
 $duelActions=['arena','duel','duel-create','duel-accept','duel-decline','duel-cancel','duel-answer'];
 if (!in_array($action,$duelActions,true)) return;
@@ -49,13 +64,15 @@ if ($action==='arena') {
     $hasPresence=(bool)$db->query("SELECT 1 FROM sqlite_master WHERE type='table' AND name='online_presence'")->fetchColumn();
     $presenceJoin=$hasPresence?' LEFT JOIN (SELECT op.profile_id,MAX(CASE op.state WHEN "busy" THEN 3 WHEN "ready" THEN 2 ELSE 1 END) AS rank FROM online_presence op JOIN profiles pp ON pp.id=op.profile_id JOIN accounts aa ON aa.id=pp.account_id AND aa.session_version=op.session_version WHERE op.last_seen>='.(time()-90).' GROUP BY op.profile_id) active ON active.profile_id=p.id':'';
     $priority=$hasPresence?'CASE active.rank WHEN 2 THEN 0 WHEN 1 THEN 1 WHEN 3 THEN 2 ELSE 3 END,':'';
-    $opponents=rows($db,'SELECT DISTINCT p.id,p.nickname,w.equipped FROM profiles p JOIN club_profiles b ON b.profile_id=p.id JOIN club_profiles a ON a.club_id=b.club_id LEFT JOIN wallets w ON w.profile_id=p.id'.$presenceJoin.' WHERE a.profile_id=? AND p.id!=? ORDER BY '.$priority.'LOWER(p.nickname),p.id LIMIT 100',[$pid,$pid]);
+    $context=cpResolveContext($db,$pid);$scope='';$opponentParams=[$pid,$pid];
+    if(($context['mode']??'legacy')==='class'){$scope=' AND a.club_id=?';$opponentParams[]=$context['active']['club'];}
+    $opponents=in_array($context['mode']??'legacy',['legacy','class'],true)?rows($db,'SELECT DISTINCT p.id,p.nickname,w.equipped FROM profiles p JOIN club_profiles b ON b.profile_id=p.id JOIN club_profiles a ON a.club_id=b.club_id LEFT JOIN wallets w ON w.profile_id=p.id'.$presenceJoin.' WHERE a.profile_id=? AND p.id!=?'.$scope.' ORDER BY '.$priority.'LOWER(p.nickname),p.id LIMIT 100',$opponentParams):[];
     foreach ($opponents as &$o) {
         $o['id']=(int)$o['id']; $o['equipped']=json_decode($o['equipped']??'{}',true);
         $o['classes']=array_column(rows($db,'SELECT c.name FROM clubs c JOIN club_profiles a ON a.club_id=c.id JOIN club_profiles b ON b.club_id=c.id WHERE a.profile_id=? AND b.profile_id=? ORDER BY c.name',[$pid,$o['id']]),'name');
     } unset($o);
-    $duels=rows($db,'SELECT * FROM duels WHERE challenger=? OR opponent=? ORDER BY CASE WHEN state IN ("pending","active") THEN 0 ELSE 1 END,created_at DESC,id DESC LIMIT 40',[$pid,$pid]);
-    $duels=array_values(array_filter($duels,fn($d)=>duelClassmates($db,$pid,(int)$d['challenger']===$pid?(int)$d['opponent']:(int)$d['challenger'])));
+    $duels=rows($db,'SELECT d.* FROM duels d WHERE (d.challenger=? OR d.opponent=?) AND '.cpVisibleSessionSql('duel','d.id','d.challenger').' AND '.cpVisibleSessionSql('duel','d.id','d.opponent').' ORDER BY CASE WHEN d.state IN ("pending","active") THEN 0 ELSE 1 END,d.created_at DESC,d.id DESC LIMIT 40',[$pid,$pid]);
+    $duels=array_values(array_filter($duels,fn($d)=>duelClassmates($db,$pid,(int)$d['challenger']===$pid?(int)$d['opponent']:(int)$d['challenger'])&&duelProgramVisible($db,$d)));
     $presence=onlinePresence($db,array_column($opponents,'id'));foreach($opponents as &$opponent)$opponent['presence']=$presence[(int)$opponent['id']]??'offline';unset($opponent);
     $order=['ready'=>0,'online'=>1,'busy'=>2,'offline'=>3];usort($opponents,fn($a,$b)=>($order[$a['presence']]<=>$order[$b['presence']])?:strcasecmp($a['nickname'],$b['nickname']));
     respond(['classes'=>$classes,'opponents'=>$opponents,'duels'=>array_map(fn($d)=>duelView($db,$d,$pid),$duels)]);
@@ -63,22 +80,35 @@ if ($action==='arena') {
 if ($action==='duel-create') {
     $other=(int)($body['opponent']??0);
     if ($other===$pid || !duelClassmates($db,$pid,$other)) fail('Scegli un compagno iscritto alla tua classe.',403);
+    $club=isset($body['programClass'])?(int)$body['programClass']:null;
+    $context=cpResolveDuelContext($db,$pid,$other,$club,$body);cpRequirePlayable($context);
     $curriculum=json_decode(file_get_contents(__DIR__.'/curriculum.json'),true,32,JSON_THROW_ON_ERROR);
     $activity=$body['activity']??'kart';
     if(!is_string($activity)||!in_array($activity,['kart','football','space'],true))fail('Scegli kart, calcio o spazio.');
     $category=$body['category']??'body';
-    if (!is_string($category)||!in_array($category,['body','catpositions','toys','colors','hello','school','home','animals','transport','sport','space','ocean','dino','counting','penpositions','conversation','aboutme','family','food','clothes','weather','routines','mousepositions'],true)||empty($curriculum[$category])) fail('Scegli un argomento disponibile.');
+    if (!is_string($category)||!in_array($category,['body','catpositions','toys','colors','hello','school','home','animals','transport','sport','space','ocean','dino','counting','penpositions','conversation','aboutme','family','food','clothes','weather','routines','mousepositions','program'],true)||($category==='program'?($context['mode']??'legacy')!=='class':empty($curriculum[$category]))) fail('Scegli un argomento disponibile.');
     limitAttempts($db,'duels:'.$pid,20);
-    $unique=[];foreach ($curriculum[$category] as $w) $unique[normalWord($w[0])]=$w;
+    $db->exec('BEGIN IMMEDIATE');
+    $context=cpResolveDuelContext($db,$pid,$other,$club,$body);cpRequirePlayable($context);
+    $approved=gameProgramWords($category==='program'?($context['words']??[]):$curriculum[$category],$context);
+    $unique=[];foreach ($approved as $w) $unique[normalWord($w[0])]=$w;
     $pool=array_values($unique); shuffle($pool); $questions=[];
+    if(($context['mode']??'legacy')==='class'&&count($pool)<2){$db->exec('ROLLBACK');fail('Per questa sfida servono almeno due parole diverse assegnate alla classe.',409);}
     foreach (array_slice($pool,0,5) as $w) {
         $options=[];$seen=[lessonChoiceKey($w[0])=>true];
         foreach(array_column($pool,0) as $word){$key=lessonChoiceKey($word);if(!isset($seen[$key])){$options[]=$word;$seen[$key]=true;}}shuffle($options);
         $options=array_merge([$w[0]],array_slice($options,0,3));shuffle($options);
+        if(($context['mode']??'legacy')==='class'&&count($options)<2){$db->exec('ROLLBACK');fail('Le parole assegnate sono equivalenti. Chiedi all’adulto di aggiungere una parola diversa.',409);}
         $questions[]=['translation'=>$w[1],'emoji'=>$w[2],'options'=>$options,'answer'=>$w[0]];
     }
-    $db->exec('BEGIN IMMEDIATE');
-    if (one($db,'SELECT 1 FROM duels WHERE ((challenger=? AND opponent=?) OR (challenger=? AND opponent=?)) AND category=? AND state IN ("pending","active")',[$pid,$other,$other,$pid,$category])) { $db->exec('ROLLBACK'); fail('Avete già una sfida aperta su questo argomento.',409); }
+    $existing=rows($db,'SELECT * FROM duels WHERE ((challenger=? AND opponent=?) OR (challenger=? AND opponent=?)) AND category=? AND state IN ("pending","active")',[$pid,$other,$other,$pid,$category]);
+    foreach($existing as $open){
+        if(($context['mode']??'legacy')==='class'){
+            if(!cpSessionMatches($db,$pid,'duel',$open['id'],$context)||!cpSessionMatches($db,$other,'duel',$open['id'],$context))continue;
+            duelAssertProgramAccess($db,$open);$db->exec('COMMIT');respond(['duel'=>duelView($db,$open,$pid)]);
+        }
+        $db->exec('ROLLBACK'); fail('Avete già una sfida aperta su questo argomento.',409);
+    }
     foreach ([$pid,$other] as $player) {
         if ((int)one($db,'SELECT COUNT(*) AS n FROM duels WHERE (challenger=? OR opponent=?) AND expires_at>=? AND state IN ("pending","active")',[$player,$player,time()])['n']>=10) {
             $db->exec('ROLLBACK'); fail($player===$pid?'Completa le sfide aperte prima di inviarne altre.':'Questo compagno ha già tante sfide aperte. Riprova più tardi.',409);
@@ -86,7 +116,10 @@ if ($action==='duel-create') {
     }
     $token=bin2hex(random_bytes(16));$now=time();
     runSql($db,'INSERT INTO duels(id,challenger,opponent,category,questions,created_at,expires_at,activity) VALUES (?,?,?,?,?,?,?,?)',[$token,$pid,$other,$category,json_encode($questions,JSON_UNESCAPED_UNICODE),$now,$now+604800,$activity]);
-    foreach ([$pid,$other] as $player) runSql($db,'INSERT INTO duel_players(duel,profile) VALUES (?,?)',[$token,$player]);
+    foreach ([$pid,$other] as $player){
+        runSql($db,'INSERT INTO duel_players(duel,profile) VALUES (?,?)',[$token,$player]);
+        cpBindSession($db,$player,'duel',$token,$context);
+    }
     $d=one($db,'SELECT * FROM duels WHERE id=?',[$token]);$db->exec('COMMIT');respond(['duel'=>duelView($db,$d,$pid)]);
 }
 $token=$method==='GET'?($_GET['duel']??''):($body['duel']??'');
@@ -96,6 +129,7 @@ $d=one($db,'SELECT * FROM duels WHERE id=? AND (challenger=? OR opponent=?)',[$t
 if (!$d) { $db->exec('ROLLBACK');fail('Sfida non trovata.',404); }
 $other=(int)$d['challenger']===$pid?(int)$d['opponent']:(int)$d['challenger'];
 if (!duelClassmates($db,$pid,$other)) { $db->exec('ROLLBACK');fail('Non fate più parte della stessa classe.',403); }
+duelAssertProgramAccess($db,$d);
 $player=one($db,'SELECT * FROM duel_players WHERE duel=? AND profile=?',[$token,$pid]);
 if ($action==='duel') { $db->exec('COMMIT');respond(['duel'=>duelView($db,$d,$pid),'question'=>duelQuestion($d,(int)$player['step']),'equipped'=>duelEquipped($db,$pid)]); }
 if (in_array($action,['duel-accept','duel-decline','duel-cancel'],true)) {
@@ -112,6 +146,7 @@ if (($body['step']??null)!==$step) { $db->exec('ROLLBACK');fail('Risposta già r
 $answer=$body['answer']??null;$q=$questions[$step];
 if (!is_int($answer)||!isset($q['options'][$answer])) { $db->exec('ROLLBACK');fail('Scegli una delle risposte.'); }
 $correct=$q['options'][$answer]===$q['answer'];
+cpRecordStep($db,$pid,'duel',$token,$step,['item'=>'word:'.normalWord($q['answer']),'skill'=>'duel.choice','correct'=>$correct,'completed'=>true,'helped'=>false,'errors'=>$correct?0:1,'replays'=>0]);
 runSql($db,'UPDATE duel_players SET step=step+1,score=score+? WHERE duel=? AND profile=?',[$correct?10:0,$token,$pid]);
 $remaining=one($db,'SELECT COUNT(*) AS n FROM duel_players WHERE duel=? AND step<?',[$token,count($questions)]);
 if (!(int)$remaining['n']) { $d['state']='completed';runSql($db,'UPDATE duels SET state="completed" WHERE id=?',[$token]); }

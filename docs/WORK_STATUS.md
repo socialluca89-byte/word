@@ -1,5 +1,14 @@
 # Stato unico WordyLand
 
+## Lotto corrente: programmi di classe e schede dell’8 novembre
+
+Ultimo rilascio effettivamente verificato: **7f03b579c14e647191779df685b6de4c45bd3beb**, [run42296156096](https://github.com/socialluca89-byte/word/actions/runs/42296156096),49verify/63browser e deploy/live PASS il6novembre alle22:36:01Europe/Rome. Le sezioni successive sono fotografie storiche e non sostituiscono questa base.
+
+L’utente ha fornito cinque altre schede e autorizzato il modello classe–insegnante–programma discusso. Il candidato aggiunge35casi in6percorsi, per75casi/30nomi/11percorsi complessivi; i valori precedenti restano intatti. Sono pronti programma per classe/anno, pubblicazione di revisioni immutabili, attività assegnate/ripasso/pianificate, incarichi docente accettati e revocabili, consenso adulto per i progressi e adattatori per tutti i giochi. Le lettere IT/EN sono assegnabili esplicitamente; nessun programma viene dedotto dal nome Best2. La copia offline esplicita conserva soltanto il contenuto assegnato, senza account/token/dati degli alunni; i risultati restano locali. Nessun utente reale viene consultato o modificato dai collaudi.
+
+[Perimetro e limiti](CLASS_PROGRAMS_2026_11_08.md), [contratto](CLASS_PROGRAM_CONTRACT_2026_11_08.md), [API](CLASS_PROGRAM_API.md), [matrice delle nuove schede](WORKSHEETS_2026_11_08.md). Pacchetto59file/51statici; pipeline52verify/65browser con tutte le suite precedenti conservate. Collaudo locale:52verifiche obbligatorie, API17aree,41suite browser distinte (incluse le2nuove),7anteprime reali e prova prestazioni isolata563ms/5s PASS. La pipeline obbligatoria completa65suite prima del deploy. Questo lotto **non è ancora dichiarato pubblicato**: occorre l’esito terminale della nuova pipeline e dei controlli live sul commit esatto.
+
+
 ## Lotto corrente: spiegazioni, aiuti e premi visibili (6 novembre)
 
 Verificato online **353027185b6629afbf60906b8d29c2e1e69a8e5a**, [run42270153520](https://github.com/socialluca89-byte/word/actions/runs/42270153520):49verify,63suite browser e deploy/live PASS, concluso alle19:37:37Europe/Rome. L’interruzione dell’attesa locale non ha annullato il rilascio; il run esatto è stato riletto fino al risultato terminale.

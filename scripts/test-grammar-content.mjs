@@ -6,11 +6,20 @@ import {createHash} from 'node:crypto';
 
 const baseline='38434fc64717b8ba9d68ae3b3deaefa7a76dbeae';
 const previous=execFileSync('git',['show',baseline+':dist/training.json'],{encoding:'utf8'});
-const raw=fs.readFileSync('dist/training.json','utf8'),content=JSON.parse(raw),grammar=content.grammarLessons;
-const legacy={...content};delete legacy.grammarLessons;
-assert.deepEqual(legacy,JSON.parse(previous),'Every legacy field, word, ID, hint, model, sticker and art URL keeps its exact value');
-assert(raw.startsWith(previous.trimEnd().slice(0,-1).trimEnd()+',\n'),'Legacy catalog bytes before the added top-level property are unchanged');
-assert.equal(content.foundationWords.length,53);assert.equal(content.wordPacks.length,8);assert.equal(content.sentenceActivities.length,12);assert.equal(content.instructionActivities.length,8);
+const raw=fs.readFileSync('dist/training.json','utf8'),content=JSON.parse(raw),allGrammar=content.grammarLessons;
+const original=JSON.parse(previous),legacy={...content};delete legacy.grammarLessons;
+for(const [field,value] of Object.entries(original)){
+ if(field==='foundationWords')assert.deepEqual(content[field].slice(0,53),value,'All53 old foundation records retain every value');
+ else if(field==='wordPacks')assert.deepEqual(content[field].slice(0,8),value,'All8 old word packs retain every value');
+ else assert.deepEqual(legacy[field],value,'Legacy field remains immutable: '+field);
+}
+assert.deepEqual(Object.keys(legacy).sort(),Object.keys(original).sort(),'No unrelated top-level learning catalog introduced');
+const grammarBaseline=JSON.parse(execFileSync('git',['show','7f03b579c14e647191779df685b6de4c45bd3beb:dist/training.json'],{encoding:'utf8'})).grammarLessons;
+assert.deepEqual(allGrammar.nouns.slice(0,16),grammarBaseline.nouns,'The16 existing noun records retain every value');
+assert.deepEqual(allGrammar.packs.slice(0,5),grammarBaseline.packs,'All40 existing cases, models, hints and answers retain every value');
+const grammar={...allGrammar,nouns:allGrammar.nouns.slice(0,16),packs:allGrammar.packs.slice(0,5)};
+assert.equal(content.foundationWords.length,64);assert.equal(content.wordPacks.length,9);assert.equal(content.sentenceActivities.length,12);assert.equal(content.instructionActivities.length,8);
+assert.equal(allGrammar.nouns.length,30);assert.equal(allGrammar.packs.length,11);assert.equal(allGrammar.packs.reduce((count,pack)=>count+pack.cases.length,0),75);
 assert.equal(grammar.version,1);assert.equal(grammar.title,'Grammatica della classe');
 assert.deepEqual(Object.keys(grammar).sort(),['nouns','packs','title','version']);
 
@@ -102,4 +111,4 @@ assert.equal(packs[4].cases.filter(c=>c.answer==='Yes, it is.').length,2);assert
 const accepted=new Set(all.flatMap(c=>[c.answer,...c.aliases]).map(norm));
 for(const error of ['a books','they is books','it are a book',"yes it's",'bookss','scissorss','crayonss','a eraser','an book','pencils sharpener'])assert(!accepted.has(norm(error)),'No invalid grammatical form becomes an accepted answer: '+error);
 assert(packs[1].tip.includes('Per queste parole'),'The regular-s rule is scoped rather than claimed universal');
-console.log(JSON.stringify({status:'passed',nouns:16,cases:40,packs:[8,16,6,6,4],reusedArt:9,newArt:7,legacyComparedTo:baseline,legacySHA256:createHash('sha256').update(previous).digest('hex'),checks:['manual noun/article/plural oracle','single-object art identifiers and counts1–4','all five task meanings and balanced article/yes-no cases','exact word/question token reconstruction','aliases retained without false distractors','prompt audio does not reveal grammatical answers','invalid forms excluded','all legacy values and catalog bytes retained'],network:false,realAccounts:false}));
+console.log(JSON.stringify({status:'passed',nouns:16,cases:40,packs:[8,16,6,6,4],reusedArt:9,newArt:7,legacyComparedTo:baseline,legacySHA256:createHash('sha256').update(previous).digest('hex'),checks:['manual noun/article/plural oracle','single-object art identifiers and counts1–4','all five task meanings and balanced article/yes-no cases','exact word/question token reconstruction','aliases retained without false distractors','prompt audio does not reveal grammatical answers','invalid forms excluded','all legacy values retained; new teacher materials append to immutable prefixes'],network:false,realAccounts:false}));

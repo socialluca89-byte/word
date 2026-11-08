@@ -14,12 +14,14 @@ assert.equal(digest(originalCore),'55ecbd6e8c2cd6e0b665f4699986397ca433f37a38581
 assert.equal(digest(content.foundationWords.slice(0,43)),'b0a0754baf6c476b90429be28258f20b20fa1f984bcc927e9061c5b0cb6cc95e','The original43word records keep spelling, meaning, phrases and hints');
 assert.equal(digest(content.wordPacks.slice(0,7)),'67884808a5ffdebd068fcea92ef9d846086bc9f7ffc2d3b5c9d24f0b6d560564','All seven original pack IDs, order and contents remain unchanged');
 pass('legacy43words/sevenpacks/letters/phonics/stickers preserved');
+assert.equal(createHash('sha256').update(JSON.stringify(content.foundationWords.slice(0,53))).digest('hex'),'dec36391576566feaae234617862fb520eff7f7dba83322c10b587e5fe3bbb1c','All53previous teacher word records stay exact');
+assert.equal(createHash('sha256').update(JSON.stringify(content.wordPacks.slice(0,8))).digest('hex'),'56d1ca7fded1f2e3804ad8e3433d1f2c94864fa887be3263b60da162e92d4d83','All8previous word packs stay exact');
 
-assert.equal(content.foundationWords.length,53);
-assert.equal(content.wordPacks.length,8);
+assert.equal(content.foundationWords.length,64);
+assert.equal(content.wordPacks.length,9);
 const words=new Map(content.foundationWords.map(w=>[w.id,w]));
-assert.equal(words.size,53,'No repeated word IDs');
-assert.equal(new Set(content.wordPacks.map(p=>p.id)).size,8);
+assert.equal(words.size,64,'No repeated word IDs');
+assert.equal(new Set(content.wordPacks.map(p=>p.id)).size,9);
 for(const p of content.wordPacks){assert(p.words.length>0);assert.equal(new Set(p.words).size,p.words.length);for(const id of p.words)assert(words.has(id),'Every referenced word exists: '+id);}
 const numbers=['one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen','twenty'];
 const italian=['undici','dodici','tredici','quattordici','quindici','sedici','diciassette','diciotto','diciannove','venti'];

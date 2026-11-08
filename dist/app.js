@@ -18,7 +18,26 @@ function mountClassicScene(progress=classicProgress){
 }
 const normalize=s=>s.toLowerCase().replace(/[’‘]/g,"'").replace(/[?!.,]+$/g,'').replace(/\s+/g,' ').trim();
 function shuffle(a){let b=[...a];for(let i=b.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]]}return b}
-function allWords(){return [...new Map(Object.entries(lists).filter(([k])=>k!=='all').flatMap(([,v])=>v).concat(custom).map(x=>[x[0],x])).values()]}
+let classicProgramKey=null,classicProgramStart=0,classicSavedCategory=null;
+const classicProgramIdentity=()=>{const m=window.wordylandClassProgram?.state();return m?.mode==='class'?String(m.active.club)+':'+String(m.active.revision):m?.mode||'legacy';};
+function classicProgramMessage(text){stopClassicAudio();disposeClassicScene();queue=[];done=true;$('#game').dataset.active='false';$('#game').innerHTML='<h2>Il programma della classe</h2><p>'+esc(text)+'</p><a class="lessonShortcut" href="#programma-classe">Apri il programma della classe</a>';}
+function syncProgrammeOfflineEntry(manifest){
+ const link=document.querySelector('.appTools a[data-class-offline],.appTools a[href="offline.html"]');if(!link)return;
+ if(!link.dataset.classOffline){link.dataset.classOffline='true';link.dataset.publicLabel=link.textContent;}
+ const scoped=manifest&&manifest.mode!=='legacy';link.href=scoped?'#programma-classe':'offline.html';link.textContent=scoped?'Ripasso offline della classe':link.dataset.publicLabel;
+}
+function syncClassicProgramCategory(){
+ const cp=window.wordylandClassProgram,select=$('#category');if(!cp||!select)return;
+ const m=cp.state();syncProgrammeOfflineEntry(m);if(m?.mode==='class'){
+  let option=select.querySelector('[data-program-category]');if(!option){classicSavedCategory=select.value;option=document.createElement('option');option.value='program';option.dataset.programCategory='true';option.textContent='📘 Programma della classe';select.prepend(option);}
+  for(const option of select.options)option.disabled=!['program','review'].includes(option.value)&&cp.filterRows(option.value==='custom'?custom:lists[option.value]||[]).length===0;
+  if(classicProgramKey!==classicProgramIdentity()||select.selectedOptions[0]?.disabled)select.value='program';
+ }else if(m?.mode==='legacy'){
+  const was=select.value==='program';select.querySelector('[data-program-category]')?.remove();for(const option of select.options)option.disabled=false;
+  if(was)select.value=classicSavedCategory&&[...select.options].some(o=>o.value===classicSavedCategory)?classicSavedCategory:'focus';
+ }
+}
+function allWords(){const cp=window.wordylandClassProgram;if(cp?.isClass())return cp.wordPool();const rows=[...new Map(Object.entries(lists).filter(([k])=>k!=='all').flatMap(([,v])=>v).concat(custom).map(x=>[x[0],x])).values()];return cp?cp.filterRows(rows):rows;}
 function save(){let stored=false;try{localStorage.setItem('chloeGardenV2',JSON.stringify({stats,custom,stars,voice:voiceName}));stored=true;}catch{}const notice=$('#classicStorageNotice');if(notice)notice.hidden=stored;return stored;}
 function updateStats(){$('#total').textContent='⭐ '+stars+' stelle';let mastered=Object.values(stats).filter(x=>(x.good||0)>=3).length;$('#learned').textContent=mastered;$('#reviewCount').textContent=Object.values(stats).filter(x=>x.review).length}
 function loadVoices(){if(!('speechSynthesis'in window)){$('#audioStatus').textContent='Audio non disponibile. Usa le immagini e la modalità Scopri.';return}voices=speechSynthesis.getVoices().filter(x=>/^en[-_]/i.test(x.lang));$('#voice').innerHTML=voices.length?voices.map(v=>'<option>'+esc(v.name)+'</option>').join(''):'<option>Voce inglese automatica</option>';if(voices.some(x=>x.name===voiceName))$('#voice').value=voiceName;else{let british=voices.find(x=>x.lang==='en-GB');if(british)$('#voice').value=british.name}$('#audioStatus').textContent='La voce dipende dal dispositivo. Premi Ascolta per provarla.'}
@@ -36,15 +55,26 @@ function speak(slow=false){
  try{speechSynthesis.speak(u);}catch{if(currentSpeech()){classicSpeech=null;clearClassicSpeaking();message('L’audio non è partito. Controlla volume e voce del dispositivo.');}}
 }
 function message(t){$('#feedback').textContent=t}
-function source(){let k=$('#category').value;return k==='custom'?custom:k==='review'?allWords().filter(x=>stats[x[0]]?.review):lists[k]||[]}
-function start(){if('speechSynthesis'in window)speechSynthesis.cancel();let pool=shuffle(source());pool.sort((a,b)=>(stats[b[0]]?.review?1:0)-(stats[a[0]]?.review?1:0));queue=pool.slice(0,Number($('#length').value));pos=0;phase=0;mistakes=[];sessionCorrect=0;sessionDone=0;render();const game=$('#game');game.tabIndex=-1;game.focus({preventScroll:true});game.scrollIntoView({block:'start',behavior:window.wordylandMotion?.allowed()?'smooth':'instant'});}
+function source(){const cp=window.wordylandClassProgram,k=$('#category').value;if(cp?.isClass()&&k==='program')return cp.wordPool();const rows=k==='custom'?custom:k==='review'?allWords().filter(x=>stats[x[0]]?.review):lists[k]||[];return cp?cp.filterRows(rows):rows;}
+async function start(){
+ const ticket=++classicProgramStart,cp=window.wordylandClassProgram,owner=window.wordylandAccount?.info?.().id||null;
+ if(!cp&&document.querySelector('#classProgramRuntime')){classicProgramMessage('Il programma si sta caricando. Attendi un momento e riprova.');return;}
+ if(cp){
+  const known=cp.state(),expected=known?.mode==='class'?JSON.stringify(known.expected):null;
+  try{const m=await cp.ready();if(ticket!==classicProgramStart||owner!==(window.wordylandAccount?.info?.().id||null))return;
+   if(!['legacy','class'].includes(m.mode)){classicProgramMessage('Scegli una classe con un programma pubblicato per iniziare.');return;}
+   if(expected&&expected!==JSON.stringify(m.expected)){classicProgramMessage('Il programma è cambiato. Scegli una nuova attività nel percorso aggiornato.');return;}
+   syncClassicProgramCategory();classicProgramKey=classicProgramIdentity();
+  }catch{if(ticket===classicProgramStart)classicProgramMessage('Il programma non è disponibile. Riprova con Internet dal programma della classe.');return;}
+ }
+ if('speechSynthesis'in window)speechSynthesis.cancel();let pool=shuffle(source());pool.sort((a,b)=>(stats[b[0]]?.review?1:0)-(stats[a[0]]?.review?1:0));queue=pool.slice(0,Number($('#length').value));pos=0;phase=0;mistakes=[];sessionCorrect=0;sessionDone=0;render();const game=$('#game');game.tabIndex=-1;game.focus({preventScroll:true});game.scrollIntoView({block:'start',behavior:window.wordylandMotion?.allowed()?'smooth':'instant'});}
 function stage(){return mode==='journey'?(phase===1&&queue[pos]?.[0].includes(' ')?'gap':['look','missing','write'][phase]):mode}
 function picture(w,emoji){
 const count=lists.counting?.find(r=>r[0].toLowerCase()===w.toLowerCase());
 if(count){const meta=count[3];return '<div class="countScene" role="img" aria-label="'+esc(count[1])+'">'+Array.from({length:meta.count},()=>'<span aria-hidden="true">'+meta.symbol+'</span>').join('')+'</div>';}
 
 const place=w.match(/(?:^| )(in front of|next to|between|behind|under|on|in|by)(?: |$)/)?.[1];
-if(!place||!lists.place.some(x=>x[0]===w)&&!w.includes('box')&&!w.includes('desk')&&!w.includes('table')&&!w.includes('book'))return '<div class="emoji" aria-hidden="true">'+emoji+'</div>';
+if(!place||!lists.place.some(x=>x[0]===w)&&!w.includes('box')&&!w.includes('desk')&&!w.includes('table')&&!w.includes('book'))return '<div class="emoji" aria-hidden="true">'+esc(emoji)+'</div>';
 const isMouse=w.includes('mouse'),isCat=w.includes('cat')||isMouse,isPen=w.includes('pen')||emoji==='🖊️',isBook=w.includes('book'),isTable=w.includes('table')||w.includes('desk');
 const object=isBook?'<rect x="65" y="80" width="100" height="38" rx="5" fill="#82b8bf" stroke="#477783" stroke-width="3"/><path d="M70 90H162M70 98H162M70 106H162" stroke="#fff4d7" stroke-width="5"/><path d="M65 80H165" stroke="#477783" stroke-width="6"/>':isTable?'<path d="M55 70H160M65 73V133M150 73V133" stroke="#987349" stroke-width="9" stroke-linecap="round"/>':'<rect x="65" y="62" width="94" height="63" rx="7" fill="#e7c691" stroke="#9e7949" stroke-width="3"/><path d="M65 62L82 47H176L159 62" fill="#f5deb3" stroke="#9e7949" stroke-width="3"/>';
 function subject(x,y){return isPen?'<g transform="translate('+(x-4)+','+(y-35)+') rotate(-15)"><path d="M0 0H8V28L4 35L0 28Z" fill="#ffc95d" stroke="#956538" stroke-width="2"/><path d="M0 0H8V6H0Z" fill="#f6a5b3"/><path d="M2 31L4 35L6 31" fill="#3c5063"/></g>':isCat?'<text x="'+x+'" y="'+y+'" text-anchor="middle" font-size="39">'+(isMouse?'🐭':'🐈')+'</text>':'<circle cx="'+x+'" cy="'+(y-12)+'" r="14" fill="#e58b75" stroke="#a95c4c" stroke-width="2"/>'}
@@ -92,3 +122,51 @@ window.addEventListener('wordyland-stop-audio',stopClassicAudio);window.addEvent
 
 // Keep storage failures visible across question redraws, without losing the open activity.
 const classicStorageNotice=document.createElement('p');classicStorageNotice.id='classicStorageNotice';classicStorageNotice.className='classicStorageNotice';classicStorageNotice.hidden=true;classicStorageNotice.setAttribute('role','alert');classicStorageNotice.textContent='La copia su questo dispositivo non è stata salvata. Tieni aperta la partita e chiedi a un adulto di controllare lo spazio del browser. Se usi un profilo, controlla anche il salvataggio online nell’area account.';$('#game').after(classicStorageNotice);
+
+// A class switch stops only the unconfirmed local queue; saved answers and rewards remain.
+window.addEventListener('wordyland-program',()=>{
+ const next=classicProgramIdentity();syncClassicProgramCategory();
+ if(classicProgramKey!==null&&next!==classicProgramKey&&$('#game').dataset.active==='true'){++classicProgramStart;classicProgramMessage('Il programma è cambiato. Le attività salvate restano nel tuo profilo: scegli un nuovo giro.');}
+ classicProgramKey=next;
+});
+window.addEventListener('wordyland-profile',()=>{++classicProgramStart;const cp=window.wordylandClassProgram;if(cp)cp.ready().then(()=>syncClassicProgramCategory()).catch(()=>syncProgrammeOfflineEntry({mode:'blocked'}));});
+window.addEventListener('load',()=>{const cp=window.wordylandClassProgram;if(cp)cp.ready().then(()=>syncClassicProgramCategory()).catch(()=>{});});
+
+/* Explicit offline export contains lessons only, never an API response or identity. */
+(()=>{
+ let exporting=false;
+ const safeText=(value,max)=>typeof value==='string'&&value.length<=max?value:'';
+ function lessonPack(snapshot){
+  const rows=(snapshot?.words||[]).filter(row=>Array.isArray(row)&&safeText(row[0],120)&&safeText(row[1],300)).map(row=>[row[0],row[1],safeText(row[2],32)||'📖']);
+  if(rows.length>500)throw Error('Il programma contiene troppe parole per questo ripasso offline. Gli esercizi restano disponibili online.');
+  const source=snapshot.training||{},ids=new Set(rows.map(row=>row[0]));
+  const words=rows.map(row=>({id:row[0],meaning:row[1],emoji:row[2],topic:'parole assegnate',wordOnly:true,phrase:row[0],phraseMeaning:row[1],gap:'___'}));
+  const letters=(source.letters||[]).filter(letter=>/^[A-Z]$/.test(letter.id)).map(letter=>({id:letter.id,lower:safeText(letter.lower,1),it:safeText(letter.it,40),en:safeText(letter.en,40)}));
+  if(!rows.length&&!letters.length)throw Error('Il programma non contiene parole o lettere scaricabili. Gli esercizi restano disponibili online.');
+  const letterIds=new Set(letters.map(letter=>letter.id));
+  const blocks=(source.blocks||[]).filter(block=>Array.isArray(block.letters)&&block.letters.length&&block.letters.every(id=>letterIds.has(id))).map(block=>({id:safeText(block.id,80),title:safeText(block.title,120),letters:[...block.letters]}));
+  const packs=(source.wordPacks||[]).map(pack=>({id:safeText(pack.id,80),title:safeText(pack.title,120),icon:safeText(pack.icon,32)||'📘',wordOnly:true,words:(pack.words||[]).filter(id=>ids.has(id))})).filter(pack=>pack.id&&pack.words.length>=3);
+  if(!packs.length&&words.length>=3)packs.push({id:'assigned-words',title:'Le parole scaricate',icon:'📘',wordOnly:true,words:words.map(word=>word.id)});
+  return {words:rows,training:{letters,blocks,words,foundationWords:words,wordPacks:packs}};
+ }
+ document.addEventListener('click',async event=>{
+  const offlineLink=event.target.closest('.appTools a[data-class-offline],.appTools a[href="offline.html"]');
+  if(offlineLink&&window.wordylandAccount?.info?.().id&&window.wordylandClassProgram?.state()?.mode!=='legacy'){event.preventDefault();window.wordylandClassProgram?.open();return;}
+  const button=event.target.closest('#programDownloadOffline');if(!button||exporting)return;
+  exporting=true;button.disabled=true;let notice=document.querySelector('#programOfflineStatus');if(!notice){notice=document.createElement('p');notice.id='programOfflineStatus';notice.setAttribute('role','status');button.parentNode.after(notice);}notice.textContent='Preparo soltanto le parole assegnate…';
+  const owner=window.wordylandAccount?.info?.().id;
+  try{
+   const cp=window.wordylandClassProgram,m=await cp.refresh();if(m.mode!=='class')throw Error('Scegli prima un programma pubblicato.');
+   const generation=cp.generation(),data=lessonPack(cp.snapshot());
+   if(!crypto.subtle||!crypto.getRandomValues)throw Error('Questo browser non può preparare il pacchetto offline. Puoi usare gli esercizi online.');
+   const bytes=new TextEncoder().encode(JSON.stringify(data));if(bytes.length>2000000)throw Error('Il materiale è troppo grande per il ripasso offline. Usa il percorso online.');
+   const fingerprint=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),n=>n.toString(16).padStart(2,'0')).join('');
+   if(owner!==window.wordylandAccount?.info?.().id||generation!==cp.generation()||!button.isConnected)return;
+   const key='wordylandClassOfflinePacksV1';let stored;try{stored=JSON.parse(localStorage.getItem(key)||'null');}catch{}if(stored?.version!==1||!stored.packs||typeof stored.packs!=='object'||Array.isArray(stored.packs))stored={version:1,packs:{}};
+   let id=Object.keys(stored.packs).find(id=>/^[a-f0-9]{32}$/.test(id)&&stored.packs[id]?.fingerprint===fingerprint);
+   if(!id){id=Array.from(crypto.getRandomValues(new Uint8Array(16)),n=>n.toString(16).padStart(2,'0')).join('');stored.packs[id]={version:1,fingerprint,...data};localStorage.setItem(key,JSON.stringify(stored));}
+   notice.textContent='Pronto. Solo parole e lettere assegnate, salvate su questo dispositivo: chi lo usa potrà leggerle. Il ripasso offline non aggiorna il registro della classe. ';
+   const link=document.createElement('a');link.className='lessonShortcut';link.href='offline.html?programma='+id;link.textContent='Apri il ripasso scaricato →';notice.append(link);
+  }catch(error){if(notice.isConnected)notice.textContent=error.message||'Il salvataggio non è riuscito. Gli esercizi online restano disponibili.';}finally{exporting=false;if(button.isConnected)button.disabled=false;}
+ });
+})();

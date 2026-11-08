@@ -8,7 +8,7 @@ const base = process.env.WORDYLAND_TEST_URL;
 assert(['localhost', '127.0.0.1'].includes(new URL(base).hostname), 'Disposable localhost only');
 const origin = new URL(base).origin;
 const catalog = JSON.parse(fs.readFileSync('dist/training.json', 'utf8')).grammarLessons;
-assert(catalog && catalog.packs.length === 5 && catalog.nouns.length === 16);
+assert(catalog && catalog.packs.length === 11 && catalog.nouns.length === 30);
 const cases = new Map(catalog.packs.flatMap(pack => pack.cases.map(row => [row.id, row])));
 const captures = process.env.WORDYLAND_GRAMMAR_SCREENSHOTS;
 if (captures) {
@@ -85,7 +85,7 @@ if (captures) {
     await p.evaluate(() => wordylandAccount.ready);
     await p.locator(entry).click();
     await p.locator('#grammarMenu').waitFor();
-    assert.equal(await p.locator('[data-grammar-pack]').count(), 5);
+    assert.equal(await p.locator('[data-grammar-pack]').count(), 11);
   }
   async function start(p, pack) {
     await p.locator('[data-grammar-pack="' + pack + '"]').click();

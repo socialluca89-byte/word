@@ -14,9 +14,11 @@
   const current=++epoch;navigation();const hash=location.hash;
   if(accountOwner!==info().username){accountOwner=info().username;offset=0;adminSearch='';}
   if(['','#continua','#sfide','#personaggi','#allenati','#preposizioni','#classe-crea','#segnalazioni','#admin','#iscritti'].includes(hash)||hash.startsWith('#admin-attiva='))window.wordylandUI?.play();
+  document.body.classList.toggle('programPage',hash==='#programma-classe');
   document.body.classList.toggle('communityPage',['#classe-crea','#segnalazioni','#admin','#iscritti'].includes(hash)||hash.startsWith('#admin-attiva='));
   if(!info().username)newRecovery=null;
   const match=hash.match(/^#admin-attiva=([a-f0-9]{64})$/);if(match){activationCode=match[1];history.replaceState(null,'','#admin');}
+  if(hash==='#programma-classe'){root.hidden=true;document.querySelector('.questHub').hidden=true;window.wordylandClassProgram?.open();return;}
   if(hash==='#scoperte'){window.wordylandUI?.play();root.hidden=true;document.querySelector('.questHub').hidden=false;window.dispatchEvent(new Event('wordyland-journey'));if(scroll)window.wordylandUI?.reveal?.();return;}
   if(hash==='#natale'||hash==='#festivita'){window.wordylandUI?.play();root.hidden=true;document.querySelector('.questHub').hidden=false;window.dispatchEvent(new Event('wordyland-holiday'));if(scroll)window.wordylandUI?.reveal?.();return;}
   if(hash==='#allenamento'||hash==='#dettato'){window.wordylandUI?.play();root.hidden=true;document.querySelector('.questHub').hidden=true;window.dispatchEvent(new Event('wordyland-training-open'));return;}

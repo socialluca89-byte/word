@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 if (!defined('WORDYLAND_BOOTSTRAPPED')) { http_response_code(404); exit; }
+require_once __DIR__ . '/class-program.php';
 $db->exec('CREATE TABLE IF NOT EXISTS wallets(profile_id INTEGER PRIMARY KEY REFERENCES profiles(id) ON DELETE CASCADE, coins INTEGER NOT NULL DEFAULT 0, xp INTEGER NOT NULL DEFAULT 0, equipped TEXT NOT NULL DEFAULT "{}");
 CREATE TABLE IF NOT EXISTS inventory(profile_id INTEGER REFERENCES profiles(id) ON DELETE CASCADE,item TEXT,PRIMARY KEY(profile_id,item));
 CREATE TABLE IF NOT EXISTS quests(token TEXT PRIMARY KEY,profile_id INTEGER REFERENCES profiles(id) ON DELETE CASCADE,questions TEXT,step INTEGER DEFAULT 0,xp INTEGER DEFAULT 0,recovered INTEGER DEFAULT 0,completed INTEGER DEFAULT 0,created_at INTEGER);
@@ -192,6 +193,22 @@ function wallet(PDO $db, int $profile): array {
     $w['level'] = 1 + (int)floor($w['xp']/100);
     return $w;
 }
+/** Program provenance is additive; legacy responses keep their original shape. */
+function gameProgramMetadata(PDO $db,int $pid,string $kind,string $token): array {
+    $program=cpSessionMetadata($db,$pid,$kind,$token);
+    return $program===null?[]:['program'=>$program];
+}
+function gameProgramSessionVisible(PDO $db,int $pid,string $kind,string $token): bool {
+    $program=cpSessionMetadata($db,$pid,$kind,$token);
+    return $program===null||($program['accessible']??false)===true;
+}
+function gameProgramWords(array $pool,array $context): array {
+    $pool=cpFilterWordPool($pool,$context);
+    if(!$pool&&($context['mode']??'legacy')==='class')$pool=cpFilterWordPool($context['words']??[],$context);
+    if(!$pool)fail('Il programma della classe non contiene parole per questa attività. Chiedi all’adulto di assegnare una scheda.',409);
+    return $pool;
+}
+
 function normalWord(string $word): string { return trim(preg_replace('/\s+/u', ' ', rtrim(strtolower(str_replace(['’','‘'], "'", $word)), '?!., '))); }
 function lessonChoiceKey(string $value): string {
     $word=normalWord($value);
@@ -251,10 +268,10 @@ if(!in_array('source',array_column($db->query('PRAGMA table_info(quests)')->fetc
 }
 $db->exec('CREATE INDEX IF NOT EXISTS quests_resume ON quests(profile_id,completed,created_at)');
 function questLifetime(): int{return 604800;}
-function questSnapshot(array $quest): array {
+function questSnapshot(array $quest,?PDO $db=null,?int $pid=null): array {
     $questions=json_decode($quest['questions'],true);$step=(int)$quest['step'];
     if($quest['source']===''){static $curriculum=null;$curriculum??=json_decode(file_get_contents(__DIR__.'/curriculum.json'),true);foreach(['catpositions','penpositions','mousepositions'] as $category){if(!array_diff(array_column($questions,'word'),array_column($curriculum[$category],0))){$quest['source']=$category;break;}}}
-    return ['token'=>$quest['token'],'total'=>count($questions),'step'=>$step,'activity'=>$quest['activity'],'source'=>$quest['source'],'xp'=>(int)$quest['xp'],'expiresAt'=>(int)$quest['created_at']+questLifetime()];
+    return ['token'=>$quest['token'],'total'=>count($questions),'step'=>$step,'activity'=>$quest['activity'],'source'=>$quest['source'],'xp'=>(int)$quest['xp'],'expiresAt'=>(int)$quest['created_at']+questLifetime()]+($db!==null&&$pid!==null?gameProgramMetadata($db,$pid,'quest',$quest['token']):[]);
 }
 
 // Seasonal challenges: server clock, owned profiles, additive private history.
@@ -300,6 +317,32 @@ function holidayElf(array $event,DateTimeImmutable $now): ?array {
     }
     return ['name'=>'Birillo','active'=>$active,'opens'=>$opens->format(DateTimeInterface::ATOM),'closes'=>$event['closes'],'day'=>$now->format('Y-m-d'),'prank'=>$prank];
 }
+/** Keep Birillo's visual prank and schedule; class words never come from the global toy. */
+function holidayProgramElf(?array $elf,array $context): ?array {
+    if($elf===null||!is_array($elf['prank']??null)||($context['mode']??'legacy')==='legacy')return $elf;
+    $prank=$elf['prank'];$prank['scoped']=true;$words=cpFilterWordPool($context['words']??[],$context);
+    if(!$words){
+        $prank['story']='Birillo ha mescolato le figure. Sistemiamo insieme il suo piccolo scherzo!';
+        $prank['prompt']='Rimetti le figure nello stesso ordine del modello.';$prank['model']='⭐❄🎁';
+        $prank['display']='🎁❄⭐';$prank['feedback']='Guarda il modello e riprova con calma.';
+        if($prank['mode']==='build')$prank['tiles']=['🎁','⭐','❄'];
+        elseif($prank['mode']==='letter'){$prank['model']='⭐';$prank['mask']='?';$prank['prompt']='Scegli la stella del modello.';$prank['options']=['❄','⭐','🎁'];$prank['answer']='⭐';}
+        $elf['prank']=$prank;return $elf;
+    }
+    $original=normalWord(explode('·',$prank['model'])[0]);$word=$words[0];foreach($words as $row)if(normalWord($row[0])===$original){$word=$row;break;}
+    $model=strtoupper($word[0]);$prank['story']='Birillo ha preparato uno scherzo con una parola del programma della tua classe.';
+    $prank['model']=$model;$prank['display']=strrev($model);$prank['prompt']='Guarda il modello: '.$model.' · '.$word[1];
+    $prank['feedback']='Guardiamo il modello insieme e riproviamo con calma.';
+    if($prank['mode']==='build'){$prank['tiles']=str_split($model);shuffle($prank['tiles']);}
+    elseif($prank['mode']==='letter'){
+        preg_match('/[A-Z]/',$model,$match,PREG_OFFSET_CAPTURE);$answer=$match[0][0]??substr($model,0,1);$offset=$match[0][1]??0;
+        $prank['mask']=substr_replace($model,'_',$offset,1);$prank['answer']=$answer;$options=[$answer];
+        preg_match_all('/[A-Z]/',strtoupper(implode('',array_column($words,0))),$letters);
+        foreach($letters[0] as $letter)if(count($options)<3&&!in_array($letter,$options,true))$options[]=$letter;
+        shuffle($options);$prank['options']=$options;
+    }
+    $elf['prank']=$prank;return $elf;
+}
 // Arrival metadata stays visible when the next Christmas edition is still closed.
 // It never creates a visitor, prank or activity outside the existing event window.
 function holidayElfSchedule(array $event,DateTimeImmutable $now): ?array {
@@ -318,7 +361,7 @@ function holidayQuestion(array $s): ?array {
     $public=['mode'=>$mode,'title'=>$titles[$mode]??$titles['write'],'prompt'=>$prompt,'options'=>in_array($mode,['meaning','word','gap'],true)?$q['options']:[]];
     if(!empty($q['review']))$public['review']=true;if($mode==='build')$public['tiles']=$q['tiles'];if((int)$s['hint']>0)$public['hint']=$q['answer'];return $public;
 }
-function holidaySnapshot(array $s): array {return ['token'=>$s['token'],'day'=>$s['day'],'completedOn'=>$s['completed_on']??null,'round'=>(int)($s['round']??1),'step'=>(int)$s['step'],'total'=>3,'done'=>(int)$s['step']===3,'question'=>holidayQuestion($s)];}
+function holidaySnapshot(array $s,?PDO $db=null,?int $pid=null): array {return ['token'=>$s['token'],'day'=>$s['day'],'completedOn'=>$s['completed_on']??null,'round'=>(int)($s['round']??1),'step'=>(int)$s['step'],'total'=>3,'done'=>(int)$s['step']===3,'question'=>holidayQuestion($s)]+($db!==null&&$pid!==null?gameProgramMetadata($db,$pid,'holiday',$s['token']):[]);}
 /** New completion dates are server-owned; NULL preserves legacy completion dates. */
 function ensureHolidayCompletionColumns(PDO $db): void {
     foreach(['holiday_days','holiday_rounds'] as $table){
@@ -353,10 +396,10 @@ function holidayRewards(PDO $db,int $pid,array $event): array {
 }
 function challengeSession(PDO $db,int $pid,array $event,string $today): array|false {
     if($event['id']==='journey'){
-        $pending=one($db,'SELECT * FROM holiday_days WHERE profile_id=? AND season=? AND step<3 ORDER BY day LIMIT 1',[$pid,$event['season']]);if($pending)return $pending;
+        $pending=rows($db,'SELECT * FROM holiday_days WHERE profile_id=? AND season=? AND step<3 ORDER BY day',[$pid,$event['season']]);foreach($pending as $candidate)if(gameProgramSessionVisible($db,$pid,'holiday',$candidate['token'])||$candidate['day']===$today)return $candidate;
     }
     if($event['id']!=='journey'){
-        if($event['active']){$pending=one($db,'SELECT profile_id,season,day,token,plan,step,hint,errors,last_attempt,1 AS round,completed_on FROM holiday_days WHERE profile_id=? AND season=? AND step<3 UNION ALL SELECT profile_id,season,day,token,plan,step,hint,errors,last_attempt,round,completed_on FROM holiday_rounds WHERE profile_id=? AND season=? AND step<3 ORDER BY day,round LIMIT 1',[$pid,$event['season'],$pid,$event['season']]);if($pending)return $pending;}
+        if($event['active']){$pending=rows($db,'SELECT profile_id,season,day,token,plan,step,hint,errors,last_attempt,1 AS round,completed_on FROM holiday_days WHERE profile_id=? AND season=? AND step<3 UNION ALL SELECT profile_id,season,day,token,plan,step,hint,errors,last_attempt,round,completed_on FROM holiday_rounds WHERE profile_id=? AND season=? AND step<3 ORDER BY day,round',[$pid,$event['season'],$pid,$event['season']]);foreach($pending as $candidate)if(gameProgramSessionVisible($db,$pid,'holiday',$candidate['token'])||$candidate['day']===$today)return $candidate;}
         $round=one($db,'SELECT * FROM holiday_rounds WHERE profile_id=? AND season=? AND day=? ORDER BY round DESC LIMIT 1',[$pid,$event['season'],$today]);if($round)return $round;
     }
     return one($db,'SELECT *,1 AS round FROM holiday_days WHERE profile_id=? AND season=? AND day=?',[$pid,$event['season'],$today]);
@@ -375,24 +418,26 @@ if(str_starts_with($action,'holiday-')||str_starts_with($action,'journey-')){
     ensureHolidayCompletionColumns($db);
     $now=holidayNow();$today=$now->format('Y-m-d');
     if($op==='holiday-state'){
-        $events=$isJourney?[journeyEvent()]:holidayEvents($now);foreach($events as &$e){$e['elf']=holidayElf($e,$now);if($e['id']==='christmas')$e['elfSchedule']=holidayElfSchedule($e,$now);$e['repeatable']=!$isJourney;$e['dailyComplete']=holidayCompletedToday($db,$pid,$e['season'],$today);$e['rewards']=holidayRewards($db,$pid,$e);$s=challengeSession($db,$pid,$e,$today);$e['session']=$s?holidaySnapshot($s):null;}unset($e);respond(['day'=>$today,'timezone'=>'Europe/Rome','events'=>$events,'wallet'=>wallet($db,$pid)]);
+        $context=cpResolveContext($db,$pid);$events=$isJourney?[journeyEvent()]:holidayEvents($now);foreach($events as &$e){$e['elf']=holidayProgramElf(holidayElf($e,$now),$context);if($e['id']==='christmas')$e['elfSchedule']=holidayElfSchedule($e,$now);$e['repeatable']=!$isJourney;$e['dailyComplete']=holidayCompletedToday($db,$pid,$e['season'],$today);$e['rewards']=holidayRewards($db,$pid,$e);$s=challengeSession($db,$pid,$e,$today);$e['session']=$s&&gameProgramSessionVisible($db,$pid,'holiday',$s['token'])?holidaySnapshot($s,$db,$pid):null;}unset($e);respond(['day'=>$today,'timezone'=>'Europe/Rome','events'=>$events,'wallet'=>wallet($db,$pid)]);
     }
     if($op==='holiday-start'){
         if($isJourney){if(isset($body['event'])&&$body['event']!=='journey')fail('Scegli il percorso delle scoperte.');$body['event']='journey';}if(!is_string($body['event']??null)||(!$isJourney&&$body['event']==='journey'))fail('Scegli un percorso disponibile.');$e=holidayEvent($body['event'],$now);if(!$e['active'])fail('Le sfide di questa festività sono chiuse.',410);
         $another=$body['another']??false;if(!is_bool($another)||($isJourney&&$another))fail('Scegli una sfida disponibile.');
         if($another&&(!is_string($body['after']??null)||!preg_match('/^[a-f0-9]{48}$/',$body['after'])))fail('Riprendi la sfida completata prima di aprirne un’altra.');
         limitAttempts($db,'holiday-start:'.$pid,100);
-        $db->exec('BEGIN IMMEDIATE');$s=challengeSession($db,$pid,$e,$today);$round=1;$table='holiday_days';
+        $db->exec('BEGIN IMMEDIATE');$context=cpResolveContext($db,$pid,$body);cpRequirePlayable($context);$s=challengeSession($db,$pid,$e,$today);$round=1;$table='holiday_days';
         if($another){
             $previous=holidayStoredSession($db,$pid,$body['after']);
             if(!$previous||$previous['season']!==$e['season']){$db->exec('ROLLBACK');fail('Sfida non trovata.',404);}
+            cpAssertSessionAccess($db,$pid,'holiday',$previous['token']);
             if((int)$previous['step']!==3){$db->exec('ROLLBACK');fail('Aggiorna il villaggio e completa la sfida in corso.',409);}
             // A retried request names its completed predecessor. It cannot skip a newer
             // pending round or allocate again after that newer round was completed elsewhere.
             if($s&&(int)$s['step']===3&&$s['day']===$today&&hash_equals($s['token'],$body['after'])){$round=(int)($s['round']??1)+1;$table='holiday_rounds';$s=false;}
             elseif(!$s&&$previous['day']===$today){$db->exec('ROLLBACK');fail('Aggiorna il villaggio per riprendere la sfida.',409);}
         }
-        if(!$s){$words=json_decode(file_get_contents(__DIR__.'/training.json'),true,32,JSON_THROW_ON_ERROR)['foundationWords'];$offset=(int)(hexdec(substr(hash('sha256',$e['season'].$today),0,6))%count($words));if($round>1)$offset=($offset+($round-1)*3)%count($words);$plan=[];
+        if($s){cpAssertSessionAccess($db,$pid,'holiday',$s['token']);if(!cpSessionMatches($db,$pid,'holiday',$s['token'],$context)){$db->exec('ROLLBACK');fail('Questa sfida appartiene a un altro programma. Riprendila dal suo contesto, oppure scegli la prossima giornata.',409);}}
+        if(!$s){$wordRows=array_map(fn($row)=>[$row['id'],$row['meaning'],$row['emoji']??'📚'],json_decode(file_get_contents(__DIR__.'/training.json'),true,32,JSON_THROW_ON_ERROR)['foundationWords']);$wordRows=gameProgramWords($wordRows,$context);$words=array_map(fn($row)=>['id'=>$row[0],'meaning'=>$row[1],'emoji'=>$row[2]??'📚'],$wordRows);$offset=(int)(hexdec(substr(hash('sha256',$e['season'].$today),0,6))%count($words));if($round>1)$offset=($offset+($round-1)*3)%count($words);$plan=[];
             if($isJourney){
                 // Review only the selected profile's existing curated word signals.
                 $allWords=$words;if(holidayExercises($db,$pid,$e['season'])<6)$words=array_slice($words,0,6);
@@ -404,28 +449,31 @@ if(str_starts_with($action,'holiday-')||str_starts_with($action,'journey-')){
                 $w=$words[($offset+$j)%count($words)];$mode=$j===0?'meaning':($j===2?'write':['write','gap','build','word'][((int)$now->format('j')+$round-2)%4]);
                 $options=[$w['meaning'],$words[($offset+$j+1)%count($words)]['meaning'],$words[($offset+$j+2)%count($words)]['meaning']];$answer=$mode==='meaning'?$w['meaning']:$w['id'];$q=['word'=>$w['id'],'meaning'=>$w['meaning'],'mode'=>$mode,'answer'=>$answer,'review'=>$isJourney&&in_array($w['id'],$review??[],true)];
                 if($mode==='word')$options=[$w['id'],$words[($offset+$j+1)%count($words)]['id'],$words[($offset+$j+2)%count($words)]['id']];
-                if($mode==='gap'){$answer=$w['id'][0];$q['answer']=$answer;$q['mask']='_'.substr($w['id'],1);$options=[$answer];foreach(range('a','z') as $letter)if(count($options)<3&&!in_array($letter,$options,true))$options[]=$letter;}
+                if($mode==='gap'){$answer=$w['id'][0];$q['answer']=$answer;$q['mask']='_'.substr($w['id'],1);$options=[$answer];$letters=($context['mode']??'legacy')==='class'?array_values(array_unique(array_merge(array_map(fn($row)=>strtolower(substr($row['id'],0,1)),$words),array_map('strtolower',$context['allowed']['letterIds']??[])))):range('a','z');foreach($letters as $letter)if(count($options)<3&&!in_array($letter,$options,true))$options[]=$letter;if(count($options)<2&&($context['mode']??'legacy')==='class'){$mode='build';$q['mode']='build';$q['answer']=$w['id'];unset($q['mask']);}}
+                if(in_array($mode,['meaning','word'],true)&&($context['mode']??'legacy')==='class'){$options=array_values(array_unique($options));if(count($options)<2){$mode='write';$q['mode']='write';$q['answer']=$w['id'];$options=[];}}
                 if($mode==='build'){$q['tiles']=str_split($w['id']);shuffle($q['tiles']);}
                 shuffle($options);$q['options']=$options;$plan[]=$q;
             }
-            $token=bin2hex(random_bytes(24));$values=[$pid,$e['season'],$today,$token,json_encode($plan,JSON_UNESCAPED_UNICODE)];if($round===1)runSql($db,'INSERT INTO holiday_days(profile_id,season,day,token,plan) VALUES(?,?,?,?,?)',$values);else runSql($db,'INSERT INTO holiday_rounds(profile_id,season,day,token,plan,round) VALUES(?,?,?,?,?,?)',[...$values,$round]);$s=holidayStoredSession($db,$pid,$token);}
-        $db->exec('COMMIT');respond(['session'=>holidaySnapshot($s)]);
+            $token=bin2hex(random_bytes(24));$values=[$pid,$e['season'],$today,$token,json_encode($plan,JSON_UNESCAPED_UNICODE)];if($round===1)runSql($db,'INSERT INTO holiday_days(profile_id,season,day,token,plan) VALUES(?,?,?,?,?)',$values);else runSql($db,'INSERT INTO holiday_rounds(profile_id,season,day,token,plan,round) VALUES(?,?,?,?,?,?)',[...$values,$round]);cpBindSession($db,$pid,'holiday',$token,$context);$s=holidayStoredSession($db,$pid,$token);}
+        $db->exec('COMMIT');respond(['session'=>holidaySnapshot($s,$db,$pid)]);
     }
     if(!is_string($body['token']??null)||!preg_match('/^[a-f0-9]{48}$/',$body['token'])||!is_int($body['step']??null))fail('Riprendi la sfida confermata.');
     $db->exec('BEGIN IMMEDIATE');$s=holidayStoredSession($db,$pid,$body['token']);
-    if(!$s||(($s['season']==='journey:v1')!==$isJourney)){$db->exec('ROLLBACK');fail('Sfida non trovata.',404);}$e=holidayEvent(explode(':',$s['season'])[0],$now);
+    if(!$s||(($s['season']==='journey:v1')!==$isJourney)){$db->exec('ROLLBACK');fail('Sfida non trovata.',404);}$sessionProgram=cpAssertSessionAccess($db,$pid,'holiday',$s['token']);$e=holidayEvent(explode(':',$s['season'])[0],$now);
     if(!$e['active']||$e['season']!==$s['season']){$db->exec('ROLLBACK');fail('La festività è terminata. I premi ottenuti restano tuoi.',410);}
-    if($s['step']!==$body['step']||$s['step']===3){$db->exec('COMMIT');respond(['replayed'=>true,'session'=>holidaySnapshot($s)]);}
+    if($s['step']!==$body['step']||$s['step']===3){$db->exec('COMMIT');respond(['replayed'=>true,'session'=>holidaySnapshot($s,$db,$pid)]);}
     $table=(int)($s['round']??1)>1?'holiday_rounds':'holiday_days';
-    if($op==='holiday-hint'){runSql($db,'UPDATE '.$table.' SET hint=1 WHERE token=?',[$s['token']]);$s['hint']=1;$db->exec('COMMIT');respond(['session'=>holidaySnapshot($s)]);}
+    if($op==='holiday-hint'){runSql($db,'UPDATE '.$table.' SET hint=1 WHERE token=?',[$s['token']]);$s['hint']=1;$db->exec('COMMIT');respond(['session'=>holidaySnapshot($s,$db,$pid)]);}
     if(!is_string($body['answer']??null)||strlen($body['answer'])>100||!is_string($body['attempt']??null)||!preg_match('/^[a-f0-9]{32}$/',$body['attempt'])){$db->exec('ROLLBACK');fail('Risposta non valida.');}
-    if($s['last_attempt']===$body['attempt']){$db->exec('COMMIT');respond(['replayed'=>true,'session'=>holidaySnapshot($s)]);}
-    $q=json_decode($s['plan'],true,32,JSON_THROW_ON_ERROR)[$s['step']];$correct=normalWord($body['answer'])===normalWord($q['answer']);
+    if($s['last_attempt']===$body['attempt']){$db->exec('COMMIT');respond(['replayed'=>true,'session'=>holidaySnapshot($s,$db,$pid)]);}
+    $plan=json_decode($s['plan'],true,32,JSON_THROW_ON_ERROR);$answeredStep=(int)$s['step'];$q=$plan[$answeredStep];$correct=normalWord($body['answer'])===normalWord($q['answer']);$helped=(int)$s['hint']>0;$stepErrors=(int)($q['programErrors']??0)+($correct?0:1);
+    if($sessionProgram!==null){$plan[$answeredStep]['programErrors']=$stepErrors;$s['plan']=json_encode($plan,JSON_UNESCAPED_UNICODE);}
     if($correct){$s['step']++;$s['hint']=0;}else{$s['errors']=min(1000,$s['errors']+1);$s['hint']=1;}
     $completedOn=!$isJourney&&$correct&&$s['step']===3?$today:($s['completed_on']??null);$s['completed_on']=$completedOn;
-    runSql($db,'UPDATE '.$table.' SET step=?,hint=?,errors=?,last_attempt=?,completed_on=? WHERE token=?',[$s['step'],$s['hint'],$s['errors'],$body['attempt'],$completedOn,$s['token']]);$earned=[];
+    runSql($db,'UPDATE '.$table.' SET step=?,hint=?,errors=?,last_attempt=?,completed_on=?,plan=? WHERE token=?',[$s['step'],$s['hint'],$s['errors'],$body['attempt'],$completedOn,$s['plan'],$s['token']]);$earned=[];
+    cpRecordStep($db,$pid,'holiday',$s['token'],$answeredStep,['item'=>'word:'.normalWord($q['word']),'skill'=>'holiday.'.$q['mode'],'correct'=>$correct,'completed'=>$correct,'helped'=>$helped,'errors'=>$stepErrors,'replays'=>0]);
     if($correct)$earned=holidayEarn($db,$pid,$e);
-    $db->exec('COMMIT');respond(['correct'=>$correct,'session'=>holidaySnapshot($s),'earned'=>$earned,'rewards'=>holidayRewards($db,$pid,$e),'wallet'=>wallet($db,$pid)]);
+    $db->exec('COMMIT');respond(['correct'=>$correct,'session'=>holidaySnapshot($s,$db,$pid),'earned'=>$earned,'rewards'=>holidayRewards($db,$pid,$e),'wallet'=>wallet($db,$pid)]);
 }
 
 require __DIR__ . '/arena.php';
@@ -463,15 +511,15 @@ if(in_array($action,['pending-games','quest-resume'],true)){
         if(!$quest)fail('Missione non disponibile.',404);
         if((int)$quest['created_at']<time()-questLifetime())fail('Questa missione è scaduta. Puoi iniziarne una nuova.',410);
         if($quest['completed'])fail('Questa missione è già completata.',409);
-        $snapshot=questSnapshot($quest);$questions=json_decode($quest['questions'],true);
+        cpAssertSessionAccess($db,$pid,'quest',$quest['token']);$snapshot=questSnapshot($quest,$db,$pid);$questions=json_decode($quest['questions'],true);
         respond($snapshot+['question'=>publicQuestion($questions[$snapshot['step']],$snapshot['step'])]);
     }
-    $quests=rows($db,'SELECT * FROM quests WHERE profile_id=? AND completed=0 AND created_at>=? ORDER BY created_at DESC,token LIMIT 20',[$pid,time()-questLifetime()]);
-    $duels=rows($db,'SELECT d.* FROM duels d JOIN duel_players dp ON dp.duel=d.id AND dp.profile=? WHERE d.state="active" AND d.expires_at>=? ORDER BY d.created_at DESC,d.id LIMIT 40',[$pid,time()]);
-    $pending=[];foreach($duels as $duel){$other=(int)$duel['challenger']===$pid?(int)$duel['opponent']:(int)$duel['challenger'];if(!duelClassmates($db,$pid,$other))continue;$view=duelView($db,$duel,$pid);if($view['step']<$view['total'])$pending[]=$view;}
-    $incoming=rows($db,'SELECT challenger FROM duels WHERE opponent=? AND state="pending" AND expires_at>=?',[$pid,time()]);
-    $invites=0;foreach($incoming as $invitation)if(duelClassmates($db,$pid,(int)$invitation['challenger']))$invites++;
-    respond(['quests'=>array_map('questSnapshot',$quests),'duels'=>$pending,'incomingInvites'=>$invites]);
+    $quests=rows($db,'SELECT q.* FROM quests q WHERE q.profile_id=? AND q.completed=0 AND q.created_at>=? AND '.cpVisibleSessionSql('quest','q.token','q.profile_id').' ORDER BY q.created_at DESC,q.token LIMIT 20',[$pid,time()-questLifetime()]);$quests=array_values(array_filter($quests,fn($q)=>gameProgramSessionVisible($db,$pid,'quest',$q['token'])));
+    $duels=rows($db,'SELECT d.* FROM duels d JOIN duel_players dp ON dp.duel=d.id AND dp.profile=? WHERE d.state="active" AND d.expires_at>=? AND '.cpVisibleSessionSql('duel','d.id','d.challenger').' AND '.cpVisibleSessionSql('duel','d.id','d.opponent').' ORDER BY d.created_at DESC,d.id LIMIT 40',[$pid,time()]);
+    $pending=[];foreach($duels as $duel){$other=(int)$duel['challenger']===$pid?(int)$duel['opponent']:(int)$duel['challenger'];if(!duelClassmates($db,$pid,$other)||!duelProgramVisible($db,$duel))continue;$view=duelView($db,$duel,$pid);if($view['step']<$view['total'])$pending[]=$view;}
+    $incoming=rows($db,'SELECT * FROM duels WHERE opponent=? AND state="pending" AND expires_at>=?',[$pid,time()]);
+    $invites=0;foreach($incoming as $invitation)if(duelClassmates($db,$pid,(int)$invitation['challenger'])&&duelProgramVisible($db,$invitation))$invites++;
+    respond(['quests'=>array_map(fn($q)=>questSnapshot($q,$db,$pid),$quests),'duels'=>$pending,'incomingInvites'=>$invites]);
 }
 if ($method === 'GET' && $action === 'hub') {
     $club = (int)($_GET['club'] ?? 0);
@@ -545,6 +593,8 @@ if ($method === 'POST' && $action==='quest-start') {
     limitAttempts($db,'quests:'.$pid,60);
     $activity=$body['activity']??'classic';
     if(!is_string($activity)||!in_array($activity,adventureActivities(),true))fail('Scegli un’avventura disponibile.');
+    $context=cpResolveContext($db,$pid,$body);cpRequirePlayable($context);
+    $db->exec('BEGIN IMMEDIATE');$context=cpResolveContext($db,$pid,$body);cpRequirePlayable($context);
     $study=(int)($body['study']??0);
     if ($study) {
         $s=one($db,'SELECT words FROM studies WHERE id=? AND profile_id=?',[$study,$pid]); if(!$s)fail('Scheda non trovata.',404);
@@ -552,11 +602,22 @@ if ($method === 'POST' && $action==='quest-start') {
     } else {
         $curriculum=json_decode(file_get_contents(__DIR__.'/curriculum.json'),true,32,JSON_THROW_ON_ERROR);
         $category=$body['category']??'body';
-        if(!is_string($category)||($category!=='personal'&&!isset($curriculum[$category])))fail('Scegli un argomento disponibile.');
+        if(!is_string($category)||($category!=='personal'&&!isset($curriculum[$category])&&!(($context['mode']??'legacy')==='class'&&$category==='program')))fail('Scegli un argomento disponibile.');
         if ($category==='personal') {
             $pool=[]; foreach(rows($db,'SELECT words FROM studies WHERE profile_id=?',[$pid]) as $s)$pool=array_merge($pool,json_decode($s['words'],true));
-            if(!$pool)$pool=$curriculum['body'];
-        } else $pool=$curriculum[$category]??$curriculum['body'];
+            if(!$pool&&($context['mode']??'legacy')==='legacy')$pool=$curriculum['body'];
+        } else $pool=$category==='program'?($context['words']??[]):($curriculum[$category]??[]);
+    }
+    $source=$study?'study:'.$study:$category;
+    $pool=cpFilterWordPool($pool,$context);
+    if(!$pool&&($context['mode']??'legacy')==='class'&&!$study&&$category!=='personal'){$pool=cpFilterWordPool($context['words']??[],$context);$source='program';}
+    if(!$pool){$db->exec('ROLLBACK');fail('Nessuna parola di questa scheda è disponibile nel programma della classe.',409);}
+    if(($context['mode']??'legacy')==='class'){
+        foreach(rows($db,'SELECT * FROM quests WHERE profile_id=? AND activity=? AND source=? AND completed=0 AND created_at>=? ORDER BY created_at DESC,token',[$pid,$activity,$source,time()-questLifetime()]) as $existing){
+            if(!cpSessionMatches($db,$pid,'quest',$existing['token'],$context))continue;
+            cpAssertSessionAccess($db,$pid,'quest',$existing['token']);$plan=json_decode($existing['questions'],true);$db->exec('COMMIT');
+            respond(['token'=>$existing['token'],'total'=>count($plan),'question'=>publicQuestion($plan[(int)$existing['step']],(int)$existing['step'])]+gameProgramMetadata($db,$pid,'quest',$existing['token']));
+        }
     }
     $unique=[];foreach($pool as $word)$unique[normalWord($word[0])]=$word; $pool=array_values($unique);
     shuffle($pool);
@@ -570,7 +631,8 @@ if ($method === 'POST' && $action==='quest-start') {
         if(isset($meta['prompt']))$q['prompt']=$meta['prompt'];
         if($i===0&&($meta['type']??'')==='count') {
             $q['kind']=$kind='count';$alternatives=[];
-            foreach(['one','two','three','four','five','six','seven','eight','nine','ten'] as $j=>$number) {
+            if(($context['mode']??'legacy')==='class')$alternatives=array_values(array_filter($pool,fn($other)=>$other[0]!==$word[0]&&($other[3]['type']??'')==='count'));
+            else foreach(['one','two','three','four','five','six','seven','eight','nine','ten'] as $j=>$number) {
                 $phrase=$number.' '.($j===0?$meta['singular']:$meta['plural']);
                 if($phrase!==$word[0])$alternatives[]=[$phrase,'',''];
             }
@@ -595,18 +657,21 @@ if ($method === 'POST' && $action==='quest-start') {
             foreach($pool as $other){$key=lessonChoiceKey($other[0]);if(!isset($seen[$key]) && count($options)<4){$options[]=$other;$seen[$key]=true;}}
             shuffle($options);$q['options']=$options;
         }
+        if(($context['mode']??'legacy')==='class'&&isset($q['options'])&&count($q['options'])<2){$q['kind']='write';$q['answer']=$word[0];unset($q['options']);}
         $questions[]=$q;
     }
     $token=bin2hex(random_bytes(16));
     runSql($db,'DELETE FROM quests WHERE profile_id=? AND completed=0 AND created_at<?',[$pid,time()-questLifetime()]);
-    runSql($db,'INSERT INTO quests(token,profile_id,questions,created_at,activity,source) VALUES (?,?,?,?,?,?)',[$token,$pid,json_encode($questions,JSON_UNESCAPED_UNICODE),time(),$activity,$study?'study:'.$study:$category]);
-    respond(['token'=>$token,'total'=>count($questions),'question'=>publicQuestion($questions[0],0)]);
+    runSql($db,'INSERT INTO quests(token,profile_id,questions,created_at,activity,source) VALUES (?,?,?,?,?,?)',[$token,$pid,json_encode($questions,JSON_UNESCAPED_UNICODE),time(),$activity,$source]);
+    cpBindSession($db,$pid,'quest',$token,$context);$db->exec('COMMIT');
+    respond(['token'=>$token,'total'=>count($questions),'question'=>publicQuestion($questions[0],0)]+gameProgramMetadata($db,$pid,'quest',$token));
 }
 if ($method==='POST' && $action==='quest-hint') {
     limitAttempts($db,'quest-hint:'.$pid,300);
     $db->exec('BEGIN IMMEDIATE');
     $quest=one($db,'SELECT * FROM quests WHERE token=? AND profile_id=?',[(string)($body['token']??''),$pid]);
     if(!$quest || $quest['created_at']<time()-questLifetime()){$db->exec('ROLLBACK');fail('Questa missione è terminata. Iniziane una nuova.',410);}
+    $sessionProgram=cpAssertSessionAccess($db,$pid,'quest',$quest['token']);
     if($quest['completed'] || ($body['step']??null)!==(int)$quest['step']){$db->exec('ROLLBACK');fail('La missione è avanzata: riparti dalla schermata attuale.',409);}
     $questions=json_decode($quest['questions'],true);
     $questions[$quest['step']]['assisted']=true;
@@ -618,6 +683,7 @@ if ($method==='POST' && $action==='quest-answer') {
     $db->exec('BEGIN IMMEDIATE');
     $quest=one($db,'SELECT * FROM quests WHERE token=? AND profile_id=?',[(string)($body['token']??''),$pid]);
     if(!$quest || $quest['created_at']<time()-questLifetime()){$db->exec('ROLLBACK');fail('Questa missione è terminata. Iniziane una nuova.',410);}
+    $sessionProgram=cpAssertSessionAccess($db,$pid,'quest',$quest['token']);
     if($quest['completed']){$db->exec('ROLLBACK');fail('Premio già assegnato a questa missione.',409);}
     if(($body['step']??null)!==(int)$quest['step']){$db->exec('ROLLBACK');fail('La missione è avanzata: riparti dalla schermata attuale.',409);}
     $questions=json_decode($quest['questions'],true);
@@ -628,6 +694,8 @@ if ($method==='POST' && $action==='quest-answer') {
     runSql($db,'INSERT OR IGNORE INTO practice(profile_id,word) VALUES (?,?)',[$pid,$word]);
     if(normalWord($answer)!==normalWord($q['answer'])) {
         $questions[$quest['step']]['hadErrors']=true;
+        if($sessionProgram!==null)$questions[$quest['step']]['programErrors']=(int)($q['programErrors']??0)+1;
+        cpRecordStep($db,$pid,'quest',$quest['token'],(int)$quest['step'],['item'=>'word:'.$word,'skill'=>'mission.'.$q['kind'],'correct'=>false,'completed'=>false,'helped'=>!empty($q['assisted']),'errors'=>(int)($questions[$quest['step']]['programErrors']??1),'replays'=>0]);
         markPracticeReview($db,$pid,$word);
         runSql($db,'UPDATE quests SET questions=? WHERE token=?',[json_encode($questions,JSON_UNESCAPED_UNICODE),$quest['token']]);
         runSql($db,'UPDATE practice SET wrong=wrong+1 WHERE profile_id=? AND word=?',[$pid,$word]);$db->exec('COMMIT');
@@ -638,6 +706,7 @@ if ($method==='POST' && $action==='quest-answer') {
     runSql($db,'UPDATE practice SET good=good+1 WHERE profile_id=? AND word=?',[$pid,$word]);
     $assisted=!empty($q['assisted']);$corrected=!empty($q['hadErrors']);$independent=!$assisted&&!$corrected;
     runSql($db,'INSERT INTO practice_outcomes(profile_id,word,independent,assisted,corrected,observed,needs_review,review_at) VALUES (?,?,?,?,?,1,?,?) ON CONFLICT(profile_id,word) DO UPDATE SET independent=independent+excluded.independent,assisted=assisted+excluded.assisted,corrected=corrected+excluded.corrected,observed=observed+1,needs_review=excluded.needs_review,review_at=excluded.review_at',[$pid,$word,(int)$independent,(int)$assisted,(int)$corrected,(int)!$independent,$independent?0:time()]);
+    cpRecordStep($db,$pid,'quest',$quest['token'],(int)$quest['step'],['item'=>'word:'.$word,'skill'=>'mission.'.$q['kind'],'correct'=>true,'completed'=>true,'helped'=>$assisted,'errors'=>(int)($q['programErrors']??(!empty($q['hadErrors'])?1:0)),'replays'=>0]);
     $day=gmdate('Y-m-d');$already=one($db,'SELECT 1 FROM credits WHERE profile_id=? AND word=? AND day=?',[$pid,$word,$day]);
     $today=(int)one($db,'SELECT COUNT(*) AS n FROM credits WHERE profile_id=? AND day=?',[$pid,$day])['n'];
     $xp=(!$already && $today<15)?10:0;

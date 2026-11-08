@@ -10,15 +10,18 @@ assert len(content['blocks'])==13 and len({b['id'] for b in content['blocks']})=
 assert sorted(letter for block in content['blocks'] for letter in block['letters'])==list('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
 assert all(len(block['letters'])==2 and len(set(block['letters']))==2 for block in content['blocks'])
 assert {l['id']:(l['it'],l['en']) for l in content['letters'] if l['id'] in 'ABCEI'}=={'A':('a','ay'),'B':('bi','bee'),'C':('ci','see'),'E':('e','ee'),'I':('i','eye')}
-assert len(content['words'])==53 and {w['id'] for w in content['words'][:6]}=={'cat','pen','dog','sun','book','red'} and len(content['stickers'])==3
+baseline=json.loads(subprocess.check_output(['git','show','7f03b579c14e647191779df685b6de4c45bd3beb:dist/training.json'],text=True))
+assert content['words'][:53]==baseline['foundationWords'] and content['wordPacks'][:8]==baseline['wordPacks'], 'Keep every previous foundation record and pack unchanged'
+assert len(content['words'])==64 and {w['id'] for w in content['words'][:6]}=={'cat','pen','dog','sun','book','red'} and len(content['stickers'])==3
 assert next(pack for pack in content['wordPacks'] if pack['id']=='classroom')['words']==['pencil','pen','book','eraser','scissors','glue stick','crayons','notebook','sharpener','marker','bookbag','desk']
 for word in content['words']:assert word['gap'].replace('___',word['id'])==word['phrase']
-assert len(content['wordPacks'])==8 and len({p['id'] for p in content['wordPacks']})==8
+assert len(content['wordPacks'])==9 and len({p['id'] for p in content['wordPacks']})==9
+assert content['wordPacks'][-1]['id']=='worksheet-nov8' and content['wordPacks'][-1]['wordOnly'] is True and len(content['wordPacks'][-1]['words'])==20
 words={w['id']:w for w in content['words']}
 assert set(words)==set(id for p in content['wordPacks'] for id in p['words'])
 assert content['wordPacks'][0]['words']==['cat','pen','dog','sun','book','red']
 for pack in content['wordPacks']:
- assert 3<=len(pack['words'])<=12 and len(set(pack['words']))==len(pack['words'])
+ assert 3<=len(pack['words'])<=(20 if pack['id']=='worksheet-nov8' else 12) and len(set(pack['words']))==len(pack['words'])
 for word in content['words']:
  assert word['id'].replace(' ','').isalpha() and word['id'].isascii() and word['id'].islower()
  assert len(word['id'])<=10 and word['gap'].count('___')==1 and word['meaning'] and word['phraseMeaning']
@@ -100,7 +103,11 @@ with tempfile.TemporaryDirectory(prefix='wordyland-training-') as tmp:
     frozen=s['question'];assert req(device,f'training-state&profile={pid}&token='+s['token'])['session']['question']==frozen
     while not s['done']:
      q=s['question'];seen_words.add(q['answer']);assert q['answer'] in pack['words']
-     assert q['word']==words[q['answer']]
+     expected_word=words[q['answer']]
+     if pack.get('wordOnly'):expected_word=dict(expected_word,wordOnly=True,phrase=q['answer'],phraseMeaning=expected_word['meaning'],gap='___')
+     assert q['word']==expected_word
+     if pack.get('wordOnly'):assert q['mode']!='phrase'
+     else:assert 'wordOnly' not in q['word']
      assert len(q['choices'])==3 and len({w['id'] for w in q['choices']})==3
      assert all(w['id'] in pack['words'] for w in q['choices'])
      if q['mode']=='recall' and round==0:
@@ -118,8 +125,10 @@ with tempfile.TemporaryDirectory(prefix='wordyland-training-') as tmp:
   for block in content['blocks']:
    active.append(req(b,'training-start',{'profile':other,'track':'letters','block':block['id']},tb)['session']['token'])
   for pack in content['wordPacks']:
-   active.append(req(b,'training-start',{'profile':other,'track':'words','pack':pack['id']},tb)['session']['token'])
-  assert len(active)==21 and set(active)=={s['token'] for s in req(b,f'training-state&profile={other}')['sessions']}
+   fresh=req(b,'training-start',{'profile':other,'track':'words','pack':pack['id']},tb)['session']
+   assert fresh['total']==(8 if pack.get('wordOnly') else 9), 'Only the new worksheet omits the unassigned sentence phase'
+   active.append(fresh['token'])
+  assert len(active)==22 and set(active)=={s['token'] for s in req(b,f'training-state&profile={other}')['sessions']}
   assert snapshot()==old
   seen=set()
   for block in content['blocks']:
@@ -142,5 +151,5 @@ with tempfile.TemporaryDirectory(prefix='wordyland-training-') as tmp:
   req(a,'delete-profile',{'profile':pid,'password':password,'confirm':'ELIMINA'},ta)
   for table in ['training_sessions','training_daily','training_items','training_totals','training_stickers','training_choice_steps']:assert db.execute('SELECT COUNT(*) FROM '+table+' WHERE profile_id=?',(pid,)).fetchone()[0]==0,'Profile deletion must clean training data'
   assert req(b,f'training-state&profile={other}&token='+retained['token'])['session']['token']==retained['token']
-  print('Training API passed: 26 guided letters in 13 blocks, curated content, owned privacy/roles/CSRF, no game economy/ranking mutations, finite idempotent stickers, wrong/hint/reply replay, second-device help, spaced-days fading, reading versus audio skill separation, 53 words in eight packs, complete rotation, 21 paused paths, same-pack distractors, private report, expiry unchanged game rewards and owned-profile deletion cleanup.')
+  print('Training API passed: 26 guided letters in 13 blocks, curated content, owned privacy/roles/CSRF, no game economy/ranking mutations, finite idempotent stickers, wrong/hint/reply replay, second-device help, spaced-days fading, reading versus audio skill separation, all previous53 words/eight packs unchanged plus11 worksheet words/ninth word-only pack, complete rotation,22 paused paths, same-pack distractors, private report, expiry unchanged game rewards and owned-profile deletion cleanup.')
  finally:server.terminate();server.wait(timeout=5);log.close()

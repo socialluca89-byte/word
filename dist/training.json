@@ -441,6 +441,34 @@
         "nineteen",
         "twenty"
       ]
+    },
+    {
+      "id": "worksheet-nov8",
+      "title": "Le schede della classe · novembre",
+      "icon": "🧸",
+      "words": [
+        "bag",
+        "pencil",
+        "pen",
+        "rubber",
+        "book",
+        "desk",
+        "doll",
+        "car",
+        "ball",
+        "puzzle",
+        "teddy",
+        "rabbit",
+        "cat",
+        "rat",
+        "dog",
+        "lizard",
+        "hat",
+        "sharpener",
+        "notebook",
+        "chair"
+      ],
+      "wordOnly": true
     }
   ],
   "foundationWords": [
@@ -920,6 +948,105 @@
       "phrase": "I see twenty stars.",
       "phraseMeaning": "Vedo venti stelle.",
       "gap": "I see ___ stars."
+    },
+    {
+      "id": "rubber",
+      "meaning": "gomma",
+      "emoji": "🧽",
+      "topic": "schede-classe-novembre",
+      "phrase": "It's a rubber.",
+      "phraseMeaning": "È una gomma.",
+      "gap": "It's a ___."
+    },
+    {
+      "id": "doll",
+      "meaning": "bambola",
+      "emoji": "🪆",
+      "topic": "schede-classe-novembre",
+      "phrase": "It's a doll.",
+      "phraseMeaning": "È una bambola.",
+      "gap": "It's a ___."
+    },
+    {
+      "id": "car",
+      "meaning": "automobilina",
+      "emoji": "🚗",
+      "topic": "schede-classe-novembre",
+      "phrase": "It's a car.",
+      "phraseMeaning": "È un’automobilina.",
+      "gap": "It's a ___."
+    },
+    {
+      "id": "ball",
+      "meaning": "palla",
+      "emoji": "🏐",
+      "topic": "schede-classe-novembre",
+      "phrase": "It's a ball.",
+      "phraseMeaning": "È una palla.",
+      "gap": "It's a ___."
+    },
+    {
+      "id": "puzzle",
+      "meaning": "puzzle",
+      "emoji": "🧩",
+      "topic": "schede-classe-novembre",
+      "phrase": "It's a puzzle.",
+      "phraseMeaning": "È un puzzle.",
+      "gap": "It's a ___."
+    },
+    {
+      "id": "teddy",
+      "meaning": "orsacchiotto",
+      "emoji": "🧸",
+      "topic": "schede-classe-novembre",
+      "phrase": "It's a teddy.",
+      "phraseMeaning": "È un orsacchiotto.",
+      "gap": "It's a ___."
+    },
+    {
+      "id": "rabbit",
+      "meaning": "coniglio",
+      "emoji": "🐇",
+      "topic": "schede-classe-novembre",
+      "phrase": "It's a rabbit.",
+      "phraseMeaning": "È un coniglio.",
+      "gap": "It's a ___."
+    },
+    {
+      "id": "rat",
+      "meaning": "ratto",
+      "emoji": "🐀",
+      "topic": "schede-classe-novembre",
+      "phrase": "It's a rat.",
+      "phraseMeaning": "È un ratto.",
+      "gap": "It's a ___."
+    },
+    {
+      "id": "lizard",
+      "meaning": "lucertola",
+      "emoji": "🦎",
+      "topic": "schede-classe-novembre",
+      "phrase": "It's a lizard.",
+      "phraseMeaning": "È una lucertola.",
+      "gap": "It's a ___."
+    },
+    {
+      "id": "hat",
+      "meaning": "cappello",
+      "emoji": "👒",
+      "topic": "schede-classe-novembre",
+      "phrase": "It's a hat.",
+      "phraseMeaning": "È un cappello.",
+      "gap": "It's a ___."
+    },
+    {
+      "id": "chair",
+      "meaning": "sedia",
+      "emoji": "🪑",
+      "topic": "schede-classe-novembre",
+      "phrase": "It's a chair.",
+      "phraseMeaning": "È una sedia.",
+      "gap": "It's a ___."
     }
   ],
   "phonics": {
@@ -1554,6 +1681,161 @@
         "art": "desk",
         "singularAliases": [],
         "pluralAliases": []
+      },
+      {
+        "id": "bag",
+        "singular": "bag",
+        "plural": "bags",
+        "article": "a",
+        "meaning": "zaino",
+        "pluralMeaning": "zaini",
+        "art": "bookbag",
+        "singularAliases": [],
+        "pluralAliases": []
+      },
+      {
+        "id": "rubber",
+        "singular": "rubber",
+        "plural": "rubbers",
+        "article": "a",
+        "meaning": "gomma",
+        "pluralMeaning": "gomme",
+        "art": "eraser",
+        "singularAliases": [],
+        "pluralAliases": []
+      },
+      {
+        "id": "doll",
+        "singular": "doll",
+        "plural": "dolls",
+        "article": "a",
+        "meaning": "bambola",
+        "pluralMeaning": "bambole",
+        "art": "grammar-doll",
+        "singularAliases": [],
+        "pluralAliases": []
+      },
+      {
+        "id": "car",
+        "singular": "car",
+        "plural": "cars",
+        "article": "a",
+        "meaning": "automobilina",
+        "pluralMeaning": "automobiline",
+        "art": "grammar-car",
+        "singularAliases": [],
+        "pluralAliases": []
+      },
+      {
+        "id": "ball",
+        "singular": "ball",
+        "plural": "balls",
+        "article": "a",
+        "meaning": "palla",
+        "pluralMeaning": "palle",
+        "art": "grammar-ball",
+        "singularAliases": [],
+        "pluralAliases": []
+      },
+      {
+        "id": "puzzle",
+        "singular": "puzzle",
+        "plural": "puzzles",
+        "article": "a",
+        "meaning": "puzzle",
+        "pluralMeaning": "puzzle",
+        "art": "grammar-puzzle",
+        "singularAliases": [],
+        "pluralAliases": []
+      },
+      {
+        "id": "teddy",
+        "singular": "teddy",
+        "plural": "teddies",
+        "article": "a",
+        "meaning": "orsacchiotto",
+        "pluralMeaning": "orsacchiotti",
+        "art": "grammar-teddy",
+        "singularAliases": [],
+        "pluralAliases": []
+      },
+      {
+        "id": "rabbit",
+        "singular": "rabbit",
+        "plural": "rabbits",
+        "article": "a",
+        "meaning": "coniglio",
+        "pluralMeaning": "conigli",
+        "art": "grammar-rabbit",
+        "singularAliases": [],
+        "pluralAliases": []
+      },
+      {
+        "id": "cat",
+        "singular": "cat",
+        "plural": "cats",
+        "article": "a",
+        "meaning": "gatto",
+        "pluralMeaning": "gatti",
+        "art": "grammar-cat",
+        "singularAliases": [],
+        "pluralAliases": []
+      },
+      {
+        "id": "rat",
+        "singular": "rat",
+        "plural": "rats",
+        "article": "a",
+        "meaning": "ratto",
+        "pluralMeaning": "ratti",
+        "art": "grammar-rat",
+        "singularAliases": [],
+        "pluralAliases": []
+      },
+      {
+        "id": "dog",
+        "singular": "dog",
+        "plural": "dogs",
+        "article": "a",
+        "meaning": "cane",
+        "pluralMeaning": "cani",
+        "art": "grammar-dog",
+        "singularAliases": [],
+        "pluralAliases": []
+      },
+      {
+        "id": "lizard",
+        "singular": "lizard",
+        "plural": "lizards",
+        "article": "a",
+        "meaning": "lucertola",
+        "pluralMeaning": "lucertole",
+        "art": "grammar-lizard",
+        "singularAliases": [],
+        "pluralAliases": []
+      },
+      {
+        "id": "hat",
+        "singular": "hat",
+        "plural": "hats",
+        "article": "a",
+        "meaning": "cappello",
+        "pluralMeaning": "cappelli",
+        "art": "grammar-hat",
+        "singularAliases": [],
+        "pluralAliases": []
+      },
+      {
+        "id": "pencil-case",
+        "singular": "pencil case",
+        "plural": "pencil cases",
+        "article": "a",
+        "meaning": "astuccio",
+        "pluralMeaning": "astucci",
+        "art": null,
+        "singularAliases": [],
+        "pluralAliases": [],
+        "targetOnly": true
       }
     ],
     "packs": [
@@ -2389,6 +2671,945 @@
               "apple?"
             ],
             "questionExplanation": "Per fare la domanda mettiamo Is prima di it: Is it an apple? Dopo il punto interrogativo guardiamo il disegno e rispondiamo sì oppure no."
+          }
+        ]
+      },
+      {
+        "id": "toys-yes-no",
+        "title": "Is it…? I giocattoli",
+        "icon": "🧸",
+        "description": "Guarda i cinque giocattoli della scheda e rispondi sì oppure no.",
+        "tip": "La domanda nomina un oggetto: confrontalo con il disegno prima di rispondere.",
+        "cases": [
+          {
+            "id": "worksheet08-toy-doll-doll",
+            "noun": "doll",
+            "count": 1,
+            "task": "short-question",
+            "prompt": "Leggi la domanda e scegli la risposta.",
+            "answer": "Yes, it is.",
+            "aliases": [],
+            "explanation": "Guarda il disegno: è bambola. Rispondiamo Yes, it is.",
+            "choices": [
+              "Yes, it is.",
+              "No, it isn't."
+            ],
+            "tokens": [
+              "Yes,",
+              "it",
+              "is."
+            ],
+            "audio": "Is it a doll?",
+            "question": "Is it a doll?",
+            "questionTokens": [
+              "Is",
+              "it",
+              "a",
+              "doll?"
+            ],
+            "questionExplanation": "Leggi Is it a doll? Guarda il disegno e rispondi Yes, it is. oppure No, it isn't.",
+            "askedNoun": "doll",
+            "model": "Yes, it is."
+          },
+          {
+            "id": "worksheet08-toy-car-teddy",
+            "noun": "car",
+            "count": 1,
+            "task": "short-question",
+            "prompt": "Leggi la domanda e scegli la risposta.",
+            "answer": "No, it isn't.",
+            "aliases": [
+              "No, it is not.",
+              "No, it's not."
+            ],
+            "explanation": "Il disegno mostra automobilina; nella domanda senti teddy. Sono cose diverse: rispondiamo No, it isn't.",
+            "choices": [
+              "Yes, it is.",
+              "No, it isn't."
+            ],
+            "tokens": [
+              "No,",
+              "it",
+              "isn't."
+            ],
+            "audio": "Is it a teddy?",
+            "question": "Is it a teddy?",
+            "questionTokens": [
+              "Is",
+              "it",
+              "a",
+              "teddy?"
+            ],
+            "questionExplanation": "Leggi Is it a teddy? Guarda il disegno e rispondi Yes, it is. oppure No, it isn't.",
+            "askedNoun": "teddy",
+            "model": "No, it isn't."
+          },
+          {
+            "id": "worksheet08-toy-ball-car",
+            "noun": "ball",
+            "count": 1,
+            "task": "short-question",
+            "prompt": "Leggi la domanda e scegli la risposta.",
+            "answer": "No, it isn't.",
+            "aliases": [
+              "No, it is not.",
+              "No, it's not."
+            ],
+            "explanation": "Il disegno mostra palla; nella domanda senti car. Sono cose diverse: rispondiamo No, it isn't.",
+            "choices": [
+              "Yes, it is.",
+              "No, it isn't."
+            ],
+            "tokens": [
+              "No,",
+              "it",
+              "isn't."
+            ],
+            "audio": "Is it a car?",
+            "question": "Is it a car?",
+            "questionTokens": [
+              "Is",
+              "it",
+              "a",
+              "car?"
+            ],
+            "questionExplanation": "Leggi Is it a car? Guarda il disegno e rispondi Yes, it is. oppure No, it isn't.",
+            "askedNoun": "car",
+            "model": "No, it isn't."
+          },
+          {
+            "id": "worksheet08-toy-puzzle-puzzle",
+            "noun": "puzzle",
+            "count": 1,
+            "task": "short-question",
+            "prompt": "Leggi la domanda e scegli la risposta.",
+            "answer": "Yes, it is.",
+            "aliases": [],
+            "explanation": "Guarda il disegno: è puzzle. Rispondiamo Yes, it is.",
+            "choices": [
+              "Yes, it is.",
+              "No, it isn't."
+            ],
+            "tokens": [
+              "Yes,",
+              "it",
+              "is."
+            ],
+            "audio": "Is it a puzzle?",
+            "question": "Is it a puzzle?",
+            "questionTokens": [
+              "Is",
+              "it",
+              "a",
+              "puzzle?"
+            ],
+            "questionExplanation": "Leggi Is it a puzzle? Guarda il disegno e rispondi Yes, it is. oppure No, it isn't.",
+            "askedNoun": "puzzle",
+            "model": "Yes, it is."
+          },
+          {
+            "id": "worksheet08-toy-teddy-teddy",
+            "noun": "teddy",
+            "count": 1,
+            "task": "short-question",
+            "prompt": "Leggi la domanda e scegli la risposta.",
+            "answer": "Yes, it is.",
+            "aliases": [],
+            "explanation": "Guarda il disegno: è orsacchiotto. Rispondiamo Yes, it is.",
+            "choices": [
+              "Yes, it is.",
+              "No, it isn't."
+            ],
+            "tokens": [
+              "Yes,",
+              "it",
+              "is."
+            ],
+            "audio": "Is it a teddy?",
+            "question": "Is it a teddy?",
+            "questionTokens": [
+              "Is",
+              "it",
+              "a",
+              "teddy?"
+            ],
+            "questionExplanation": "Leggi Is it a teddy? Guarda il disegno e rispondi Yes, it is. oppure No, it isn't.",
+            "askedNoun": "teddy",
+            "model": "Yes, it is."
+          }
+        ]
+      },
+      {
+        "id": "whats-this",
+        "title": "What’s this?",
+        "icon": "🎒",
+        "description": "Riconosci sei oggetti scolastici e componi la risposta della scheda.",
+        "tip": "What’s this? chiede che cos’è. Per un oggetto puoi iniziare con It’s a… .",
+        "cases": [
+          {
+            "id": "worksheet08-identify-bag",
+            "noun": "bag",
+            "count": 1,
+            "task": "identify",
+            "prompt": "What’s this? Componi la risposta.",
+            "answer": "It's a bag.",
+            "aliases": [
+              "It is a bag."
+            ],
+            "explanation": "What’s this? chiede che cos’è. Il disegno mostra zaino: It's a bag.",
+            "choices": [],
+            "tokens": [
+              "It's",
+              "a",
+              "bag."
+            ],
+            "audio": "What's this?",
+            "question": "What's this?",
+            "model": "It's a bag."
+          },
+          {
+            "id": "worksheet08-identify-pencil",
+            "noun": "pencil",
+            "count": 1,
+            "task": "identify",
+            "prompt": "What’s this? Componi la risposta.",
+            "answer": "It's a pencil.",
+            "aliases": [
+              "It is a pencil."
+            ],
+            "explanation": "What’s this? chiede che cos’è. Il disegno mostra matita: It's a pencil.",
+            "choices": [],
+            "tokens": [
+              "It's",
+              "a",
+              "pencil."
+            ],
+            "audio": "What's this?",
+            "question": "What's this?",
+            "model": "It's a pencil."
+          },
+          {
+            "id": "worksheet08-identify-pen",
+            "noun": "pen",
+            "count": 1,
+            "task": "identify",
+            "prompt": "What’s this? Componi la risposta.",
+            "answer": "It's a pen.",
+            "aliases": [
+              "It is a pen."
+            ],
+            "explanation": "What’s this? chiede che cos’è. Il disegno mostra penna: It's a pen.",
+            "choices": [],
+            "tokens": [
+              "It's",
+              "a",
+              "pen."
+            ],
+            "audio": "What's this?",
+            "question": "What's this?",
+            "model": "It's a pen."
+          },
+          {
+            "id": "worksheet08-identify-rubber",
+            "noun": "rubber",
+            "count": 1,
+            "task": "identify",
+            "prompt": "What’s this? Componi la risposta.",
+            "answer": "It's a rubber.",
+            "aliases": [
+              "It is a rubber."
+            ],
+            "explanation": "What’s this? chiede che cos’è. Il disegno mostra gomma: It's a rubber.",
+            "choices": [],
+            "tokens": [
+              "It's",
+              "a",
+              "rubber."
+            ],
+            "audio": "What's this?",
+            "question": "What's this?",
+            "model": "It's a rubber."
+          },
+          {
+            "id": "worksheet08-identify-book",
+            "noun": "book",
+            "count": 1,
+            "task": "identify",
+            "prompt": "What’s this? Componi la risposta.",
+            "answer": "It's a book.",
+            "aliases": [
+              "It is a book."
+            ],
+            "explanation": "What’s this? chiede che cos’è. Il disegno mostra libro: It's a book.",
+            "choices": [],
+            "tokens": [
+              "It's",
+              "a",
+              "book."
+            ],
+            "audio": "What's this?",
+            "question": "What's this?",
+            "model": "It's a book."
+          },
+          {
+            "id": "worksheet08-identify-desk",
+            "noun": "desk",
+            "count": 1,
+            "task": "identify",
+            "prompt": "What’s this? Componi la risposta.",
+            "answer": "It's a desk.",
+            "aliases": [
+              "It is a desk."
+            ],
+            "explanation": "What’s this? chiede che cos’è. Il disegno mostra banco: It's a desk.",
+            "choices": [],
+            "tokens": [
+              "It's",
+              "a",
+              "desk."
+            ],
+            "audio": "What's this?",
+            "question": "What's this?",
+            "model": "It's a desk."
+          }
+        ]
+      },
+      {
+        "id": "it-they-choice",
+        "title": "It is o They are?",
+        "icon": "🔎",
+        "description": "Scegli l’inizio della frase: una cosa oppure più cose.",
+        "tip": "It is indica una sola cosa. They are indica più cose.",
+        "cases": [
+          {
+            "id": "worksheet08-choose-book",
+            "noun": "book",
+            "count": 3,
+            "task": "prefix-choice",
+            "prompt": "Scegli It is oppure They are.",
+            "answer": "They are",
+            "aliases": [],
+            "explanation": "Ci sono più cose: scegli They are. They are books.",
+            "choices": [
+              "It is",
+              "They are"
+            ],
+            "tokens": [
+              "They",
+              "are"
+            ],
+            "audio": "book",
+            "ending": "books.",
+            "model": "They are books."
+          },
+          {
+            "id": "worksheet08-choose-rabbit",
+            "noun": "rabbit",
+            "count": 1,
+            "task": "prefix-choice",
+            "prompt": "Scegli It is oppure They are.",
+            "answer": "It is",
+            "aliases": [],
+            "explanation": "C’è una sola cosa: scegli It is. It is a rabbit.",
+            "choices": [
+              "It is",
+              "They are"
+            ],
+            "tokens": [
+              "It",
+              "is"
+            ],
+            "audio": "rabbit",
+            "ending": "a rabbit.",
+            "model": "It is a rabbit."
+          },
+          {
+            "id": "worksheet08-choose-pen",
+            "noun": "pen",
+            "count": 2,
+            "task": "prefix-choice",
+            "prompt": "Scegli It is oppure They are.",
+            "answer": "They are",
+            "aliases": [],
+            "explanation": "Ci sono più cose: scegli They are. They are pens.",
+            "choices": [
+              "It is",
+              "They are"
+            ],
+            "tokens": [
+              "They",
+              "are"
+            ],
+            "audio": "pen",
+            "ending": "pens.",
+            "model": "They are pens."
+          },
+          {
+            "id": "worksheet08-choose-doll",
+            "noun": "doll",
+            "count": 2,
+            "task": "prefix-choice",
+            "prompt": "Scegli It is oppure They are.",
+            "answer": "They are",
+            "aliases": [],
+            "explanation": "Ci sono più cose: scegli They are. They are dolls.",
+            "choices": [
+              "It is",
+              "They are"
+            ],
+            "tokens": [
+              "They",
+              "are"
+            ],
+            "audio": "doll",
+            "ending": "dolls.",
+            "model": "They are dolls."
+          },
+          {
+            "id": "worksheet08-choose-cat",
+            "noun": "cat",
+            "count": 1,
+            "task": "prefix-choice",
+            "prompt": "Scegli It is oppure They are.",
+            "answer": "It is",
+            "aliases": [],
+            "explanation": "C’è una sola cosa: scegli It is. It is a cat.",
+            "choices": [
+              "It is",
+              "They are"
+            ],
+            "tokens": [
+              "It",
+              "is"
+            ],
+            "audio": "cat",
+            "ending": "a cat.",
+            "model": "It is a cat."
+          },
+          {
+            "id": "worksheet08-choose-rat",
+            "noun": "rat",
+            "count": 1,
+            "task": "prefix-choice",
+            "prompt": "Scegli It is oppure They are.",
+            "answer": "It is",
+            "aliases": [],
+            "explanation": "C’è una sola cosa: scegli It is. It is a rat.",
+            "choices": [
+              "It is",
+              "They are"
+            ],
+            "tokens": [
+              "It",
+              "is"
+            ],
+            "audio": "rat",
+            "ending": "a rat.",
+            "model": "It is a rat."
+          }
+        ]
+      },
+      {
+        "id": "it-they-write",
+        "title": "Scrivi It is / They are",
+        "icon": "✍️",
+        "description": "Completa sei frasi come nella scheda della classe.",
+        "tip": "It is indica una sola cosa. They are indica più cose.",
+        "cases": [
+          {
+            "id": "worksheet08-write-car",
+            "noun": "car",
+            "count": 1,
+            "task": "prefix-write",
+            "prompt": "Scrivi It is oppure They are.",
+            "answer": "It is",
+            "aliases": [],
+            "explanation": "C’è una sola cosa: scegli It is. It is a car.",
+            "choices": [],
+            "tokens": [
+              "It",
+              "is"
+            ],
+            "audio": "car",
+            "ending": "a car.",
+            "model": "It is a car."
+          },
+          {
+            "id": "worksheet08-write-dog",
+            "noun": "dog",
+            "count": 2,
+            "task": "prefix-write",
+            "prompt": "Scrivi It is oppure They are.",
+            "answer": "They are",
+            "aliases": [],
+            "explanation": "Ci sono più cose: scegli They are. They are dogs.",
+            "choices": [],
+            "tokens": [
+              "They",
+              "are"
+            ],
+            "audio": "dog",
+            "ending": "dogs.",
+            "model": "They are dogs."
+          },
+          {
+            "id": "worksheet08-write-lizard",
+            "noun": "lizard",
+            "count": 2,
+            "task": "prefix-write",
+            "prompt": "Scrivi It is oppure They are.",
+            "answer": "They are",
+            "aliases": [],
+            "explanation": "Ci sono più cose: scegli They are. They are lizards.",
+            "choices": [],
+            "tokens": [
+              "They",
+              "are"
+            ],
+            "audio": "lizard",
+            "ending": "lizards.",
+            "model": "They are lizards."
+          },
+          {
+            "id": "worksheet08-write-bag",
+            "noun": "bag",
+            "count": 2,
+            "task": "prefix-write",
+            "prompt": "Scrivi It is oppure They are.",
+            "answer": "They are",
+            "aliases": [],
+            "explanation": "Ci sono più cose: scegli They are. They are bags.",
+            "choices": [],
+            "tokens": [
+              "They",
+              "are"
+            ],
+            "audio": "bag",
+            "ending": "bags.",
+            "model": "They are bags."
+          },
+          {
+            "id": "worksheet08-write-desk",
+            "noun": "desk",
+            "count": 1,
+            "task": "prefix-write",
+            "prompt": "Scrivi It is oppure They are.",
+            "answer": "It is",
+            "aliases": [],
+            "explanation": "C’è una sola cosa: scegli It is. It is a desk.",
+            "choices": [],
+            "tokens": [
+              "It",
+              "is"
+            ],
+            "audio": "desk",
+            "ending": "a desk.",
+            "model": "It is a desk."
+          },
+          {
+            "id": "worksheet08-write-hat",
+            "noun": "hat",
+            "count": 1,
+            "task": "prefix-write",
+            "prompt": "Scrivi It is oppure They are.",
+            "answer": "It is",
+            "aliases": [],
+            "explanation": "C’è una sola cosa: scegli It is. It is a hat.",
+            "choices": [],
+            "tokens": [
+              "It",
+              "is"
+            ],
+            "audio": "hat",
+            "ending": "a hat.",
+            "model": "It is a hat."
+          }
+        ]
+      },
+      {
+        "id": "is-this",
+        "title": "Is this…?",
+        "icon": "✏️",
+        "description": "Leggi otto domande sugli oggetti scolastici e scrivi la risposta.",
+        "tip": "Anche con Is this…? la risposta breve della scheda è Yes, it is. oppure No, it isn’t.",
+        "cases": [
+          {
+            "id": "worksheet08-this-pencil-sharpener-pen",
+            "noun": "pencil-sharpener",
+            "count": 1,
+            "task": "short-question",
+            "prompt": "Leggi la domanda e scegli la risposta.",
+            "answer": "No, it isn't.",
+            "aliases": [
+              "No, it is not.",
+              "No, it's not."
+            ],
+            "explanation": "Il disegno mostra temperamatite; nella domanda senti pen. Sono cose diverse: rispondiamo No, it isn't.",
+            "choices": [
+              "Yes, it is.",
+              "No, it isn't."
+            ],
+            "tokens": [
+              "No,",
+              "it",
+              "isn't."
+            ],
+            "audio": "Is this a pen?",
+            "question": "Is this a pen?",
+            "questionTokens": [
+              "Is",
+              "this",
+              "a",
+              "pen?"
+            ],
+            "questionExplanation": "Leggi Is this a pen? Guarda il disegno e rispondi Yes, it is. oppure No, it isn't.",
+            "askedNoun": "pen",
+            "model": "No, it isn't."
+          },
+          {
+            "id": "worksheet08-this-pencil-pencil",
+            "noun": "pencil",
+            "count": 1,
+            "task": "short-question",
+            "prompt": "Leggi la domanda e scegli la risposta.",
+            "answer": "Yes, it is.",
+            "aliases": [],
+            "explanation": "Guarda il disegno: è matita. Rispondiamo Yes, it is.",
+            "choices": [
+              "Yes, it is.",
+              "No, it isn't."
+            ],
+            "tokens": [
+              "Yes,",
+              "it",
+              "is."
+            ],
+            "audio": "Is this a pencil?",
+            "question": "Is this a pencil?",
+            "questionTokens": [
+              "Is",
+              "this",
+              "a",
+              "pencil?"
+            ],
+            "questionExplanation": "Leggi Is this a pencil? Guarda il disegno e rispondi Yes, it is. oppure No, it isn't.",
+            "askedNoun": "pencil",
+            "model": "Yes, it is."
+          },
+          {
+            "id": "worksheet08-this-bag-bag",
+            "noun": "bag",
+            "count": 1,
+            "task": "short-question",
+            "prompt": "Leggi la domanda e scegli la risposta.",
+            "answer": "Yes, it is.",
+            "aliases": [],
+            "explanation": "Guarda il disegno: è zaino. Rispondiamo Yes, it is.",
+            "choices": [
+              "Yes, it is.",
+              "No, it isn't."
+            ],
+            "tokens": [
+              "Yes,",
+              "it",
+              "is."
+            ],
+            "audio": "Is this a bag?",
+            "question": "Is this a bag?",
+            "questionTokens": [
+              "Is",
+              "this",
+              "a",
+              "bag?"
+            ],
+            "questionExplanation": "Leggi Is this a bag? Guarda il disegno e rispondi Yes, it is. oppure No, it isn't.",
+            "askedNoun": "bag",
+            "model": "Yes, it is."
+          },
+          {
+            "id": "worksheet08-this-pen-notebook",
+            "noun": "pen",
+            "count": 1,
+            "task": "short-question",
+            "prompt": "Leggi la domanda e scegli la risposta.",
+            "answer": "No, it isn't.",
+            "aliases": [
+              "No, it is not.",
+              "No, it's not."
+            ],
+            "explanation": "Il disegno mostra penna; nella domanda senti notebook. Sono cose diverse: rispondiamo No, it isn't.",
+            "choices": [
+              "Yes, it is.",
+              "No, it isn't."
+            ],
+            "tokens": [
+              "No,",
+              "it",
+              "isn't."
+            ],
+            "audio": "Is this a notebook?",
+            "question": "Is this a notebook?",
+            "questionTokens": [
+              "Is",
+              "this",
+              "a",
+              "notebook?"
+            ],
+            "questionExplanation": "Leggi Is this a notebook? Guarda il disegno e rispondi Yes, it is. oppure No, it isn't.",
+            "askedNoun": "notebook",
+            "model": "No, it isn't."
+          },
+          {
+            "id": "worksheet08-this-desk-pencil-case",
+            "noun": "desk",
+            "count": 1,
+            "task": "short-question",
+            "prompt": "Leggi la domanda e scegli la risposta.",
+            "answer": "No, it isn't.",
+            "aliases": [
+              "No, it is not.",
+              "No, it's not."
+            ],
+            "explanation": "Il disegno mostra banco; nella domanda senti pencil case. Sono cose diverse: rispondiamo No, it isn't.",
+            "choices": [
+              "Yes, it is.",
+              "No, it isn't."
+            ],
+            "tokens": [
+              "No,",
+              "it",
+              "isn't."
+            ],
+            "audio": "Is this a pencil case?",
+            "question": "Is this a pencil case?",
+            "questionTokens": [
+              "Is",
+              "this",
+              "a",
+              "pencil",
+              "case?"
+            ],
+            "questionExplanation": "Leggi Is this a pencil case? Guarda il disegno e rispondi Yes, it is. oppure No, it isn't.",
+            "askedNoun": "pencil-case",
+            "model": "No, it isn't."
+          },
+          {
+            "id": "worksheet08-this-rubber-rubber",
+            "noun": "rubber",
+            "count": 1,
+            "task": "short-question",
+            "prompt": "Leggi la domanda e scegli la risposta.",
+            "answer": "Yes, it is.",
+            "aliases": [],
+            "explanation": "Guarda il disegno: è gomma. Rispondiamo Yes, it is.",
+            "choices": [
+              "Yes, it is.",
+              "No, it isn't."
+            ],
+            "tokens": [
+              "Yes,",
+              "it",
+              "is."
+            ],
+            "audio": "Is this a rubber?",
+            "question": "Is this a rubber?",
+            "questionTokens": [
+              "Is",
+              "this",
+              "a",
+              "rubber?"
+            ],
+            "questionExplanation": "Leggi Is this a rubber? Guarda il disegno e rispondi Yes, it is. oppure No, it isn't.",
+            "askedNoun": "rubber",
+            "model": "Yes, it is."
+          },
+          {
+            "id": "worksheet08-this-book-desk",
+            "noun": "book",
+            "count": 1,
+            "task": "short-question",
+            "prompt": "Leggi la domanda e scegli la risposta.",
+            "answer": "No, it isn't.",
+            "aliases": [
+              "No, it is not.",
+              "No, it's not."
+            ],
+            "explanation": "Il disegno mostra libro; nella domanda senti desk. Sono cose diverse: rispondiamo No, it isn't.",
+            "choices": [
+              "Yes, it is.",
+              "No, it isn't."
+            ],
+            "tokens": [
+              "No,",
+              "it",
+              "isn't."
+            ],
+            "audio": "Is this a desk?",
+            "question": "Is this a desk?",
+            "questionTokens": [
+              "Is",
+              "this",
+              "a",
+              "desk?"
+            ],
+            "questionExplanation": "Leggi Is this a desk? Guarda il disegno e rispondi Yes, it is. oppure No, it isn't.",
+            "askedNoun": "desk",
+            "model": "No, it isn't."
+          },
+          {
+            "id": "worksheet08-this-chair-chair",
+            "noun": "chair",
+            "count": 1,
+            "task": "short-question",
+            "prompt": "Leggi la domanda e scegli la risposta.",
+            "answer": "Yes, it is.",
+            "aliases": [],
+            "explanation": "Guarda il disegno: è sedia. Rispondiamo Yes, it is.",
+            "choices": [
+              "Yes, it is.",
+              "No, it isn't."
+            ],
+            "tokens": [
+              "Yes,",
+              "it",
+              "is."
+            ],
+            "audio": "Is this a chair?",
+            "question": "Is this a chair?",
+            "questionTokens": [
+              "Is",
+              "this",
+              "a",
+              "chair?"
+            ],
+            "questionExplanation": "Leggi Is this a chair? Guarda il disegno e rispondi Yes, it is. oppure No, it isn't.",
+            "askedNoun": "chair",
+            "model": "Yes, it is."
+          }
+        ]
+      },
+      {
+        "id": "short-answer-gap",
+        "title": "Completa is / isn’t",
+        "icon": "🧩",
+        "description": "Trascina o scegli la parola che completa quattro risposte.",
+        "tip": "Yes, it is. conferma. No, it isn’t. dice che l’oggetto è diverso.",
+        "cases": [
+          {
+            "id": "worksheet08-gap-puzzle-puzzle",
+            "noun": "puzzle",
+            "count": 1,
+            "task": "short-gap",
+            "prompt": "Completa la risposta con is oppure isn’t.",
+            "answer": "is",
+            "aliases": [],
+            "explanation": "Il disegno corrisponde alla domanda: completiamo con is. Yes, it is.",
+            "choices": [
+              "is",
+              "isn't"
+            ],
+            "tokens": [
+              "is"
+            ],
+            "audio": "Is it a puzzle?",
+            "question": "Is it a puzzle?",
+            "questionTokens": [
+              "Is",
+              "it",
+              "a",
+              "puzzle?"
+            ],
+            "questionExplanation": "Guarda il disegno e confrontalo con l’oggetto nominato nella domanda.",
+            "askedNoun": "puzzle",
+            "frame": "Yes, it ___.",
+            "model": "Yes, it is."
+          },
+          {
+            "id": "worksheet08-gap-teddy-ball",
+            "noun": "teddy",
+            "count": 1,
+            "task": "short-gap",
+            "prompt": "Completa la risposta con is oppure isn’t.",
+            "answer": "isn't",
+            "aliases": [],
+            "explanation": "Il disegno è diverso dall’oggetto della domanda: completiamo con isn't. No, it isn't.",
+            "choices": [
+              "is",
+              "isn't"
+            ],
+            "tokens": [
+              "isn't"
+            ],
+            "audio": "Is it a ball?",
+            "question": "Is it a ball?",
+            "questionTokens": [
+              "Is",
+              "it",
+              "a",
+              "ball?"
+            ],
+            "questionExplanation": "Guarda il disegno e confrontalo con l’oggetto nominato nella domanda.",
+            "askedNoun": "ball",
+            "frame": "No, it ___.",
+            "model": "No, it isn't."
+          },
+          {
+            "id": "worksheet08-gap-doll-puzzle",
+            "noun": "doll",
+            "count": 1,
+            "task": "short-gap",
+            "prompt": "Completa la risposta con is oppure isn’t.",
+            "answer": "isn't",
+            "aliases": [],
+            "explanation": "Il disegno è diverso dall’oggetto della domanda: completiamo con isn't. No, it isn't.",
+            "choices": [
+              "is",
+              "isn't"
+            ],
+            "tokens": [
+              "isn't"
+            ],
+            "audio": "Is it a puzzle?",
+            "question": "Is it a puzzle?",
+            "questionTokens": [
+              "Is",
+              "it",
+              "a",
+              "puzzle?"
+            ],
+            "questionExplanation": "Guarda il disegno e confrontalo con l’oggetto nominato nella domanda.",
+            "askedNoun": "puzzle",
+            "frame": "No, it ___.",
+            "model": "No, it isn't."
+          },
+          {
+            "id": "worksheet08-gap-car-car",
+            "noun": "car",
+            "count": 1,
+            "task": "short-gap",
+            "prompt": "Completa la risposta con is oppure isn’t.",
+            "answer": "is",
+            "aliases": [],
+            "explanation": "Il disegno corrisponde alla domanda: completiamo con is. Yes, it is.",
+            "choices": [
+              "is",
+              "isn't"
+            ],
+            "tokens": [
+              "is"
+            ],
+            "audio": "Is it a car?",
+            "question": "Is it a car?",
+            "questionTokens": [
+              "Is",
+              "it",
+              "a",
+              "car?"
+            ],
+            "questionExplanation": "Guarda il disegno e confrontalo con l’oggetto nominato nella domanda.",
+            "askedNoun": "car",
+            "frame": "Yes, it ___.",
+            "model": "Yes, it is."
           }
         ]
       }

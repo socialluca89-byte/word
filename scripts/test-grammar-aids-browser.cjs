@@ -8,10 +8,11 @@ const base = process.env.WORDYLAND_TEST_URL;
 assert(['localhost', '127.0.0.1'].includes(new URL(base).hostname), 'Disposable localhost only');
 const origin = new URL(base).origin, key = 'wordylandGrammarGuestV1';
 const content = fs.readFileSync('dist/training.json');
-assert.equal(crypto.createHash('sha256').update(content).digest('hex'), 'aa4ebe404d8516f0047b64c0b34677050402fdae5d4b9517180003565ebdd4cd', 'The published teacher-only content is byte-identical; no new topics, words or cases');
-const catalog = JSON.parse(content).grammarLessons;
-assert.equal(catalog.nouns.length, 16);
-assert.equal(catalog.packs.reduce((sum, pack) => sum + pack.cases.length, 0), 40);
+const currentContent=JSON.parse(content), catalog=currentContent.grammarLessons;
+const previous={...currentContent,foundationWords:currentContent.foundationWords.slice(0,53),wordPacks:currentContent.wordPacks.slice(0,8),grammarLessons:{...catalog,nouns:catalog.nouns.slice(0,16),packs:catalog.packs.slice(0,5)}};
+assert.equal(crypto.createHash('sha256').update(JSON.stringify(previous)).digest('hex'),'63b58d5e3d38489d1ab4e21e959e9e42942d44673f1918c09068be64de3a51b8','All previous published teacher content stays exact; Nov8 appends only');
+assert.equal(catalog.nouns.length,30);
+assert.equal(catalog.packs.reduce((sum,pack)=>sum+pack.cases.length,0),75);
 const captures = process.env.WORDYLAND_GRAMMAR_AIDS_SCREENSHOTS;
 if (captures) {
   assert(['/workspace/', '/tmp/'].some(root => path.resolve(captures).startsWith(root)));
@@ -65,7 +66,7 @@ if (captures) {
       localStorage.setItem(key, JSON.stringify(data));
     }, {key, ids: priorities, all: catalog.packs.flatMap(pack => pack.cases.map(row => row.id))});
     await p.locator('#openGrammarTraining').click(); await p.locator('#grammarMenu').waitFor();
-    assert.deepEqual(await p.locator('[data-grammar-pack]').evaluateAll(nodes => nodes.map(node => node.dataset.grammarPack)), ['number', 'plurals', 'articles', 'sentences', 'questions'], 'All five existing paths remain reachable');
+    assert.deepEqual(await p.locator('[data-grammar-pack]').evaluateAll(nodes => nodes.map(node => node.dataset.grammarPack)), ['number','plurals','articles','sentences','questions','toys-yes-no','whats-this','it-they-choice','it-they-write','is-this','short-answer-gap'], 'All five old and six new teacher paths remain reachable');
   }
   async function start(p, pack) {
     await p.locator('[data-grammar-pack="' + pack + '"]').click();
@@ -337,7 +338,7 @@ if (captures) {
     checks.push('owned hints wait for one confirmed response; late profile replies and newer-step replay never open the old aid; private progress remains guided and tokens never enter guest storage; competing aid clicks cannot launch a second pending request');
 
     assert.deepEqual(guestWrites, [], 'Guest aids send no API writes'); assert.deepEqual(errors, [], 'No application page errors');
-    const report = {status: 'passed', checks, geometries, contentSha256: 'aa4ebe404d8516f0047b64c0b34677050402fdae5d4b9517180003565ebdd4cd', syntheticOnly: true, realVoiceQuality: 'not validated', realDevice: 'not tested', pageErrors: errors};
+    const report = {status: 'passed', checks, geometries, contentSha256: crypto.createHash('sha256').update(content).digest('hex'), syntheticOnly: true, realVoiceQuality: 'not validated', realDevice: 'not tested', pageErrors: errors};
     if (captures) fs.writeFileSync(path.join(captures, 'grammar-aids-report.json'), JSON.stringify(report, null, 2) + '\n');
     console.log(JSON.stringify(report));
   } finally {for (const release of releases) release(); await browser.close();}

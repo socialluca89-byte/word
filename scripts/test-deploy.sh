@@ -79,6 +79,7 @@ before=$(sha256sum "$docroot/index.html")
 FAKE_SSH_FAIL_ON='incoming/' bash scripts/deploy-siteground.sh deploy >/dev/null 2>&1 && fail 'transfer failure not detected'
 [[ $(sha256sum "$docroot/index.html") == "$before" ]] || fail 'site changed after failed transfer'
 [[ ! -e "$docroot/guardian.php" ]] || fail 'failed transfer installed the new guardian module'
+[[ ! -e "$docroot/class-program.php" ]] || fail 'failed transfer installed the new programme module'
 
 echo '--- first deploy'
 bash scripts/deploy-siteground.sh deploy | tee "$root/out1"
@@ -87,7 +88,7 @@ bash scripts/deploy-siteground.sh deploy | tee "$root/out1"
 [[ ! -e "$docroot/api.php.wordyland-previous" ]] || fail 'stray PHP copy still public'
 [[ -z $(find "$docroot" \( -name '*.wordyland-*' -o -name '*.tar' -o -name SHA256SUMS \) ! -name .wordyland-managed) ]] || fail 'temporary files in docroot'
 [[ -f "$docroot/.well-known/acme" && -f "$site/.wordyland-data/keep" ]] || fail 'preserved files lost'
-for f in guardian.php community.php classroom.php arena.php api.php platform.php classroom.js presence.js arena.js curriculum.json quests.css data.js worlds.js learning.js app.js accounts.js quests.js community.js arcade.css arcade.js island.css island.js island-places.webp three.min.js study-import.js pdf.min.js pdf.worker.min.js study-ocr.js ocr-worker.min.js ocr-core-775a35df6f2a.js ocr-eng-45b4cb346724.traineddata.gz ocr-ita-f702fcfad297.traineddata.gz race-world.webp race-circuits.webp race-racers.webp character-portraits.png character-portraits.webp holiday-worlds.png holiday-worlds.webp classroom-objects.png classroom-objects.webp manifest.webmanifest icon-192.png icon-512.png icon-maskable-512.png offline.html offline.js pwa.css pwa.js sw.js index.html; do
+for f in class-program.php class-program-catalog.json class-program.js class-program.css training.php training.json grammar.js training.js guardian.php community.php classroom.php arena.php api.php platform.php classroom.js presence.js arena.js curriculum.json quests.css data.js worlds.js learning.js app.js accounts.js quests.js community.js arcade.css arcade.js island.css island.js island-places.webp three.min.js study-import.js pdf.min.js pdf.worker.min.js study-ocr.js ocr-worker.min.js ocr-core-775a35df6f2a.js ocr-eng-45b4cb346724.traineddata.gz ocr-ita-f702fcfad297.traineddata.gz race-world.webp race-circuits.webp race-racers.webp character-portraits.png character-portraits.webp holiday-worlds.png holiday-worlds.webp classroom-objects.png classroom-objects.webp manifest.webmanifest icon-192.png icon-512.png icon-maskable-512.png offline.html offline.js pwa.css pwa.js sw.js index.html; do
   cmp -s "dist/$f" "$docroot/$f" || fail "$f differs"
 done
 priv="$site/.wordyland-deploy"; [[ $(stat -c %a "$priv") == 700 ]] || fail 'private dir not 700'
@@ -166,16 +167,18 @@ echo '--- failed HTTPS checks after publishing restore the previous release'
 parent=$(git rev-parse HEAD~1)
 printf '%s\n' "$parent" > "$docroot/.wordyland-managed"; echo 'previous page WordyLand' > "$docroot/index.html"
 # Model an older healthy release that did not yet contain this additive module.
-rm -f "$docroot/guardian.php"
+rm -f "$docroot/guardian.php" "$docroot/class-program.php" "$docroot/class-program.js" "$docroot/class-program.css" "$docroot/class-program-catalog.json"
 rm -f "$home/install-attempted"
 FAKE_HEALTH_FAILURE_AFTER_INSTALL=1 bash scripts/deploy-siteground.sh deploy >"$root/out_live" 2>&1 && fail 'deploy passed with failing live checks'
 grep -q 'restoring backup' "$root/out_live" || fail 'no rollback after live check failure'
 grep -q 'previous page' "$docroot/index.html" || fail 'previous index.html not restored after live failure'
 [[ $(cat "$docroot/.wordyland-managed") == "$parent" ]] || fail 'marker not restored after live failure'
 [[ ! -e "$docroot/guardian.php" ]] || fail 'rollback kept a guardian module absent from the previous release'
+for f in class-program.php class-program.js class-program.css class-program-catalog.json; do [[ ! -e "$docroot/$f" ]] || fail "rollback kept new programme module $f"; done
 bash scripts/deploy-siteground.sh deploy >/dev/null || fail 'redeploy after live failure'
 cmp -s dist/index.html "$docroot/index.html" || fail 'redeploy content'
 cmp -s dist/guardian.php "$docroot/guardian.php" || fail 'redeploy did not restore the guardian module'
+for f in class-program.php class-program.js class-program.css class-program-catalog.json; do cmp -s "dist/$f" "$docroot/$f" || fail "redeploy did not restore programme module $f"; done
 
 echo '--- valid script bytes with wrong MIME fail and restore previous release'
 printf '%s\n' "$parent" > "$docroot/.wordyland-managed"; echo 'previous MIME page WordyLand' > "$docroot/index.html"

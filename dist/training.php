@@ -2,9 +2,10 @@
 /** Private profile training. No wallet, points, rankings, diagnosis, or recorded voice. */
 declare(strict_types=1);
 if(!defined('WORDYLAND_BOOTSTRAPPED')){http_response_code(404);exit;}
-if(in_array($action,['phonics-state','phonics-start','phonics-hint','phonics-answer','phonics-progress'],true))phonicsHandle($db,$id,$method,$body,$accountRole,$action);
+if(in_array($action,['phonics-state','phonics-start','phonics-hint','phonics-answer','phonics-progress'],true)){require_once __DIR__.'/class-program.php';phonicsHandle($db,$id,$method,$body,$accountRole,$action);}
 $trainingActions=['training-state','training-start','training-hint','training-answer','training-progress'];
 if(!in_array($action,$trainingActions,true))return;
+require_once __DIR__.'/class-program.php';
 $db->exec('CREATE TABLE IF NOT EXISTS training_totals(profile_id INTEGER PRIMARY KEY REFERENCES profiles(id) ON DELETE CASCADE,sessions INTEGER NOT NULL,first_day TEXT NOT NULL,last_day TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS training_items(profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,item TEXT NOT NULL,skill TEXT NOT NULL,completed INTEGER NOT NULL DEFAULT 0,independent INTEGER NOT NULL DEFAULT 0,guided INTEGER NOT NULL DEFAULT 0,errors INTEGER NOT NULL DEFAULT 0,replays INTEGER NOT NULL DEFAULT 0,independent_days INTEGER NOT NULL DEFAULT 0,last_independent_day TEXT,PRIMARY KEY(profile_id,item,skill));
 CREATE TABLE IF NOT EXISTS training_sessions(token TEXT PRIMARY KEY,profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,track TEXT NOT NULL,plan TEXT NOT NULL,step INTEGER NOT NULL DEFAULT 0,helped INTEGER NOT NULL DEFAULT 0,errors INTEGER NOT NULL DEFAULT 0,hint INTEGER NOT NULL DEFAULT 0,last_attempt TEXT,created_at INTEGER NOT NULL,completed_at INTEGER);
@@ -13,6 +14,7 @@ CREATE TABLE IF NOT EXISTS training_stickers(profile_id INTEGER NOT NULL REFEREN
 $db->exec('CREATE TABLE IF NOT EXISTS training_choice_steps(profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,item TEXT NOT NULL,skill TEXT NOT NULL,choice_count INTEGER NOT NULL CHECK(choice_count IN (3,4)),independent INTEGER NOT NULL DEFAULT 0,independent_days INTEGER NOT NULL DEFAULT 0,last_day TEXT NOT NULL,PRIMARY KEY(profile_id,item,skill,choice_count));');
 // Separate additive storage keeps new plans invisible if application files are rolled back.
 $db->exec('CREATE TABLE IF NOT EXISTS training_grammar_sessions(token TEXT PRIMARY KEY,profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,track TEXT NOT NULL CHECK(track LIKE "grammar:%"),plan TEXT NOT NULL,step INTEGER NOT NULL DEFAULT 0,helped INTEGER NOT NULL DEFAULT 0,errors INTEGER NOT NULL DEFAULT 0,hint INTEGER NOT NULL DEFAULT 0,last_attempt TEXT,created_at INTEGER NOT NULL,completed_at INTEGER);');
+$db->exec('CREATE TABLE IF NOT EXISTS training_worksheet_sessions(token TEXT PRIMARY KEY,profile_id INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,track TEXT NOT NULL CHECK(track LIKE "grammar:%"),plan TEXT NOT NULL,step INTEGER NOT NULL DEFAULT 0,helped INTEGER NOT NULL DEFAULT 0,errors INTEGER NOT NULL DEFAULT 0,hint INTEGER NOT NULL DEFAULT 0,last_attempt TEXT,created_at INTEGER NOT NULL,completed_at INTEGER);');
 $trainingProfile=ownedProfile($db,$id,$method==='GET'?($_GET['profile']??0):($body['profile']??0));$tp=(int)$trainingProfile['id'];
 if($action==='training-progress'){
     if(!in_array($accountRole,['adult','admin'],true))fail('I progressi sono riservati all’adulto che gestisce i propri profili.',403);
@@ -23,26 +25,29 @@ if($action==='training-state'){
     if($method!=='GET')fail('Metodo non consentito.',405);
     if(isset($_GET['token']))respond(['session'=>trainingSnapshot(trainingOwnedSession($db,$tp,(string)$_GET['token'])),'stickers'=>trainingStickers($db,$tp)]);
     // Select trusted storage before LIMIT32; old application code only knows training_sessions.
-    $grammar=($_GET['grammar']??null)==='1';$sessionTable=$grammar?'training_grammar_sessions':'training_sessions';
-    $active=rows($db,'SELECT * FROM '.$sessionTable.' WHERE profile_id=? AND completed_at IS NULL AND created_at>=? ORDER BY rowid DESC LIMIT 32',[$tp,time()-604800]);
-    $snapshots=array_map('trainingSnapshot',$active);
-    respond(['sessions'=>$snapshots,'stickers'=>trainingStickers($db,$tp),'recommendation'=>trainingRecommendation(trainingContent(),trainingRecommendationEvidence($db,$tp),$snapshots)]);
+    $grammar=($_GET['grammar']??null)==='1';$sessionTables=$grammar?['training_grammar_sessions','training_worksheet_sessions']:['training_sessions'];$active=[];
+    $hasWorksheets=false;foreach($sessionTables as $sessionTable){$incoming=rows($db,'SELECT t.rowid AS _rowid,t.* FROM '.$sessionTable.' t WHERE t.profile_id=? AND t.completed_at IS NULL AND t.created_at>=? AND '.cpVisibleSessionSql('training','t.token','t.profile_id').' ORDER BY t.rowid DESC LIMIT 32',[$tp,time()-604800]);if($sessionTable==='training_worksheet_sessions'&&$incoming)$hasWorksheets=true;$active=array_merge($active,$incoming);}
+    $active=array_values(array_filter($active,fn($s)=>trainingProgramAccessible($db,$tp,'training',$s['token'])));
+    if($hasWorksheets)usort($active,fn($a,$b)=>((int)$b['created_at']<=>(int)$a['created_at'])?:((int)$b['_rowid']<=>(int)$a['_rowid']));$active=array_slice($active,0,32);
+    $snapshots=array_map('trainingSnapshot',$active);$context=cpResolveContext($db,$tp);$recommendation=null;
+    if(in_array($context['mode'],['legacy','class'],true)){$eligible=array_values(array_filter($active,fn($s)=>cpSessionMatches($db,$tp,'training',$s['token'],$context)));$recommendation=trainingRecommendation(cpFilterTrainingContent(trainingContent(),$context),trainingRecommendationEvidence($db,$tp),array_map('trainingSnapshot',$eligible));}
+    respond(['sessions'=>$snapshots,'stickers'=>trainingStickers($db,$tp),'recommendation'=>$recommendation]);
 }
 if($method!=='POST')fail('Metodo non consentito.',405);
 if($action==='training-start'){
-    $track=$body['track']??'letters';$block=$body['block']??'ae';$content=trainingContent();
+    $track=$body['track']??'letters';$block=$body['block']??'ae';$context=cpResolveContext($db,$tp,$body);cpRequirePlayable($context);$content=cpFilterTrainingContent(trainingContent(),$context);
     if(!is_string($track)||!in_array($track,['letters','words','sentences','instructions','grammar'],true))fail('Scegli un percorso disponibile.');
     if($track==='letters'&&!in_array($block,array_column($content['blocks'],'id'),true))fail('Scegli un blocco disponibile.');
     $pack=in_array($track,['words','grammar'],true)?($body['pack']??'first'):'first';
     if($track==='words'&&(!is_string($pack)||!in_array($pack,array_column($content['wordPacks'],'id'),true)))fail('Scegli un gruppo di parole disponibile.');
     if($track==='grammar'&&(!is_string($pack)||!in_array($pack,array_column($content['grammarLessons']['packs']??[],'id'),true)))fail('Scegli un percorso di grammatica disponibile.');
     $key=$track==='letters'?'letters:'.$block:($track==='words'?($pack==='first'?'words':'words:'.$pack):($track==='grammar'?'grammar:'.$pack:$track.':basics'));limitAttempts($db,'training-start:'.$tp,60);
-    $sessionTable=$track==='grammar'?'training_grammar_sessions':'training_sessions';
-    $db->exec('BEGIN IMMEDIATE');
-    $old=one($db,'SELECT * FROM '.$sessionTable.' WHERE profile_id=? AND track=? AND completed_at IS NULL AND created_at>=? ORDER BY rowid DESC LIMIT 1',[$tp,$key,time()-604800]);
+    $sessionTable=$track==='grammar'?(in_array($pack,['number','plurals','articles','sentences','questions'],true)?'training_grammar_sessions':'training_worksheet_sessions'):'training_sessions';
+    $db->exec('BEGIN IMMEDIATE');$context=cpResolveContext($db,$tp,$body);cpRequirePlayable($context);$content=cpFilterTrainingContent(trainingContent(),$context);
+    $old=null;foreach(rows($db,'SELECT * FROM '.$sessionTable.' WHERE profile_id=? AND track=? AND completed_at IS NULL AND created_at>=? ORDER BY rowid DESC LIMIT 32',[$tp,$key,time()-604800]) as $candidate)if(cpSessionMatches($db,$tp,'training',$candidate['token'],$context)){$old=$candidate;break;}
     if($old){$db->exec('COMMIT');respond(['session'=>trainingSnapshot($old),'stickers'=>trainingStickers($db,$tp)]);}
-    $plan=trainingPlan($db,$tp,$track,$block,$content,$pack);$token=bin2hex(random_bytes(24));
-    runSql($db,'INSERT INTO '.$sessionTable.'(token,profile_id,track,plan,created_at) VALUES(?,?,?,?,?)',[$token,$tp,$key,json_encode($plan,JSON_THROW_ON_ERROR),time()]);
+    $plan=trainingPlan($db,$tp,$track,$block,$content,$pack);if(!$plan){$db->exec('ROLLBACK');fail('Questo percorso non contiene ancora attività assegnate.',409);}$token=bin2hex(random_bytes(24));
+    runSql($db,'INSERT INTO '.$sessionTable.'(token,profile_id,track,plan,created_at) VALUES(?,?,?,?,?)',[$token,$tp,$key,json_encode($plan,JSON_THROW_ON_ERROR),time()]);cpBindSession($db,$tp,'training',$token,$context);
     // Only the new training data has retention; no game/account/progress table is pruned.
     runSql($db,'DELETE FROM '.$sessionTable.' WHERE profile_id=? AND created_at<?',[$tp,time()-2592000]);
     runSql($db,'DELETE FROM training_daily WHERE profile_id=? AND day<?',[$tp,gmdate('Y-m-d',time()-90*86400)]);
@@ -73,38 +78,44 @@ if($q['mode']==='letter'){
 }
 $isGrammar=str_starts_with($session['track'],'grammar:');
 $correct=$isGrammar?trainingGrammarCorrect($q,$answer):($q['mode']==='model'||normalWord($answer)===normalWord($q['answer']));
-if(!$correct){runSql($db,'UPDATE '.$sessionTable.' SET errors=errors+1,helped=MAX(helped,?),last_attempt=? WHERE token=?',[(int)(($body['helped']??false)===true),$attempt,$token]);$db->exec('COMMIT');respond(['correct'=>false,'session'=>trainingSnapshot(trainingOwnedSession($db,$tp,$token))]);}
+if(!$correct){runSql($db,'UPDATE '.$sessionTable.' SET errors=errors+1,helped=MAX(helped,?),last_attempt=? WHERE token=?',[(int)(($body['helped']??false)===true),$attempt,$token]);cpRecordStep($db,$tp,'training',$token,$step,['item'=>$q['item'],'skill'=>trainingEvidenceSkill($q,$body,$isGrammar),'correct'=>false,'completed'=>false,'helped'=>(bool)$session['helped']||($body['helped']??false)===true||(int)$session['hint']>0,'errors'=>(int)$session['errors']+1,'replays'=>trainingReplays($body)]);$db->exec('COMMIT');respond(['correct'=>false,'session'=>trainingSnapshot(trainingOwnedSession($db,$tp,$token))]);}
 $helped=(int)$session['helped']===1||($body['helped']??false)===true||in_array($q['mode'],['model','build','grammar-model'],true);
 $independent=!$helped&&(int)$session['errors']===0;
 $audio=($body['audioUsed']??false)===true;
-$skill=match($q['mode']){'letter'=>'letter-reading.letter','recognize'=>'word-reading.meaning','build'=>'spelling.compose','recall'=>'spelling.recall','phrase'=>'phrase.match','sentence-build'=>'sentence.compose','instruction-choice'=>'instruction-reading.meaning',default=>'model.explore'};
-if($isGrammar)$skill=trainingGrammarSkill($q);
-if($audio&&$q['mode']==='letter'&&($body['letterAudioVerified']??false)===true)$skill='letter-name.letter';
-if($audio&&$q['mode']==='recognize')$skill='heard-word.meaning';
-if($audio&&$q['mode']==='instruction-choice')$skill='heard-instruction.meaning';
+$skill=trainingEvidenceSkill($q,$body,$isGrammar);
 if($q['mode']==='letter'&&$independent&&$choiceCount>=3){
     runSql($db,'INSERT INTO training_choice_steps(profile_id,item,skill,choice_count,independent,independent_days,last_day) VALUES(?,?,?,?,1,1,?) ON CONFLICT(profile_id,item,skill,choice_count) DO UPDATE SET independent=independent+1,independent_days=independent_days+CASE WHEN last_day!=excluded.last_day THEN 1 ELSE 0 END,last_day=excluded.last_day',[$tp,$q['item'],$skill,$choiceCount,gmdate('Y-m-d')]);
 }
-$replays=$body['replays']??0;$replays=is_int($replays)?max(0,min(20,$replays)):0;
+$replays=trainingReplays($body);
 runSql($db,'INSERT INTO training_daily(profile_id,day,item,skill,completed,independent,guided,errors,replays) VALUES(?,?,?,?,1,?,?,?,?) ON CONFLICT(profile_id,day,item,skill) DO UPDATE SET completed=completed+1,independent=independent+excluded.independent,guided=guided+excluded.guided,errors=errors+excluded.errors,replays=replays+excluded.replays',[$tp,gmdate('Y-m-d'),$q['item'],$skill,(int)$independent,(int)!$independent,(int)$session['errors'],$replays]);
 runSql($db,'INSERT INTO training_items(profile_id,item,skill,completed,independent,guided,errors,replays,independent_days,last_independent_day) VALUES(?,?,?,1,?,?,?,?,?,?) ON CONFLICT(profile_id,item,skill) DO UPDATE SET completed=completed+1,independent=independent+excluded.independent,guided=guided+excluded.guided,errors=errors+excluded.errors,replays=replays+excluded.replays,independent_days=independent_days+CASE WHEN excluded.independent>0 AND COALESCE(last_independent_day,"")!=excluded.last_independent_day THEN 1 ELSE 0 END,last_independent_day=CASE WHEN excluded.independent>0 THEN excluded.last_independent_day ELSE last_independent_day END',[$tp,$q['item'],$skill,(int)$independent,(int)!$independent,(int)$session['errors'],$replays,(int)$independent,$independent?gmdate('Y-m-d'):null]);
 $next=$step+1;$done=$next>=count($plan);
 runSql($db,'UPDATE '.$sessionTable.' SET step=?,helped=0,errors=0,hint=0,last_attempt=NULL,completed_at=? WHERE token=?',[$next,$done?time():null,$token]);
 if($done){runSql($db,'INSERT INTO training_totals(profile_id,sessions,first_day,last_day) VALUES(?,1,?,?) ON CONFLICT(profile_id) DO UPDATE SET sessions=sessions+1,last_day=excluded.last_day',[$tp,gmdate('Y-m-d'),gmdate('Y-m-d')]);trainingGrantStickers($db,$tp);}
+cpRecordStep($db,$tp,'training',$token,$step,['item'=>$q['item'],'skill'=>$skill,'correct'=>true,'completed'=>true,'helped'=>!$independent,'errors'=>(int)$session['errors'],'replays'=>$replays]);
 $db->exec('COMMIT');respond(['correct'=>true,'independent'=>$independent,'session'=>trainingSnapshot(trainingOwnedSession($db,$tp,$token)),'stickers'=>trainingStickers($db,$tp)]);
+
+function trainingProgramAccessible(PDO $db,int $pid,string $kind,string $token):bool{$meta=cpSessionMetadata($db,$pid,$kind,$token);return $meta===null||($meta['accessible']??false)===true;}
+function trainingReplays(array $body):int{$n=$body['replays']??0;return is_int($n)?max(0,min(20,$n)):0;}
+function trainingEvidenceSkill(array $q,array $body,bool $grammar):string{
+    if($grammar)return trainingGrammarSkill($q);
+    $skill=match($q['mode']){'letter'=>'letter-reading.letter','recognize'=>'word-reading.meaning','build'=>'spelling.compose','recall'=>'spelling.recall','phrase'=>'phrase.match','sentence-build'=>'sentence.compose','instruction-choice'=>'instruction-reading.meaning',default=>'model.explore'};
+    if(($body['audioUsed']??false)===true){if($q['mode']==='letter'&&($body['letterAudioVerified']??false)===true)return 'letter-name.letter';if($q['mode']==='recognize')return 'heard-word.meaning';if($q['mode']==='instruction-choice')return 'heard-instruction.meaning';}return $skill;
+}
 
 function trainingContent():array{$content=json_decode(file_get_contents(__DIR__.'/training.json'),true,32,JSON_THROW_ON_ERROR);$content['words']=$content['foundationWords']??$content['words'];$content['wordPacks']??=[['id'=>'first','words'=>array_column($content['words'],'id')]];return $content;}
 function trainingOwnedSession(PDO $db,int $pid,string $token):array{
     $s=one($db,'SELECT * FROM training_sessions WHERE token=? AND profile_id=?',[$token,$pid]);
     if(!$s){$s=one($db,'SELECT * FROM training_grammar_sessions WHERE token=? AND profile_id=?',[$token,$pid]);if($s)$s['_grammarStorage']=true;}
+    if(!$s){$s=one($db,'SELECT * FROM training_worksheet_sessions WHERE profile_id=? AND token=?',[$pid,$token]);if($s)$s['_worksheetStorage']=true;}
     if(!$s)fail('Allenamento non trovato.',404);
     if((int)$s['created_at']<time()-604800)fail('Questo allenamento è terminato. Puoi iniziarne uno nuovo.',410);
-    return $s;
+    cpAssertSessionAccess($db,$pid,'training',$token);return $s;
 }
-function trainingSessionTable(array $session):string{return ($session['_grammarStorage']??false)===true?'training_grammar_sessions':'training_sessions';}
+function trainingSessionTable(array $session):string{return ($session['_worksheetStorage']??false)===true?'training_worksheet_sessions':(($session['_grammarStorage']??false)===true?'training_grammar_sessions':'training_sessions');}
 function trainingSnapshot(array $s):array{
     $plan=json_decode($s['plan'],true,32,JSON_THROW_ON_ERROR);$step=(int)$s['step'];
-    return ['token'=>$s['token'],'track'=>$s['track'],'step'=>$step,'total'=>count($plan),'done'=>$s['completed_at']!==null,'question'=>$plan[$step]??null,'hint'=>(int)$s['hint'],'helped'=>(bool)$s['helped'],'errors'=>(int)$s['errors']];
+    global $db;$out=['token'=>$s['token'],'track'=>$s['track'],'step'=>$step,'total'=>count($plan),'done'=>$s['completed_at']!==null,'question'=>$plan[$step]??null,'hint'=>(int)$s['hint'],'helped'=>(bool)$s['helped'],'errors'=>(int)$s['errors']];$meta=cpSessionMetadata($db,(int)$s['profile_id'],'training',$s['token']);if($meta!==null)$out['program']=$meta;return $out;
 }
 function trainingFamiliar(PDO $db,int $pid,string $item,string $skill):bool{
     $r=one($db,'SELECT COALESCE(SUM(independent),0) AS successes,COALESCE(MAX(independent_days),0) AS days FROM training_items WHERE profile_id=? AND item=? AND skill=?',[$pid,$item,$skill]);
@@ -149,8 +160,10 @@ function trainingPlan(PDO $db,int $pid,string $track,string $block,array $conten
     }else{
         $review=array_column(rows($db,'SELECT item FROM training_daily WHERE profile_id=? AND day>=? AND skill="spelling.recall" GROUP BY item HAVING SUM(errors)>=2 OR SUM(guided)>=2',[$pid,gmdate('Y-m-d',time()-7*86400)]),'item');
         $review=array_values(array_unique(array_merge($review,array_map(fn($row)=>'word:'.$row['word'],array_filter(practiceReviewRows($db,$pid),fn($row)=>in_array('missions',$row['sources'],true))))));
-        $ids=$content['wordPacks'][array_search($pack,array_column($content['wordPacks'],'id'),true)]['words'];$pool=array_values(array_filter($content['words'],fn($w)=>in_array($w['id'],$ids,true)));
+        $selectedPack=$content['wordPacks'][array_search($pack,array_column($content['wordPacks'],'id'),true)];$ids=$selectedPack['words'];$pool=array_values(array_filter($content['words'],fn($w)=>in_array($w['id'],$ids,true)));if(!$pool)fail('Queste parole non sono assegnate nel programma attivo.',409);if($selectedPack['wordOnly']??false)$pool=array_map(fn($w)=>array_merge($w,['wordOnly'=>true,'phrase'=>$w['id'],'phraseMeaning'=>$w['meaning'],'gap'=>'___']),$pool);
         $words=$pool;$counts=array_column(rows($db,'SELECT item,SUM(completed) AS n FROM training_items WHERE profile_id=? GROUP BY item',[$pid]),'n','item');
+        // A new worksheet rotates through its own complete set; old pack histories stay unchanged.
+        if($selectedPack['wordOnly']??false){$counts=[];foreach(rows($db,'SELECT plan,step FROM training_sessions WHERE profile_id=? AND track=? ORDER BY rowid DESC LIMIT 64',[$pid,'words:'.$pack]) as $past){$seen=[];foreach(array_slice(json_decode($past['plan'],true,32,JSON_THROW_ON_ERROR),0,(int)$past['step']) as $answered)$seen[$answered['item']]=true;foreach($seen as $item=>$unused)$counts[$item]=($counts[$item]??0)+1;}}
         usort($words,fn($a,$b)=>((int)in_array('word:'.$b['id'],$review,true)<=>(int)in_array('word:'.$a['id'],$review,true))?:((int)($counts['word:'.$a['id']]??0)<=>(int)($counts['word:'.$b['id']]??0)));
         $selected=array_slice($words,0,2);$unseen=array_values(array_filter($words,fn($w)=>(int)($counts['word:'.$w['id']]??0)===0));
         if($unseen&&!array_filter($selected,fn($w)=>(int)($counts['word:'.$w['id']]??0)===0))$selected[1]=$unseen[0];
@@ -158,7 +171,7 @@ function trainingPlan(PDO $db,int $pid,string $track,string $block,array $conten
             if(!trainingFamiliar($db,$pid,$base['item'],'spelling.recall'))$plan[]=$base+['mode'=>'model'];
             foreach(['recognize','build','recall'] as $mode)$plan[]=$base+['mode'=>$mode];
         }
-        $word=$selected[0];$choices=array_slice(array_values(array_filter($pool,fn($w)=>$w['id']!==$word['id'])),0,2);$choices[]=$word;shuffle($choices);$plan[]=['item'=>'word:'.$word['id'],'word'=>$word,'answer'=>$word['id'],'mode'=>'phrase','choices'=>$choices,'topic'=>'piccole frasi'];
+        $word=$selected[0];if(!($word['wordOnly']??false)){$choices=array_slice(array_values(array_filter($pool,fn($w)=>$w['id']!==$word['id'])),0,2);$choices[]=$word;shuffle($choices);$plan[]=['item'=>'word:'.$word['id'],'word'=>$word,'answer'=>$word['id'],'mode'=>'phrase','choices'=>$choices,'topic'=>'piccole frasi'];}
     }
     return $plan;
 }
@@ -183,6 +196,12 @@ function trainingGrammarSkill(array $q):string{
         'sentence'=>'grammar.sentence.compose',
         'question-build'=>'grammar.question.compose',
         'short-answer'=>'grammar.question.answer',
+        'short-write'=>'grammar.question.write',
+        'identify-build'=>'grammar.identify.compose',
+        'identify-write'=>'grammar.identify.write',
+        'prefix-choice'=>'grammar.subject.recognize',
+        'prefix-write'=>'grammar.subject.write',
+        'short-gap'=>'grammar.short-answer.complete',
         default=>'grammar.guided',
     };
 }
@@ -196,19 +215,24 @@ function trainingGrammarPlan(PDO $db,int $pid,string $pack,array $content):array
     $grammar=$content['grammarLessons']??[];$packs=$grammar['packs']??[];$index=array_search($pack,array_column($packs,'id'),true);
     if($index===false)fail('Scegli un percorso di grammatica disponibile.');
     $selectedPack=$packs[$index];$cases=$selectedPack['cases']??[];$nouns=array_column($grammar['nouns']??[],null,'id');
-    if(count($cases)<3)fail('Questo percorso non è ancora disponibile.',409);
+    if(!$cases)fail('Questo percorso non è ancora disponibile.',409);
     $counts=array_column(rows($db,'SELECT item,SUM(completed) AS n FROM training_items WHERE profile_id=? AND item LIKE "grammar:%" GROUP BY item',[$pid]),'n','item');
     usort($cases,fn($a,$b)=>(int)($counts['grammar:'.$a['id']]??0)<=>(int)($counts['grammar:'.$b['id']]??0));
     $plan=[];
     foreach(array_slice($cases,0,3) as $case){
         if(!isset($nouns[$case['noun']]))fail('Questo percorso non è ancora disponibile.',409);
         $noun=$nouns[$case['noun']];$plan[]=trainingGrammarQuestion($case,$noun,$selectedPack,'grammar-model','model');
-        foreach(match($pack){
+        foreach(match($case['task']){
             'number'=>[['grammar-choice','number']],
-            'plurals'=>[['grammar-choice','plural-choice'],['grammar-write','plural-write']],
-            'articles'=>[['grammar-choice','article']],
-            'sentences'=>[['grammar-build','sentence']],
-            'questions'=>[['grammar-build','question-build'],['grammar-choice','short-answer']],
+            'plural'=>[['grammar-choice','plural-choice'],['grammar-write','plural-write']],
+            'article'=>[['grammar-choice','article']],
+            'sentence'=>[['grammar-build','sentence']],
+            'question'=>[['grammar-build','question-build'],['grammar-choice','short-answer']],
+            'short-question'=>[['grammar-choice','short-answer'],['grammar-write','short-write']],
+            'identify'=>[['grammar-build','identify-build'],['grammar-write','identify-write']],
+            'prefix-choice'=>[['grammar-choice','prefix-choice']],
+            'prefix-write'=>[['grammar-write','prefix-write']],
+            'short-gap'=>[['grammar-choice','short-gap']],
             default=>[],
         } as [$mode,$phase])$plan[]=trainingGrammarQuestion($case,$noun,$selectedPack,$mode,$phase);
     }
@@ -261,8 +285,9 @@ function trainingProgress(PDO $db,int $pid):array{
 /** Guided visual onset practice; never phoneme discrimination or pronunciation scoring. */
 function phonicsContent():array{return trainingContent();}
 function phonicsPlan(string $lesson,array $content):array{
-    $groups=$content['phonics']['groups'];$g=$groups[array_search($lesson,array_column($groups,'id'),true)];$words=array_column($content['words'],null,'id');
-    $other=array_values(array_filter($groups,fn($x)=>$x['id']!==$lesson));$distractors=array_map(fn($x)=>$x['words'][0],array_slice($other,0,2));
+    $groups=$content['phonics']['groups']??[];$index=array_search($lesson,array_column($groups,'id'),true);if($index===false)fail('Questo gruppo non è assegnato nel programma attivo.',409);$g=$groups[$index];$words=array_column($content['words'],null,'id');
+    if(count($g['words']??[])<2||array_diff($g['words'],array_keys($words)))fail('Questo gruppo non contiene ancora tutte le parole assegnate.',409);
+    $other=array_values(array_filter($groups,fn($x)=>$x['id']!==$lesson&&isset($words[$x['words'][0]??''])));$distractors=array_map(fn($x)=>$x['words'][0],array_slice($other,0,2));
     $optionWords=function(string $correct)use($distractors,$words):array{$ids=array_merge([$correct],$distractors);shuffle($ids);return array_map(fn($id)=>['id'=>$id,'label'=>$id,'meaning'=>$words[$id]['meaning'],'emoji'=>$words[$id]['emoji']],$ids);};
     $concept=function(string $answer)use($g,$words):array{$options=[['id'=>'name','label'=>'I nomi delle lettere'],['id'=>'sound','label'=>'I suoni nella parola']];shuffle($options);return ['kind'=>'concept','group'=>$g,'word'=>$words[$g['words'][0]],'answer'=>$answer,'options'=>$options];};
     $letters=array_merge([$g['letter']],array_column(array_slice($other,0,2),'letter'));shuffle($letters);
@@ -274,8 +299,9 @@ function phonicsPlan(string $lesson,array $content):array{
       $match($g['words'][2]??$g['words'][0],$g['words'][1]),$concept('sound')
     ];
 }
-function phonicsSnapshot(array $s):array{$plan=json_decode($s['plan'],true,32,JSON_THROW_ON_ERROR);return ['token'=>$s['token'],'lesson'=>$s['lesson'],'step'=>(int)$s['step'],'total'=>count($plan),'done'=>$s['completed_at']!==null,'question'=>$plan[(int)$s['step']]??null,'hint'=>(int)$s['hint'],'errors'=>(int)$s['errors'],'guidedOnly'=>true];}
-function phonicsOwnedSession(PDO $db,int $pid,string $token):array{$s=one($db,'SELECT * FROM phonics_sessions WHERE profile_id=? AND token=?',[$pid,$token]);if(!$s)fail('Percorso non trovato.',404);if((int)$s['created_at']<time()-604800)fail('Questo percorso è scaduto. Le attività confermate restano conservate.',410);return $s;}
+function phonicsEvidenceSkill(array $q):string{return match($q['kind']){'concept'=>'concept-'.$q['answer'],'match'=>'visual-initial-match','gap'=>'initial-letter',default=>'model.explore'};}
+function phonicsSnapshot(array $s):array{global $db;$plan=json_decode($s['plan'],true,32,JSON_THROW_ON_ERROR);$out=['token'=>$s['token'],'lesson'=>$s['lesson'],'step'=>(int)$s['step'],'total'=>count($plan),'done'=>$s['completed_at']!==null,'question'=>$plan[(int)$s['step']]??null,'hint'=>(int)$s['hint'],'errors'=>(int)$s['errors'],'guidedOnly'=>true];$meta=cpSessionMetadata($db,(int)$s['profile_id'],'phonics',$s['token']);if($meta!==null)$out['program']=$meta;return $out;}
+function phonicsOwnedSession(PDO $db,int $pid,string $token):array{$s=one($db,'SELECT * FROM phonics_sessions WHERE profile_id=? AND token=?',[$pid,$token]);if(!$s)fail('Percorso non trovato.',404);if((int)$s['created_at']<time()-604800)fail('Questo percorso è scaduto. Le attività confermate restano conservate.',410);cpAssertSessionAccess($db,$pid,'phonics',$token);return $s;}
 function phonicsHandle(PDO $db,int $account,string $method,array $body,string $role,string $action):void{
     if($method!==(in_array($action,['phonics-state','phonics-progress'],true)?'GET':'POST'))fail('Metodo non consentito.',405);
     $p=ownedProfile($db,$account,$method==='GET'?($_GET['profile']??0):($body['profile']??0));$pid=(int)$p['id'];
@@ -286,12 +312,12 @@ function phonicsHandle(PDO $db,int $account,string $method,array $body,string $r
     if($action==='phonics-progress')respond(['profile'=>$pid,'scope'=>'owned-guided-phonics-only','guidedOnly'=>true,'assessesPronunciation'=>false,'assessesPhonemeListening'=>false,'items'=>rows($db,'SELECT lesson,skill,completed,with_help,errors,replays,last_day FROM phonics_practice WHERE profile_id=? ORDER BY lesson,skill',[$pid]),'lessons'=>rows($db,'SELECT lesson,sessions,last_day FROM phonics_totals WHERE profile_id=? ORDER BY lesson',[$pid])]);
     if($action==='phonics-state'){
       if(isset($_GET['token'])){if(!is_string($_GET['token']))fail('Percorso non valido.');respond(['session'=>phonicsSnapshot(phonicsOwnedSession($db,$pid,$_GET['token']))]);}
-      respond(['sessions'=>array_map('phonicsSnapshot',rows($db,'SELECT * FROM phonics_sessions WHERE profile_id=? AND completed_at IS NULL AND created_at>=? ORDER BY rowid DESC LIMIT 4',[$pid,time()-604800])),'lessons'=>rows($db,'SELECT lesson,sessions FROM phonics_totals WHERE profile_id=? ORDER BY lesson',[$pid])]);
+      respond(['sessions'=>array_map('phonicsSnapshot',array_values(array_filter(rows($db,'SELECT t.* FROM phonics_sessions t WHERE t.profile_id=? AND t.completed_at IS NULL AND t.created_at>=? AND '.cpVisibleSessionSql('phonics','t.token','t.profile_id').' ORDER BY t.rowid DESC LIMIT 4',[$pid,time()-604800]),fn($s)=>trainingProgramAccessible($db,$pid,'phonics',$s['token'])))),'lessons'=>rows($db,'SELECT lesson,sessions FROM phonics_totals WHERE profile_id=? ORDER BY lesson',[$pid])]);
     }
     if($action==='phonics-start'){
-      $lesson=$body['lesson']??null;$content=phonicsContent();if(!is_string($lesson)||!in_array($lesson,array_column($content['phonics']['groups'],'id'),true))fail('Scegli un gruppo disponibile.');limitAttempts($db,'phonics-start:'.$pid,40);
-      $db->exec('BEGIN IMMEDIATE');$old=one($db,'SELECT * FROM phonics_sessions WHERE profile_id=? AND lesson=? AND completed_at IS NULL AND created_at>=? ORDER BY rowid DESC LIMIT 1',[$pid,$lesson,time()-604800]);if($old){$db->exec('COMMIT');respond(['session'=>phonicsSnapshot($old)]);}
-      $token=bin2hex(random_bytes(24));runSql($db,'INSERT INTO phonics_sessions(token,profile_id,lesson,plan,created_at) VALUES(?,?,?,?,?)',[$token,$pid,$lesson,json_encode(phonicsPlan($lesson,$content),JSON_THROW_ON_ERROR),time()]);runSql($db,'DELETE FROM phonics_sessions WHERE profile_id=? AND created_at<?',[$pid,time()-2592000]);$db->exec('COMMIT');respond(['session'=>phonicsSnapshot(phonicsOwnedSession($db,$pid,$token))]);
+      $lesson=$body['lesson']??null;$context=cpResolveContext($db,$pid,$body);cpRequirePlayable($context);$content=cpFilterTrainingContent(phonicsContent(),$context);if(!is_string($lesson)||!in_array($lesson,array_column($content['phonics']['groups']??[],'id'),true))fail('Scegli un gruppo disponibile.');limitAttempts($db,'phonics-start:'.$pid,40);
+      $db->exec('BEGIN IMMEDIATE');$context=cpResolveContext($db,$pid,$body);cpRequirePlayable($context);$content=cpFilterTrainingContent(phonicsContent(),$context);$old=null;foreach(rows($db,'SELECT * FROM phonics_sessions WHERE profile_id=? AND lesson=? AND completed_at IS NULL AND created_at>=? ORDER BY rowid DESC LIMIT 32',[$pid,$lesson,time()-604800]) as $candidate)if(cpSessionMatches($db,$pid,'phonics',$candidate['token'],$context)){$old=$candidate;break;}if($old){$db->exec('COMMIT');respond(['session'=>phonicsSnapshot($old)]);}
+      $token=bin2hex(random_bytes(24));runSql($db,'INSERT INTO phonics_sessions(token,profile_id,lesson,plan,created_at) VALUES(?,?,?,?,?)',[$token,$pid,$lesson,json_encode(phonicsPlan($lesson,$content),JSON_THROW_ON_ERROR),time()]);cpBindSession($db,$pid,'phonics',$token,$context);runSql($db,'DELETE FROM phonics_sessions WHERE profile_id=? AND created_at<?',[$pid,time()-2592000]);$db->exec('COMMIT');respond(['session'=>phonicsSnapshot(phonicsOwnedSession($db,$pid,$token))]);
     }
     $token=is_string($body['token']??null)?$body['token']:'';$step=$body['step']??null;if(!is_int($step)||$step<0)fail('Attività non valida.');phonicsOwnedSession($db,$pid,$token);
     $db->exec('BEGIN IMMEDIATE');$s=phonicsOwnedSession($db,$pid,$token);if($step>(int)$s['step']){$db->exec('ROLLBACK');fail('Riprendi l’attività corrente.',409);}if($step<(int)$s['step']||$s['completed_at']!==null){$db->exec('COMMIT');respond(['replayed'=>true,'session'=>phonicsSnapshot($s)]);}
@@ -299,9 +325,9 @@ function phonicsHandle(PDO $db,int $account,string $method,array $body,string $r
     $attempt=$body['attempt']??null;$answer=$body['answer']??null;if(!is_string($attempt)||!preg_match('/^[a-f0-9]{16,64}$/',$attempt)||!is_string($answer)||strlen($answer)>100){$db->exec('ROLLBACK');fail('Risposta non valida.');}
     if($s['last_attempt']===$attempt){$db->exec('COMMIT');respond(['correct'=>false,'replayed'=>true,'session'=>phonicsSnapshot($s)]);}
     $plan=json_decode($s['plan'],true,32,JSON_THROW_ON_ERROR);$q=$plan[$step];$correct=$q['kind']==='model'||normalWord($q['answer'])===normalWord($answer);
-    if(!$correct){runSql($db,'UPDATE phonics_sessions SET errors=errors+1,hint=MAX(hint,CAST(? AS INTEGER)),last_attempt=? WHERE token=?',[(int)$s['errors']>=1?2:0,$attempt,$token]);$db->exec('COMMIT');respond(['correct'=>false,'session'=>phonicsSnapshot(phonicsOwnedSession($db,$pid,$token))]);}
+    if(!$correct){runSql($db,'UPDATE phonics_sessions SET errors=errors+1,hint=MAX(hint,CAST(? AS INTEGER)),last_attempt=? WHERE token=?',[(int)$s['errors']>=1?2:0,$attempt,$token]);cpRecordStep($db,$pid,'phonics',$token,$step,['item'=>'phonics:'.$s['lesson'],'skill'=>phonicsEvidenceSkill($q),'correct'=>false,'completed'=>false,'helped'=>true,'errors'=>(int)$s['errors']+1,'replays'=>trainingReplays($body)]);$db->exec('COMMIT');respond(['correct'=>false,'session'=>phonicsSnapshot(phonicsOwnedSession($db,$pid,$token))]);}
     $skill=match($q['kind']){'concept'=>'concept-'.$q['answer'],'match'=>'visual-initial-match','gap'=>'initial-letter',default=>'guided-model'};
     $replays=is_int($body['replays']??null)?max(0,min(20,$body['replays'])):0;$help=(int)$s['hint']>0||(int)$s['errors']>0||($body['helped']??false)===true;
     runSql($db,'INSERT INTO phonics_practice(profile_id,lesson,skill,completed,with_help,errors,replays,last_day) VALUES(?,?,?,1,?,?,?,?) ON CONFLICT(profile_id,lesson,skill) DO UPDATE SET completed=completed+1,with_help=with_help+excluded.with_help,errors=errors+excluded.errors,replays=replays+excluded.replays,last_day=excluded.last_day',[$pid,$s['lesson'],$skill,(int)$help,(int)$s['errors'],$replays,gmdate('Y-m-d')]);
-    $next=$step+1;$done=$next===count($plan);runSql($db,'UPDATE phonics_sessions SET step=?,hint=0,errors=0,last_attempt=NULL,completed_at=? WHERE token=?',[$next,$done?time():null,$token]);if($done)runSql($db,'INSERT INTO phonics_totals(profile_id,lesson,sessions,last_day) VALUES(?,?,1,?) ON CONFLICT(profile_id,lesson) DO UPDATE SET sessions=sessions+1,last_day=excluded.last_day',[$pid,$s['lesson'],gmdate('Y-m-d')]);$db->exec('COMMIT');respond(['correct'=>true,'guidedOnly'=>true,'independent'=>false,'session'=>phonicsSnapshot(phonicsOwnedSession($db,$pid,$token))]);
+    $next=$step+1;$done=$next===count($plan);runSql($db,'UPDATE phonics_sessions SET step=?,hint=0,errors=0,last_attempt=NULL,completed_at=? WHERE token=?',[$next,$done?time():null,$token]);if($done)runSql($db,'INSERT INTO phonics_totals(profile_id,lesson,sessions,last_day) VALUES(?,?,1,?) ON CONFLICT(profile_id,lesson) DO UPDATE SET sessions=sessions+1,last_day=excluded.last_day',[$pid,$s['lesson'],gmdate('Y-m-d')]);cpRecordStep($db,$pid,'phonics',$token,$step,['item'=>'phonics:'.$s['lesson'],'skill'=>phonicsEvidenceSkill($q),'correct'=>true,'completed'=>true,'helped'=>true,'errors'=>(int)$s['errors'],'replays'=>$replays]);$db->exec('COMMIT');respond(['correct'=>true,'guidedOnly'=>true,'independent'=>false,'session'=>phonicsSnapshot(phonicsOwnedSession($db,$pid,$token))]);
 }

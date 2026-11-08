@@ -4,9 +4,12 @@ import http.cookiejar,io,json,math,os,secrets,shlex,socket,sqlite3,subprocess,ta
 
 content=json.loads(Path('dist/training.json').read_text())
 grammar=content['grammarLessons'];packs={p['id']:p for p in grammar['packs']};nouns={n['id']:n for n in grammar['nouns']}
-assert set(packs)=={'number','plurals','articles','sentences','questions'} and len(nouns)==16
+legacy=json.loads(subprocess.check_output(['git','show','7f03b579c14e647191779df685b6de4c45bd3beb:dist/training.json'],text=True))['grammarLessons']
+old_packs={'number','plurals','articles','sentences','questions'}
+assert grammar['nouns'][:16]==legacy['nouns'] and grammar['packs'][:5]==legacy['packs'], 'The previous40cases/16nouns stay byte-equivalent as structured data'
+assert set(packs)==old_packs|{'toys-yes-no','whats-this','it-they-choice','it-they-write','is-this','short-answer-gap'} and len(nouns)==30
 cases={c['id']:c for p in packs.values() for c in p['cases']}
-assert len(cases)==40
+assert len(cases)==75
 # A narrow comparison contract for the new track; legacy comparison is not changed.
 comparison_cases=[
     ({'mode':'grammar-choice','answer':'Yes, it is.','aliases':[]}, '  YES,it IS!  ', True),
@@ -25,8 +28,8 @@ comparison_cases=[
 php=r"""define('WORDYLAND_BOOTSTRAPPED',true);$action='not-training';require 'dist/training.php';$tests=json_decode(stream_get_contents(STDIN),true);foreach($tests as [$q,$answer,$expected]){if(trainingGrammarCorrect($q,$answer)!==$expected){fwrite(STDERR,'Grammar comparison failed');exit(1);}}echo 'Grammar comparison cases passed';"""
 comparison=subprocess.run(shlex.split(os.environ.get('PHP_COMMAND','php'))+['-r',php],input=json.dumps(comparison_cases),text=True,capture_output=True,timeout=10)
 assert comparison.returncode==0,(comparison.stdout,comparison.stderr)
-expected_phases={'number':['model','number'],'plurals':['model','plural-choice','plural-write'],'articles':['model','article'],'sentences':['model','sentence'],'questions':['model','question-build','short-answer']}
-expected_skills={'model':'model.explore','number':'grammar.number','plural-choice':'grammar.plural.recognize','plural-write':'grammar.plural.write','article':'grammar.article','sentence':'grammar.sentence.compose','question-build':'grammar.question.compose','short-answer':'grammar.question.answer'}
+expected_phases={'number':['model','number'],'plurals':['model','plural-choice','plural-write'],'articles':['model','article'],'sentences':['model','sentence'],'questions':['model','question-build','short-answer'],'toys-yes-no':['model','short-answer','short-write'],'whats-this':['model','identify-build','identify-write'],'it-they-choice':['model','prefix-choice'],'it-they-write':['model','prefix-write'],'is-this':['model','short-answer','short-write'],'short-answer-gap':['model','short-gap']}
+expected_skills={'model':'model.explore','number':'grammar.number','plural-choice':'grammar.plural.recognize','plural-write':'grammar.plural.write','article':'grammar.article','sentence':'grammar.sentence.compose','question-build':'grammar.question.compose','short-answer':'grammar.question.answer','short-write':'grammar.question.write','identify-build':'grammar.identify.compose','identify-write':'grammar.identify.write','prefix-choice':'grammar.subject.recognize','prefix-write':'grammar.subject.write','short-gap':'grammar.short-answer.complete'}
 with tempfile.TemporaryDirectory(prefix='wordyland-grammar-') as tmp:
     with socket.socket() as sock:sock.bind(('127.0.0.1',0));port=sock.getsockname()[1]
     log=open(tmp+'/server.log','w+')
@@ -74,7 +77,7 @@ with tempfile.TemporaryDirectory(prefix='wordyland-grammar-') as tmp:
             return req(c or a,'training-answer',body,csrf or ta),body
         def state(token,c=None):return req(c or a,f'training-state&profile={pid}&token='+token)['session']
         def check_plan(s,pack):
-            row=db.execute('SELECT plan FROM training_grammar_sessions WHERE token=?',(s['token'],)).fetchone();plan=json.loads(row[0]);phases=expected_phases[pack]
+            table='training_grammar_sessions' if pack in old_packs else 'training_worksheet_sessions';row=db.execute('SELECT plan FROM '+table+' WHERE token=?',(s['token'],)).fetchone();assert row;plan=json.loads(row[0]);phases=expected_phases[pack]
             assert s['track']=='grammar:'+pack and s['total']==3*len(phases)
             assert len(plan)==s['total'] and len({q['item'] for q in plan})==3
             for index,q in enumerate(plan):
@@ -82,7 +85,7 @@ with tempfile.TemporaryDirectory(prefix='wordyland-grammar-') as tmp:
                 assert q['grammar']==dict(case,nounData=nouns[case['noun']],pack=pack,phase=phase)
                 assert q['answer']==(case['question'] if phase=='question-build' else case['answer'])
                 assert q['aliases']==([] if phase=='question-build' else case['aliases'])
-                assert q['mode']==('grammar-model' if phase=='model' else 'grammar-write' if phase=='plural-write' else 'grammar-build' if phase in ['sentence','question-build'] else 'grammar-choice')
+                assert q['mode']==('grammar-model' if phase=='model' else 'grammar-write' if phase in ['plural-write','short-write','identify-write','prefix-write'] else 'grammar-build' if phase in ['sentence','question-build','identify-build'] else 'grammar-choice')
                 assert sorted(q['choices'])==sorted(case['choices'])
                 assert sorted(q['tokens'])==sorted(case.get('questionTokens',[]) if phase=='question-build' else case['tokens'])
                 assert q['grammar']['nounData']['art']==nouns[case['noun']]['art']
@@ -94,7 +97,7 @@ with tempfile.TemporaryDirectory(prefix='wordyland-grammar-') as tmp:
         # A model is always guided even if the client claims that it worked independently.
         q=s['question'];r,model_payload=answer(s,helped=False,audioUsed=True);assert r['correct'] and not r['independent'];s=r['session']
         assert db.execute('SELECT independent,guided FROM training_items WHERE profile_id=? AND item=? AND skill="model.explore"',(pid,q['item'])).fetchone()==(0,1)
-        unchanged=snapshot(['training_sessions','training_grammar_sessions','training_items','training_daily','training_totals','training_stickers'])
+        unchanged=snapshot(['training_sessions','training_grammar_sessions','training_worksheet_sessions','training_items','training_daily','training_totals','training_stickers'])
         assert req(a,'training-answer',model_payload,ta)['replayed'];assert snapshot(list(unchanged))==unchanged
         # Wrong attempts, retries and hints use the same persisted protocol as other training.
         wrong=next(x for x in s['question']['choices'] if x!=s['question']['answer'])
@@ -110,7 +113,7 @@ with tempfile.TemporaryDirectory(prefix='wordyland-grammar-') as tmp:
         assert req(a,'training-hint',h,ta)['session']['hint']==2
         r,_=answer(s,helped=False);assert not r['independent'];s=r['session']
         # Fail an actual save before COMMIT: no advance, daily count or clue is invented.
-        tables=['training_sessions','training_grammar_sessions','training_items','training_daily','training_totals','training_stickers']
+        tables=['training_sessions','training_grammar_sessions','training_worksheet_sessions','training_items','training_daily','training_totals','training_stickers']
         saved=snapshot(tables)
         db.execute('CREATE TRIGGER grammar_storage_failure BEFORE INSERT ON training_daily WHEN NEW.item LIKE "grammar:%" BEGIN SELECT RAISE(ABORT,"synthetic grammar storage full"); END');db.commit()
         attempt+=1;pending={'profile':pid,'token':s['token'],'step':s['step'],'attempt':f'{attempt:032x}','answer':s['question']['answer']}
@@ -145,7 +148,7 @@ with tempfile.TemporaryDirectory(prefix='wordyland-grammar-') as tmp:
             assert seen[pack]=={c['id'] for c in packs[pack]['cases']},(pack,seen[pack])
         assert positive_seen and negative_seen and question_order_rejected and sentence_order_rejected and aliases_accepted
         report=req(a,f'training-progress&profile={pid}');assert report['scope']=='owned-training-only'
-        entries=[i for i in report['items'] if i['item'].startswith('grammar:')];assert len(entries)==40
+        entries=[i for i in report['items'] if i['item'].startswith('grammar:')];assert len(entries)==75
         assert all(i['label'] and not i['label'].startswith('grammar:') for i in entries)
         assert set(expected_skills.values())=={c['skill'] for i in entries for c in i['competencies']}
         assert all(c['independent']==0 for i in entries for c in i['competencies'] if c['skill']=='model.explore')
@@ -160,6 +163,25 @@ with tempfile.TemporaryDirectory(prefix='wordyland-grammar-') as tmp:
         for i in range(36):db.execute('INSERT INTO training_grammar_sessions(token,profile_id,track,plan,created_at) VALUES(?,?,?,?,?)',(f'{i+1000:048x}',pid,'grammar:number',clone,int(time.time())))
         db.commit();assert {x['token'] for x in req(a,f'training-state&profile={pid}')['sessions']}=={legacy['token']}
         filtered=req(a,f'training-state&profile={pid}&grammar=1')['sessions'];assert len(filtered)==32 and all(x['track'].startswith('grammar:') for x in filtered)
+        # The immediately previous grammar release must ignore all six new track IDs.
+        worksheet_pending=start('toys-yes-no');assert worksheet_pending['track']=='grammar:toys-yes-no'
+        priorroot=Path(tmp)/'grammar-rollback';priorroot.mkdir()
+        archive=subprocess.check_output(['git','archive','7f03b579c14e647191779df685b6de4c45bd3beb','dist'])
+        with tarfile.open(fileobj=io.BytesIO(archive)) as bundle:bundle.extractall(priorroot,filter='data')
+        with socket.socket() as sock:sock.bind(('127.0.0.1',0));priorport=sock.getsockname()[1]
+        priorserver=subprocess.Popen(shlex.split(os.environ.get('PHP_COMMAND','php'))+['-d','session.save_path='+tmp,'-S',f'127.0.0.1:{priorport}','-t',str(priorroot/'dist')],env=dict(os.environ,WORDYLAND_TEST='1',WORDYLAND_DATA_DIR=tmp+'/data'),stdout=log,stderr=log)
+        priorbase=f'http://127.0.0.1:{priorport}/api.php?action='
+        try:
+            for _ in range(80):
+                try:priorstate=req(a,f'training-state&profile={pid}&grammar=1',origin=priorbase);break
+                except urllib.error.URLError:time.sleep(.05)
+            else:raise RuntimeError('Previous grammar PHP did not start')
+            assert priorstate['sessions'] and all(s['track'].split(':',1)[1] in old_packs for s in priorstate['sessions'])
+            assert worksheet_pending['token'] not in {s['token'] for s in priorstate['sessions']}
+            req(a,f'training-state&profile={pid}&token='+worksheet_pending['token'],status=404,origin=priorbase)
+            assert req(a,f'training-state&profile={pid}&token='+worksheet_pending['token'])['session']['question']==worksheet_pending['question']
+            assert snapshot()==before,'Previous grammar read changed accounts, rewards or classic progress'
+        finally:priorserver.terminate();priorserver.wait(timeout=5)
         # Expiry and rate limits leave confirmed observations and legacy state alone.
         expiry=filtered[0];db.execute('UPDATE training_grammar_sessions SET created_at=? WHERE token=?',(int(time.time())-604801,expiry['token']));db.commit();req(a,f'training-state&profile={pid}&token='+expiry['token'],status=410)
         db.execute('INSERT OR REPLACE INTO rate_limits(bucket,attempts,expires) VALUES(?,?,?)',(f'training-start:{pid}',60,int(time.time())+3600));db.commit()
@@ -191,11 +213,11 @@ with tempfile.TemporaryDirectory(prefix='wordyland-grammar-') as tmp:
         assert db.execute('SELECT COUNT(*) FROM training_grammar_sessions WHERE profile_id=?',(lp,)).fetchone()[0]==0
         # Existing owned profile deletion cascades new observations with no schema changes.
         req(a,'delete-profile',{'profile':pid,'password':password,'confirm':'ELIMINA'},ta,origin=oldbase)
-        for table in ['training_items','training_daily','training_sessions','training_grammar_sessions','training_totals','training_stickers']:
+        for table in ['training_items','training_daily','training_sessions','training_grammar_sessions','training_worksheet_sessions','training_totals','training_stickers']:
             assert db.execute('SELECT COUNT(*) FROM '+table+' WHERE profile_id=?',(pid,)).fetchone()[0]==0,table
         assert req(b,f'training-state&profile={other}')['sessions']==[]
         oldserver.terminate();oldserver.wait(timeout=5)
-        print('Grammar API passed: five packs/all40cases, frozen phased plans and rotation, explicit grammar skills, aliases/punctuation/Yes and No, rejected word order/contractions, model/help autonomy, failed-save rollback, idempotent retry and second-device help, private ownership/CSRF, separate session storage and real384 rollback/deletion compatibility before LIMIT32, expiry/quota, unchanged economy and old session, finite stickers and class/profile deletion. Synthetic localhost only.')
+        print('Grammar API passed: preserved40legacycases/16nouns plus35worksheetcases,11packs/75cases/30nouns, frozen phased plans and rotation, explicit grammar skills, aliases/punctuation/Yes and No, rejected word order/contractions, model/help autonomy, failed-save rollback, idempotent retry and second-device help, private ownership/CSRF, separate session storage and real7f03 and384 rollback/deletion compatibility before LIMIT32, expiry/quota, unchanged economy and old session, finite stickers and class/profile deletion. Synthetic localhost only.')
     finally:
         if 'oldserver' in locals() and oldserver.poll() is None:oldserver.terminate();oldserver.wait(timeout=5)
         server.terminate();server.wait(timeout=5);log.close()
