@@ -64,7 +64,14 @@
       const section=panel.querySelector(view==='recover'&&!session.username?'#accountRecovery':view==='password'||view==='recover'&&session.username?'#passwordSettings':'#accountForm');
       if(section?.matches('details'))section.open=true;
       if(view==='recover'&&session.username){say('Per cambiare la password usa la password attuale nel modulo qui sotto.');panel.querySelector('#passwordSettings').open=true;}
-      requestAnimationFrame(()=>{area.scrollIntoView({block:'start'});(section?.querySelector('input')||panel.querySelector('input'))?.focus({preventScroll:true});});
+      const focusAtOpen=document.activeElement,focusOwner=session;
+      requestAnimationFrame(()=>{
+        if(session!==focusOwner||!area.open||section&&!section.isConnected)return;
+        const focused=document.activeElement;
+        // A delayed frame must not take typing away from a field already chosen.
+        if(focused!==focusAtOpen&&focused!==document.body||panel.contains(focused)&&focused.matches('input,textarea,select,[contenteditable="true"]'))return;
+        area.scrollIntoView({block:'start'});(section?.querySelector('input')||panel.querySelector('input'))?.focus({preventScroll:true});
+      });
     }catch(error){if(ownershipPaused)initialAccessError(error);tools.querySelector('#accessStatus').textContent=error.message;}
   }
   function passwordSettings(){return '<details id="passwordSettings" class="accountSecurity"><summary>Cambia password</summary><form id="changePasswordForm"><label>Password attuale<input name="password" type="password" autocomplete="current-password" required></label><label>Nuova password · almeno 12 caratteri<input name="newPassword" type="password" autocomplete="new-password" minlength="12" maxlength="72" required></label><label>Ripeti la nuova password<input name="confirmPassword" type="password" autocomplete="new-password" minlength="12" maxlength="72" required></label><button class="primary">Salva la nuova password</button><p>Resterai collegato qui. Gli altri dispositivi dovranno accedere di nuovo.</p><p id="passwordChangeStatus" role="status" aria-live="polite"></p></form></details>';}

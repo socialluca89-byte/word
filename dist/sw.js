@@ -1,5 +1,5 @@
 /* Public offline revision only. API calls, accounts and private documents never enter CacheStorage. */
-const CACHE_NAME='wordyland-offline-3b6574c2e0f48847';
+const CACHE_NAME='wordyland-offline-40f0b750875a9f2a';
 const ASSETS={"/offline.html":"offline.html?v=7ce8bd78d937","/learning.js":"learning.js?v=18a45b30731d","/offline.js":"offline.js?v=836ee0a96ae7","/pwa.css":"pwa.css?v=c3e4b1cf69e3","/curriculum.json":"curriculum.json?v=caec47ff5b7d","/training.json":"training.json?v=1a40846309b2","/manifest.webmanifest":"manifest.webmanifest?v=5e1522f35a54","/icon-192.png":"icon-192.png?v=1f9b3f6f1b02","/icon-512.png":"icon-512.png?v=73f342b30736","/icon-maskable-512.png":"icon-maskable-512.png?v=73f342b30736"};
 const assetURL=path=>new URL(ASSETS[path],self.registration.scope).href;
 self.addEventListener('install',event=>{
