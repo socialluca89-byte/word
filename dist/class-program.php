@@ -115,8 +115,9 @@ function cpComposeRevision(PDO $db,array $program):array{
 function cpFilterWordPool(array $rows,array $context):array{
     if($context['mode']==='legacy')return $rows;
     if($context['mode']!=='class')return [];
-    $keys=array_fill_keys(array_map(fn($w)=>cpNormalize($w[0]),$context['words']??[]),true);
-    return array_values(array_filter($rows,fn($row)=>is_array($row)&&is_string($row[0]??null)&&isset($keys[cpNormalize($row[0])])));
+    $approved=[];foreach($context['words']??[] as $word)$approved[cpNormalize($word[0])]=$word;
+    $filtered=[];foreach($rows as $row)if(is_array($row)&&is_string($row[0]??null)&&isset($approved[cpNormalize($row[0])])){$canonical=$approved[cpNormalize($row[0])];if(!array_key_exists(3,$canonical)&&array_key_exists(3,$row))$canonical[3]=$row[3];$filtered[]=$canonical;}
+    return $filtered;
 }
 function cpFilterTrainingContent(array $content,array $context):array{
     if($context['mode']==='legacy')return $content;

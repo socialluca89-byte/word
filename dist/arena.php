@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 if (!defined('WORDYLAND_BOOTSTRAPPED')) { http_response_code(404); exit; }
+// This module is installed before api/platform during the managed release.
+require_once __DIR__ . '/class-program.php';
 $db->exec('CREATE TABLE IF NOT EXISTS duels (
  id TEXT PRIMARY KEY, challenger INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
  opponent INTEGER NOT NULL REFERENCES profiles(id) ON DELETE CASCADE, category TEXT NOT NULL,
@@ -46,10 +48,11 @@ function duelView(PDO $db, array $d, int $pid): array {
     $mine=one($db,'SELECT step,score FROM duel_players WHERE duel=? AND profile=?',[$d['id'],$pid]);
     $rival=one($db,'SELECT step,score FROM duel_players WHERE duel=? AND profile=?',[$d['id'],$other]);
     $total=count(json_decode($d['questions'],true));
+    $program=cpSessionMetadata($db,$pid,'duel',$d['id']);
     return ['id'=>$d['id'],'opponent'=>$other,'nickname'=>$p['nickname'],'category'=>$d['category'],'state'=>$d['state'],
         'activity'=>$d['activity'],'incoming'=>(int)$d['opponent']===$pid,'step'=>(int)$mine['step'],'score'=>(int)$mine['score'],
         'rivalScore'=>$d['state']==='completed'?(int)$rival['score']:null,'rivalDone'=>(int)$rival['step']===$total,
-        'total'=>$total,'expiresAt'=>(int)$d['expires_at']]+gameProgramMetadata($db,$pid,'duel',$d['id']);
+        'total'=>$total,'expiresAt'=>(int)$d['expires_at']]+($program===null?[]:['program'=>$program]);
 }
 $duelActions=['arena','duel','duel-create','duel-accept','duel-decline','duel-cancel','duel-answer'];
 if (!in_array($action,$duelActions,true)) return;
@@ -90,7 +93,9 @@ if ($action==='duel-create') {
     limitAttempts($db,'duels:'.$pid,20);
     $db->exec('BEGIN IMMEDIATE');
     $context=cpResolveDuelContext($db,$pid,$other,$club,$body);cpRequirePlayable($context);
-    $approved=gameProgramWords($category==='program'?($context['words']??[]):$curriculum[$category],$context);
+    $approved=cpFilterWordPool($category==='program'?($context['words']??[]):$curriculum[$category],$context);
+    if(!$approved&&($context['mode']??'legacy')==='class')$approved=cpFilterWordPool($context['words']??[],$context);
+    if(!$approved){$db->exec('ROLLBACK');fail('Il programma della classe non contiene parole per questa attività. Chiedi all’adulto di assegnare una scheda.',409);}
     $unique=[];foreach ($approved as $w) $unique[normalWord($w[0])]=$w;
     $pool=array_values($unique); shuffle($pool); $questions=[];
     if(($context['mode']??'legacy')==='class'&&count($pool)<2){$db->exec('ROLLBACK');fail('Per questa sfida servono almeno due parole diverse assegnate alla classe.',409);}

@@ -502,7 +502,8 @@ def main():
             checks.append('alphabet is explicitly assigned: planned has no effect and letters-only programmes include no words or grammar')
 
             # A reviewed private wording wins consistently over a public homonym.
-            override_rows = [['book', 'libro personale della scheda', '⭐']]
+            override_rows = [['book', 'libro personale della scheda', '⭐'],
+                             ['pen', 'penna personale della scheda', '🖊️']]
             override = post('owner', 'class-program-material-save', {
                 'club': first['id'], 'title': 'Synthetic approved wording override',
                 'words': override_rows, 'confirmed': True})['unit']
@@ -529,6 +530,51 @@ def main():
             assert state('learner') == canonical
             published_file.write_text(source)
             checks.append('private reviewed wording/icons override public homonyms consistently and survive later global catalog changes')
+
+            # A two-word class guarantees book is selected in a real saved quest.
+            minimal, _ = draft(first['id'], [{'id': override['id'], 'status': 'active'}],
+                               'Synthetic two-word mission pool', '2028/2029',
+                               expected=override_program['editVersion'])
+            publish(minimal)
+            post('owner', 'class-program-context', {'profile': profiles['owner'], 'club': first['id']})
+            two_word_context = state('owner')
+            assert len(two_word_context['words']) == 2
+            post('owner', 'study-save', {'profile': profiles['owner'],
+                'title': 'Synthetic stale source wording', 'confirmed': True,
+                'words': [['book', 'global meaning must not win', '📙'],
+                          ['pen', 'global pen meaning must not win', '🌐'],
+                          ['cat', 'unassigned word must not enter', '🐈']]})
+            study = database.execute('SELECT id FROM studies WHERE profile_id=? ORDER BY id DESC LIMIT 1',
+                                     (profiles['owner'],)).fetchone()[0]
+            mission = post('owner', 'quest-start', {'profile': profiles['owner'],
+                'study': study, 'activity': 'kart', **two_word_context['expected']})
+            plan = json.loads(database.execute('SELECT questions FROM quests WHERE token=?',
+                                              (mission['token'],)).fetchone()[0])
+            expected_words = {row[0]: row for row in override_rows}
+            assert len(plan) == 2 and {question['word'] for question in plan} == {'book', 'pen'}
+            for question in plan:
+                canonical_row = expected_words[question['word']]
+                assert [question['word'], question['translation'], question['emoji']] == canonical_row
+                for option in question.get('options', []):
+                    assert option[:3] == expected_words[option[0]]
+
+            # Pure helper oracle also covers trusted visual metadata and legacy identity.
+            probe = '''define('WORDYLAND_BOOTSTRAPPED',true);
+            $db=new PDO('sqlite::memory:');$db->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE,PDO::FETCH_ASSOC);
+            $db->exec('CREATE TABLE accounts(id INTEGER PRIMARY KEY,role TEXT);CREATE TABLE clubs(id INTEGER PRIMARY KEY,owner_id INTEGER);CREATE TABLE profiles(id INTEGER PRIMARY KEY,account_id INTEGER);CREATE TABLE club_profiles(club_id INTEGER,profile_id INTEGER);');
+            $action='synthetic-pool-probe';require $argv[1];
+            $rows=[['BOOK','global','old',['type'=>'count','count'=>2]],['cat','global cat','old']];
+            $context=['mode'=>'class','words'=>[['book','libro personale della scheda','⭐']]];
+            $plain=cpFilterWordPool($rows,$context);
+            $context['words'][0][3]=['type'=>'count','count'=>3];
+            echo json_encode(['plain'=>$plain,'explicit'=>cpFilterWordPool($rows,$context),'legacy'=>cpFilterWordPool($rows,['mode'=>'legacy']),'blocked'=>cpFilterWordPool($rows,['mode'=>'blocked'])],JSON_UNESCAPED_UNICODE);'''
+            helper = json.loads(subprocess.run(command + ['-r', probe, str(Path(public, 'class-program.php'))],
+                                               check=True, capture_output=True, text=True).stdout)
+            assert helper['plain'] == [['book', 'libro personale della scheda', '⭐', {'type': 'count', 'count': 2}]]
+            assert helper['explicit'] == [['book', 'libro personale della scheda', '⭐', {'type': 'count', 'count': 3}]]
+            assert helper['legacy'] == [['BOOK', 'global', 'old', {'type': 'count', 'count': 2}], ['cat', 'global cat', 'old']]
+            assert helper['blocked'] == []
+            checks.append('mission pools use private canonical meanings/icons, preserve trusted visual metadata, exclude unassigned words and leave legacy unchanged')
 
             print(json.dumps({'status': 'passed', 'checks': checks, 'syntheticOnly': True}))
         finally:

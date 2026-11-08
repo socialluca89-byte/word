@@ -427,6 +427,23 @@ assert(context.picture('fixtureword','📘').includes('📘'),'Plain emoji remai
             assert rows('SELECT * FROM wallets WHERE profile_id=?', (profiles['owner'],))[0] == wallet_before
             assert scalar('SELECT COUNT(*) FROM rewards WHERE profile_id=?', (profiles['owner'],)) == reward_before
             checks.append('all five elf pranks retain identity with approved words or neutral draft toys; worksheet grammar is scoped, models/guided evidence persist and unassigned training/phonics never fall back or alter economy')
+
+            # The deployment copies arena before api/platform. It must be self-contained
+            # in that brief window, with the new module already installed first.
+            select(second['id'])
+            for filename in ['api.php', 'platform.php']:
+                previous = subprocess.check_output(['git', 'show',
+                    '7f03b579c14e647191779df685b6de4c45bd3beb:dist/' + filename])
+                (public / filename).write_bytes(previous)
+            hybrid_arena = get('owner', f"arena&profile={profiles['owner']}")
+            assert profiles['rival'] in {opponent['id'] for opponent in hybrid_arena['opponents']}
+            hybrid_duel = post('owner', 'duel-create', {'profile': profiles['owner'],
+                'opponent': profiles['rival'], 'category': 'program', **expected_b})['duel']
+            assert hybrid_duel['program']['club'] == second['id']
+            hybrid_plan = json.loads(scalar('SELECT questions FROM duels WHERE id=?', (hybrid_duel['id'],)))
+            assert {q['answer'] for q in hybrid_plan} <= approved_b
+            assert get('owner', f"duel&profile={profiles['owner']}&duel={hybrid_duel['id']}")['duel']['id'] == hybrid_duel['id']
+            checks.append('mixed deployment with old api/platform and new arena/module can list, create and resume an exactly scoped duel')
             print(json.dumps({'status': 'passed', 'checks': checks, 'syntheticOnly': True}))
         finally:
             server.terminate()
