@@ -21,6 +21,8 @@ function communityPlayedSql(PDO $db): string {
         'training_sessions'=>'errors>0',
         'training_grammar_sessions'=>'errors>0',
         'training_worksheet_sessions'=>'errors>0',
+        'training_best2_word_sessions'=>'errors>0',
+        'training_best2_grammar_sessions'=>'errors>0',
         'phonics_practice'=>'skill!="guided-model" AND (completed>0 OR errors>0)',
         'phonics_sessions'=>'errors>0'
     ] as $table=>$answered)if(isset($tables[$table]))$parts[]='EXISTS(SELECT 1 FROM '.$table.' ca WHERE ca.profile_id=p.id AND ('.$answered.'))';

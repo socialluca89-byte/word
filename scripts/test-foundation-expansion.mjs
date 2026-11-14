@@ -17,11 +17,11 @@ pass('legacy43words/sevenpacks/letters/phonics/stickers preserved');
 assert.equal(createHash('sha256').update(JSON.stringify(content.foundationWords.slice(0,53))).digest('hex'),'dec36391576566feaae234617862fb520eff7f7dba83322c10b587e5fe3bbb1c','All53previous teacher word records stay exact');
 assert.equal(createHash('sha256').update(JSON.stringify(content.wordPacks.slice(0,8))).digest('hex'),'56d1ca7fded1f2e3804ad8e3433d1f2c94864fa887be3263b60da162e92d4d83','All8previous word packs stay exact');
 
-assert.equal(content.foundationWords.length,64);
-assert.equal(content.wordPacks.length,9);
+assert.equal(content.foundationWords.length,71);
+assert.equal(content.wordPacks.length,10);
 const words=new Map(content.foundationWords.map(w=>[w.id,w]));
-assert.equal(words.size,64,'No repeated word IDs');
-assert.equal(new Set(content.wordPacks.map(p=>p.id)).size,9);
+assert.equal(words.size,71,'No repeated word IDs');
+assert.equal(new Set(content.wordPacks.map(p=>p.id)).size,10);
 for(const p of content.wordPacks){assert(p.words.length>0);assert.equal(new Set(p.words).size,p.words.length);for(const id of p.words)assert(words.has(id),'Every referenced word exists: '+id);}
 const numbers=['one','two','three','four','five','six','seven','eight','nine','ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen','twenty'];
 const italian=['undici','dodici','tredici','quattordici','quindici','sedici','diciassette','diciotto','diciannove','venti'];

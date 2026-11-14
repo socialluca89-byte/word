@@ -21,7 +21,7 @@ const content=JSON.parse(fs.readFileSync('dist/training.json','utf8'));
    const first=await p.evaluate(()=>({id:document.activeElement.dataset.trainingBlock,hash:location.hash,box:(()=>{const r=document.querySelector('[data-training-block=ae]').getBoundingClientRect();return {top:r.top,bottom:r.bottom,height:r.height};})()}));
    record('letters-focus-'+width,first.id==='ae'&&first.hash==='#allenamento'&&first.box.top>=0&&first.box.bottom<=844,first);
    await p.keyboard.press('Tab');record('letters-next-tab-'+width,await p.evaluate(()=>document.activeElement.dataset.trainingBlock==='bc'));
-   record('all-paths-retained-'+width,await p.locator('[data-training-block]').count()===13&&await p.locator('[data-training-pack]').count()===9&&await p.locator('.alphabetGrid button').count()===26);
+   record('all-paths-retained-'+width,await p.locator('[data-training-block]').count()===13&&await p.locator('[data-training-pack]').count()===10&&await p.locator('.alphabetGrid button').count()===26);
    record('training-no-page-overflow-'+width,await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   }
   await p.setViewportSize({width:390,height:844});await p.locator('#openPhonics').click();await p.locator('[data-phonics-group=s]').click();

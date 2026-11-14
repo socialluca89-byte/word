@@ -3,7 +3,10 @@ from pathlib import Path
 import http.cookiejar,io,json,math,os,secrets,shlex,socket,sqlite3,subprocess,tarfile,tempfile,time,urllib.error,urllib.request
 
 content=json.loads(Path('dist/training.json').read_text())
-grammar=content['grammarLessons'];packs={p['id']:p for p in grammar['packs']};nouns={n['id']:n for n in grammar['nouns']}
+full_grammar=content['grammarLessons'];assert len(full_grammar['nouns'])==34 and len(full_grammar['packs'])==14 and sum(len(p['cases']) for p in full_grammar['packs'])==103
+previous3614=json.loads(subprocess.check_output(['git','show','3614c4476101814b307dd72a80b935ca7883e2fd:dist/training.json'],text=True))['grammarLessons']
+assert full_grammar['nouns'][:30]==previous3614['nouns'] and full_grammar['packs'][:11]==previous3614['packs']
+grammar={**full_grammar,'nouns':full_grammar['nouns'][:30],'packs':full_grammar['packs'][:11]};packs={p['id']:p for p in grammar['packs']};nouns={n['id']:n for n in grammar['nouns']}
 legacy=json.loads(subprocess.check_output(['git','show','7f03b579c14e647191779df685b6de4c45bd3beb:dist/training.json'],text=True))['grammarLessons']
 old_packs={'number','plurals','articles','sentences','questions'}
 assert grammar['nouns'][:16]==legacy['nouns'] and grammar['packs'][:5]==legacy['packs'], 'The previous40cases/16nouns stay byte-equivalent as structured data'

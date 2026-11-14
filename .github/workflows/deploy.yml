@@ -43,6 +43,7 @@ jobs:
           node scripts/test-foundation-expansion.mjs
           node scripts/test-grammar-content.mjs
           node scripts/test-worksheet-content.mjs
+          node scripts/test-best2-materials-content.mjs
       - name: Verify account API and database isolation
         run: |
           for f in dist/*.php; do php -l "$f"; done
@@ -80,6 +81,7 @@ jobs:
           python3 scripts/test-grammar.py
           python3 scripts/test-class-program.py
           python3 scripts/test-class-program-adapters.py
+          python3 scripts/test-best2-materials.py
           python3 scripts/test-phonics.py
           python3 scripts/test-letter-progression.py
           python3 scripts/test-training-guidance.py
@@ -100,6 +102,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
@@ -129,7 +132,7 @@ jobs:
           WORDYLAND_PLAYWRIGHT_MODULE: /tmp/wordyland-browser-deps/node_modules/playwright
         run: |
           export WORDYLAND_CHROMIUM=$(node -p "require(process.env.WORDYLAND_PLAYWRIGHT_MODULE).chromium.executablePath()")
-          for check in class-program-offline class-program grammar-aids grammar visual-journey classroom-access learning-entry training-memory interaction-focus training-guidance guardian learning-experience account-resilience duel-identity offline-audio pdf-scan ocr materials learning resume access email autonomy review parent-summary tiles wallet training spelling letter-progression foundations offline-training offline-letters phonics; do bash scripts/test-browser.sh "$check"; done
+          for check in best2-materials class-program-offline class-program grammar-aids grammar visual-journey classroom-access learning-entry training-memory interaction-focus training-guidance guardian learning-experience account-resilience duel-identity offline-audio pdf-scan ocr materials learning resume access email autonomy review parent-summary tiles wallet training spelling letter-progression foundations offline-training offline-letters phonics; do bash scripts/test-browser.sh "$check"; done
 
   deploy:
     needs: [verify, browser]

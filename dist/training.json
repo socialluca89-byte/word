@@ -469,6 +469,21 @@
         "chair"
       ],
       "wordOnly": true
+    },
+    {
+      "id": "best2-new-words",
+      "title": "Best 2 · Le nuove parole",
+      "icon": "📚",
+      "words": [
+        "slide",
+        "scooter",
+        "swing",
+        "shelf",
+        "cupboard",
+        "computer",
+        "tree"
+      ],
+      "wordOnly": true
     }
   ],
   "foundationWords": [
@@ -1047,6 +1062,76 @@
       "phrase": "It's a chair.",
       "phraseMeaning": "È una sedia.",
       "gap": "It's a ___."
+    },
+    {
+      "id": "slide",
+      "meaning": "scivolo",
+      "emoji": "🛝",
+      "topic": "best2-materiale-2026-11-14",
+      "phrase": "slide",
+      "phraseMeaning": "scivolo",
+      "gap": "___",
+      "wordOnly": true
+    },
+    {
+      "id": "scooter",
+      "meaning": "monopattino",
+      "emoji": "🛴",
+      "topic": "best2-materiale-2026-11-14",
+      "phrase": "scooter",
+      "phraseMeaning": "monopattino",
+      "gap": "___",
+      "wordOnly": true
+    },
+    {
+      "id": "swing",
+      "meaning": "altalena",
+      "emoji": "🪢",
+      "topic": "best2-materiale-2026-11-14",
+      "phrase": "swing",
+      "phraseMeaning": "altalena",
+      "gap": "___",
+      "wordOnly": true
+    },
+    {
+      "id": "shelf",
+      "meaning": "mensola",
+      "emoji": "📚",
+      "topic": "best2-materiale-2026-11-14",
+      "phrase": "shelf",
+      "phraseMeaning": "mensola",
+      "gap": "___",
+      "wordOnly": true
+    },
+    {
+      "id": "cupboard",
+      "meaning": "armadietto",
+      "emoji": "🗄️",
+      "topic": "best2-materiale-2026-11-14",
+      "phrase": "cupboard",
+      "phraseMeaning": "armadietto",
+      "gap": "___",
+      "wordOnly": true
+    },
+    {
+      "id": "computer",
+      "meaning": "computer",
+      "emoji": "💻",
+      "topic": "best2-materiale-2026-11-14",
+      "phrase": "computer",
+      "phraseMeaning": "computer",
+      "gap": "___",
+      "wordOnly": true
+    },
+    {
+      "id": "tree",
+      "meaning": "albero",
+      "emoji": "🌳",
+      "topic": "best2-materiale-2026-11-14",
+      "phrase": "tree",
+      "phraseMeaning": "albero",
+      "gap": "___",
+      "wordOnly": true
     }
   ],
   "phonics": {
@@ -1836,6 +1921,54 @@
         "singularAliases": [],
         "pluralAliases": [],
         "targetOnly": true
+      },
+      {
+        "id": "tree",
+        "singular": "tree",
+        "plural": "trees",
+        "article": "a",
+        "meaning": "albero",
+        "pluralMeaning": "alberi",
+        "art": "grammar-tree",
+        "singularAliases": [],
+        "pluralAliases": []
+      },
+      {
+        "id": "boy",
+        "singular": "boy",
+        "plural": "boys",
+        "article": "a",
+        "meaning": "bambino",
+        "pluralMeaning": "bambini",
+        "art": "grammar-boy",
+        "singularAliases": [],
+        "pluralAliases": []
+      },
+      {
+        "id": "hand",
+        "singular": "hand",
+        "plural": "hands",
+        "article": "a",
+        "meaning": "mano",
+        "pluralMeaning": "mani",
+        "art": "grammar-hand",
+        "singularAliases": [],
+        "pluralAliases": []
+      },
+      {
+        "id": "bookbag",
+        "singular": "bookbag",
+        "plural": "bookbags",
+        "article": "a",
+        "meaning": "zaino",
+        "pluralMeaning": "zaini",
+        "art": "bookbag",
+        "singularAliases": [
+          "book bag"
+        ],
+        "pluralAliases": [
+          "book bags"
+        ]
       }
     ],
     "packs": [
@@ -3610,6 +3743,618 @@
             "askedNoun": "car",
             "frame": "Yes, it ___.",
             "model": "Yes, it is."
+          }
+        ]
+      },
+      {
+        "id": "best2-what-questions",
+        "title": "Best 2 · What is this? / What are they?",
+        "icon": "❓",
+        "description": "Le domande delle nuove schede: riconosci una cosa o più cose e componi la risposta.",
+        "tip": "What is this? chiede una cosa. What are they? chiede più cose. Le risposte iniziano con It is oppure They are.",
+        "cases": [
+          {
+            "id": "best2-20261114-what-desk-one",
+            "noun": "desk",
+            "count": 1,
+            "task": "identify",
+            "prompt": "Osserva il disegno e rispondi alla domanda.",
+            "answer": "It is a desk.",
+            "aliases": [
+              "It's a desk."
+            ],
+            "explanation": "La domanda indica una sola cosa. Rispondiamo con It is (anche It’s): It is a desk.",
+            "choices": [],
+            "tokens": [
+              "It",
+              "is",
+              "a",
+              "desk."
+            ],
+            "audio": "What is this?",
+            "question": "What is this?",
+            "model": "It is a desk."
+          },
+          {
+            "id": "best2-20261114-what-desk-many",
+            "noun": "desk",
+            "count": 2,
+            "task": "identify",
+            "prompt": "Osserva il disegno e rispondi alla domanda.",
+            "answer": "They are desks.",
+            "aliases": [],
+            "explanation": "La domanda indica più cose. Rispondiamo con They are e la parola al plurale, senza a o an: They are desks.",
+            "choices": [],
+            "tokens": [
+              "They",
+              "are",
+              "desks."
+            ],
+            "audio": "What are they?",
+            "question": "What are they?",
+            "model": "They are desks."
+          },
+          {
+            "id": "best2-20261114-what-bookbag-one",
+            "noun": "bookbag",
+            "count": 1,
+            "task": "identify",
+            "prompt": "Osserva il disegno e rispondi alla domanda.",
+            "answer": "It is a bookbag.",
+            "aliases": [
+              "It's a bookbag.",
+              "It is a book bag.",
+              "It's a book bag."
+            ],
+            "explanation": "La domanda indica una sola cosa. Rispondiamo con It is (anche It’s): It is a bookbag.",
+            "choices": [],
+            "tokens": [
+              "It",
+              "is",
+              "a",
+              "bookbag."
+            ],
+            "audio": "What is this?",
+            "question": "What is this?",
+            "model": "It is a bookbag."
+          },
+          {
+            "id": "best2-20261114-what-bookbag-many",
+            "noun": "bookbag",
+            "count": 2,
+            "task": "identify",
+            "prompt": "Osserva il disegno e rispondi alla domanda.",
+            "answer": "They are bookbags.",
+            "aliases": [
+              "They are book bags."
+            ],
+            "explanation": "La domanda indica più cose. Rispondiamo con They are e la parola al plurale, senza a o an: They are bookbags.",
+            "choices": [],
+            "tokens": [
+              "They",
+              "are",
+              "bookbags."
+            ],
+            "audio": "What are they?",
+            "question": "What are they?",
+            "model": "They are bookbags."
+          },
+          {
+            "id": "best2-20261114-what-pencil-sharpener-one",
+            "noun": "pencil-sharpener",
+            "count": 1,
+            "task": "identify",
+            "prompt": "Osserva il disegno e rispondi alla domanda.",
+            "answer": "It is a pencil sharpener.",
+            "aliases": [
+              "It's a pencil sharpener."
+            ],
+            "explanation": "La domanda indica una sola cosa. Rispondiamo con It is (anche It’s): It is a pencil sharpener.",
+            "choices": [],
+            "tokens": [
+              "It",
+              "is",
+              "a",
+              "pencil",
+              "sharpener."
+            ],
+            "audio": "What is this?",
+            "question": "What is this?",
+            "model": "It is a pencil sharpener."
+          },
+          {
+            "id": "best2-20261114-what-pencil-sharpener-many",
+            "noun": "pencil-sharpener",
+            "count": 3,
+            "task": "identify",
+            "prompt": "Osserva il disegno e rispondi alla domanda.",
+            "answer": "They are pencil sharpeners.",
+            "aliases": [],
+            "explanation": "La domanda indica più cose. Rispondiamo con They are e la parola al plurale, senza a o an: They are pencil sharpeners.",
+            "choices": [],
+            "tokens": [
+              "They",
+              "are",
+              "pencil",
+              "sharpeners."
+            ],
+            "audio": "What are they?",
+            "question": "What are they?",
+            "model": "They are pencil sharpeners."
+          },
+          {
+            "id": "best2-20261114-what-pen-one",
+            "noun": "pen",
+            "count": 1,
+            "task": "identify",
+            "prompt": "Osserva il disegno e rispondi alla domanda.",
+            "answer": "It is a pen.",
+            "aliases": [
+              "It's a pen."
+            ],
+            "explanation": "La domanda indica una sola cosa. Rispondiamo con It is (anche It’s): It is a pen.",
+            "choices": [],
+            "tokens": [
+              "It",
+              "is",
+              "a",
+              "pen."
+            ],
+            "audio": "What is this?",
+            "question": "What is this?",
+            "model": "It is a pen."
+          },
+          {
+            "id": "best2-20261114-what-pen-many",
+            "noun": "pen",
+            "count": 2,
+            "task": "identify",
+            "prompt": "Osserva il disegno e rispondi alla domanda.",
+            "answer": "They are pens.",
+            "aliases": [],
+            "explanation": "La domanda indica più cose. Rispondiamo con They are e la parola al plurale, senza a o an: They are pens.",
+            "choices": [],
+            "tokens": [
+              "They",
+              "are",
+              "pens."
+            ],
+            "audio": "What are they?",
+            "question": "What are they?",
+            "model": "They are pens."
+          },
+          {
+            "id": "best2-20261114-what-apple-one",
+            "noun": "apple",
+            "count": 1,
+            "task": "identify",
+            "prompt": "Osserva il disegno e rispondi alla domanda.",
+            "answer": "It's an apple.",
+            "aliases": [
+              "It is an apple."
+            ],
+            "explanation": "La domanda indica una sola cosa. Rispondiamo con It is (anche It’s): It's an apple.",
+            "choices": [],
+            "tokens": [
+              "It's",
+              "an",
+              "apple."
+            ],
+            "audio": "What's this?",
+            "question": "What's this?",
+            "model": "It's an apple."
+          },
+          {
+            "id": "best2-20261114-what-apple-many",
+            "noun": "apple",
+            "count": 3,
+            "task": "identify",
+            "prompt": "Osserva il disegno e rispondi alla domanda.",
+            "answer": "They are apples.",
+            "aliases": [],
+            "explanation": "La domanda indica più cose. Rispondiamo con They are e la parola al plurale, senza a o an: They are apples.",
+            "choices": [],
+            "tokens": [
+              "They",
+              "are",
+              "apples."
+            ],
+            "audio": "What are they?",
+            "question": "What are they?",
+            "model": "They are apples."
+          }
+        ]
+      },
+      {
+        "id": "best2-this-these",
+        "title": "Best 2 · This is / These are",
+        "icon": "👉",
+        "description": "Mele, palle, cani e alberi: scegli l’inizio, componi la frase e scrivila.",
+        "tip": "Per una cosa usiamo This is. Per più cose usiamo These are e il plurale, senza a o an.",
+        "cases": [
+          {
+            "id": "best2-20261114-this-apple-one",
+            "noun": "apple",
+            "count": 1,
+            "task": "demonstrative",
+            "prompt": "Scegli This is oppure These are.",
+            "answer": "This is an apple.",
+            "aliases": [],
+            "explanation": "C’è una sola cosa: iniziamo con This is. This is an apple.",
+            "choices": [
+              "This is",
+              "These are"
+            ],
+            "tokens": [
+              "This",
+              "is",
+              "an",
+              "apple."
+            ],
+            "audio": "apple",
+            "prefix": "This is",
+            "ending": "an apple.",
+            "model": "This is an apple."
+          },
+          {
+            "id": "best2-20261114-this-apple-many",
+            "noun": "apple",
+            "count": 2,
+            "task": "demonstrative",
+            "prompt": "Scegli This is oppure These are.",
+            "answer": "These are apples.",
+            "aliases": [],
+            "explanation": "Ci sono più cose: iniziamo con These are e usiamo il plurale, senza a o an. These are apples.",
+            "choices": [
+              "This is",
+              "These are"
+            ],
+            "tokens": [
+              "These",
+              "are",
+              "apples."
+            ],
+            "audio": "apple",
+            "prefix": "These are",
+            "ending": "apples.",
+            "model": "These are apples."
+          },
+          {
+            "id": "best2-20261114-this-ball-one",
+            "noun": "ball",
+            "count": 1,
+            "task": "demonstrative",
+            "prompt": "Scegli This is oppure These are.",
+            "answer": "This is a ball.",
+            "aliases": [],
+            "explanation": "C’è una sola cosa: iniziamo con This is. This is a ball.",
+            "choices": [
+              "This is",
+              "These are"
+            ],
+            "tokens": [
+              "This",
+              "is",
+              "a",
+              "ball."
+            ],
+            "audio": "ball",
+            "prefix": "This is",
+            "ending": "a ball.",
+            "model": "This is a ball."
+          },
+          {
+            "id": "best2-20261114-this-ball-many",
+            "noun": "ball",
+            "count": 2,
+            "task": "demonstrative",
+            "prompt": "Scegli This is oppure These are.",
+            "answer": "These are balls.",
+            "aliases": [],
+            "explanation": "Ci sono più cose: iniziamo con These are e usiamo il plurale, senza a o an. These are balls.",
+            "choices": [
+              "This is",
+              "These are"
+            ],
+            "tokens": [
+              "These",
+              "are",
+              "balls."
+            ],
+            "audio": "ball",
+            "prefix": "These are",
+            "ending": "balls.",
+            "model": "These are balls."
+          },
+          {
+            "id": "best2-20261114-this-dog-one",
+            "noun": "dog",
+            "count": 1,
+            "task": "demonstrative",
+            "prompt": "Scegli This is oppure These are.",
+            "answer": "This is a dog.",
+            "aliases": [],
+            "explanation": "C’è una sola cosa: iniziamo con This is. This is a dog.",
+            "choices": [
+              "This is",
+              "These are"
+            ],
+            "tokens": [
+              "This",
+              "is",
+              "a",
+              "dog."
+            ],
+            "audio": "dog",
+            "prefix": "This is",
+            "ending": "a dog.",
+            "model": "This is a dog."
+          },
+          {
+            "id": "best2-20261114-this-dog-many",
+            "noun": "dog",
+            "count": 2,
+            "task": "demonstrative",
+            "prompt": "Scegli This is oppure These are.",
+            "answer": "These are dogs.",
+            "aliases": [],
+            "explanation": "Ci sono più cose: iniziamo con These are e usiamo il plurale, senza a o an. These are dogs.",
+            "choices": [
+              "This is",
+              "These are"
+            ],
+            "tokens": [
+              "These",
+              "are",
+              "dogs."
+            ],
+            "audio": "dog",
+            "prefix": "These are",
+            "ending": "dogs.",
+            "model": "These are dogs."
+          },
+          {
+            "id": "best2-20261114-this-tree-one",
+            "noun": "tree",
+            "count": 1,
+            "task": "demonstrative",
+            "prompt": "Scegli This is oppure These are.",
+            "answer": "This is a tree.",
+            "aliases": [],
+            "explanation": "C’è una sola cosa: iniziamo con This is. This is a tree.",
+            "choices": [
+              "This is",
+              "These are"
+            ],
+            "tokens": [
+              "This",
+              "is",
+              "a",
+              "tree."
+            ],
+            "audio": "tree",
+            "prefix": "This is",
+            "ending": "a tree.",
+            "model": "This is a tree."
+          },
+          {
+            "id": "best2-20261114-this-tree-many",
+            "noun": "tree",
+            "count": 2,
+            "task": "demonstrative",
+            "prompt": "Scegli This is oppure These are.",
+            "answer": "These are trees.",
+            "aliases": [],
+            "explanation": "Ci sono più cose: iniziamo con These are e usiamo il plurale, senza a o an. These are trees.",
+            "choices": [
+              "This is",
+              "These are"
+            ],
+            "tokens": [
+              "These",
+              "are",
+              "trees."
+            ],
+            "audio": "tree",
+            "prefix": "These are",
+            "ending": "trees.",
+            "model": "These are trees."
+          }
+        ]
+      },
+      {
+        "id": "best2-it-they-sentences",
+        "title": "Best 2 · Scriviamo It is / They are",
+        "icon": "✏️",
+        "description": "Le frasi del quaderno con matite, temperamatite, banchi, bambini e mani.",
+        "tip": "Osserva il disegno: una cosa richiede It is, più cose richiedono They are. Puoi guardare il modello e riprovare.",
+        "cases": [
+          {
+            "id": "best2-20261114-statement-pencil-one",
+            "noun": "pencil",
+            "count": 1,
+            "task": "sentence",
+            "prompt": "Componi la frase per il disegno.",
+            "answer": "It is a pencil.",
+            "aliases": [
+              "It's a pencil."
+            ],
+            "explanation": "C’è una sola cosa: iniziamo con It is e usiamo a. It is a pencil.",
+            "choices": [],
+            "tokens": [
+              "It",
+              "is",
+              "a",
+              "pencil."
+            ],
+            "audio": "pencil"
+          },
+          {
+            "id": "best2-20261114-statement-pencil-many",
+            "noun": "pencil",
+            "count": 3,
+            "task": "sentence",
+            "prompt": "Componi la frase per il disegno.",
+            "answer": "They are pencils.",
+            "aliases": [],
+            "explanation": "Ci sono più cose: iniziamo con They are e usiamo il plurale, senza a o an. They are pencils.",
+            "choices": [],
+            "tokens": [
+              "They",
+              "are",
+              "pencils."
+            ],
+            "audio": "pencil"
+          },
+          {
+            "id": "best2-20261114-statement-pencil-sharpener-one",
+            "noun": "pencil-sharpener",
+            "count": 1,
+            "task": "sentence",
+            "prompt": "Componi la frase per il disegno.",
+            "answer": "It is a pencil sharpener.",
+            "aliases": [
+              "It's a pencil sharpener."
+            ],
+            "explanation": "C’è una sola cosa: iniziamo con It is e usiamo a. It is a pencil sharpener.",
+            "choices": [],
+            "tokens": [
+              "It",
+              "is",
+              "a",
+              "pencil",
+              "sharpener."
+            ],
+            "audio": "pencil sharpener"
+          },
+          {
+            "id": "best2-20261114-statement-pencil-sharpener-many",
+            "noun": "pencil-sharpener",
+            "count": 3,
+            "task": "sentence",
+            "prompt": "Componi la frase per il disegno.",
+            "answer": "They are pencil sharpeners.",
+            "aliases": [],
+            "explanation": "Ci sono più cose: iniziamo con They are e usiamo il plurale, senza a o an. They are pencil sharpeners.",
+            "choices": [],
+            "tokens": [
+              "They",
+              "are",
+              "pencil",
+              "sharpeners."
+            ],
+            "audio": "pencil sharpener"
+          },
+          {
+            "id": "best2-20261114-statement-desk-one",
+            "noun": "desk",
+            "count": 1,
+            "task": "sentence",
+            "prompt": "Componi la frase per il disegno.",
+            "answer": "It is a desk.",
+            "aliases": [
+              "It's a desk."
+            ],
+            "explanation": "C’è una sola cosa: iniziamo con It is e usiamo a. It is a desk.",
+            "choices": [],
+            "tokens": [
+              "It",
+              "is",
+              "a",
+              "desk."
+            ],
+            "audio": "desk"
+          },
+          {
+            "id": "best2-20261114-statement-desk-many",
+            "noun": "desk",
+            "count": 3,
+            "task": "sentence",
+            "prompt": "Componi la frase per il disegno.",
+            "answer": "They are desks.",
+            "aliases": [],
+            "explanation": "Ci sono più cose: iniziamo con They are e usiamo il plurale, senza a o an. They are desks.",
+            "choices": [],
+            "tokens": [
+              "They",
+              "are",
+              "desks."
+            ],
+            "audio": "desk"
+          },
+          {
+            "id": "best2-20261114-statement-boy-one",
+            "noun": "boy",
+            "count": 1,
+            "task": "sentence",
+            "prompt": "Componi la frase per il disegno.",
+            "answer": "It is a boy.",
+            "aliases": [
+              "It's a boy."
+            ],
+            "explanation": "C’è una sola cosa: iniziamo con It is e usiamo a. It is a boy.",
+            "choices": [],
+            "tokens": [
+              "It",
+              "is",
+              "a",
+              "boy."
+            ],
+            "audio": "boy"
+          },
+          {
+            "id": "best2-20261114-statement-boy-many",
+            "noun": "boy",
+            "count": 2,
+            "task": "sentence",
+            "prompt": "Componi la frase per il disegno.",
+            "answer": "They are boys.",
+            "aliases": [],
+            "explanation": "Ci sono più cose: iniziamo con They are e usiamo il plurale, senza a o an. They are boys.",
+            "choices": [],
+            "tokens": [
+              "They",
+              "are",
+              "boys."
+            ],
+            "audio": "boy"
+          },
+          {
+            "id": "best2-20261114-statement-hand-one",
+            "noun": "hand",
+            "count": 1,
+            "task": "sentence",
+            "prompt": "Componi la frase per il disegno.",
+            "answer": "It is a hand.",
+            "aliases": [
+              "It's a hand."
+            ],
+            "explanation": "C’è una sola cosa: iniziamo con It is e usiamo a. It is a hand.",
+            "choices": [],
+            "tokens": [
+              "It",
+              "is",
+              "a",
+              "hand."
+            ],
+            "audio": "hand"
+          },
+          {
+            "id": "best2-20261114-statement-hand-many",
+            "noun": "hand",
+            "count": 2,
+            "task": "sentence",
+            "prompt": "Componi la frase per il disegno.",
+            "answer": "They are hands.",
+            "aliases": [],
+            "explanation": "Ci sono più cose: iniziamo con They are e usiamo il plurale, senza a o an. They are hands.",
+            "choices": [],
+            "tokens": [
+              "They",
+              "are",
+              "hands."
+            ],
+            "audio": "hand"
           }
         ]
       }

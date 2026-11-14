@@ -11,8 +11,8 @@ const content = fs.readFileSync('dist/training.json');
 const currentContent=JSON.parse(content), catalog=currentContent.grammarLessons;
 const previous={...currentContent,foundationWords:currentContent.foundationWords.slice(0,53),wordPacks:currentContent.wordPacks.slice(0,8),grammarLessons:{...catalog,nouns:catalog.nouns.slice(0,16),packs:catalog.packs.slice(0,5)}};
 assert.equal(crypto.createHash('sha256').update(JSON.stringify(previous)).digest('hex'),'63b58d5e3d38489d1ab4e21e959e9e42942d44673f1918c09068be64de3a51b8','All previous published teacher content stays exact; Nov8 appends only');
-assert.equal(catalog.nouns.length,30);
-assert.equal(catalog.packs.reduce((sum,pack)=>sum+pack.cases.length,0),75);
+assert.equal(catalog.nouns.length,34);
+assert.equal(catalog.packs.reduce((sum,pack)=>sum+pack.cases.length,0),103);
 const captures = process.env.WORDYLAND_GRAMMAR_AIDS_SCREENSHOTS;
 if (captures) {
   assert(['/workspace/', '/tmp/'].some(root => path.resolve(captures).startsWith(root)));
@@ -66,7 +66,7 @@ if (captures) {
       localStorage.setItem(key, JSON.stringify(data));
     }, {key, ids: priorities, all: catalog.packs.flatMap(pack => pack.cases.map(row => row.id))});
     await p.locator('#openGrammarTraining').click(); await p.locator('#grammarMenu').waitFor();
-    assert.deepEqual(await p.locator('[data-grammar-pack]').evaluateAll(nodes => nodes.map(node => node.dataset.grammarPack)), ['number','plurals','articles','sentences','questions','toys-yes-no','whats-this','it-they-choice','it-they-write','is-this','short-answer-gap'], 'All five old and six new teacher paths remain reachable');
+    assert.deepEqual(await p.locator('[data-grammar-pack]').evaluateAll(nodes => nodes.map(node => node.dataset.grammarPack)), ['number','plurals','articles','sentences','questions','toys-yes-no','whats-this','it-they-choice','it-they-write','is-this','short-answer-gap','best2-what-questions','best2-this-these','best2-it-they-sentences'], 'All previous eleven and three new teacher paths remain reachable');
   }
   async function start(p, pack) {
     await p.locator('[data-grammar-pack="' + pack + '"]').click();

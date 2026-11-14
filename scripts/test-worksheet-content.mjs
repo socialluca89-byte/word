@@ -7,13 +7,13 @@ import vm from 'node:vm';
 const content=JSON.parse(fs.readFileSync('dist/training.json','utf8'));
 const grammar=content.grammarLessons;
 const nouns=new Map(grammar.nouns.map(noun=>[noun.id,noun]));
-const packs=grammar.packs.slice(5);
+const packs=grammar.packs.slice(5,11);
 assert.deepEqual(packs.map(pack=>pack.id),['toys-yes-no','whats-this','it-they-choice','it-they-write','is-this','short-answer-gap']);
 assert.deepEqual(packs.map(pack=>pack.cases.length),[5,6,6,6,8,4]);
 const all=packs.flatMap(pack=>pack.cases);
 assert.equal(all.length,35);
-assert.equal(new Set(grammar.packs.flatMap(pack=>pack.cases.map(row=>row.id))).size,75);
-assert.deepEqual(grammar.nouns.slice(16).map(noun=>noun.id),['bag','rubber','doll','car','ball','puzzle','teddy','rabbit','cat','rat','dog','lizard','hat','pencil-case']);
+assert.equal(new Set(grammar.packs.slice(0,11).flatMap(pack=>pack.cases.map(row=>row.id))).size,75);
+assert.deepEqual(grammar.nouns.slice(16,30).map(noun=>noun.id),['bag','rubber','doll','car','ball','puzzle','teddy','rabbit','cat','rat','dog','lizard','hat','pencil-case']);
 assert.equal(nouns.get('rubber').article,'a');
 assert.equal(nouns.get('rubber').art,'eraser');
 assert.equal(nouns.get('bag').art,'bookbag');
@@ -85,9 +85,9 @@ for(const row of all){
 assert(!all.some(row=>row.task==='plural'));
 assert.deepEqual(new Set(all.filter(row=>row.count>1).map(row=>nouns.get(row.noun).plural)),new Set(['books','pens','dolls','dogs','lizards','bags']));
 
-const foundation=content.foundationWords.slice(53);
+const foundation=content.foundationWords.slice(53,64);
 assert.deepEqual(foundation.map(word=>word.id),['rubber','doll','car','ball','puzzle','teddy','rabbit','rat','lizard','hat','chair']);
-assert.equal(content.foundationWords.length,64);assert(!content.foundationWords.some(word=>word.id==='pencil case'));
+assert.equal(content.foundationWords.slice(0,64).length,64);assert(!content.foundationWords.some(word=>word.id==='pencil case'));
 for(const word of foundation){assert.equal(word.phrase,"It's a "+word.id+'.');assert.equal(word.gap,"It's a ___.");}
 const wordPack=content.wordPacks[8];
 assert.equal(wordPack.id,'worksheet-nov8');assert.equal(wordPack.wordOnly,true);
@@ -116,7 +116,7 @@ const canonical=vm.runInNewContext('('+source.slice(canonicalStart,canonicalEnd)
  MAX_AGE:604800000,trackValid:value=>/^grammar:(?:number|plurals|articles|sentences|questions|toys-yes-no|whats-this|it-they-choice|it-they-write|is-this|short-answer-gap)$/.test(value||''),
  phases:helpers.phases,phaseMode:helpers.phaseMode
 });
-for(const pack of grammar.packs){
+for(const pack of grammar.packs.slice(0,11)){
  const row=pack.cases[0],noun=nouns.get(row.noun),sequence=[...helpers.phases(row)];
  const plan=sequence.map(phase=>({item:'grammar:'+row.id,mode:helpers.phaseMode(phase),grammar:{...row,nounData:noun,pack:pack.id,phase},answer:phase==='question-build'?row.question:row.answer,aliases:phase==='question-build'?[]:[...row.aliases],choices:[...row.choices],tokens:[...(phase==='question-build'?row.questionTokens:row.tokens)],topic:pack.title}));
  const frozen={token:'ab'.repeat(16),track:'grammar:'+pack.id,plan,step:1,total:plan.length,createdAt:Date.now(),hint:1,helped:true,errors:0,done:false};

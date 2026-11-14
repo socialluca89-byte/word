@@ -2,6 +2,11 @@
 import json,os,shlex,socket,sqlite3,subprocess,tempfile,time,urllib.error,urllib.request,http.cookiejar,datetime
 from pathlib import Path
 content=json.loads(Path('dist/training.json').read_text())
+# Preserve the exact legacy request/storage contract; Nov14 V3 has an independent full oracle.
+assert len(content['foundationWords'])==71 and len(content['wordPacks'])==10
+previous3614=json.loads(subprocess.check_output(['git','show','3614c4476101814b307dd72a80b935ca7883e2fd:dist/training.json'],text=True))
+assert content['foundationWords'][:64]==previous3614['foundationWords'] and content['wordPacks'][:9]==previous3614['wordPacks']
+content['foundationWords']=content['foundationWords'][:64];content['wordPacks']=content['wordPacks'][:9]
 assert len(content['words'])==6 and content['foundationWords'][:6]==content['words'],'Keep the public legacy catalog compatible with old cached clients'
 content['words']=content['foundationWords']
 assert [l['id'] for l in content['letters']]==list('ABCDEFGHIJKLMNOPQRSTUVWXYZ')

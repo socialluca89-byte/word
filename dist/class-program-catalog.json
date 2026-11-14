@@ -1,14 +1,239 @@
 {
   "version": 1,
   "units": [
-    {"id":"classroom-grammar","title":"Le schede della classe: uno, tanti e domande","source":"teacher-material-2026-11-06","grammarPacks":["number","plurals","articles","sentences","questions"],"wordPacks":[],"wordIds":[]},
-    {"id":"classroom-dictation","title":"Classroom: le dodici parole del dettato","source":"teacher-material-classroom","grammarPacks":[],"wordPacks":["classroom"],"wordIds":[]},
-    {"id":"toys-yes-no","title":"Is it…? I giocattoli della scheda","source":"teacher-material-2026-11-08-1","grammarPacks":["toys-yes-no"],"wordPacks":[],"wordIds":["doll","car","ball","puzzle","teddy"]},
-    {"id":"whats-this","title":"What’s this? Gli oggetti scolastici","source":"teacher-material-2026-11-08-2","grammarPacks":["whats-this"],"wordPacks":[],"wordIds":["bag","pencil","pen","rubber","book","desk"]},
-    {"id":"it-they-choice","title":"It is oppure They are: scegli","source":"teacher-material-2026-11-08-3","grammarPacks":["it-they-choice"],"wordPacks":[],"wordIds":["books","rabbit","pens","dolls","cat","rat"]},
-    {"id":"it-they-write","title":"It is oppure They are: completa","source":"teacher-material-2026-11-08-3","grammarPacks":["it-they-write"],"wordPacks":[],"wordIds":["car","dogs","lizards","bags","desk","hat"]},
-    {"id":"is-this","title":"Is this…? Leggi e rispondi","source":"teacher-material-2026-11-08-4","grammarPacks":["is-this"],"wordPacks":[],"wordIds":["sharpener","pen","pencil","bag","notebook","rubber","book","desk","chair"]},
-    {"id":"short-answer-gap","title":"Yes, it is / No, it isn’t: completa","source":"teacher-material-2026-11-08-5","grammarPacks":["short-answer-gap"],"wordPacks":[],"wordIds":["puzzle","teddy","ball","doll","car"]},
-    {"id":"alphabet-it-en","title":"Nomi delle lettere IT/EN","source":"user-request-2026-10-25-alphabet-26-letters","grammarPacks":[],"wordPacks":[],"wordIds":[],"letterIds":["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"]}
+    {
+      "id": "classroom-grammar",
+      "title": "Le schede della classe: uno, tanti e domande",
+      "source": "teacher-material-2026-11-06",
+      "grammarPacks": [
+        "number",
+        "plurals",
+        "articles",
+        "sentences",
+        "questions"
+      ],
+      "wordPacks": [],
+      "wordIds": []
+    },
+    {
+      "id": "classroom-dictation",
+      "title": "Classroom: le dodici parole del dettato",
+      "source": "teacher-material-classroom",
+      "grammarPacks": [],
+      "wordPacks": [
+        "classroom"
+      ],
+      "wordIds": []
+    },
+    {
+      "id": "toys-yes-no",
+      "title": "Is it…? I giocattoli della scheda",
+      "source": "teacher-material-2026-11-08-1",
+      "grammarPacks": [
+        "toys-yes-no"
+      ],
+      "wordPacks": [],
+      "wordIds": [
+        "doll",
+        "car",
+        "ball",
+        "puzzle",
+        "teddy"
+      ]
+    },
+    {
+      "id": "whats-this",
+      "title": "What’s this? Gli oggetti scolastici",
+      "source": "teacher-material-2026-11-08-2",
+      "grammarPacks": [
+        "whats-this"
+      ],
+      "wordPacks": [],
+      "wordIds": [
+        "bag",
+        "pencil",
+        "pen",
+        "rubber",
+        "book",
+        "desk"
+      ]
+    },
+    {
+      "id": "it-they-choice",
+      "title": "It is oppure They are: scegli",
+      "source": "teacher-material-2026-11-08-3",
+      "grammarPacks": [
+        "it-they-choice"
+      ],
+      "wordPacks": [],
+      "wordIds": [
+        "books",
+        "rabbit",
+        "pens",
+        "dolls",
+        "cat",
+        "rat"
+      ]
+    },
+    {
+      "id": "it-they-write",
+      "title": "It is oppure They are: completa",
+      "source": "teacher-material-2026-11-08-3",
+      "grammarPacks": [
+        "it-they-write"
+      ],
+      "wordPacks": [],
+      "wordIds": [
+        "car",
+        "dogs",
+        "lizards",
+        "bags",
+        "desk",
+        "hat"
+      ]
+    },
+    {
+      "id": "is-this",
+      "title": "Is this…? Leggi e rispondi",
+      "source": "teacher-material-2026-11-08-4",
+      "grammarPacks": [
+        "is-this"
+      ],
+      "wordPacks": [],
+      "wordIds": [
+        "sharpener",
+        "pen",
+        "pencil",
+        "bag",
+        "notebook",
+        "rubber",
+        "book",
+        "desk",
+        "chair"
+      ]
+    },
+    {
+      "id": "short-answer-gap",
+      "title": "Yes, it is / No, it isn’t: completa",
+      "source": "teacher-material-2026-11-08-5",
+      "grammarPacks": [
+        "short-answer-gap"
+      ],
+      "wordPacks": [],
+      "wordIds": [
+        "puzzle",
+        "teddy",
+        "ball",
+        "doll",
+        "car"
+      ]
+    },
+    {
+      "id": "alphabet-it-en",
+      "title": "Nomi delle lettere IT/EN",
+      "source": "user-request-2026-10-25-alphabet-26-letters",
+      "grammarPacks": [],
+      "wordPacks": [],
+      "wordIds": [],
+      "letterIds": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "E",
+        "F",
+        "G",
+        "H",
+        "I",
+        "J",
+        "K",
+        "L",
+        "M",
+        "N",
+        "O",
+        "P",
+        "Q",
+        "R",
+        "S",
+        "T",
+        "U",
+        "V",
+        "W",
+        "X",
+        "Y",
+        "Z"
+      ]
+    },
+    {
+      "id": "best2-20261114-words",
+      "title": "Best 2 · Nuove parole del 14 novembre",
+      "source": "teacher-material-best2-2026-11-14-new-words",
+      "grammarPacks": [],
+      "wordPacks": [
+        "best2-new-words"
+      ],
+      "wordIds": []
+    },
+    {
+      "id": "best2-20261114-questions",
+      "title": "Best 2 · What is this? / What are they?",
+      "source": "teacher-material-best2-2026-11-14-questions-answers",
+      "grammarPacks": [
+        "best2-what-questions"
+      ],
+      "wordPacks": [],
+      "wordIds": [
+        "desk",
+        "desks",
+        "bookbag",
+        "bookbags",
+        "pencil sharpener",
+        "pencil sharpeners",
+        "pen",
+        "pens",
+        "apple",
+        "apples"
+      ]
+    },
+    {
+      "id": "best2-20261114-this-these",
+      "title": "Best 2 · This is / These are",
+      "source": "teacher-material-best2-2026-11-14-this-these",
+      "grammarPacks": [
+        "best2-this-these"
+      ],
+      "wordPacks": [],
+      "wordIds": [
+        "apple",
+        "apples",
+        "ball",
+        "balls",
+        "dog",
+        "dogs",
+        "tree",
+        "trees"
+      ]
+    },
+    {
+      "id": "best2-20261114-statements",
+      "title": "Best 2 · Le frasi It is / They are",
+      "source": "teacher-material-best2-2026-11-14-it-they",
+      "grammarPacks": [
+        "best2-it-they-sentences"
+      ],
+      "wordPacks": [],
+      "wordIds": [
+        "pencil",
+        "pencils",
+        "pencil sharpener",
+        "pencil sharpeners",
+        "desk",
+        "desks",
+        "boy",
+        "boys",
+        "hand",
+        "hands"
+      ]
+    }
   ]
 }

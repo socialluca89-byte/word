@@ -1,5 +1,15 @@
 # Stato unico WordyLand
 
+## Lotto corrente: materiali Best 2 del 14 novembre
+
+Base effettivamente pubblicata e verificata: **3614c4476101814b307dd72a80b935ca7883e2fd**, [run42494775887](https://github.com/socialluca89-byte/word/actions/runs/42494775887),52verify/65browser e deploy/live PASS l’8novembre. Le sezioni successive sono registrazioni storiche.
+
+Le tredici fotografie nuove e ripetute appartengono a Best2 per indicazione esplicita dell’utente. Il lotto aggiunge28casi in3percorsi (What is this?/What are they?, This is/These are, frasi It is/They are) e7parole: slide, scooter, swing, shelf, cupboard, computer, tree. I75casi e tutti i contenuti precedenti restano invariati; i doppioni sono riutilizzati. Nove illustrazioni originali accompagnano gli oggetti nuovi. Nessun nome o fotografia degli alunni entra nell’applicazione.
+
+Sono aggiunte quattro unità selezionabili nel programma, etichettate Best2; **nessuna classe reale viene assegnata automaticamente dal nome**. Le revisioni già pubblicate restano immutabili: l’adulto autorizzato deve selezionare le nuove unità e pubblicare una nuova revisione tramite l’interfaccia esistente. I nuovi piani usano archivi separati e capability3, con ripresa di aiuti/bozze e protezione dei progressi dai client precedenti. Le revisioni nuove hanno una vista compatibile per un eventuale rollback; le nuove attività grammaticali richiedono la versione aggiornata. Punti, economia, premi, accessi e consenso restano invariati.
+
+[Matrice delle fonti e limiti](BEST2_MATERIALS_2026_11_14.md), [contratto finito](BEST2_MATERIAL_CONTRACT_2026_11_14.md). Pacchetto59file/51statici; pipeline54verify/66browser. Stato alla redazione: sviluppo e collaudo cumulativo locale completati,54verifiche e66suite browser PASS; misura prestazioni isolata541,6ms con soglia5s invariata, sei anteprime reali320/390/1360. Corretto anche il passaggio da script3614 ancora aperti con JSON nuovo, preservando token, aiuti, bozze e salvataggi offline senza duplicare premi. **Non ancora dichiarato pubblicato**. Per il rilascio servono CI, deploy realmente eseguito e controlli live del commit esatto. Pronuncia su voci/dispositivi reali e accuratezza di eventuali altre foto restano verifiche umane, non esiti delle fixture sintetiche.
+
 ## Lotto corrente: programmi di classe e schede dell’8 novembre
 
 Ultimo rilascio effettivamente verificato: **7f03b579c14e647191779df685b6de4c45bd3beb**, [run42296156096](https://github.com/socialluca89-byte/word/actions/runs/42296156096),49verify/63browser e deploy/live PASS il6novembre alle22:36:01Europe/Rome. Le sezioni successive sono fotografie storiche e non sostituiscono questa base.

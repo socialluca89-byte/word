@@ -46,7 +46,8 @@ function cpRevisionContext(PDO $db,int $revision,array $classes=[]):array{
     $payload=cpDecode($r['payload']);$active=$payload['active'];$active['revision']=(int)$r['id'];$context=cpEmptyContext('class',$classes,$active);
     foreach(['words','allowed','units'] as $key)$context[$key]=$payload[$key]??$context[$key];
     $context['units']=array_values(array_filter($context['units'],fn($u)=>in_array($u['status']??null,['active','review'],true)));
-    if(isset($payload['training'])&&is_array($payload['training']))$context['training']=$payload['training'];
+    $training=$payload['trainingV3']??$payload['training']??null;
+    if(is_array($training))$context['training']=$training;
     $context['expected']=['programClass'=>(int)$r['club_id'],'programRevision'=>(int)$r['id']];return $context;
 }
 function cpResolveContext(PDO $db,int $pid,?array $expected=null):array{
@@ -72,7 +73,7 @@ function cpResolveContext(PDO $db,int $pid,?array $expected=null):array{
     return $context;
 }
 function cpRequirePlayable(array $context):void{if($context['mode']==='selection-required')fail('Scegli la classe prima di iniziare.',409);if($context['mode']==='blocked')fail('Il programma della classe non è ancora pubblicato oppure non ha attività assegnate.',409);}
-function cpIcon(string $id):string{return ['pencil'=>'✏️','pen'=>'🖊️','book'=>'📘','eraser'=>'🧽','rubber'=>'🧽','bag'=>'🎒','bookbag'=>'🎒','notebook'=>'📓','sharpener'=>'🔧','desk'=>'🏫','chair'=>'🪑','doll'=>'🪆','car'=>'🚗','ball'=>'⚽','puzzle'=>'🧩','teddy'=>'🧸','rabbit'=>'🐇','cat'=>'🐈','rat'=>'🐀','dog'=>'🐕','lizard'=>'🦎','hat'=>'👒','grammar-door'=>'🚪','grammar-ruler'=>'📏','grammar-chair'=>'🪑','grammar-table'=>'🪵','grammar-egg'=>'🥚','grammar-apple'=>'🍎','grammar-cup'=>'☕'][$id]??'📘';}
+function cpIcon(string $id):string{return ['tree'=>'🌳','boy'=>'🧒','hand'=>'✋','apple'=>'🍎','pencil-sharpener'=>'🔧','pencil'=>'✏️','pen'=>'🖊️','book'=>'📘','eraser'=>'🧽','rubber'=>'🧽','bag'=>'🎒','bookbag'=>'🎒','notebook'=>'📓','sharpener'=>'🔧','desk'=>'🏫','chair'=>'🪑','doll'=>'🪆','car'=>'🚗','ball'=>'⚽','puzzle'=>'🧩','teddy'=>'🧸','rabbit'=>'🐇','cat'=>'🐈','rat'=>'🐀','dog'=>'🐕','lizard'=>'🦎','hat'=>'👒','grammar-door'=>'🚪','grammar-ruler'=>'📏','grammar-chair'=>'🪑','grammar-table'=>'🪵','grammar-egg'=>'🥚','grammar-apple'=>'🍎','grammar-cup'=>'☕'][$id]??'📘';}
 function cpTrainingSource():array{return cpDecode((string)file_get_contents(__DIR__.'/training.json'));}
 function cpWordIndex(array $content):array{
     $index=[];foreach($content['foundationWords']??$content['words']??[] as $w)$index[cpNormalize($w['id'])]=[$w['id'],$w['meaning'],$w['emoji']??'📘'];
@@ -110,7 +111,18 @@ function cpComposeRevision(PDO $db,array $program):array{
     if(!$words&&!$allowed['grammarCases']&&!$allowed['letterIds']&&!$allowed['sentenceIds']&&!$allowed['instructionIds']&&!$allowed['phonicsGroups'])fail('Assegna almeno un’attività attiva prima di pubblicare.',409);
     $context=['mode'=>'class','words'=>array_values($words),'allowed'=>$allowed];
     $training=cpFilterTrainingContent(cpTrainingSource(),$context);
-    return ['active'=>cpMetadata($program,0),'words'=>array_values($words),'allowed'=>$allowed,'units'=>$units,'training'=>$training];
+    $payload=['active'=>cpMetadata($program,0),'words'=>array_values($words),'allowed'=>$allowed,'units'=>$units,'training'=>$training];
+    // Old application3614 reads payload.training: keep its frozen view executable.
+    $v3Packs=['best2-what-questions','best2-this-these','best2-it-they-sentences'];
+    $newWords=['slide','scooter','swing','shelf','cupboard','computer','tree'];
+    $needsV3=(bool)array_intersect(array_column($training['grammarLessons']['packs']??[],'id'),$v3Packs)||(bool)array_intersect(array_column($training['foundationWords']??[],'id'),$newWords);
+    if($needsV3){
+        $safe=$training;$safe['grammarLessons']['packs']=array_values(array_filter($training['grammarLessons']['packs']??[],fn($p)=>!in_array($p['id'],$v3Packs,true)));
+        $safe['wordPacks']=array_values(array_filter($training['wordPacks']??[],fn($p)=>$p['id']!=='best2-new-words'));
+        foreach($safe['wordPacks'] as &$p)if(array_intersect($p['words'],$newWords))$p['wordOnly']=true;unset($p);
+        $payload['training']=$safe;$payload['trainingV3']=$training;
+    }
+    return $payload;
 }
 function cpFilterWordPool(array $rows,array $context):array{
     if($context['mode']==='legacy')return $rows;

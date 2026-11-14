@@ -18,8 +18,8 @@ const grammarBaseline=JSON.parse(execFileSync('git',['show','7f03b579c14e6471917
 assert.deepEqual(allGrammar.nouns.slice(0,16),grammarBaseline.nouns,'The16 existing noun records retain every value');
 assert.deepEqual(allGrammar.packs.slice(0,5),grammarBaseline.packs,'All40 existing cases, models, hints and answers retain every value');
 const grammar={...allGrammar,nouns:allGrammar.nouns.slice(0,16),packs:allGrammar.packs.slice(0,5)};
-assert.equal(content.foundationWords.length,64);assert.equal(content.wordPacks.length,9);assert.equal(content.sentenceActivities.length,12);assert.equal(content.instructionActivities.length,8);
-assert.equal(allGrammar.nouns.length,30);assert.equal(allGrammar.packs.length,11);assert.equal(allGrammar.packs.reduce((count,pack)=>count+pack.cases.length,0),75);
+assert.equal(content.foundationWords.length,71);assert.equal(content.wordPacks.length,10);assert.equal(content.sentenceActivities.length,12);assert.equal(content.instructionActivities.length,8);
+assert.equal(allGrammar.nouns.length,34);assert.equal(allGrammar.packs.length,14);assert.equal(allGrammar.packs.reduce((count,pack)=>count+pack.cases.length,0),103);
 assert.equal(grammar.version,1);assert.equal(grammar.title,'Grammatica della classe');
 assert.deepEqual(Object.keys(grammar).sort(),['nouns','packs','title','version']);
 

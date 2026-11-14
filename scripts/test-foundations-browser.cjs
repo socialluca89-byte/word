@@ -30,9 +30,9 @@ async function assertRecallHelp(page,token,answer,before=null){
 try{const p=await browser.newPage({viewport:{width:390,height:844},reducedMotion:'reduce'}),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.addInitScript(()=>{if('speechSynthesis'in window)speechSynthesis.getVoices=()=>[];});
  await p.goto(base+'/#allenamento');await p.locator('[data-training-pack]').first().waitFor();
  const content=JSON.parse(fs.readFileSync('dist/training.json','utf8')),initial=await p.evaluate(()=>({stats:structuredClone(stats),stars,game:Object.fromEntries(Object.keys(localStorage).filter(k=>!k.startsWith('wordylandTraining')&&!k.startsWith('wordylandLetterVoice')).map(k=>[k,localStorage.getItem(k)]))}));
- assert.equal(await p.locator('[data-training-pack]').count(),9);await p.locator('#chooseTrainingWords').click();assert.equal(await p.locator('[data-training-pack=first]').evaluate(n=>n===document.activeElement),true);
+ assert.equal(await p.locator('[data-training-pack]').count(),10);await p.locator('#chooseTrainingWords').click();assert.equal(await p.locator('[data-training-pack=first]').evaluate(n=>n===document.activeElement),true);
  // Keep every unfinished theme and letter block; opening the 11th must not discard the first.
- for(const pack of content.wordPacks){await p.locator('[data-training-pack='+pack.id+']').click();await p.locator('#trainingContinue').waitFor();await p.locator('#pauseTraining').click();}
+ for(const pack of content.wordPacks.slice(0,9)){await p.locator('[data-training-pack='+pack.id+']').click();await p.locator('#trainingContinue').waitFor();await p.locator('#pauseTraining').click();}
  for(const block of content.blocks){if(!await p.locator('[data-training-block='+block.id+']').isVisible())await p.locator('#moreTrainingLetters>summary').click();await p.locator('[data-training-block='+block.id+']').click();await p.locator('#trainingContinue').waitFor();await p.locator('#pauseTraining').click();}
  assert.equal(await p.locator('[data-training-resume]').count(),22);const saved=await p.evaluate(()=>JSON.parse(localStorage.getItem('wordylandTrainingGuest')));assert.equal(new Set(saved.sessions.map(s=>s.track)).size,22);
  // A former-release session with original six words resumes, retaining sanitized choice order.

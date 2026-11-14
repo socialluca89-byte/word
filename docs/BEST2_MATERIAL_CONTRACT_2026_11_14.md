@@ -1,0 +1,30 @@
+# Best 2 teacher material — 14 November 2026
+
+Base:3614c4476101814b307dd72a80b935ca7883e2fd, last verified live run42494775887. User confirms ALL supplied/current materials are for Best2 unless stated otherwise. Latest two messages contain13photos. Content only from their printed examples and clear teacher corrections; never store pupil names/photos. No real account/class/member/grant/consent mutations by tools. Ordinary tested publication remains authorised; no supplementary production probe, security change, email or credentials. Stop on protection rejection.
+
+## Finite content
+
+Preserve every old value/order:75cases,30nouns,64foundationWords,9wordPacks,11grammar packs,9class-program units. Repeated Classroom12words, regular-s plurals, a/an, Is it a pen and old6It/They statements remain reused, not duplicated/replaced.
+
+Add exactly28cases in3new grammar packs:
+- best2-what-questions(10),task identify: desk/desks1/2; bookbag/bookbags1/2; pencil sharpener(s)1/3; pen/pens1/2; apple/apples1/3. Questions What is this?/What are they?, answers It is a…/They are…; apple singular source It's an apple. Bookbag canonical one word in this source, aliases book bag permitted, bare bag not accepted for that noun. Pens plural illustration represents plurality, not an exact hidden source count.
+- best2-this-these(8),task demonstrative: apple,ball,dog,tree each singular1/plural2. These plural quantities are representative one/many, not a transcription of unclear picture counts. No That/Those/He/She. Full answer/model This is [a/an noun]. / These are [plural]. field prefix='This is'|'These are', ending,choices=['This is','These are'],full tokens,aliases[]. Phases model,demonstrative-choice(prefix answer),demonstrative-build(full model),demonstrative-write(full model). Existing grammar-model/choice/build/write modes reused. Maximum plan remains12.
+- best2-it-they-sentences(10),task sentence: pencil1/3,pencil sharpener1/3,desk1/3,boy1/2,hand1/2. Quaderno margin numbers do not create new counting tasks. Existing book/pen/eraser statement cases remain untouched.
+
+Add4grammar nouns: tree/trees, boy/boys, hand/hands, bookbag/bookbags. Bookbag uses existing atlas; spaced aliases supported. Other6new singular vocab words must NOT receive invented plurals, especially shelves. Add7foundationWords:slide,scooter,swing,shelf,cupboard,computer,tree; one wordOnly pack best2-new-words (all7), phrase=id/phraseMeaning=meaning/gap=___, no invented sentences. Final counts:103cases,34nouns,71foundationWords,10wordPacks,14grammar packs. Existing global tree/boy/table/etc are reused as appropriate, no global curriculum/data.js mutation.
+
+Append4class-program units best2-20261114-words, best2-20261114-questions, best2-20261114-this-these, best2-20261114-statements. Titles/provenance clearly identify Best2 material. This is not a real-class assignment and must not match class IDs by display name. Configured classes without those units must not see them; frozen published revisions remain unchanged. Catalogue total13units.
+
+## Compatibility and storage
+
+New word and grammar plans must be invisible to rollback3614 and cached old clients. Add training_best2_word_sessions and training_best2_grammar_sessions with the existing session columns, additive only. New clients send trainingSchema:3 on starts and trainingSchema=3 on state/token reads; old state without capability excludes both new tables. Starting new IDs without capability returns upgrade409 before writing. Owned reads/hints/answers for new tokens require capability; old tokens keep old request semantics. Existing3session tables remain exact. cpBindSession/cpRecordStep kind training and atomic/idempotent semantics unchanged. Roster errors include both new tables, model not played. New entries/progress do not change economy, roles, registration, existing grants or programmes.
+
+Guest storage must likewise preserve existing keys from cached-old-client pruning. Grammar new packs use wordylandBest2GrammarGuestV1; word pack uses third existing guestStores bucket wordylandBest2TrainingGuestV1. Old keys unchanged for new sessions. Menus/resume combine snapshots from buckets, mutations bind the right key with existing conflict/locks/quota guards. Existing rewards remain finite; no point/coin/new ranking. Display owned stickers as deduplicated finite catalog, preserve prior guest awards. Offline public progress loader must not discard the new word-only pack; new offline words remain8steps, old ones9. No account/API cache or new profile storage.
+
+## Ownership
+
+A /nov14_material_audit: training.json,class-program-catalog.json,docs/BEST2_MATERIALS_2026_11_14.md only. B /nov14_integration_review: training.php,community.php and optional NEW test-best2-materials.py (coordinate with QA) only. C frontend author: grammar.js,training.js only. D QA: new test-best2-materials-content.mjs and test-best2-materials-browser.cjs only, may own API test instead of B by agreement. Root owns instructions, manifests/versioning/workflow/old-test oracles, offline.js if needed, release and integration. No commit/push/versioner/production calls by agents. One or at most2isolated browser suites; performance alone. Record actual failure vs fixture error without hiding via retries or raised assertion deadlines.
+
+## Tests
+
+Independent source matrix28, all old prefixes exact,7vocab/wordOnly,no unprovided plural/rules. API+browser new starts require capability; error/help/replay/pause/reload/quota/profile changes, all28cases, This/These vs It/They, audio stops/no fake phonemes, mobile320/390/1360. Correct counts affect every exact .count(),9 AND .count()===9 assertion; preserve old inventories plus additions. Prove old-client state and real application rollback3614 never enumerate new plans; preserve old saved plan bytes/help/progress/rewards and new isolated guest state. Class programmes frozen/scoped, no auto real-class mutation. Run required verify and existing65browser plus new test, normal CI and live checks before publication claim. Human voices/mail/device checks remain separate.
