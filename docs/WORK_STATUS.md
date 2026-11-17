@@ -1,5 +1,9 @@
 # Stato unico WordyLand
 
+## Correzioni UI del 17 novembre — candidato in verifica
+
+L’utente approva le tre priorità emerse da Taste Skill con «ok procedi». Implementati feedback vuoto senza falso riquadro, scena grammaticale coerente con gli altri esercizi e home più leggera, preservando ogni entrata/contenuto/progresso/premio. [Perimetro](TASTE_UI_SCOPE_2026_11_17.md) e [prove/limiti](TASTE_UI_VERIFICATION_2026_11_17.md). Localmente54verify e15suite browser pertinenti PASS, confronto prima/dopo su320/390/768/1360 e stress CSS zoom200%; prestazioni isolate446,1ms con soglia5s invariata. Il candidato conserva l’installazione locale della skill e attende CI67browser e deploy/live esatti prima di essere dichiarato pubblicato. La fonte MondoSkills indicata in seguito non è leggibile dall’ambiente (HTTP403); nessuna installazione aggiuntiva o aggiramento.
+
 ## Strumenti grafici del 17 novembre
 
 Installata localmente **Taste Skill / design-taste-frontend2.5.1**, su richiesta dell’utente, con versione upstream e manifest verificati. [Applicazione a WordyLand e tre priorità emerse](TASTE_SKILL_ADOPTION_2026_11_17.md). Sono una installazione e una revisione: nessuna modifica al gioco o nuovo deploy in questo lotto. La versione effettivamente pubblicata resta **8de8e233f5a4f0c2ee5295552d5f9d89cf714d79**, [run43609838612](https://github.com/socialluca89-byte/word/actions/runs/43609838612),54verify/66browser e controlli live PASS il14novembre alle16:36:20Europe/Rome. Il commit locale della skill va conservato nei lotti grafici successivi.
