@@ -31,6 +31,33 @@ with tempfile.TemporaryDirectory(prefix='wordyland-readonly-') as tmp:
         assert set(d['mail'])=={'configuration','transport','sender','phpMailAvailable','configurationReady'}
         return d
     stdin=run([PHP,'--','--read-only'],env,input=script.read_text());assert stdin.returncode==0 and stdin.stderr=='' and set(json.loads(stdin.stdout))=={'ownerExists','ownerIsAdmin','privateActivationAvailable','mail'}
+    # Exercise modern and retained legacy selections against synthetic SQLite only.
+    source=script.read_text();selector="$modernSqlite=defined('Pdo\\\\Sqlite::ATTR_OPEN_FLAGS') && defined('Pdo\\\\Sqlite::OPEN_READONLY');"
+    assert source.count(selector)==1
+    available=run([PHP,'-r',"echo defined('Pdo\\\\Sqlite::ATTR_OPEN_FLAGS') && defined('Pdo\\\\Sqlite::OPEN_READONLY') ? 'yes' : 'no';"],env)
+    def check_open_flags(candidate):
+        before=snapshot();anchor='    $query=$db->prepare('
+        assert candidate.count(anchor)==1
+        injected="""    $db->exec('PRAGMA query_only=OFF');
+    $writeRejected=false;
+    try {$db->exec("UPDATE progress SET value='write-must-be-refused'");} catch(PDOException $failure) {$writeRejected=true;}
+    if(!$writeRejected)throw new RuntimeException('connection-is-not-read-only');
+    $db->exec('PRAGMA query_only=ON');
+"""
+        checked=run([PHP,'--','--read-only'],env,input=candidate.replace(anchor,injected+anchor))
+        assert snapshot()==before,'Connection flags allowed a private-file mutation'
+        assert checked.returncode==0 and checked.stderr=='' and json.loads(checked.stdout)==json.loads(stdin.stdout)
+    check_open_flags(source)
+    if available.stdout=='yes':
+        # Fail on either legacy expression if the modern branch evaluates it.
+        strict=source.replace('PDO::SQLITE_ATTR_OPEN_FLAGS',"throw new RuntimeException('legacy-expression-evaluated')").replace('PDO::SQLITE_OPEN_READONLY',"throw new RuntimeException('legacy-expression-evaluated')")
+        modern=run([PHP,'--','--read-only'],env,input=strict);assert modern.returncode==0 and modern.stderr=='' and json.loads(modern.stdout)==json.loads(stdin.stdout)
+        check_open_flags(strict)
+    version=run([PHP,'-r','echo PHP_VERSION_ID;'],env);assert version.returncode==0 and version.stdout.isdigit()
+    if int(version.stdout)<80500:
+        legacy=run([PHP,'--','--read-only'],env,input=source.replace(selector,'$modernSqlite=false;'))
+        assert legacy.returncode==0 and legacy.stderr=='' and json.loads(legacy.stdout)==json.loads(stdin.stdout)
+        check_open_flags(source.replace(selector,'$modernSqlite=false;'))
     d=probe();assert d['ownerExists'] and d['ownerIsAdmin'] and d['privateActivationAvailable'];assert d['mail']['configuration']=='absent'
     def config(value):settings.write_text(json.dumps(value));settings.chmod(0o600)
     config({'enabled':True,'transport':'php-mail','from':'sender@wordyland.example','password':SENTINEL});d=probe();assert d['mail']['configurationReady'] and d['mail']['sender']=='valid_format';assert 'sender@wordyland.example' not in json.dumps(d)

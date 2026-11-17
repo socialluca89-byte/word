@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Keep API regression output/exit status and publish a value-free CI location."""
 from pathlib import Path
+import os
 import re
 import subprocess
 import sys
@@ -19,6 +20,11 @@ def main():
     if len(sys.argv) != 2 or not re.fullmatch(r'scripts/test-[a-z0-9-]+\.py', sys.argv[1]):
         raise SystemExit('Usage: run-api-check.py scripts/test-name.py')
     script = sys.argv[1]
+    if script == 'scripts/test-read-only-readiness.py':
+        runtime = subprocess.run([os.environ.get('PHP_COMMAND', 'php'), '-r', 'echo PHP_VERSION;'],
+                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        version = runtime.stdout if re.fullmatch(r'[a-zA-Z0-9.+-]{1,50}', runtime.stdout) else 'unavailable'
+        print('::notice title=API runtime::Read-only readiness PHP ' + version + '.', flush=True)
     result = subprocess.run([sys.executable, script], stdout=subprocess.PIPE,
                             stderr=subprocess.STDOUT, text=True)
     print(result.stdout, end='', flush=True)

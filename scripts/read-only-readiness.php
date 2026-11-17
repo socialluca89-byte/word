@@ -10,7 +10,11 @@ try {
     if(!$directory || realpath($directory)!==$directory || is_link($directory) || basename($directory)!=='.wordyland-data' || basename(dirname($directory))!=='wordyland.eu' || preg_match('~(?:^|/)public_html(?:/|$)~',$directory))throw new RuntimeException('private-directory-required');
     $database=$directory.'/wordyland.sqlite';
     if(!is_file($database) || is_link($database) || !is_readable($database))throw new RuntimeException('database-unavailable');
-    $db=new PDO('sqlite:'.$database,null,null,[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC,PDO::SQLITE_ATTR_OPEN_FLAGS=>PDO::SQLITE_OPEN_READONLY]);
+    // PHP8.5 deprecates driver constants on PDO; retain the same read-only flags.
+    $modernSqlite=defined('Pdo\\Sqlite::ATTR_OPEN_FLAGS') && defined('Pdo\\Sqlite::OPEN_READONLY');
+    $openFlags=$modernSqlite?constant('Pdo\\Sqlite::ATTR_OPEN_FLAGS'):PDO::SQLITE_ATTR_OPEN_FLAGS;
+    $readOnly=$modernSqlite?constant('Pdo\\Sqlite::OPEN_READONLY'):PDO::SQLITE_OPEN_READONLY;
+    $db=new PDO('sqlite:'.$database,null,null,[PDO::ATTR_ERRMODE=>PDO::ERRMODE_EXCEPTION,PDO::ATTR_DEFAULT_FETCH_MODE=>PDO::FETCH_ASSOC,$openFlags=>$readOnly]);
     $db->exec('PRAGMA query_only=ON; PRAGMA busy_timeout=3000');
     $query=$db->prepare('SELECT role FROM accounts WHERE username=?');$query->execute(['luca@perrone.it']);$account=$query->fetch();
     $activation=$directory.'/admin-activation.txt';

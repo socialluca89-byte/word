@@ -8,7 +8,7 @@ Fonte applicativa precedente:8de8e233f5a4f0c2ee5295552d5f9d89cf714d79, pubblicat
 - Le quattro modalità grammaticali attive usano la stessa scena focalizzata delle parole. Menu, pausa, completamento e uscita ripristinano la corretta navigazione. Una chiusura tardiva non sovrascrive un’altra missione o un duello già attivo.
 - La home mantiene tutte le entrate e le illustrazioni, con superfici secondarie più quiete, bordi da1px e ombre alleggerite. Testo, font, ordine, significato dei colori e dimensioni accessibili rimangono.
 
-PHP, JSON didattici, cataloghi, immagini, codice di account/classi, archivi e regole di premi/economia sono invariati. Cambiano soltanto3file prodotto (`grammar.js`, `pwa.css`, `quests.css`) e4file generati dalle versioni degli asset (`index.html`, `offline.html`, `pwa.js`, `sw.js`). Le verifiche confrontano tutti59file congelati con i rispettivi hash.
+PHP pubblici, JSON didattici, cataloghi, immagini, codice di account/classi, archivi e regole di premi/economia sono invariati. Cambiano soltanto3file prodotto (`grammar.js`, `pwa.css`, `quests.css`) e4file generati dalle versioni degli asset (`index.html`, `offline.html`, `pwa.js`, `sw.js`). Le verifiche confrontano tutti59file congelati con i rispettivi hash.
 
 ## Prove locali completate
 
@@ -29,3 +29,11 @@ L’utente ha fornito `https://mondoskills.it/categoria/giochi-e-3d/`. Il tentat
 ## Pubblicazione e limiti
 
 Stato alla redazione: sviluppato e collaudato localmente, non ancora dichiarato online. Il normale workflow deve superare54verify,67browser e il deploy sul commit esatto, con marker/health/51file statici/MIME/homepage e cache verificati. Nessuna sonda supplementare di produzione. Audio, tablet e screen reader reali restano verifiche umane separate; nessun account, classe, consenso, email o protezione hosting è stato modificato dagli strumenti.
+
+## Blocco CI e compatibilità del diagnostico privato
+
+Il run44102683046 sul candidatoc6e84d8 ha fallito la verifica API prima del deploy. Il run diagnostico44104477676 sul ramofix, escluso dal deploy, ha riprodotto il problema identificando `test-read-only-readiness.py:33`: esecuzione viaSTDIN del CLI privato. Tutti i test API precedenti erano passati. I log completi non sono accessibili dall’ambiente; le nuove annotazioni conservano soltanto file/riga/tipo di eccezione, senza valori. Comandi, output originale, exit status, test e soglie restano identici.
+
+La fonte ufficiale PHP8.5 conferma la deprecazione delle costanti driver-specifiche suPDO: https://github.com/php/php-src/blob/PHP-8.5/UPGRADING . I nomi effettivi delle costanti aggiornate sono verificati nello stub ufficiale: https://github.com/php/php-src/blob/PHP-8.5/ext/pdo_sqlite/pdo_sqlite.stub.php . Il gestore rigoroso del diagnostico trasforma anche tali avvisi in un fallimento sanitizzato. La patch seleziona `Pdo\Sqlite::ATTR_OPEN_FLAGS` e `Pdo\Sqlite::OPEN_READONLY` quando disponibili; conserva il ramoPDO perPHP8.1–8.3. Non attenua avvisi/errori e non rimuove il flag d’apertura in sola lettura oquery_only. Lo script rimane privato, mai installato inpublic_html o invocato in produzione da questo lotto.
+
+Fixture PHP8.4.24: percorso moderno e fallback verificati; accessi alle espressioni legacy resi fallibili nella variante di prova per dimostrare che il ramo moderno non le valuta. Una scrittura viene rifiutata anche dopo disattivazione diquery_only nella sola fixture, provando il flag d’aperturaOSreadonly; file/database restano byte-identici. SuPHP8.5 il fallback forzato non viene eseguito perché i suoi simboli sono intenzionalmente deprecati: il percorso normale e quello moderno rigoroso restano obbligatori. Il runner CI pubblica soltanto la versionePHP per confermare il runtime effettivo. Nessuna esecuzione localePHP8.5 viene simulata o dichiarata effettuata.
