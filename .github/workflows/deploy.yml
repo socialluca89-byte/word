@@ -47,46 +47,46 @@ jobs:
       - name: Verify account API and database isolation
         run: |
           for f in dist/*.php; do php -l "$f"; done
-          python3 scripts/test-api.py
-          python3 scripts/test-access.py
-          python3 scripts/test-email-recovery.py
-          python3 scripts/test-classroom.py
-          python3 scripts/test-classroom-access.py
-          python3 scripts/test-adventures.py
-          python3 scripts/test-holidays.py
-          python3 scripts/test-holiday-continuity.py
-          python3 scripts/test-learning-bridge.py
-          python3 scripts/test-journey.py
-          python3 scripts/test-elf.py
+          python3 scripts/run-api-check.py scripts/test-api.py
+          python3 scripts/run-api-check.py scripts/test-access.py
+          python3 scripts/run-api-check.py scripts/test-email-recovery.py
+          python3 scripts/run-api-check.py scripts/test-classroom.py
+          python3 scripts/run-api-check.py scripts/test-classroom-access.py
+          python3 scripts/run-api-check.py scripts/test-adventures.py
+          python3 scripts/run-api-check.py scripts/test-holidays.py
+          python3 scripts/run-api-check.py scripts/test-holiday-continuity.py
+          python3 scripts/run-api-check.py scripts/test-learning-bridge.py
+          python3 scripts/run-api-check.py scripts/test-journey.py
+          python3 scripts/run-api-check.py scripts/test-elf.py
           php -l scripts/bootstrap-admin.php
           php -l scripts/owner-recovery-status.php
           php -l scripts/prepare-owner-recovery.php
           php -l scripts/read-only-readiness.php
-          python3 scripts/test-read-only-readiness.py
-          python3 scripts/test-owner-recovery.py
+          python3 scripts/run-api-check.py scripts/test-read-only-readiness.py
+          python3 scripts/run-api-check.py scripts/test-owner-recovery.py
           php -l scripts/siteground-cache.php
-          python3 scripts/test-cache-purge.py
-          python3 scripts/test-community.py
-          python3 scripts/test-community-activity.py
-          python3 scripts/test-api-diagnostics.py
-          python3 scripts/test-arena-capacity.py
-          python3 scripts/test-data-snapshot.py
-          python3 scripts/test-presence.py
-          python3 scripts/test-resume.py
-          python3 scripts/test-autonomy.py
-          python3 scripts/test-review.py
-          python3 scripts/test-choice-fairness.py
-          python3 scripts/test-parent-summary.py
-          python3 scripts/test-training.py
-          python3 scripts/test-grammar.py
-          python3 scripts/test-class-program.py
-          python3 scripts/test-class-program-adapters.py
-          python3 scripts/test-best2-materials.py
-          python3 scripts/test-phonics.py
-          python3 scripts/test-letter-progression.py
-          python3 scripts/test-training-guidance.py
-          python3 scripts/test-holiday-calendar.py
-          python3 scripts/test-guardian.py
+          python3 scripts/run-api-check.py scripts/test-cache-purge.py
+          python3 scripts/run-api-check.py scripts/test-community.py
+          python3 scripts/run-api-check.py scripts/test-community-activity.py
+          python3 scripts/run-api-check.py scripts/test-api-diagnostics.py
+          python3 scripts/run-api-check.py scripts/test-arena-capacity.py
+          python3 scripts/run-api-check.py scripts/test-data-snapshot.py
+          python3 scripts/run-api-check.py scripts/test-presence.py
+          python3 scripts/run-api-check.py scripts/test-resume.py
+          python3 scripts/run-api-check.py scripts/test-autonomy.py
+          python3 scripts/run-api-check.py scripts/test-review.py
+          python3 scripts/run-api-check.py scripts/test-choice-fairness.py
+          python3 scripts/run-api-check.py scripts/test-parent-summary.py
+          python3 scripts/run-api-check.py scripts/test-training.py
+          python3 scripts/run-api-check.py scripts/test-grammar.py
+          python3 scripts/run-api-check.py scripts/test-class-program.py
+          python3 scripts/run-api-check.py scripts/test-class-program-adapters.py
+          python3 scripts/run-api-check.py scripts/test-best2-materials.py
+          python3 scripts/run-api-check.py scripts/test-phonics.py
+          python3 scripts/run-api-check.py scripts/test-letter-progression.py
+          python3 scripts/run-api-check.py scripts/test-training-guidance.py
+          python3 scripts/run-api-check.py scripts/test-holiday-calendar.py
+          python3 scripts/run-api-check.py scripts/test-guardian.py
       - name: Check public bundle
         run: node scripts/verify-bundle.mjs
       - name: Test deployment script in isolation

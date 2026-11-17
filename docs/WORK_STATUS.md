@@ -2,6 +2,8 @@
 
 ## Correzioni UI del 17 novembre — candidato in verifica
 
+Primo CI `c6e84d8`, [run44102683046](https://github.com/socialluca89-byte/word/actions/runs/44102683046): verifica JavaScript PASS; gruppo API fallito senza nome dello script nell’annotazione disponibile. Deploy non eseguito, live precedente8de8e23 preservato. I log dettagliati non sono disponibili dagli strumenti dell’ambiente (API GitHub Forbidden, collegamento pubblico ufficiale404). È preparata una diagnosi sul ramo di verifica preesistente, che non può pubblicare: il wrapper conserva output, comandi, exit status, soglie e tutti i controlli; aggiunge soltanto annotazioni con nome file, riga ed eccezione, escludendo i valori. Tutte54verifiche locali con il wrapper PASS e tutti59file applicativi congelati invariati. Non è ancora identificata la causa del primo errore; nessuna modifica ipotetica a prodotto o soglie viene presentata come correzione.
+
 L’utente approva le tre priorità emerse da Taste Skill con «ok procedi». Implementati feedback vuoto senza falso riquadro, scena grammaticale coerente con gli altri esercizi e home più leggera, preservando ogni entrata/contenuto/progresso/premio. [Perimetro](TASTE_UI_SCOPE_2026_11_17.md) e [prove/limiti](TASTE_UI_VERIFICATION_2026_11_17.md). Localmente54verify e15suite browser pertinenti PASS, confronto prima/dopo su320/390/768/1360 e stress CSS zoom200%; prestazioni isolate446,1ms con soglia5s invariata. Il candidato conserva l’installazione locale della skill e attende CI67browser e deploy/live esatti prima di essere dichiarato pubblicato. La fonte MondoSkills indicata in seguito non è leggibile dall’ambiente (HTTP403); nessuna installazione aggiuntiva o aggiramento.
 
 ## Strumenti grafici del 17 novembre
