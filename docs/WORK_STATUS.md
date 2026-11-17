@@ -1,5 +1,9 @@
 # Stato unico WordyLand
 
+## Strumenti grafici del 17 novembre
+
+Installata localmente **Taste Skill / design-taste-frontend2.5.1**, su richiesta dell’utente, con versione upstream e manifest verificati. [Applicazione a WordyLand e tre priorità emerse](TASTE_SKILL_ADOPTION_2026_11_17.md). Sono una installazione e una revisione: nessuna modifica al gioco o nuovo deploy in questo lotto. La versione effettivamente pubblicata resta **8de8e233f5a4f0c2ee5295552d5f9d89cf714d79**, [run43609838612](https://github.com/socialluca89-byte/word/actions/runs/43609838612),54verify/66browser e controlli live PASS il14novembre alle16:36:20Europe/Rome. Il commit locale della skill va conservato nei lotti grafici successivi.
+
 ## Lotto corrente: materiali Best 2 del 14 novembre
 
 Base effettivamente pubblicata e verificata: **3614c4476101814b307dd72a80b935ca7883e2fd**, [run42494775887](https://github.com/socialluca89-byte/word/actions/runs/42494775887),52verify/65browser e deploy/live PASS l’8novembre. Le sezioni successive sono registrazioni storiche.
